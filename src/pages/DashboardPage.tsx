@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useMemo } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Receipt,
@@ -10,16 +10,6 @@ import {
   Plus,
   BarChart3,
 } from "lucide-react";
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  Tooltip,
-  ReferenceLine,
-  ResponsiveContainer,
-  Cell,
-} from "recharts";
 import { format, parseISO } from "date-fns";
 import { fr } from "date-fns/locale";
 import { PageContainer } from "../components/layout/PageContainer";
@@ -79,11 +69,6 @@ export function DashboardPage() {
 
   const periodLabel =
     period === "month" ? "Ce mois-ci" : period === "quarter" ? "Ce trimestre" : "Cette année";
-
-  const maxCa = useMemo(
-    () => Math.max(1, ...(data?.monthlyCa || []).map((m) => m.ca)),
-    [data]
-  );
 
   const isMixed = (data?.caByNature.service || 0) > 0 && (data?.caByNature.goods || 0) > 0;
 
@@ -212,59 +197,11 @@ export function DashboardPage() {
                 <Skeleton height="12rem" />
               ) : (
                 <>
-                  <div style={{ width: "100%", height: 240 }}>
-                    <ResponsiveContainer>
-                      <BarChart data={data?.monthlyCa || []} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                        <XAxis
-                          dataKey="month"
-                          tickFormatter={(m: string) => {
-                            const idx = parseInt(m.slice(5, 7), 10) - 1;
-                            return MONTH_LABELS[idx] || m;
-                          }}
-                          tick={{ fontSize: 10, fill: "var(--muted)" }}
-                          axisLine={false}
-                          tickLine={false}
-                        />
-                        <YAxis
-                          tick={{ fontSize: 10, fill: "var(--muted)" }}
-                          axisLine={false}
-                          tickLine={false}
-                          tickFormatter={(v: number) => `${(v / 1000).toFixed(0)}k`}
-                        />
-                        <Tooltip
-                          formatter={(v: number) => [formatAmount(v), "CA"]}
-                          labelFormatter={(m: string) => {
-                            const idx = parseInt(m.slice(5, 7), 10) - 1;
-                            return MONTH_LABELS[idx] || m;
-                          }}
-                          contentStyle={{
-                            background: "var(--surface)",
-                            border: "1px solid var(--border)",
-                            borderRadius: "0.5rem",
-                            fontSize: "12px",
-                          }}
-                        />
-                        <ReferenceLine
-                          y={VAT_THRESHOLDS.service}
-                          stroke="#f59e0b"
-                          strokeDasharray="4 4"
-                          label={{ value: "Seuil TVA", fill: "#f59e0b", fontSize: 10, position: "right" }}
-                        />
-                        <Bar dataKey="ca" radius={[4, 4, 0, 0]}>
-                          {(data?.monthlyCa || []).map((m, idx) => {
-                            const isCurrent = idx === (data?.monthlyCa.length || 0) - 1;
-                            return (
-                              <Cell
-                                key={m.month}
-                                fill={company.accent_color || "var(--primary)"}
-                                opacity={isCurrent ? 1 : 0.5}
-                              />
-                            );
-                          })}
-                        </Bar>
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </div>
+                  <CaBarChart
+                    data={data?.monthlyCa || []}
+                    accent={company.accent_color}
+                    vatThreshold={VAT_THRESHOLDS.service}
+                  />
                   <div className="flex justify-around mt-4 pt-4 border-t border-border">
                     <div className="text-center">
                       <p className="text-xs text-muted">Meilleur mois</p>
@@ -569,6 +506,141 @@ function FiscalHealthGauge({
       {pct >= 0.9 && (
         <p className="text-xs text-danger mt-1 text-center">Vous approchez du seuil de TVA</p>
       )}
+    </div>
+  );
+}
+
+function CaBarChart({
+  data,
+  accent,
+  vatThreshold,
+}: {
+  data: { month: string; ca: number }[];
+  accent: string;
+  vatThreshold: number;
+}) {
+  const [hoverIdx, setHoverIdx] = useState<number | null>(null);
+  const width = 520;
+  const height = 240;
+  const padTop = 10;
+  const padBottom = 28;
+  const padLeft = 36;
+  const padRight = 12;
+  const chartW = width - padLeft - padRight;
+  const chartH = height - padTop - padBottom;
+  const maxVal = Math.max(vatThreshold, ...data.map((d) => d.ca), 1);
+  const barW = chartW / data.length;
+  const accentColor = accent || "var(--primary)";
+
+  const yTicks = 4;
+  const tickVals = Array.from({ length: yTicks + 1 }, (_, i) => (maxVal / yTicks) * i);
+  const vatY = padTop + chartH - (vatThreshold / maxVal) * chartH;
+
+  return (
+    <div className="w-full">
+      <svg viewBox={`0 0 ${width} ${height}`} className="w-full" style={{ height: 240 }}>
+        {/* Y grid + labels */}
+        {tickVals.map((tv, i) => {
+          const y = padTop + chartH - (tv / maxVal) * chartH;
+          return (
+            <g key={i}>
+              <line
+                x1={padLeft}
+                y1={y}
+                x2={width - padRight}
+                y2={y}
+                stroke="var(--border)"
+                strokeWidth={0.5}
+                opacity={0.5}
+              />
+              <text
+                x={padLeft - 6}
+                y={y + 3}
+                textAnchor="end"
+                fontSize={9}
+                fill="var(--muted)"
+              >
+                {tv >= 1000 ? `${(tv / 1000).toFixed(0)}k` : tv.toFixed(0)}
+              </text>
+            </g>
+          );
+        })}
+
+        {/* VAT threshold line */}
+        <line
+          x1={padLeft}
+          y1={vatY}
+          x2={width - padRight}
+          y2={vatY}
+          stroke="#f59e0b"
+          strokeWidth={1}
+          strokeDasharray="4 4"
+        />
+        <text x={width - padRight - 4} y={vatY - 4} textAnchor="end" fontSize={9} fill="#f59e0b">
+          Seuil TVA
+        </text>
+
+        {/* Bars */}
+        {data.map((d, i) => {
+          const barH = (d.ca / maxVal) * chartH;
+          const x = padLeft + i * barW + barW * 0.15;
+          const w = barW * 0.7;
+          const y = padTop + chartH - barH;
+          const isCurrent = i === data.length - 1;
+          const isHover = hoverIdx === i;
+          return (
+            <g
+              key={d.month}
+              onMouseEnter={() => setHoverIdx(i)}
+              onMouseLeave={() => setHoverIdx(null)}
+            >
+              <rect
+                x={x}
+                y={y}
+                width={w}
+                height={Math.max(barH, 0)}
+                rx={4}
+                fill={accentColor}
+                opacity={isCurrent ? 1 : isHover ? 0.8 : 0.5}
+                className="transition-opacity duration-150"
+              />
+              <text
+                x={x + w / 2}
+                y={height - 10}
+                textAnchor="middle"
+                fontSize={9}
+                fill="var(--muted)"
+              >
+                {MONTH_LABELS[parseInt(d.month.slice(5, 7), 10) - 1] || d.month}
+              </text>
+              {isHover && d.ca > 0 && (
+                <g>
+                  <rect
+                    x={x + w / 2 - 40}
+                    y={y - 24}
+                    width={80}
+                    height={18}
+                    rx={4}
+                    fill="var(--surface)"
+                    stroke="var(--border)"
+                    strokeWidth={0.5}
+                  />
+                  <text
+                    x={x + w / 2}
+                    y={y - 11}
+                    textAnchor="middle"
+                    fontSize={10}
+                    fill="var(--text)"
+                    fontWeight={600}
+                  >
+                    {formatAmount(d.ca)}
+                  </text>
+                </g>
+              )}
+            </g>
+          );
+        })}
+      </svg>
     </div>
   );
 }
