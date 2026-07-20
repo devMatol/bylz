@@ -1,6 +1,6 @@
 import { supabase } from "./supabase";
 import { paymentTermsToDate } from "./date";
-import { parseISO, isValid } from "date-fns";
+import { parseISO, isValid, format } from "date-fns";
 import type {
   Client,
   CatalogItem,
@@ -940,6 +940,134 @@ export async function fetchPayments(
     .order("paid_at", { ascending: false });
   if (error) throw error;
   return (data || []) as Payment[];
+}
+
+// ---------- Dashboard ----------
+
+export interface DashboardData {
+  caEncaisse: number;
+  beneficeFiscal: number;
+  cotisationsUrssaf: number;
+  netEstime: number;
+  monthlyCa: { month: string; ca: number }[];
+  recentInvoices: (Invoice & { client_name: string })[];
+  upcomingEcheances: (Invoice & { client_name: string })[];
+}
+
+const URSSAF_RATES: Record<ActivityType, { rate: number; abattement: number }> = {
+  freelance_bnc: { rate: 0.22, abattement: 0.71 },
+  liberal: { rate: 0.22, abattement: 0.34 },
+  artisan_bic: { rate: 0.123, abattement: 0.71 },
+  commerce: { rate: 0.123, abattement: 0.71 },
+};
+
+export async function fetchDashboardData(
+  companyId: string,
+  activityType: ActivityType
+): Promise<DashboardData> {
+  const { data: invoices, error } = await supabase
+    .from("invoices")
+    .select(
+      "id, company_id, client_id, quote_id, number, type, status, pa_status, pa_rejection_reason, issue_date, due_date, payment_terms, total_ht, total_vat, total_ttc, paid_at, paid_amount, payment_method, stripe_payment_link, facturx_pdf_url, ereporting_status, note, created_at, clients(name)"
+    )
+    .eq("company_id", companyId)
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+
+  const invoiceRows = (invoices || []).map((i: any) => ({
+    id: i.id,
+    company_id: i.company_id,
+    client_id: i.client_id,
+    quote_id: i.quote_id,
+    number: i.number,
+    type: i.type,
+    status: i.status,
+    pa_status: i.pa_status,
+    pa_rejection_reason: i.pa_rejection_reason,
+    issue_date: i.issue_date,
+    due_date: i.due_date,
+    payment_terms: i.payment_terms,
+    total_ht: Number(i.total_ht),
+    total_vat: Number(i.total_vat),
+    total_ttc: Number(i.total_ttc),
+    paid_at: i.paid_at,
+    paid_amount: i.paid_amount != null ? Number(i.paid_amount) : null,
+    payment_method: i.payment_method,
+    stripe_payment_link: i.stripe_payment_link,
+    facturx_pdf_url: i.facturx_pdf_url,
+    ereporting_status: i.ereporting_status,
+    note: i.note,
+    created_at: i.created_at,
+    client_name: i.clients?.name || "—",
+  })) as (Invoice & { client_name: string })[];
+
+  const invoiceIds = invoiceRows.map((i) => i.id);
+
+  let payments: Payment[] = [];
+  if (invoiceIds.length > 0) {
+    const { data: pmt, error: pErr } = await supabase
+      .from("payments")
+      .select("id, invoice_id, amount, method, paid_at, source")
+      .in("invoice_id", invoiceIds);
+    if (pErr) throw pErr;
+    payments = (pmt || []) as Payment[];
+  }
+
+  const now = new Date();
+  const yearStart = new Date(now.getFullYear(), 0, 1);
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+
+  let caEncaisse = 0;
+  let caEncaisseYear = 0;
+  const monthlyMap = new Map<string, number>();
+
+  for (let m = 11; m >= 0; m--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - m, 1);
+    monthlyMap.set(format(d, "yyyy-MM"), 0);
+  }
+
+  for (const p of payments) {
+    const amt = Number(p.amount) || 0;
+    const pdate = parseISO(p.paid_at);
+    if (!isValid(pdate)) continue;
+    if (pdate >= monthStart) caEncaisse += amt;
+    if (pdate >= yearStart) caEncaisseYear += amt;
+    const key = format(pdate, "yyyy-MM");
+    if (monthlyMap.has(key)) monthlyMap.set(key, (monthlyMap.get(key) || 0) + amt);
+  }
+
+  const { rate, abattement } = URSSAF_RATES[activityType] || URSSAF_RATES.freelance_bnc;
+  const beneficeFiscal = caEncaisseYear * (1 - abattement);
+  const cotisationsUrssaf = beneficeFiscal * rate;
+  const netEstime = caEncaisseYear - cotisationsUrssaf;
+
+  const recentInvoices = invoiceRows
+    .filter((i) => i.status !== "draft" && i.type !== "credit_note")
+    .slice(0, 5);
+
+  const todayISO = now.toISOString().slice(0, 10);
+  const upcomingEcheances = invoiceRows
+    .filter(
+      (i) =>
+        (i.status === "pending" || i.status === "late") &&
+        i.type !== "credit_note"
+    )
+    .sort((a, b) => (a.due_date < b.due_date ? -1 : 1))
+    .slice(0, 5);
+  void todayISO;
+
+  return {
+    caEncaisse,
+    beneficeFiscal: Math.max(0, beneficeFiscal),
+    cotisationsUrssaf,
+    netEstime,
+    monthlyCa: Array.from(monthlyMap.entries()).map(([month, ca]) => ({
+      month,
+      ca,
+    })),
+    recentInvoices,
+    upcomingEcheances,
+  };
 }
 
 export async function downloadPdf(
