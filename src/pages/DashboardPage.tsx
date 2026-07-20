@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { Component, useEffect, useState, useCallback, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Receipt,
@@ -6,19 +6,16 @@ import {
   Landmark,
   Wallet,
   CalendarClock,
-  FileText,
   Plus,
   BarChart3,
 } from "lucide-react";
-import { format, parseISO } from "date-fns";
-import { fr } from "date-fns/locale";
+import { parseISO, isValid } from "date-fns";
 import { PageContainer } from "../components/layout/PageContainer";
 import { Card } from "../components/ui/Card";
 import { Skeleton } from "../components/ui/Skeleton";
 import { StatCard } from "../components/shared/StatCard";
 import { Amount } from "../components/shared/Amount";
 import { StatusBadge } from "../components/shared/StatusBadge";
-import { EmptyState } from "../components/shared/EmptyState";
 import { useAuth } from "../contexts/AuthContext";
 import { useToast } from "../components/ui/Toast";
 import {
@@ -29,12 +26,24 @@ import {
   type DashboardPeriod,
 } from "../lib/api";
 import { formatAmount, cn } from "../lib/utils";
-import { formatDateLong, todayISO } from "../lib/date";
+import { formatDateLong, todayISO, safeFormatDate } from "../lib/date";
 
 const MONTH_LABELS = [
   "janv.", "févr.", "mars", "avr.", "mai", "juin",
   "juil.", "août", "sept.", "oct.", "nov.", "déc.",
 ];
+
+function safeNum(n: unknown, fallback = 0): number {
+  const v = Number(n);
+  return Number.isFinite(v) ? v : fallback;
+}
+
+function sanitizeMonthlyCa(data: { month: string; ca: number }[] | undefined): { month: string; ca: number }[] {
+  if (!Array.isArray(data) || data.length === 0) return [];
+  return data
+    .filter((d) => d && d.month && typeof d.month === "string")
+    .map((d) => ({ month: d.month, ca: safeNum(d.ca) }));
+}
 
 export function DashboardPage() {
   const { company, profile } = useAuth();
@@ -43,10 +52,12 @@ export function DashboardPage() {
   const [period, setPeriod] = useState<DashboardPeriod>("month");
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     if (!company) return;
     setLoading(true);
+    setLoadError(null);
     try {
       const d = await fetchDashboardData(
         company.id,
@@ -56,7 +67,9 @@ export function DashboardPage() {
       );
       setData(d);
     } catch (err) {
-      toast(err instanceof Error ? err.message : "Erreur", "danger");
+      const msg = err instanceof Error ? err.message : "Erreur";
+      setLoadError(msg);
+      toast(msg, "danger");
       setData(null);
     } finally {
       setLoading(false);
@@ -70,7 +83,8 @@ export function DashboardPage() {
   const periodLabel =
     period === "month" ? "Ce mois-ci" : period === "quarter" ? "Ce trimestre" : "Cette année";
 
-  const isMixed = (data?.caByNature.service || 0) > 0 && (data?.caByNature.goods || 0) > 0;
+  const isMixed =
+    safeNum(data?.caByNature.service) > 0 && safeNum(data?.caByNature.goods) > 0;
 
   if (!company) return null;
 
@@ -108,14 +122,21 @@ export function DashboardPage() {
         </div>
       }
     >
-      {!loading && data && !data.hasData ? (
-        <EmptyState
-          icon={<BarChart3 className="w-8 h-8" />}
-          title="Aucune donnée pour l'instant"
-          description="Émettez votre première facture pour voir vos statistiques apparaître ici."
-          ctaLabel="Créer une facture"
-          onCta={() => navigate("/invoices/new")}
-        />
+      {loadError ? (
+        <Card className="p-8 text-center">
+          <div className="w-12 h-12 rounded-card bg-danger/10 flex items-center justify-center text-danger mx-auto mb-4">
+            <BarChart3 className="w-6 h-6" />
+          </div>
+          <h3 className="text-lg font-bold text-text mb-2">Données indisponibles</h3>
+          <p className="text-sm text-muted mb-4">{loadError}</p>
+          <button
+            type="button"
+            onClick={() => void load()}
+            className="rounded-pill px-5 h-10 text-sm font-semibold text-white bg-primary hover:opacity-90 transition-opacity"
+          >
+            Réessayer
+          </button>
+        </Card>
       ) : (
         <>
           {/* Row 1 — StatCards */}
@@ -131,10 +152,10 @@ export function DashboardPage() {
               <>
                 <StatCard
                   label="CA encaissé"
-                  value={data.caEncaisse}
+                  value={safeNum(data.caEncaisse)}
                   icon={<TrendingUp className="w-4 h-4" />}
                   delta={
-                    data.caDeltaPct != null
+                    data.caDeltaPct != null && Number.isFinite(data.caDeltaPct)
                       ? {
                           value: `${data.caDeltaPct >= 0 ? "+" : ""}${data.caDeltaPct}% vs période précédente`,
                           positive: data.caDeltaPct >= 0,
@@ -144,17 +165,17 @@ export function DashboardPage() {
                 />
                 <StatCard
                   label="Bénéfice fiscal"
-                  value={data.beneficeFiscal}
+                  value={safeNum(data.beneficeFiscal)}
                   icon={<Wallet className="w-4 h-4" />}
                 />
                 <StatCard
                   label="Cotisations URSSAF"
-                  value={data.cotisationsUrssaf}
+                  value={safeNum(data.cotisationsUrssaf)}
                   icon={<Landmark className="w-4 h-4" />}
                 />
                 <StatCard
                   label="Net estimé"
-                  value={data.netEstime}
+                  value={safeNum(data.netEstime)}
                   icon={<Receipt className="w-4 h-4" />}
                 />
               </>
@@ -166,11 +187,11 @@ export function DashboardPage() {
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6 -mt-2">
               <p className="text-xs text-muted text-center">{periodLabel}</p>
               <p className="text-xs text-muted text-center">
-                Après abattement de {data.abattementPct}%
+                Après abattement de {safeNum(data.abattementPct)}%
               </p>
               <p className="text-xs text-muted text-center">
                 {data.nextUrssafDueDate
-                  ? `Prochaine déclaration: ${formatDateLong(data.nextUrssafDueDate)}`
+                  ? `Prochaine déclaration: ${safeFormatDate(data.nextUrssafDueDate)}`
                   : "Prochaine déclaration à venir"}
               </p>
               <p className="text-xs text-muted text-center">
@@ -196,9 +217,9 @@ export function DashboardPage() {
               {loading ? (
                 <Skeleton height="12rem" />
               ) : (
-                <>
+                <ChartErrorBoundary>
                   <CaBarChart
-                    data={data?.monthlyCa || []}
+                    data={sanitizeMonthlyCa(data?.monthlyCa)}
                     accent={company.accent_color}
                     vatThreshold={VAT_THRESHOLDS.service}
                   />
@@ -206,19 +227,19 @@ export function DashboardPage() {
                     <div className="text-center">
                       <p className="text-xs text-muted">Meilleur mois</p>
                       <p className="text-sm font-bold text-text">
-                        {data?.bestMonth
-                          ? `${MONTH_LABELS[parseInt(data.bestMonth.month.slice(5, 7), 10) - 1]} — ${formatAmount(data.bestMonth.ca)}`
+                        {data?.bestMonth && data.bestMonth.ca > 0
+                          ? `${MONTH_LABELS[parseInt(data.bestMonth.month.slice(5, 7), 10) - 1] ?? data.bestMonth.month} — ${formatAmount(safeNum(data.bestMonth.ca))}`
                           : "—"}
                       </p>
                     </div>
                     <div className="text-center">
                       <p className="text-xs text-muted">Moyenne mensuelle</p>
                       <p className="text-sm font-bold text-text">
-                        {formatAmount(data?.monthlyAverage || 0)}
+                        {formatAmount(safeNum(data?.monthlyAverage))}
                       </p>
                     </div>
                   </div>
-                </>
+                </ChartErrorBoundary>
               )}
             </Card>
 
@@ -231,20 +252,20 @@ export function DashboardPage() {
                 <div className="flex flex-col gap-4">
                   <NatureBar
                     label="Services"
-                    value={data?.caByNature.service || 0}
+                    value={safeNum(data?.caByNature.service)}
                     threshold={VAT_THRESHOLDS.service}
                     accent={company.accent_color}
                   />
                   <NatureBar
                     label="Vente de biens"
-                    value={data?.caByNature.goods || 0}
+                    value={safeNum(data?.caByNature.goods)}
                     threshold={VAT_THRESHOLDS.goods}
                     accent={company.accent_color}
                   />
                   <div className="pt-2 border-t border-border text-xs text-muted space-y-1">
                     <div className="flex justify-between">
                       <span>CA annuel services</span>
-                      <span className="font-semibold text-text">{formatAmount(data?.caByNature.service || 0)}</span>
+                      <span className="font-semibold text-text">{formatAmount(safeNum(data?.caByNature.service))}</span>
                     </div>
                     <div className="flex justify-between">
                       <span>Seuil micro services</span>
@@ -252,7 +273,7 @@ export function DashboardPage() {
                     </div>
                     <div className="flex justify-between">
                       <span>CA annuel biens</span>
-                      <span className="font-semibold text-text">{formatAmount(data?.caByNature.goods || 0)}</span>
+                      <span className="font-semibold text-text">{formatAmount(safeNum(data?.caByNature.goods))}</span>
                     </div>
                     <div className="flex justify-between">
                       <span>Seuil micro biens</span>
@@ -262,7 +283,7 @@ export function DashboardPage() {
                 </div>
               ) : (
                 <FiscalHealthGauge
-                  ca={data?.yearlyCa || 0}
+                  ca={safeNum(data?.yearlyCa)}
                   threshold={VAT_THRESHOLDS.service}
                   accent={company.accent_color}
                 />
@@ -306,12 +327,12 @@ export function DashboardPage() {
                           {inv.client_name}
                         </p>
                         <p className="text-xs text-muted">
-                          {inv.number.startsWith("DRAFT-") ? "Brouillon" : inv.number}{" "}
-                          · {formatDateLong(inv.issue_date)}
+                          {inv.number?.startsWith("DRAFT-") ? "Brouillon" : inv.number}{" "}
+                          · {safeFormatDate(inv.issue_date)}
                         </p>
                       </div>
                       <div className="flex items-center gap-3 flex-shrink-0">
-                        <Amount value={inv.total_ttc} size="sm" />
+                        <Amount value={safeNum(inv.total_ttc)} size="sm" />
                         <StatusBadge status={inv.status} />
                       </div>
                     </button>
@@ -344,9 +365,12 @@ export function DashboardPage() {
                   {(data?.upcomingEcheances || []).map((inv) => {
                     const today = todayISO();
                     const isLate = inv.due_date < today;
-                    const days = Math.ceil(
-                      (new Date(inv.due_date).getTime() - new Date(today).getTime()) / 86400000
-                    );
+                    const dueDate = parseISO(inv.due_date);
+                    const todayDate = parseISO(today);
+                    const days =
+                      isValid(dueDate) && isValid(todayDate)
+                        ? Math.ceil((dueDate.getTime() - todayDate.getTime()) / 86400000)
+                        : 0;
                     return (
                       <button
                         key={inv.id}
@@ -364,11 +388,11 @@ export function DashboardPage() {
                               isLate ? "text-danger font-semibold" : "text-muted"
                             )}
                           >
-                            {inv.number} · {formatDateLong(inv.due_date)}
+                            {inv.number} · {safeFormatDate(inv.due_date)}
                           </p>
                         </div>
                         <div className="flex items-center gap-3 flex-shrink-0">
-                          <Amount value={inv.total_ttc} size="sm" />
+                          <Amount value={safeNum(inv.total_ttc)} size="sm" />
                           <CountdownPill days={days} isLate={isLate} />
                         </div>
                       </button>
@@ -388,8 +412,30 @@ export function DashboardPage() {
   );
 }
 
+class ChartErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean }> {
+  state = { hasError: false };
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+  componentDidCatch(error: Error) {
+    console.error("Chart render error:", error);
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="flex flex-col items-center justify-center py-12 text-center">
+          <BarChart3 className="w-8 h-8 text-muted mb-2" />
+          <p className="text-sm text-muted">Graphique indisponible</p>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 function CountdownPill({ days, isLate }: { days: number; isLate: boolean }) {
-  const absDays = Math.abs(days);
+  const safeDays = Number.isFinite(days) ? days : 0;
+  const absDays = Math.abs(safeDays);
   const color = isLate
     ? "bg-danger/15 text-danger"
     : absDays < 7
@@ -397,9 +443,7 @@ function CountdownPill({ days, isLate }: { days: number; isLate: boolean }) {
     : absDays < 15
     ? "bg-warning/15 text-warning"
     : "bg-surface-hover text-muted";
-  const label = isLate
-    ? `${absDays}j de retard`
-    : `J-${absDays}`;
+  const label = isLate ? `${absDays}j de retard` : `J-${absDays}`;
   return (
     <span className={cn("text-xs font-semibold px-2 py-0.5 rounded-pill", color)}>
       {label}
@@ -418,7 +462,8 @@ function NatureBar({
   threshold: number;
   accent: string;
 }) {
-  const pct = Math.min((value / threshold) * 100, 100);
+  const safeThreshold = threshold > 0 ? threshold : 1;
+  const pct = Math.min((value / safeThreshold) * 100, 100);
   const color =
     pct < 70 ? accent || "var(--primary)" : pct < 90 ? "#f59e0b" : "#ef4444";
   return (
@@ -432,7 +477,7 @@ function NatureBar({
       <div className="h-3 rounded-full bg-surface-hover overflow-hidden">
         <div
           className="h-full rounded-full transition-all duration-500"
-          style={{ width: `${pct}%`, backgroundColor: color }}
+          style={{ width: `${Math.max(0, Math.min(pct, 100))}%`, backgroundColor: color }}
         />
       </div>
       {pct >= 90 && (
@@ -451,7 +496,8 @@ function FiscalHealthGauge({
   threshold: number;
   accent: string;
 }) {
-  const pct = Math.min(ca / threshold, 1);
+  const safeThreshold = threshold > 0 ? threshold : 1;
+  const pct = Math.min(ca / safeThreshold, 1);
   const angle = pct * 270;
   const radius = 52;
   const circumference = 2 * Math.PI * radius;
@@ -461,11 +507,7 @@ function FiscalHealthGauge({
   const status =
     pct < 0.5 ? "Sain" : pct < 0.8 ? "Attention" : pct < 1 ? "Limite" : "Dépassé";
   const statusColor =
-    pct < 0.5
-      ? "text-success"
-      : pct < 0.8
-      ? "text-warning"
-      : "text-danger";
+    pct < 0.5 ? "text-success" : pct < 0.8 ? "text-warning" : "text-danger";
   const strokeColor = pct < 0.7 ? accent || "var(--primary)" : pct < 0.9 ? "#f59e0b" : "#ef4444";
 
   return (
@@ -520,6 +562,8 @@ function CaBarChart({
   vatThreshold: number;
 }) {
   const [hoverIdx, setHoverIdx] = useState<number | null>(null);
+  const safeData = Array.isArray(data) && data.length > 0 ? data : [];
+  const safeVat = safeNum(vatThreshold, VAT_THRESHOLDS.service);
   const width = 520;
   const height = 240;
   const padTop = 10;
@@ -528,13 +572,22 @@ function CaBarChart({
   const padRight = 12;
   const chartW = width - padLeft - padRight;
   const chartH = height - padTop - padBottom;
-  const maxVal = Math.max(vatThreshold, ...data.map((d) => d.ca), 1);
-  const barW = chartW / data.length;
+  const maxCa = safeData.length > 0 ? Math.max(...safeData.map((d) => safeNum(d.ca))) : 0;
+  const maxVal = Math.max(safeVat, maxCa, 1);
+  const barW = safeData.length > 0 ? chartW / safeData.length : chartW;
   const accentColor = accent || "var(--primary)";
 
   const yTicks = 4;
   const tickVals = Array.from({ length: yTicks + 1 }, (_, i) => (maxVal / yTicks) * i);
-  const vatY = padTop + chartH - (vatThreshold / maxVal) * chartH;
+  const vatY = padTop + chartH - (safeVat / maxVal) * chartH;
+
+  if (safeData.length === 0) {
+    return (
+      <div className="flex items-center justify-center py-12 text-sm text-muted">
+        Aucune donnée à afficher
+      </div>
+    );
+  }
 
   return (
     <div className="w-full">
@@ -581,13 +634,16 @@ function CaBarChart({
         </text>
 
         {/* Bars */}
-        {data.map((d, i) => {
-          const barH = (d.ca / maxVal) * chartH;
+        {safeData.map((d, i) => {
+          const ca = safeNum(d.ca);
+          const barH = (ca / maxVal) * chartH;
           const x = padLeft + i * barW + barW * 0.15;
           const w = barW * 0.7;
           const y = padTop + chartH - barH;
-          const isCurrent = i === data.length - 1;
+          const isCurrent = i === safeData.length - 1;
           const isHover = hoverIdx === i;
+          const monthIdx = parseInt(d.month.slice(5, 7), 10) - 1;
+          const monthLabel = MONTH_LABELS[monthIdx] || d.month;
           return (
             <g
               key={d.month}
@@ -611,9 +667,9 @@ function CaBarChart({
                 fontSize={9}
                 fill="var(--muted)"
               >
-                {MONTH_LABELS[parseInt(d.month.slice(5, 7), 10) - 1] || d.month}
+                {monthLabel}
               </text>
-              {isHover && d.ca > 0 && (
+              {isHover && ca > 0 && (
                 <g>
                   <rect
                     x={x + w / 2 - 40}
@@ -633,7 +689,7 @@ function CaBarChart({
                     fill="var(--text)"
                     fontWeight={600}
                   >
-                    {formatAmount(d.ca)}
+                    {formatAmount(ca)}
                   </text>
                 </g>
               )}

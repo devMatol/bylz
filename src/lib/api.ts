@@ -1101,8 +1101,9 @@ export async function fetchDashboardData(
     monthlyMap.set(format(d, "yyyy-MM"), 0);
   }
 
-  for (const p of payments) {
+  for (const p of payments || []) {
     const amt = Number(p.amount) || 0;
+    if (!Number.isFinite(amt)) continue;
     const pdate = parseISO(p.paid_at);
     if (!isValid(pdate)) continue;
     if (pdate >= start) caEncaisse += amt;
@@ -1162,7 +1163,9 @@ export async function fetchDashboardData(
     .sort((a, b) => (a.due_date < b.due_date ? -1 : 1))
     .slice(0, 5);
 
-  const monthlyArr = Array.from(monthlyMap.entries()).map(([month, ca]) => ({ month, ca }));
+  const monthlyArr = Array.from(monthlyMap.entries())
+    .map(([month, ca]) => ({ month, ca: Number.isFinite(ca) ? ca : 0 }))
+    .filter((m) => m.month && Number.isFinite(m.ca));
   const bestMonth = monthlyArr.reduce<{ month: string; ca: number } | null>(
     (best, m) => (!best || m.ca > best.ca ? m : best),
     null
@@ -1171,7 +1174,7 @@ export async function fetchDashboardData(
     ? monthlyArr.reduce((s, m) => s + m.ca, 0) / monthlyArr.length
     : 0;
 
-  const hasData = payments.length > 0 || invoiceRows.length > 0;
+  const hasData = (payments?.length || 0) > 0 || (invoiceRows?.length || 0) > 0;
 
   return {
     caEncaisse,
