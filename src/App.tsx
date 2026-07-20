@@ -33,35 +33,40 @@ function App() {
     <ToastProvider>
       <AuthProvider>
         <BrowserRouter>
-          <Routes>
-            <Route
-              path="/login"
-              element={
-                <PublicOnlyRoute>
-                  <LoginPage />
-                </PublicOnlyRoute>
-              }
-            />
-            <Route
-              path="/signup"
-              element={
-                <PublicOnlyRoute>
-                  <SignupPage />
-                </PublicOnlyRoute>
-              }
-            />
-            <Route
-              path="/onboarding"
-              element={
-                <OnboardingRoute>
-                  <OnboardingPage />
-                </OnboardingRoute>
-              }
-            />
-            <Route path="/admin" element={<AdminPage />} />
-            <Route element={<ProtectedRoute />}>
-              <NotificationsProvider>
-                <Route element={<AppShell />}>
+          <NotificationsProvider>
+            <Routes>
+              <Route
+                path="/login"
+                element={
+                  <PublicOnlyRoute>
+                    <LoginPage />
+                  </PublicOnlyRoute>
+                }
+              />
+              <Route
+                path="/signup"
+                element={
+                  <PublicOnlyRoute>
+                    <SignupPage />
+                  </PublicOnlyRoute>
+                }
+              />
+              <Route
+                path="/onboarding"
+                element={
+                  <OnboardingRoute>
+                    <OnboardingPage />
+                  </OnboardingRoute>
+                }
+              />
+              <Route path="/admin" element={<AdminPage />} />
+              <Route
+                element={
+                  <ProtectedRoute>
+                    <AppShell />
+                  </ProtectedRoute>
+                }
+              >
                 <Route path="/" element={<DashboardPage />} />
                 <Route path="/quotes" element={<QuotesPage />} />
                 <Route path="/quotes/new" element={<QuoteNewPage />} />
@@ -85,10 +90,9 @@ function App() {
                   />
                 )}
               </Route>
-              </NotificationsProvider>
-            </Route>
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </NotificationsProvider>
         </BrowserRouter>
       </AuthProvider>
     </ToastProvider>
