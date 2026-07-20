@@ -9,9 +9,10 @@ interface LineEditorProps {
   lines: LineInput[];
   onChange: (lines: LineInput[]) => void;
   catalog: CatalogItem[];
+  allowNegativePrice?: boolean;
 }
 
-export function LineEditor({ lines, onChange, catalog }: LineEditorProps) {
+export function LineEditor({ lines, onChange, catalog, allowNegativePrice = false }: LineEditorProps) {
   function update(idx: number, patch: Partial<LineInput>) {
     onChange(lines.map((l, i) => (i === idx ? { ...l, ...patch } : l)));
   }
@@ -56,6 +57,7 @@ export function LineEditor({ lines, onChange, catalog }: LineEditorProps) {
           key={idx}
           line={line}
           catalog={catalog}
+          allowNegativePrice={allowNegativePrice}
           onChange={(patch) => update(idx, patch)}
           onRemove={() => remove(idx)}
           onUp={() => move(idx, -1)}
@@ -80,6 +82,7 @@ export function LineEditor({ lines, onChange, catalog }: LineEditorProps) {
 interface LineRowProps {
   line: LineInput;
   catalog: CatalogItem[];
+  allowNegativePrice: boolean;
   onChange: (patch: Partial<LineInput>) => void;
   onRemove: () => void;
   onUp: () => void;
@@ -91,6 +94,7 @@ interface LineRowProps {
 function LineRow({
   line,
   catalog,
+  allowNegativePrice,
   onChange,
   onRemove,
   onUp,
@@ -224,10 +228,13 @@ function LineRow({
           <input
             type="number"
             step="0.01"
-            min="0"
+            min={allowNegativePrice ? undefined : "0"}
             value={line.unit_price}
             onChange={(e) => onChange({ unit_price: parseFloat(e.target.value) || 0 })}
-            className="w-full h-9 rounded bg-bg border border-border px-2 pr-5 text-sm text-text text-right tabular-nums input-focus"
+            className={cn(
+              "w-full h-9 rounded bg-bg border border-border px-2 pr-5 text-sm text-text text-right tabular-nums input-focus",
+              allowNegativePrice && line.unit_price < 0 && "text-danger"
+            )}
           />
           <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-muted pointer-events-none">€</span>
         </div>
@@ -318,10 +325,13 @@ function LineRow({
               <input
                 type="number"
                 step="0.01"
-                min="0"
+                min={allowNegativePrice ? undefined : "0"}
                 value={line.unit_price}
                 onChange={(e) => onChange({ unit_price: parseFloat(e.target.value) || 0 })}
-                className="w-full h-9 rounded bg-bg border border-border px-2 pr-5 text-sm text-text text-right tabular-nums input-focus"
+                className={cn(
+                  "w-full h-9 rounded bg-bg border border-border px-2 pr-5 text-sm text-text text-right tabular-nums input-focus",
+                  allowNegativePrice && line.unit_price < 0 && "text-danger"
+                )}
               />
               <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-muted pointer-events-none">€</span>
             </div>

@@ -51,6 +51,7 @@ export function InvoiceNewPage() {
   const [emitOpen, setEmitOpen] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [loading, setLoading] = useState(isEdit);
+  const [invoiceType, setInvoiceType] = useState<"invoice" | "credit_note">("invoice");
 
   const load = useCallback(async () => {
     if (!company) return;
@@ -77,6 +78,7 @@ export function InvoiceNewPage() {
         setDueDate(data.invoice.due_date);
         setPaymentTerms(data.invoice.payment_terms);
         setNote(data.invoice.note || "");
+        setInvoiceType(data.invoice.type || "invoice");
         setLines(
           data.lines.map((l) => ({
             id: l.id,
@@ -116,10 +118,11 @@ export function InvoiceNewPage() {
 
   const totals = computeTotals(lines, company.vat_regime);
   const selectedClient = clients.find((c) => c.id === clientId) || null;
+  const isCreditNote = invoiceType === "credit_note";
   const linesValid =
     lines.length > 0 &&
     lines.every(
-      (l) => l.description && l.quantity > 0 && l.unit_price >= 0
+      (l) => l.description && l.quantity > 0 && (isCreditNote || l.unit_price >= 0)
     );
   const datesValid = isValidDate(issueDate) && isValidDate(dueDate);
   const canSubmit = !!clientId && linesValid && datesValid;
@@ -241,7 +244,7 @@ export function InvoiceNewPage() {
         {/* Lines */}
         <section className="border border-border rounded-card p-4 card-shadow">
           <h3 className="text-sm font-bold text-text mb-3">Lignes</h3>
-          <LineEditor lines={lines} onChange={setLines} catalog={catalog} />
+          <LineEditor lines={lines} onChange={setLines} catalog={catalog} allowNegativePrice={isCreditNote} />
           {lines.length > 0 && (
             <div className="mt-3 pt-3 border-t border-border flex flex-col gap-1.5 text-sm">
               <div className="flex justify-between text-muted">
