@@ -1,8 +1,8 @@
-import { Navigate } from "react-router-dom";
+import { Navigate, Outlet } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import { Skeleton } from "../ui/Skeleton";
 
-export function PublicOnlyRoute({ children }: { children: React.ReactNode }) {
+export function PublicOnlyRoute() {
   const { user, company, loading } = useAuth();
 
   if (loading) {
@@ -17,5 +17,5 @@ export function PublicOnlyRoute({ children }: { children: React.ReactNode }) {
     return <Navigate to={company ? "/" : "/onboarding"} replace />;
   }
 
-  return <>{children}</>;
+  return <Outlet />;
 }

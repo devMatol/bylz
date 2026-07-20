@@ -35,61 +35,46 @@ function App() {
         <BrowserRouter>
           <NotificationsProvider>
             <Routes>
-              <Route
-                path="/login"
-                element={
-                  <PublicOnlyRoute>
-                    <LoginPage />
-                  </PublicOnlyRoute>
-                }
-              />
-              <Route
-                path="/signup"
-                element={
-                  <PublicOnlyRoute>
-                    <SignupPage />
-                  </PublicOnlyRoute>
-                }
-              />
-              <Route
-                path="/onboarding"
-                element={
-                  <OnboardingRoute>
-                    <OnboardingPage />
-                  </OnboardingRoute>
-                }
-              />
-              <Route path="/admin" element={<AdminPage />} />
-              <Route
-                element={
-                  <ProtectedRoute>
-                    <AppShell />
-                  </ProtectedRoute>
-                }
-              >
-                <Route path="/" element={<DashboardPage />} />
-                <Route path="/quotes" element={<QuotesPage />} />
-                <Route path="/quotes/new" element={<QuoteNewPage />} />
-                <Route path="/quotes/:id" element={<QuoteDetailPage />} />
-                <Route path="/invoices" element={<InvoicesPage />} />
-                <Route path="/invoices/new" element={<InvoiceNewPage />} />
-                <Route path="/invoices/:id" element={<InvoiceDetailPage />} />
-                <Route path="/clients" element={<ClientsPage />} />
-                <Route path="/clients/:id" element={<ClientDetailPage />} />
-                <Route path="/catalog" element={<CatalogPage />} />
-                <Route path="/urssaf" element={<UrssafPage />} />
-                <Route path="/settings" element={<SettingsPage />} />
-                {import.meta.env.DEV && (
-                  <Route
-                    path="/dev-kitchen-sink"
-                    element={
-                      <Suspense fallback={<div className="p-10">Chargement…</div>}>
-                        <KitchenSinkPage />
-                      </Suspense>
-                    }
-                  />
-                )}
+              {/* public — standalone layout, no AppShell */}
+              <Route element={<PublicOnlyRoute />}>
+                <Route path="/login" element={<LoginPage />} />
+                <Route path="/signup" element={<SignupPage />} />
               </Route>
+
+              {/* onboarding — authenticated, standalone layout */}
+              <Route path="/onboarding" element={<OnboardingRoute />}>
+                <Route index element={<OnboardingPage />} />
+              </Route>
+
+              {/* protected app — AppShell wraps ALL of these */}
+              <Route element={<ProtectedRoute />}>
+                <Route element={<AppShell />}>
+                  <Route path="/" element={<DashboardPage />} />
+                  <Route path="/quotes" element={<QuotesPage />} />
+                  <Route path="/quotes/new" element={<QuoteNewPage />} />
+                  <Route path="/quotes/:id" element={<QuoteDetailPage />} />
+                  <Route path="/invoices" element={<InvoicesPage />} />
+                  <Route path="/invoices/new" element={<InvoiceNewPage />} />
+                  <Route path="/invoices/:id" element={<InvoiceDetailPage />} />
+                  <Route path="/clients" element={<ClientsPage />} />
+                  <Route path="/clients/:id" element={<ClientDetailPage />} />
+                  <Route path="/catalog" element={<CatalogPage />} />
+                  <Route path="/urssaf" element={<UrssafPage />} />
+                  <Route path="/settings" element={<SettingsPage />} />
+                  <Route path="/admin" element={<AdminPage />} />
+                  {import.meta.env.DEV && (
+                    <Route
+                      path="/dev-kitchen-sink"
+                      element={
+                        <Suspense fallback={<div className="p-10">Chargement…</div>}>
+                          <KitchenSinkPage />
+                        </Suspense>
+                      }
+                    />
+                  )}
+                </Route>
+              </Route>
+
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </NotificationsProvider>
