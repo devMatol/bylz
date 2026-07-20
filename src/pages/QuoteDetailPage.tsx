@@ -23,8 +23,10 @@ import {
   duplicateQuote,
   convertQuoteToInvoice,
   quoteHasInvoice,
+  sendDocumentByEmail,
 } from "../lib/api";
 import { formatDateLong } from "../lib/date";
+import { formatAmount } from "../lib/utils";
 import type { Quote, QuoteLine, Client } from "../types/database";
 
 export function QuoteDetailPage() {
@@ -79,6 +81,20 @@ export function QuoteDetailPage() {
     setBusy(true);
     try {
       await updateQuoteStatus(company.id, quote.id, status);
+      if (status === "sent" && client?.email) {
+        try {
+          const amount = formatAmount(Number(quote.total_ttc));
+          await sendDocumentByEmail("quote", quote.id, client.email, {
+            subject: `Devis ${quote.number} — ${company.commercial_name || company.legal_name}`,
+            body: `Bonjour ${client.name},\n\nVeuillez trouver ci-joint mon devis ${quote.number} d'un montant de ${amount}.\n\nJe reste à votre disposition pour toute question.\n\nCordialement,\n${company.commercial_name || company.legal_name}`,
+          });
+          toast("Devis envoyé par email au client", "info");
+        } catch (err) {
+          toast(err instanceof Error ? `Email non envoyé : ${err.message}` : "Email non envoyé", "danger");
+        }
+      } else if (status === "sent" && !client?.email) {
+        toast("Client sans email — document non envoyé", "info");
+      }
       toast("Statut mis à jour", "success");
       void load();
     } catch (err) {

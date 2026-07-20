@@ -196,6 +196,13 @@ export interface TicketMessage {
   created_at: string;
 }
 
+export interface InvoiceReminder {
+  id: string;
+  invoice_id: string;
+  sent_at: string;
+  days_late: number;
+}
+
 export interface AuditLog {
   id: string;
   admin_id: string;

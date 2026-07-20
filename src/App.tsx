@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AppShell } from "./components/layout/AppShell";
 import { ToastProvider } from "./components/ui/Toast";
 import { AuthProvider } from "./contexts/AuthContext";
+import { NotificationsProvider } from "./contexts/NotificationsContext";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import { PublicOnlyRoute } from "./components/auth/PublicOnlyRoute";
 import { OnboardingRoute } from "./components/auth/OnboardingRoute";
@@ -59,7 +60,8 @@ function App() {
             />
             <Route path="/admin" element={<AdminPage />} />
             <Route element={<ProtectedRoute />}>
-              <Route element={<AppShell />}>
+              <NotificationsProvider>
+                <Route element={<AppShell />}>
                 <Route path="/" element={<DashboardPage />} />
                 <Route path="/quotes" element={<QuotesPage />} />
                 <Route path="/quotes/new" element={<QuoteNewPage />} />
@@ -83,6 +85,7 @@ function App() {
                   />
                 )}
               </Route>
+              </NotificationsProvider>
             </Route>
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>

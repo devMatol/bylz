@@ -1,6 +1,7 @@
 import { supabase } from "./supabase";
 import { paymentTermsToDate } from "./date";
 import { parseISO, isValid, format } from "date-fns";
+import { fr } from "date-fns/locale";
 import type {
   Client,
   CatalogItem,
@@ -15,6 +16,10 @@ import type {
   ItemNature,
   ClientType,
   PaymentMethod,
+  ActivityType,
+  UrssafFreq,
+  InvoiceReminder,
+  UrssafDeclaration,
 } from "../types/database";
 
 export interface ClientWithStats extends Client {
@@ -942,28 +947,83 @@ export async function fetchPayments(
   return (data || []) as Payment[];
 }
 
-// ---------- Dashboard ----------
+// ---------- Fiscal constants ----------
 
-export interface DashboardData {
-  caEncaisse: number;
-  beneficeFiscal: number;
-  cotisationsUrssaf: number;
-  netEstime: number;
-  monthlyCa: { month: string; ca: number }[];
-  recentInvoices: (Invoice & { client_name: string })[];
-  upcomingEcheances: (Invoice & { client_name: string })[];
-}
+export const VAT_THRESHOLDS = {
+  service: 36800,
+  goods: 91900,
+};
+export const MICRO_THRESHOLDS = {
+  service: 77700,
+  goods: 188700,
+};
 
 const URSSAF_RATES: Record<ActivityType, { rate: number; abattement: number }> = {
-  freelance_bnc: { rate: 0.22, abattement: 0.71 },
-  liberal: { rate: 0.22, abattement: 0.34 },
-  artisan_bic: { rate: 0.123, abattement: 0.71 },
+  freelance_bnc: { rate: 0.212, abattement: 0.34 },
+  liberal: { rate: 0.212, abattement: 0.34 },
+  artisan_bic: { rate: 0.212, abattement: 0.50 },
   commerce: { rate: 0.123, abattement: 0.71 },
 };
 
+export function abattementFor(activityType: ActivityType): number {
+  return URSSAF_RATES[activityType]?.abattement ?? 0.34;
+}
+
+export function urssafRateFor(activityType: ActivityType): number {
+  return URSSAF_RATES[activityType]?.rate ?? 0.212;
+}
+
+// ---------- Dashboard ----------
+
+export type DashboardPeriod = "month" | "quarter" | "year";
+
+export interface DashboardData {
+  caEncaisse: number;
+  caPrevious: number;
+  caDeltaPct: number | null;
+  beneficeFiscal: number;
+  cotisationsUrssaf: number;
+  netEstime: number;
+  netSubtitle: string;
+  abattementPct: number;
+  monthlyCa: { month: string; ca: number }[];
+  recentInvoices: (Invoice & { client_name: string })[];
+  upcomingEcheances: (Invoice & { client_name: string })[];
+  bestMonth: { month: string; ca: number } | null;
+  monthlyAverage: number;
+  yearlyCa: number;
+  caByNature: { service: number; goods: number };
+  nextUrssafDueDate: string | null;
+  hasData: boolean;
+}
+
+function periodRange(period: DashboardPeriod, now: Date): { start: Date; prevStart: Date; prevEnd: Date } {
+  const year = now.getFullYear();
+  const month = now.getMonth();
+  if (period === "month") {
+    const start = new Date(year, month, 1);
+    const prevEnd = new Date(year, month, 0);
+    const prevStart = new Date(year, month - 1, 1);
+    return { start, prevStart, prevEnd };
+  }
+  if (period === "quarter") {
+    const q = Math.floor(month / 3);
+    const start = new Date(year, q * 3, 1);
+    const prevEnd = new Date(year, q * 3, 0);
+    const prevStart = new Date(year, (q - 1) * 3, 1);
+    return { start, prevStart, prevEnd };
+  }
+  const start = new Date(year, 0, 1);
+  const prevEnd = new Date(year, 0, 0);
+  const prevStart = new Date(year - 1, 0, 1);
+  return { start, prevStart, prevEnd };
+}
+
 export async function fetchDashboardData(
   companyId: string,
-  activityType: ActivityType
+  activityType: ActivityType,
+  period: DashboardPeriod = "month",
+  tmi: number | null = null
 ): Promise<DashboardData> {
   const { data: invoices, error } = await supabase
     .from("invoices")
@@ -1013,13 +1073,28 @@ export async function fetchDashboardData(
     payments = (pmt || []) as Payment[];
   }
 
+  // fetch invoice lines for per-nature CA split
+  let lineNatures: Record<string, ItemNature> = {};
+  if (invoiceIds.length > 0) {
+    const { data: lines, error: lErr } = await supabase
+      .from("invoice_lines")
+      .select("invoice_id, nature")
+      .in("invoice_id", invoiceIds);
+    if (lErr) throw lErr;
+    for (const l of (lines || []) as { invoice_id: string; nature: ItemNature }[]) {
+      lineNatures[l.invoice_id] = l.nature;
+    }
+  }
+
   const now = new Date();
+  const { start, prevStart, prevEnd } = periodRange(period, now);
   const yearStart = new Date(now.getFullYear(), 0, 1);
-  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
 
   let caEncaisse = 0;
+  let caPrevious = 0;
   let caEncaisseYear = 0;
   const monthlyMap = new Map<string, number>();
+  const caByNature = { service: 0, goods: 0 };
 
   for (let m = 11; m >= 0; m--) {
     const d = new Date(now.getFullYear(), now.getMonth() - m, 1);
@@ -1030,22 +1105,54 @@ export async function fetchDashboardData(
     const amt = Number(p.amount) || 0;
     const pdate = parseISO(p.paid_at);
     if (!isValid(pdate)) continue;
-    if (pdate >= monthStart) caEncaisse += amt;
-    if (pdate >= yearStart) caEncaisseYear += amt;
+    if (pdate >= start) caEncaisse += amt;
+    if (pdate >= prevStart && pdate <= prevEnd) caPrevious += amt;
+    if (pdate >= yearStart) {
+      caEncaisseYear += amt;
+      const nature = lineNatures[p.invoice_id] || "service";
+      if (nature === "goods") caByNature.goods += amt;
+      else caByNature.service += amt;
+    }
     const key = format(pdate, "yyyy-MM");
     if (monthlyMap.has(key)) monthlyMap.set(key, (monthlyMap.get(key) || 0) + amt);
   }
 
-  const { rate, abattement } = URSSAF_RATES[activityType] || URSSAF_RATES.freelance_bnc;
-  const beneficeFiscal = caEncaisseYear * (1 - abattement);
-  const cotisationsUrssaf = beneficeFiscal * rate;
-  const netEstime = caEncaisseYear - cotisationsUrssaf;
+  const abattement = abattementFor(activityType);
+  const urssafRate = urssafRateFor(activityType);
+
+  // Per-nature fiscal computation for mixed activity
+  const isMixed = caByNature.service > 0 && caByNature.goods > 0;
+  let beneficeFiscal: number;
+  let cotisationsUrssaf: number;
+  if (isMixed) {
+    const abattementService = abattementFor("liberal");
+    const abattementGoods = abattementFor("commerce");
+    const rateService = urssafRateFor("liberal");
+    const rateGoods = urssafRateFor("commerce");
+    const beneficeService = caByNature.service * (1 - abattementService);
+    const beneficeGoods = caByNature.goods * (1 - abattementGoods);
+    beneficeFiscal = beneficeService + beneficeGoods;
+    cotisationsUrssaf = beneficeService * rateService + beneficeGoods * rateGoods;
+  } else {
+    beneficeFiscal = caEncaisseYear * (1 - abattement);
+    cotisationsUrssaf = beneficeFiscal * urssafRate;
+  }
+  beneficeFiscal = Math.max(0, beneficeFiscal);
+
+  const impot = tmi != null ? beneficeFiscal * tmi : 0;
+  const netEstime = beneficeFiscal - cotisationsUrssaf - impot;
+  const netSubtitle = tmi != null
+    ? "Après cotisations et impôt estimé"
+    : "Renseignez votre TMI pour affiner";
+
+  const caDeltaPct = caPrevious > 0
+    ? Math.round(((caEncaisse - caPrevious) / caPrevious) * 100)
+    : null;
 
   const recentInvoices = invoiceRows
     .filter((i) => i.status !== "draft" && i.type !== "credit_note")
     .slice(0, 5);
 
-  const todayISO = now.toISOString().slice(0, 10);
   const upcomingEcheances = invoiceRows
     .filter(
       (i) =>
@@ -1054,20 +1161,224 @@ export async function fetchDashboardData(
     )
     .sort((a, b) => (a.due_date < b.due_date ? -1 : 1))
     .slice(0, 5);
-  void todayISO;
+
+  const monthlyArr = Array.from(monthlyMap.entries()).map(([month, ca]) => ({ month, ca }));
+  const bestMonth = monthlyArr.reduce<{ month: string; ca: number } | null>(
+    (best, m) => (!best || m.ca > best.ca ? m : best),
+    null
+  );
+  const monthlyAverage = monthlyArr.length
+    ? monthlyArr.reduce((s, m) => s + m.ca, 0) / monthlyArr.length
+    : 0;
+
+  const hasData = payments.length > 0 || invoiceRows.length > 0;
 
   return {
     caEncaisse,
-    beneficeFiscal: Math.max(0, beneficeFiscal),
+    caPrevious,
+    caDeltaPct,
+    beneficeFiscal,
     cotisationsUrssaf,
     netEstime,
-    monthlyCa: Array.from(monthlyMap.entries()).map(([month, ca]) => ({
-      month,
-      ca,
-    })),
+    netSubtitle,
+    abattementPct: Math.round(abattement * 100),
+    monthlyCa: monthlyArr,
     recentInvoices,
     upcomingEcheances,
+    bestMonth: bestMonth && bestMonth.ca > 0 ? bestMonth : null,
+    monthlyAverage,
+    yearlyCa: caEncaisseYear,
+    caByNature,
+    nextUrssafDueDate: null,
+    hasData,
   };
+}
+
+// ---------- Reminders ----------
+
+export async function fetchInvoiceReminders(
+  companyId: string,
+  invoiceId: string
+): Promise<InvoiceReminder[]> {
+  void companyId;
+  const { data, error } = await supabase
+    .from("invoice_reminders")
+    .select("*")
+    .eq("invoice_id", invoiceId)
+    .order("sent_at", { ascending: false });
+  if (error) throw error;
+  return (data || []) as InvoiceReminder[];
+}
+
+export async function sendInvoiceReminder(
+  companyId: string,
+  invoiceId: string,
+  invoice: { number: string; due_date: string; total_ttc: number },
+  client: { email: string | null; name: string } | null,
+  emailContent: { subject: string; body: string }
+): Promise<void> {
+  if (!client?.email) {
+    throw new Error("Client sans email — relance impossible");
+  }
+  const { data, error } = await supabase.functions.invoke<{ success?: boolean; error?: string }>(
+    "send-email",
+    {
+      body: {
+        to: client.email,
+        subject: emailContent.subject,
+        body: emailContent.body,
+        document_type: "invoice",
+        document_id: invoiceId,
+      },
+    }
+  );
+  if (error) throw error;
+  if (!data || !data.success) throw new Error(data?.error || "Échec de l'envoi email");
+
+  const today = new Date();
+  const due = parseISO(invoice.due_date);
+  const daysLate = isValid(due) && today > due
+    ? Math.floor((today.getTime() - due.getTime()) / 86400000)
+    : 0;
+
+  const { error: insErr } = await supabase.from("invoice_reminders").insert({
+    invoice_id: invoiceId,
+    sent_at: today.toISOString(),
+    days_late: daysLate,
+  });
+  if (insErr) throw insErr;
+  void companyId;
+}
+
+// ---------- Document email (send on emit) ----------
+
+export async function sendDocumentByEmail(
+  documentType: "quote" | "invoice",
+  documentId: string,
+  to: string,
+  emailContent: { subject: string; body: string }
+): Promise<void> {
+  const { data, error } = await supabase.functions.invoke<{ success?: boolean; error?: string }>(
+    "send-email",
+    {
+      body: {
+        to,
+        subject: emailContent.subject,
+        body: emailContent.body,
+        document_type: documentType,
+        document_id: documentId,
+      },
+    }
+  );
+  if (error) throw error;
+  if (!data || !data.success) throw new Error(data?.error || "Échec de l'envoi email");
+}
+
+// ---------- URSSAF declarations ----------
+
+export interface UrssafPeriod {
+  periodStart: string;
+  periodEnd: string;
+  dueDate: string;
+  label: string;
+  revenue: number;
+  estimatedAmount: number;
+  declared: boolean;
+  declaredAt: string | null;
+  id: string | null;
+}
+
+export function computeUrssafPeriods(
+  companyCreatedAt: string,
+  frequency: UrssafFreq,
+  payments: Payment[],
+  declarations: UrssafDeclaration[]
+): UrssafPeriod[] {
+  const created = parseISO(companyCreatedAt);
+  const now = new Date();
+  const periods: UrssafPeriod[] = [];
+
+  const start = new Date(created.getFullYear(), created.getMonth(), 1);
+  const endNow = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+
+  const stepMonths = frequency === "monthly" ? 1 : 3;
+  const declWindowDays = frequency === "monthly" ? 15 : 45;
+
+  for (let d = new Date(start); d < endNow; d.setMonth(d.getMonth() + stepMonths)) {
+    const pStart = new Date(d);
+    const pEnd = new Date(d.getFullYear(), d.getMonth() + stepMonths, 0);
+    const due = new Date(pEnd);
+    due.setDate(due.getDate() + declWindowDays);
+
+    const rev = payments
+      .filter((p) => {
+        const pd = parseISO(p.paid_at);
+        return isValid(pd) && pd >= pStart && pd <= new Date(pEnd.getTime() + 86400000);
+      })
+      .reduce((s, p) => s + (Number(p.amount) || 0), 0);
+
+    const matching = declarations.find((decl) => decl.period_start === format(pStart, "yyyy-MM-dd"));
+    const est = rev * 0.212;
+
+    periods.push({
+      periodStart: format(pStart, "yyyy-MM-dd"),
+      periodEnd: format(pEnd, "yyyy-MM-dd"),
+      dueDate: format(due, "yyyy-MM-dd"),
+      label: format(pStart, "MMMM yyyy", { locale: fr }),
+      revenue: rev,
+      estimatedAmount: est,
+      declared: !!matching?.declared_at,
+      declaredAt: matching?.declared_at || null,
+      id: matching?.id || null,
+    });
+  }
+  return periods.reverse();
+}
+
+export async function fetchUrssafDeclarations(
+  companyId: string
+): Promise<UrssafDeclaration[]> {
+  const { data, error } = await supabase
+    .from("urssaf_declarations")
+    .select("*")
+    .eq("company_id", companyId)
+    .order("period_start", { ascending: false });
+  if (error) throw error;
+  return (data || []) as UrssafDeclaration[];
+}
+
+export async function markUrssafDeclared(
+  companyId: string,
+  period: UrssafPeriod,
+  activityType: ActivityType
+): Promise<void> {
+  const rate = urssafRateFor(activityType);
+  const est = period.revenue * rate;
+  const payload = {
+    company_id: companyId,
+    period_start: period.periodStart,
+    period_end: period.periodEnd,
+    revenue: period.revenue,
+    estimated_amount: est,
+    due_date: period.dueDate,
+    declared_at: new Date().toISOString(),
+  };
+  const { error } = await supabase
+    .from("urssaf_declarations")
+    .upsert(payload, { onConflict: "company_id,period_start" });
+  if (error) throw error;
+}
+
+// ---------- Notification counts ----------
+
+export async function fetchLateInvoicesCount(companyId: string): Promise<number> {
+  const { count, error } = await supabase
+    .from("invoices")
+    .select("*", { count: "exact", head: true })
+    .eq("company_id", companyId)
+    .eq("status", "late");
+  if (error) return 0;
+  return count || 0;
 }
 
 export async function downloadPdf(

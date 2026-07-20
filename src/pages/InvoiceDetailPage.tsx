@@ -5,6 +5,7 @@ import {
   Bell,
   Send,
   Check,
+  Mail,
 } from "lucide-react";
 import { PageContainer } from "../components/layout/PageContainer";
 import { Button } from "../components/ui/Button";
@@ -13,7 +14,6 @@ import { Input } from "../components/ui/Input";
 import { Select } from "../components/ui/Select";
 import { Modal } from "../components/ui/Modal";
 import { StatusBadge } from "../components/shared/StatusBadge";
-import { Tooltip } from "../components/ui/Tooltip";
 import { DocumentPreview } from "../components/documents/DocumentPreview";
 import { PdfButton } from "../components/documents/PdfButton";
 import { useAuth } from "../contexts/AuthContext";
@@ -23,10 +23,16 @@ import {
   markInvoicePaid,
   createCreditNote,
   emitInvoice,
+  fetchInvoiceReminders,
+  sendInvoiceReminder,
+  sendDocumentByEmail,
 } from "../lib/api";
 import { formatDateLong, todayISO, isValidDate } from "../lib/date";
-import { parseISO } from "date-fns";
-import type { Invoice, InvoiceLine, Client, PaymentMethod } from "../types/database";
+import { formatAmount } from "../lib/utils";
+import { parseISO, differenceInCalendarDays } from "date-fns";
+import { fr } from "date-fns/locale";
+import { format } from "date-fns";
+import type { Invoice, InvoiceLine, Client, PaymentMethod, InvoiceReminder } from "../types/database";
 
 export function InvoiceDetailPage() {
   const { id } = useParams();
@@ -41,6 +47,11 @@ export function InvoiceDetailPage() {
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [payOpen, setPayOpen] = useState(false);
+  const [remindOpen, setRemindOpen] = useState(false);
+  const [reminders, setReminders] = useState<InvoiceReminder[]>([]);
+  const [remindSubject, setRemindSubject] = useState("");
+  const [remindBody, setRemindBody] = useState("");
+  const [remindError, setRemindError] = useState<string | null>(null);
 
   const [payDate, setPayDate] = useState(todayISO());
   const [payAmount, setPayAmount] = useState("");
@@ -53,6 +64,8 @@ export function InvoiceDetailPage() {
       setData(d);
       if (d) {
         setPayAmount(String(Number(d.invoice.total_ttc)));
+        const rems = await fetchInvoiceReminders(company.id, id);
+        setReminders(rems);
       }
     } catch (err) {
       toast(err instanceof Error ? err.message : "Erreur", "danger");
@@ -77,6 +90,37 @@ export function InvoiceDetailPage() {
   const isDraft = invoice.status === "draft";
   const isPendingOrLate = invoice.status === "pending" || invoice.status === "late";
   const isCreditNote = invoice.type === "credit_note";
+
+  function computeDaysLate(): number {
+    const due = parseISO(invoice.due_date);
+    const today = new Date();
+    return today > due ? differenceInCalendarDays(today, due) : 0;
+  }
+
+  function buildReminderTemplate(): { subject: string; body: string } {
+    const daysLate = computeDaysLate();
+    const clientName = client?.name || "client";
+    const amount = formatAmount(Number(invoice.total_ttc));
+    const dueDate = formatDateLong(invoice.due_date);
+    const invoiceNumber = invoice.number;
+
+    if (daysLate <= 0 || daysLate < 7) {
+      return {
+        subject: `Rappel : facture ${invoiceNumber} à régler`,
+        body: `Bonjour ${clientName},\n\nJe me permets de vous rappeler que la facture ${invoiceNumber} d'un montant de ${amount}, échéance du ${dueDate}, est en attente de règlement.\n\nMerci de bien vouloir procéder au paiement dans les meilleurs délais.\n\nCordialement,\n${company.commercial_name || company.legal_name}`,
+      };
+    }
+    if (daysLate <= 30) {
+      return {
+        subject: `Relance : facture ${invoiceNumber} — échéance dépassée`,
+        body: `Bonjour ${clientName},\n\nSauf erreur de ma part, la facture ${invoiceNumber} d'un montant de ${amount}, dont l'échéance était fixée au ${dueDate}, n'a pas encore été réglée (soit ${daysLate} jours de retard).\n\nJe vous remercie de bien vouloir procéder au règlement dès réception de ce courriel.\n\nCordialement,\n${company.commercial_name || company.legal_name}`,
+      };
+    }
+    return {
+      subject: `Mise en demeure : facture ${invoiceNumber} — ${daysLate} jours de retard`,
+      body: `Bonjour ${clientName},\n\nMalgré plusieurs relances, la facture ${invoiceNumber} d'un montant de ${amount}, dont l'échéance était fixée au ${dueDate}, reste impayée à ce jour (${daysLate} jours de retard).\n\nJe vous informe que des pénalités de retard sont applicables conformément aux conditions de vente. Une indemnité forfaitaire de 40€ pour frais de recouvrement est également due en application de l'article L441-10 du Code de commerce.\n\nJe vous demande par conséquent de procéder au règlement de cette facture dans un délai de 8 jours.\n\nÀ défaut, je me verrai contraint d'engager les poursuites nécessaires.\n\nCordialement,\n${company.commercial_name || company.legal_name}`,
+    };
+  }
 
   async function handlePay() {
     if (!company || !invoice) return;
@@ -117,9 +161,53 @@ export function InvoiceDetailPage() {
     try {
       const emitted = await emitInvoice(company.id, invoice.id);
       toast(`${isCreditNote ? "Avoir" : "Facture"} émis${isCreditNote ? "" : "e"} : ${emitted.number}`, "success");
+      if (client?.email) {
+        try {
+          const amount = formatAmount(Number(emitted.total_ttc));
+          await sendDocumentByEmail("invoice", emitted.id, client.email, {
+            subject: `${isCreditNote ? "Avoir" : "Facture"} ${emitted.number} — ${company.commercial_name || company.legal_name}`,
+            body: `Bonjour ${client.name},\n\nVeuillez trouver ci-joint ${isCreditNote ? "votre avoir" : "votre facture"} ${emitted.number} d'un montant de ${amount}.\n\nCordialement,\n${company.commercial_name || company.legal_name}`,
+          });
+          toast("Document envoyé par email au client", "info");
+        } catch (err) {
+          toast(err instanceof Error ? `Email non envoyé : ${err.message}` : "Email non envoyé", "danger");
+        }
+      } else {
+        toast("Client sans email — document non envoyé", "info");
+      }
       void load();
     } catch (err) {
       toast(err instanceof Error ? err.message : "Erreur", "danger");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  function openRemind() {
+    const tpl = buildReminderTemplate();
+    setRemindSubject(tpl.subject);
+    setRemindBody(tpl.body);
+    setRemindError(null);
+    setRemindOpen(true);
+  }
+
+  async function handleSendReminder() {
+    if (!company || !invoice) return;
+    setBusy(true);
+    setRemindError(null);
+    try {
+      await sendInvoiceReminder(
+        company.id,
+        invoice.id,
+        { number: invoice.number, due_date: invoice.due_date, total_ttc: Number(invoice.total_ttc) },
+        client ? { email: client.email, name: client.name } : null,
+        { subject: remindSubject, body: remindBody }
+      );
+      toast("Relance envoyée", "success");
+      setRemindOpen(false);
+      void load();
+    } catch (err) {
+      setRemindError(err instanceof Error ? err.message : "Erreur");
     } finally {
       setBusy(false);
     }
@@ -221,17 +309,13 @@ export function InvoiceDetailPage() {
               </ActionButton>
             )}
             {isPendingOrLate && !isCreditNote && (
-              <Tooltip content="Disponible prochainement" side="top">
-                <span className="block">
-                  <ActionButton
-                    icon={<Bell className="w-4 h-4" />}
-                    onClick={() => {}}
-                    disabled
-                  >
-                    Relancer
-                  </ActionButton>
-                </span>
-              </Tooltip>
+              <ActionButton
+                icon={<Bell className="w-4 h-4" />}
+                onClick={openRemind}
+                disabled={busy}
+              >
+                Relancer
+              </ActionButton>
             )}
             {!isCreditNote && !isDraft && (
               <ActionButton
@@ -249,6 +333,37 @@ export function InvoiceDetailPage() {
               variant="ghost"
             />
           </div>
+
+          {/* Reminder history */}
+          {isPendingOrLate && !isCreditNote && (
+            <div className="border border-border rounded-card p-4 card-shadow">
+              <span className="text-xs font-semibold text-muted uppercase tracking-wide mb-2 block">
+                Relances
+              </span>
+              {reminders.length === 0 ? (
+                <p className="text-sm text-muted">Aucune relance envoyée</p>
+              ) : (
+                <div className="flex flex-col gap-2">
+                  {reminders.map((r, idx) => {
+                    const ordinal =
+                      idx === 0 ? "1ère relance" : `${idx + 1}ème relance`;
+                    return (
+                      <div
+                        key={r.id}
+                        className="flex items-center gap-2 text-sm"
+                      >
+                        <Mail className="w-3.5 h-3.5 text-muted flex-shrink-0" />
+                        <span className="text-text">
+                          Relancé le {format(parseISO(r.sent_at), "d MMMM yyyy", { locale: fr })}
+                        </span>
+                        <span className="text-muted text-xs">— {ordinal}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
@@ -289,6 +404,53 @@ export function InvoiceDetailPage() {
             </Button>
             <Button type="button" variant="primary" onClick={handlePay} loading={busy}>
               Encaisser
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Reminder modal */}
+      <Modal open={remindOpen} onClose={() => setRemindOpen(false)} title="Relancer le client">
+        <div className="flex flex-col gap-4">
+          <Input
+            label="Sujet"
+            value={remindSubject}
+            onChange={(e) => setRemindSubject(e.target.value)}
+            required
+          />
+          <div className="flex flex-col gap-1.5">
+            <label className="text-sm font-semibold text-text">Message</label>
+            <textarea
+              value={remindBody}
+              onChange={(e) => setRemindBody(e.target.value)}
+              rows={10}
+              className="w-full rounded-card border border-border bg-surface px-3 py-2 text-sm text-text resize-y focus:outline-none focus:border-primary"
+              required
+            />
+          </div>
+          {!client?.email && (
+            <p className="text-sm text-danger">
+              Ce client n'a pas d'email enregistré — la relance ne peut pas être envoyée.
+            </p>
+          )}
+          {remindError && (
+            <p className="text-sm text-danger">{remindError}</p>
+          )}
+          <p className="text-xs text-muted">
+            La facture sera jointe automatiquement au format PDF.
+          </p>
+          <div className="flex justify-end gap-2">
+            <Button type="button" variant="ghost" onClick={() => setRemindOpen(false)} disabled={busy}>
+              Annuler
+            </Button>
+            <Button
+              type="button"
+              variant="primary"
+              onClick={handleSendReminder}
+              loading={busy}
+              disabled={!client?.email}
+            >
+              Envoyer la relance
             </Button>
           </div>
         </div>

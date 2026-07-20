@@ -4,10 +4,12 @@ import { Zap, LogOut } from "lucide-react";
 import { NAV_ITEMS } from "../../lib/constants";
 import { ThemeToggle } from "../shared/ThemeToggle";
 import { useAuth } from "../../contexts/AuthContext";
+import { useNotifications } from "../../contexts/NotificationsContext";
 import { cn } from "../../lib/utils";
 
 export function Sidebar() {
   const { user, profile, signOut } = useAuth();
+  const { lateInvoicesCount, urssafDueSoon } = useNotifications();
   const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -60,6 +62,12 @@ export function Sidebar() {
             >
               <Icon className="w-5 h-5" />
               {item.label}
+              {item.path === "/invoices" && lateInvoicesCount > 0 && (
+                <span className="ml-auto w-2 h-2 rounded-full bg-danger flex-shrink-0" />
+              )}
+              {item.path === "/urssaf" && urssafDueSoon && (
+                <span className="ml-auto w-2 h-2 rounded-full bg-danger flex-shrink-0" />
+              )}
             </NavLink>
           );
         })}

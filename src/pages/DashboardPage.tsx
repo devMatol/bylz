@@ -8,22 +8,38 @@ import {
   CalendarClock,
   FileText,
   Plus,
+  BarChart3,
 } from "lucide-react";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ReferenceLine,
+  ResponsiveContainer,
+  Cell,
+} from "recharts";
+import { format, parseISO } from "date-fns";
+import { fr } from "date-fns/locale";
 import { PageContainer } from "../components/layout/PageContainer";
 import { Card } from "../components/ui/Card";
 import { Skeleton } from "../components/ui/Skeleton";
 import { StatCard } from "../components/shared/StatCard";
 import { Amount } from "../components/shared/Amount";
 import { StatusBadge } from "../components/shared/StatusBadge";
+import { EmptyState } from "../components/shared/EmptyState";
 import { useAuth } from "../contexts/AuthContext";
 import { useToast } from "../components/ui/Toast";
-import { fetchDashboardData, type DashboardData } from "../lib/api";
+import {
+  fetchDashboardData,
+  VAT_THRESHOLDS,
+  MICRO_THRESHOLDS,
+  type DashboardData,
+  type DashboardPeriod,
+} from "../lib/api";
 import { formatAmount, cn } from "../lib/utils";
-import { formatDateLong } from "../lib/date";
-
-type Period = "month" | "year";
-
-const VAT_THRESHOLD = 36800;
+import { formatDateLong, todayISO } from "../lib/date";
 
 const MONTH_LABELS = [
   "janv.", "févr.", "mars", "avr.", "mai", "juin",
@@ -31,10 +47,10 @@ const MONTH_LABELS = [
 ];
 
 export function DashboardPage() {
-  const { company } = useAuth();
+  const { company, profile } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [period, setPeriod] = useState<Period>("month");
+  const [period, setPeriod] = useState<DashboardPeriod>("month");
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -42,39 +58,34 @@ export function DashboardPage() {
     if (!company) return;
     setLoading(true);
     try {
-      const d = await fetchDashboardData(company.id, company.activity_type);
+      const d = await fetchDashboardData(
+        company.id,
+        company.activity_type,
+        period,
+        profile?.tmi ?? null
+      );
       setData(d);
     } catch (err) {
       toast(err instanceof Error ? err.message : "Erreur", "danger");
-      setData({
-        caEncaisse: 0,
-        beneficeFiscal: 0,
-        cotisationsUrssaf: 0,
-        netEstime: 0,
-        monthlyCa: [],
-        recentInvoices: [],
-        upcomingEcheances: [],
-      });
+      setData(null);
     } finally {
       setLoading(false);
     }
-  }, [company, toast]);
+  }, [company, profile, period, toast]);
 
   useEffect(() => {
     void load();
   }, [load]);
 
-  const periodLabel = period === "month" ? "Ce mois-ci" : "Cette année";
+  const periodLabel =
+    period === "month" ? "Ce mois-ci" : period === "quarter" ? "Ce trimestre" : "Cette année";
 
   const maxCa = useMemo(
     () => Math.max(1, ...(data?.monthlyCa || []).map((m) => m.ca)),
     [data]
   );
 
-  const caForPeriod =
-    period === "month"
-      ? data?.caEncaisse ?? 0
-      : data?.monthlyCa.reduce((s, m) => s + m.ca, 0) ?? 0;
+  const isMixed = (data?.caByNature.service || 0) > 0 && (data?.caByNature.goods || 0) > 0;
 
   if (!company) return null;
 
@@ -85,30 +96,21 @@ export function DashboardPage() {
       actions={
         <div className="flex items-center gap-2">
           <div className="flex rounded-pill border border-border p-0.5 bg-surface">
-            <button
-              type="button"
-              onClick={() => setPeriod("month")}
-              className={cn(
-                "px-3 h-8 rounded-pill text-xs font-semibold transition-colors",
-                period === "month"
-                  ? "bg-primary text-white"
-                  : "text-muted hover:text-text"
-              )}
-            >
-              Mois
-            </button>
-            <button
-              type="button"
-              onClick={() => setPeriod("year")}
-              className={cn(
-                "px-3 h-8 rounded-pill text-xs font-semibold transition-colors",
-                period === "year"
-                  ? "bg-primary text-white"
-                  : "text-muted hover:text-text"
-              )}
-            >
-              Année
-            </button>
+            {(["month", "quarter", "year"] as DashboardPeriod[]).map((p) => (
+              <button
+                key={p}
+                type="button"
+                onClick={() => setPeriod(p)}
+                className={cn(
+                  "px-3 h-8 rounded-pill text-xs font-semibold transition-colors",
+                  period === p
+                    ? "bg-primary text-white"
+                    : "text-muted hover:text-text"
+                )}
+              >
+                {p === "month" ? "Ce mois" : p === "quarter" ? "Ce trimestre" : "Cette année"}
+              </button>
+            ))}
           </div>
           <button
             type="button"
@@ -121,234 +123,385 @@ export function DashboardPage() {
         </div>
       }
     >
-      {/* Stat cards — always rendered */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        {loading ? (
-          Array.from({ length: 4 }).map((_, i) => (
-            <Card key={i}>
-              <Skeleton height="1rem" width="60%" className="mb-2" />
-              <Skeleton height="2rem" width="80%" />
-            </Card>
-          ))
-        ) : (
-          <>
-            <StatCard
-              label="CA encaissé"
-              value={caForPeriod}
-              icon={<TrendingUp className="w-4 h-4" />}
-            />
-            <StatCard
-              label="Bénéfice fiscal"
-              value={data?.beneficeFiscal ?? 0}
-              icon={<Wallet className="w-4 h-4" />}
-            />
-            <StatCard
-              label="Cotisations URSSAF"
-              value={data?.cotisationsUrssaf ?? 0}
-              icon={<Landmark className="w-4 h-4" />}
-            />
-            <StatCard
-              label="Net estimé"
-              value={data?.netEstime ?? 0}
-              icon={<Receipt className="w-4 h-4" />}
-            />
-          </>
-        )}
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-        {/* CA 12-month bar chart */}
-        <Card className="lg:col-span-2">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-bold text-text">
-              CA encaissé — 12 mois
-            </h3>
-            <span className="text-xs text-muted">
-              Seuil TVA: {formatAmount(VAT_THRESHOLD)}
-            </span>
+      {!loading && data && !data.hasData ? (
+        <EmptyState
+          icon={<BarChart3 className="w-8 h-8" />}
+          title="Aucune donnée pour l'instant"
+          description="Émettez votre première facture pour voir vos statistiques apparaître ici."
+          ctaLabel="Créer une facture"
+          onCta={() => navigate("/invoices/new")}
+        />
+      ) : (
+        <>
+          {/* Row 1 — StatCards */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            {loading || !data ? (
+              Array.from({ length: 4 }).map((_, i) => (
+                <Card key={i}>
+                  <Skeleton height="1rem" width="60%" className="mb-2" />
+                  <Skeleton height="2rem" width="80%" />
+                </Card>
+              ))
+            ) : (
+              <>
+                <StatCard
+                  label="CA encaissé"
+                  value={data.caEncaisse}
+                  icon={<TrendingUp className="w-4 h-4" />}
+                  delta={
+                    data.caDeltaPct != null
+                      ? {
+                          value: `${data.caDeltaPct >= 0 ? "+" : ""}${data.caDeltaPct}% vs période précédente`,
+                          positive: data.caDeltaPct >= 0,
+                        }
+                      : undefined
+                  }
+                />
+                <StatCard
+                  label="Bénéfice fiscal"
+                  value={data.beneficeFiscal}
+                  icon={<Wallet className="w-4 h-4" />}
+                />
+                <StatCard
+                  label="Cotisations URSSAF"
+                  value={data.cotisationsUrssaf}
+                  icon={<Landmark className="w-4 h-4" />}
+                />
+                <StatCard
+                  label="Net estimé"
+                  value={data.netEstime}
+                  icon={<Receipt className="w-4 h-4" />}
+                />
+              </>
+            )}
           </div>
-          {loading ? (
-            <Skeleton height="12rem" />
-          ) : (
-            <div className="relative">
-              <div className="flex items-end gap-1.5 h-40">
-                {(data?.monthlyCa || []).map((m) => {
-                  const heightPct = (m.ca / maxCa) * 100;
-                  const monthIdx = parseInt(m.month.slice(5, 7), 10) - 1;
-                  return (
-                    <div
-                      key={m.month}
-                      className="flex-1 flex flex-col items-center gap-1 group"
-                    >
-                      <div className="relative w-full flex items-end justify-center" style={{ height: "100%" }}>
-                        <div
-                          className="w-full max-w-[2rem] rounded-t-sm transition-all duration-300 group-hover:opacity-80"
-                          style={{
-                            height: `${Math.max(heightPct, m.ca > 0 ? 4 : 0)}%`,
-                            backgroundColor: company.accent_color || "var(--primary)",
-                            minHeight: m.ca > 0 ? "4px" : "0",
-                          }}
-                          title={`${MONTH_LABELS[monthIdx]}: ${formatAmount(m.ca)}`}
-                        />
-                      </div>
-                      <span className="text-[10px] text-muted">
-                        {MONTH_LABELS[monthIdx]}
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
-              {/* VAT threshold line */}
-              <div
-                className="absolute left-0 right-0 border-t border-dashed border-warning pointer-events-none"
-                style={{
-                  bottom: `${(VAT_THRESHOLD / (maxCa * 1.1 || 1)) * 100}%`,
-                }}
-              >
-                <span className="absolute -top-4 right-0 text-[10px] text-warning font-semibold bg-bg px-1">
-                  Seuil TVA
-                </span>
-              </div>
-            </div>
-          )}
-        </Card>
 
-        {/* Santé fiscale gauge */}
-        <Card>
-          <h3 className="text-sm font-bold text-text mb-4">Santé fiscale</h3>
-          {loading ? (
-            <Skeleton height="10rem" />
-          ) : (
-            <FiscalHealthGauge
-              ca={data?.beneficeFiscal ?? 0}
-              threshold={VAT_THRESHOLD}
-              accent={company.accent_color}
-            />
-          )}
-        </Card>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Factures récentes */}
-        <Card>
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-bold text-text">Factures récentes</h3>
-            <button
-              type="button"
-              onClick={() => navigate("/invoices")}
-              className="text-xs text-primary font-semibold hover:underline"
-            >
-              Tout voir
-            </button>
-          </div>
-          {loading ? (
-            <div className="flex flex-col gap-2">
-              {Array.from({ length: 3 }).map((_, i) => (
-                <Skeleton key={i} height="2.5rem" />
-              ))}
-            </div>
-          ) : (data?.recentInvoices || []).length === 0 ? (
-            <div className="flex flex-col items-center justify-center text-center py-8">
-              <div className="w-12 h-12 rounded-card bg-surface-hover flex items-center justify-center text-muted mb-3">
-                <FileText className="w-6 h-6" />
-              </div>
-              <p className="text-sm text-muted">Aucune facture émise</p>
-              <button
-                type="button"
-                onClick={() => navigate("/invoices/new")}
-                className="mt-3 text-xs text-primary font-semibold hover:underline"
-              >
-                Créer une facture
-              </button>
-            </div>
-          ) : (
-            <div className="flex flex-col">
-              {(data?.recentInvoices || []).map((inv) => (
-                <button
-                  key={inv.id}
-                  type="button"
-                  onClick={() => navigate(`/invoices/${inv.id}`)}
-                  className="flex items-center justify-between py-2.5 border-b border-border last:border-0 hover:bg-surface-hover -mx-2 px-2 rounded transition-colors text-left"
-                >
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-semibold text-text truncate">
-                      {inv.client_name}
-                    </p>
-                    <p className="text-xs text-muted">
-                      {inv.number.startsWith("DRAFT-") ? "Brouillon" : inv.number}{" "}
-                      · {formatDateLong(inv.issue_date)}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-3 flex-shrink-0">
-                    <Amount value={inv.total_ttc} size="sm" />
-                    <StatusBadge status={inv.status} />
-                  </div>
-                </button>
-              ))}
-            </div>
-          )}
-        </Card>
-
-        {/* Prochaines échéances */}
-        <Card>
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-bold text-text">Prochaines échéances</h3>
-            <CalendarClock className="w-4 h-4 text-muted" />
-          </div>
-          {loading ? (
-            <div className="flex flex-col gap-2">
-              {Array.from({ length: 3 }).map((_, i) => (
-                <Skeleton key={i} height="2.5rem" />
-              ))}
-            </div>
-          ) : (data?.upcomingEcheances || []).length === 0 ? (
-            <div className="flex flex-col items-center justify-center text-center py-8">
-              <div className="w-12 h-12 rounded-card bg-surface-hover flex items-center justify-center text-muted mb-3">
-                <CalendarClock className="w-6 h-6" />
-              </div>
-              <p className="text-sm text-muted">Aucune échéance à venir</p>
-            </div>
-          ) : (
-            <div className="flex flex-col">
-              {(data?.upcomingEcheances || []).map((inv) => {
-                const today = new Date().toISOString().slice(0, 10);
-                const isLate = inv.due_date < today;
-                return (
+          {/* Subtitles row */}
+          {!loading && data && (
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6 -mt-2">
+              <p className="text-xs text-muted text-center">{periodLabel}</p>
+              <p className="text-xs text-muted text-center">
+                Après abattement de {data.abattementPct}%
+              </p>
+              <p className="text-xs text-muted text-center">
+                {data.nextUrssafDueDate
+                  ? `Prochaine déclaration: ${formatDateLong(data.nextUrssafDueDate)}`
+                  : "Prochaine déclaration à venir"}
+              </p>
+              <p className="text-xs text-muted text-center">
+                {profile?.tmi != null ? (
+                  data.netSubtitle
+                ) : (
                   <button
-                    key={inv.id}
-                    type="button"
-                    onClick={() => navigate(`/invoices/${inv.id}`)}
-                    className="flex items-center justify-between py-2.5 border-b border-border last:border-0 hover:bg-surface-hover -mx-2 px-2 rounded transition-colors text-left"
+                    onClick={() => navigate("/settings")}
+                    className="text-primary hover:underline"
                   >
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm font-semibold text-text truncate">
-                        {inv.client_name}
-                      </p>
-                      <p
-                        className={cn(
-                          "text-xs",
-                          isLate ? "text-danger font-semibold" : "text-muted"
-                        )}
-                      >
-                        {inv.number} · {formatDateLong(inv.due_date)}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-3 flex-shrink-0">
-                      <Amount value={inv.total_ttc} size="sm" />
-                      <StatusBadge status={isLate ? "late" : "pending"} />
-                    </div>
+                    Renseignez votre TMI
                   </button>
-                );
-              })}
+                )}
+              </p>
             </div>
           )}
-        </Card>
-      </div>
 
-      <p className="text-xs text-muted mt-6 text-center">
-        {periodLabel} · Estimations indicatives basées sur les encaissements enregistrés
-      </p>
+          {/* Row 2 — Chart + Santé fiscale */}
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 mb-6">
+            {/* CA chart (60%) */}
+            <Card className="lg:col-span-3">
+              <h3 className="text-sm font-bold text-text mb-4">Évolution du CA</h3>
+              {loading ? (
+                <Skeleton height="12rem" />
+              ) : (
+                <>
+                  <div style={{ width: "100%", height: 240 }}>
+                    <ResponsiveContainer>
+                      <BarChart data={data?.monthlyCa || []} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                        <XAxis
+                          dataKey="month"
+                          tickFormatter={(m: string) => {
+                            const idx = parseInt(m.slice(5, 7), 10) - 1;
+                            return MONTH_LABELS[idx] || m;
+                          }}
+                          tick={{ fontSize: 10, fill: "var(--muted)" }}
+                          axisLine={false}
+                          tickLine={false}
+                        />
+                        <YAxis
+                          tick={{ fontSize: 10, fill: "var(--muted)" }}
+                          axisLine={false}
+                          tickLine={false}
+                          tickFormatter={(v: number) => `${(v / 1000).toFixed(0)}k`}
+                        />
+                        <Tooltip
+                          formatter={(v: number) => [formatAmount(v), "CA"]}
+                          labelFormatter={(m: string) => {
+                            const idx = parseInt(m.slice(5, 7), 10) - 1;
+                            return MONTH_LABELS[idx] || m;
+                          }}
+                          contentStyle={{
+                            background: "var(--surface)",
+                            border: "1px solid var(--border)",
+                            borderRadius: "0.5rem",
+                            fontSize: "12px",
+                          }}
+                        />
+                        <ReferenceLine
+                          y={VAT_THRESHOLDS.service}
+                          stroke="#f59e0b"
+                          strokeDasharray="4 4"
+                          label={{ value: "Seuil TVA", fill: "#f59e0b", fontSize: 10, position: "right" }}
+                        />
+                        <Bar dataKey="ca" radius={[4, 4, 0, 0]}>
+                          {(data?.monthlyCa || []).map((m, idx) => {
+                            const isCurrent = idx === (data?.monthlyCa.length || 0) - 1;
+                            return (
+                              <Cell
+                                key={m.month}
+                                fill={company.accent_color || "var(--primary)"}
+                                opacity={isCurrent ? 1 : 0.5}
+                              />
+                            );
+                          })}
+                        </Bar>
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                  <div className="flex justify-around mt-4 pt-4 border-t border-border">
+                    <div className="text-center">
+                      <p className="text-xs text-muted">Meilleur mois</p>
+                      <p className="text-sm font-bold text-text">
+                        {data?.bestMonth
+                          ? `${MONTH_LABELS[parseInt(data.bestMonth.month.slice(5, 7), 10) - 1]} — ${formatAmount(data.bestMonth.ca)}`
+                          : "—"}
+                      </p>
+                    </div>
+                    <div className="text-center">
+                      <p className="text-xs text-muted">Moyenne mensuelle</p>
+                      <p className="text-sm font-bold text-text">
+                        {formatAmount(data?.monthlyAverage || 0)}
+                      </p>
+                    </div>
+                  </div>
+                </>
+              )}
+            </Card>
+
+            {/* Santé fiscale (40%) */}
+            <Card className="lg:col-span-2">
+              <h3 className="text-sm font-bold text-text mb-4">Santé fiscale</h3>
+              {loading ? (
+                <Skeleton height="10rem" />
+              ) : isMixed ? (
+                <div className="flex flex-col gap-4">
+                  <NatureBar
+                    label="Services"
+                    value={data?.caByNature.service || 0}
+                    threshold={VAT_THRESHOLDS.service}
+                    accent={company.accent_color}
+                  />
+                  <NatureBar
+                    label="Vente de biens"
+                    value={data?.caByNature.goods || 0}
+                    threshold={VAT_THRESHOLDS.goods}
+                    accent={company.accent_color}
+                  />
+                  <div className="pt-2 border-t border-border text-xs text-muted space-y-1">
+                    <div className="flex justify-between">
+                      <span>CA annuel services</span>
+                      <span className="font-semibold text-text">{formatAmount(data?.caByNature.service || 0)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Seuil micro services</span>
+                      <span className="font-semibold text-text">{formatAmount(MICRO_THRESHOLDS.service)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>CA annuel biens</span>
+                      <span className="font-semibold text-text">{formatAmount(data?.caByNature.goods || 0)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Seuil micro biens</span>
+                      <span className="font-semibold text-text">{formatAmount(MICRO_THRESHOLDS.goods)}</span>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <FiscalHealthGauge
+                  ca={data?.yearlyCa || 0}
+                  threshold={VAT_THRESHOLDS.service}
+                  accent={company.accent_color}
+                />
+              )}
+            </Card>
+          </div>
+
+          {/* Row 3 — Recent invoices + Upcoming deadlines */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Factures récentes */}
+            <Card>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-sm font-bold text-text">Factures récentes</h3>
+                <button
+                  type="button"
+                  onClick={() => navigate("/invoices")}
+                  className="text-xs text-primary font-semibold hover:underline"
+                >
+                  Voir tout
+                </button>
+              </div>
+              {loading ? (
+                <div className="flex flex-col gap-2">
+                  {Array.from({ length: 3 }).map((_, i) => (
+                    <Skeleton key={i} height="2.5rem" />
+                  ))}
+                </div>
+              ) : (data?.recentInvoices || []).length === 0 ? (
+                <p className="text-sm text-muted text-center py-8">Aucune facture émise</p>
+              ) : (
+                <div className="flex flex-col">
+                  {(data?.recentInvoices || []).map((inv) => (
+                    <button
+                      key={inv.id}
+                      type="button"
+                      onClick={() => navigate(`/invoices/${inv.id}`)}
+                      className="flex items-center justify-between py-2.5 border-b border-border last:border-0 hover:bg-surface-hover -mx-2 px-2 rounded transition-colors text-left"
+                    >
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-semibold text-text truncate">
+                          {inv.client_name}
+                        </p>
+                        <p className="text-xs text-muted">
+                          {inv.number.startsWith("DRAFT-") ? "Brouillon" : inv.number}{" "}
+                          · {formatDateLong(inv.issue_date)}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-3 flex-shrink-0">
+                        <Amount value={inv.total_ttc} size="sm" />
+                        <StatusBadge status={inv.status} />
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </Card>
+
+            {/* Prochaines échéances */}
+            <Card>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-sm font-bold text-text">Prochaines échéances</h3>
+                <CalendarClock className="w-4 h-4 text-muted" />
+              </div>
+              {loading ? (
+                <div className="flex flex-col gap-2">
+                  {Array.from({ length: 3 }).map((_, i) => (
+                    <Skeleton key={i} height="2.5rem" />
+                  ))}
+                </div>
+              ) : (data?.upcomingEcheances || []).length === 0 ? (
+                <div className="flex flex-col items-center justify-center text-center py-8">
+                  <div className="w-12 h-12 rounded-card bg-surface-hover flex items-center justify-center text-muted mb-3">
+                    <CalendarClock className="w-6 h-6" />
+                  </div>
+                  <p className="text-sm text-muted">Aucune échéance à venir</p>
+                </div>
+              ) : (
+                <div className="flex flex-col">
+                  {(data?.upcomingEcheances || []).map((inv) => {
+                    const today = todayISO();
+                    const isLate = inv.due_date < today;
+                    const days = Math.ceil(
+                      (new Date(inv.due_date).getTime() - new Date(today).getTime()) / 86400000
+                    );
+                    return (
+                      <button
+                        key={inv.id}
+                        type="button"
+                        onClick={() => navigate(`/invoices/${inv.id}`)}
+                        className="flex items-center justify-between py-2.5 border-b border-border last:border-0 hover:bg-surface-hover -mx-2 px-2 rounded transition-colors text-left"
+                      >
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-semibold text-text truncate">
+                            {inv.client_name}
+                          </p>
+                          <p
+                            className={cn(
+                              "text-xs",
+                              isLate ? "text-danger font-semibold" : "text-muted"
+                            )}
+                          >
+                            {inv.number} · {formatDateLong(inv.due_date)}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-3 flex-shrink-0">
+                          <Amount value={inv.total_ttc} size="sm" />
+                          <CountdownPill days={days} isLate={isLate} />
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </Card>
+          </div>
+
+          <p className="text-xs text-muted mt-6 text-center">
+            {periodLabel} · Estimations indicatives basées sur les encaissements enregistrés
+          </p>
+        </>
+      )}
     </PageContainer>
+  );
+}
+
+function CountdownPill({ days, isLate }: { days: number; isLate: boolean }) {
+  const absDays = Math.abs(days);
+  const color = isLate
+    ? "bg-danger/15 text-danger"
+    : absDays < 7
+    ? "bg-danger/15 text-danger"
+    : absDays < 15
+    ? "bg-warning/15 text-warning"
+    : "bg-surface-hover text-muted";
+  const label = isLate
+    ? `${absDays}j de retard`
+    : `J-${absDays}`;
+  return (
+    <span className={cn("text-xs font-semibold px-2 py-0.5 rounded-pill", color)}>
+      {label}
+    </span>
+  );
+}
+
+function NatureBar({
+  label,
+  value,
+  threshold,
+  accent,
+}: {
+  label: string;
+  value: number;
+  threshold: number;
+  accent: string;
+}) {
+  const pct = Math.min((value / threshold) * 100, 100);
+  const color =
+    pct < 70 ? accent || "var(--primary)" : pct < 90 ? "#f59e0b" : "#ef4444";
+  return (
+    <div>
+      <div className="flex justify-between text-xs mb-1">
+        <span className="text-muted">{label}</span>
+        <span className="font-semibold text-text">
+          {formatAmount(value)} / {formatAmount(threshold)}
+        </span>
+      </div>
+      <div className="h-3 rounded-full bg-surface-hover overflow-hidden">
+        <div
+          className="h-full rounded-full transition-all duration-500"
+          style={{ width: `${pct}%`, backgroundColor: color }}
+        />
+      </div>
+      {pct >= 90 && (
+        <p className="text-xs text-danger mt-1">Vous approchez du seuil de TVA</p>
+      )}
+    </div>
   );
 }
 
@@ -376,6 +529,7 @@ function FiscalHealthGauge({
       : pct < 0.8
       ? "text-warning"
       : "text-danger";
+  const strokeColor = pct < 0.7 ? accent || "var(--primary)" : pct < 0.9 ? "#f59e0b" : "#ef4444";
 
   return (
     <div className="flex flex-col items-center">
@@ -395,7 +549,7 @@ function FiscalHealthGauge({
           cy="70"
           r={radius}
           fill="none"
-          stroke={accent || "var(--primary)"}
+          stroke={strokeColor}
           strokeWidth="10"
           strokeDasharray={`${arcLength} ${circumference}`}
           strokeLinecap="round"
@@ -412,6 +566,9 @@ function FiscalHealthGauge({
       <p className="text-xs text-muted mt-1 text-center">
         {formatAmount(ca)} / {formatAmount(threshold)}
       </p>
+      {pct >= 0.9 && (
+        <p className="text-xs text-danger mt-1 text-center">Vous approchez du seuil de TVA</p>
+      )}
     </div>
   );
 }
