@@ -523,7 +523,7 @@ export async function fetchInvoices(
   let query = supabase
     .from("invoices")
     .select(
-      "id, company_id, client_id, quote_id, number, type, status, pa_status, pa_rejection_reason, issue_date, due_date, payment_terms, total_ht, total_vat, total_ttc, paid_at, paid_amount, payment_method, stripe_payment_link, facturx_pdf_url, ereporting_status, note, created_at, clients(name)"
+      "id, company_id, client_id, quote_id, credited_invoice_id, number, type, status, pa_status, pa_rejection_reason, issue_date, due_date, payment_terms, total_ht, total_vat, total_ttc, paid_at, paid_amount, payment_method, stripe_payment_link, facturx_pdf_url, ereporting_status, note, created_at, clients(name)"
     )
     .eq("company_id", companyId)
     .order("created_at", { ascending: false });
@@ -540,6 +540,7 @@ export async function fetchInvoices(
     company_id: i.company_id,
     client_id: i.client_id,
     quote_id: i.quote_id,
+    credited_invoice_id: i.credited_invoice_id,
     number: i.number,
     type: i.type,
     status: i.status,
@@ -566,7 +567,13 @@ export async function fetchInvoices(
 export async function fetchInvoice(
   companyId: string,
   id: string
-): Promise<{ invoice: Invoice; lines: InvoiceLine[]; client: Client | null } | null> {
+): Promise<{
+  invoice: Invoice;
+  lines: InvoiceLine[];
+  client: Client | null;
+  linkedCreditNotes: { id: string; number: string }[];
+  sourceInvoice: { id: string; number: string } | null;
+} | null> {
   const { data, error } = await supabase
     .from("invoices")
     .select("*")
@@ -576,7 +583,7 @@ export async function fetchInvoice(
   if (error) throw error;
   if (!data) return null;
   const invoice = data as Invoice;
-  const [linesRes, clientRes] = await Promise.all([
+  const [linesRes, clientRes, linkedRes, sourceRes] = await Promise.all([
     supabase
       .from("invoice_lines")
       .select("*")
@@ -587,13 +594,32 @@ export async function fetchInvoice(
       .select("*")
       .eq("id", invoice.client_id)
       .maybeSingle(),
+    supabase
+      .from("invoices")
+      .select("id, number")
+      .eq("company_id", companyId)
+      .eq("credited_invoice_id", id)
+      .neq("status", "draft")
+      .order("created_at", { ascending: false }),
+    invoice.credited_invoice_id
+      ? supabase
+          .from("invoices")
+          .select("id, number")
+          .eq("company_id", companyId)
+          .eq("id", invoice.credited_invoice_id)
+          .maybeSingle()
+      : Promise.resolve({ data: null, error: null }),
   ]);
   if (linesRes.error) throw linesRes.error;
   if (clientRes.error) throw clientRes.error;
+  if (linkedRes.error) throw linkedRes.error;
+  if (sourceRes.error) throw sourceRes.error;
   return {
     invoice,
     lines: (linesRes.data || []) as InvoiceLine[],
     client: (clientRes.data as Client) || null,
+    linkedCreditNotes: (linkedRes.data || []) as { id: string; number: string }[],
+    sourceInvoice: (sourceRes.data as { id: string; number: string }) || null,
   };
 }
 
@@ -772,7 +798,8 @@ export async function createCreditNote(
       total_ht: -Math.abs(Number(invoice.total_ht)),
       total_vat: -Math.abs(Number(invoice.total_vat)),
       total_ttc: -Math.abs(Number(invoice.total_ttc)),
-      note: `Avoir sur ${invoice.number}`,
+      note: `Avoir sur facture ${invoice.number}`,
+      credited_invoice_id: sourceInvoiceId,
     })
     .select("*")
     .single();
@@ -855,7 +882,7 @@ export async function fetchInvoiceStats(
     .from("invoices")
     .select("total_ttc, paid_amount, status, issue_date, due_date, paid_at, type")
     .eq("company_id", companyId)
-    .neq("type", "credit_note");
+    .in("status", ["pending", "late", "paid", "rejected"]);
   if (error) throw error;
   let totalFacture = 0,
     enAttente = 0,
@@ -893,7 +920,7 @@ export async function fetchClientStats(
     .select("total_ttc, paid_amount, status, issue_date, paid_at, type")
     .eq("company_id", companyId)
     .eq("client_id", clientId)
-    .neq("type", "credit_note");
+    .in("status", ["pending", "late", "paid", "rejected"]);
   if (error) throw error;
   let caEncaisse = 0,
     enAttente = 0;
@@ -1028,7 +1055,7 @@ export async function fetchDashboardData(
   const { data: invoices, error } = await supabase
     .from("invoices")
     .select(
-      "id, company_id, client_id, quote_id, number, type, status, pa_status, pa_rejection_reason, issue_date, due_date, payment_terms, total_ht, total_vat, total_ttc, paid_at, paid_amount, payment_method, stripe_payment_link, facturx_pdf_url, ereporting_status, note, created_at, clients(name)"
+      "id, company_id, client_id, quote_id, credited_invoice_id, number, type, status, pa_status, pa_rejection_reason, issue_date, due_date, payment_terms, total_ht, total_vat, total_ttc, paid_at, paid_amount, payment_method, stripe_payment_link, facturx_pdf_url, ereporting_status, note, created_at, clients(name)"
     )
     .eq("company_id", companyId)
     .order("created_at", { ascending: false });
@@ -1039,6 +1066,7 @@ export async function fetchDashboardData(
     company_id: i.company_id,
     client_id: i.client_id,
     quote_id: i.quote_id,
+    credited_invoice_id: i.credited_invoice_id,
     number: i.number,
     type: i.type,
     status: i.status,
@@ -1151,7 +1179,7 @@ export async function fetchDashboardData(
     : null;
 
   const recentInvoices = invoiceRows
-    .filter((i) => i.status !== "draft" && i.type !== "credit_note")
+    .filter((i) => i.status !== "draft")
     .slice(0, 5);
 
   const upcomingEcheances = invoiceRows

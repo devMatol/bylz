@@ -109,6 +109,7 @@ export interface Invoice {
   company_id: string;
   client_id: string;
   quote_id: string | null;
+  credited_invoice_id: string | null;
   number: string;
   type: InvoiceType;
   status: InvoiceStatus;

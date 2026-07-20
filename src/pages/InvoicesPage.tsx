@@ -190,10 +190,17 @@ export function InvoicesPage() {
                         {formatDateShort(r.due_date)}
                       </td>
                       <td className="p-3 text-right whitespace-nowrap">
-                        <Amount value={r.total_ttc} size="sm" />
+                        <Amount value={r.total_ttc} size="sm" className={r.type === "credit_note" ? "text-danger" : undefined} />
                       </td>
                       <td className="p-3">
-                        <StatusBadge status={r.status} />
+                        <div className="flex items-center gap-1.5">
+                          {r.type === "credit_note" && (
+                            <span className="inline-flex items-center px-1.5 py-0.5 rounded-pill text-[10px] font-bold bg-violet-500/15 text-violet-600 dark:text-violet-400">
+                              Avoir
+                            </span>
+                          )}
+                          <StatusBadge status={r.status} />
+                        </div>
                       </td>
                       <td className="p-3">
                         <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -267,10 +274,17 @@ export function InvoicesPage() {
                         {formatDateShort(r.due_date)}
                       </td>
                       <td className="p-3 text-right whitespace-nowrap">
-                        <Amount value={r.total_ttc} size="sm" />
+                        <Amount value={r.total_ttc} size="sm" className={r.type === "credit_note" ? "text-danger" : undefined} />
                       </td>
                       <td className="p-3">
-                        <StatusBadge status={r.status} />
+                        <div className="flex items-center gap-1.5">
+                          {r.type === "credit_note" && (
+                            <span className="inline-flex items-center px-1.5 py-0.5 rounded-pill text-[10px] font-bold bg-violet-500/15 text-violet-600 dark:text-violet-400">
+                              Avoir
+                            </span>
+                          )}
+                          <StatusBadge status={r.status} />
+                        </div>
                       </td>
                       <td className="p-3">
                         <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -310,7 +324,14 @@ export function InvoicesPage() {
                         {r.number.startsWith("DRAFT-") ? "Brouillon" : r.number}
                       </p>
                     </div>
-                    <StatusBadge status={r.status} />
+                    <div className="flex items-center gap-1.5">
+                      {r.type === "credit_note" && (
+                        <span className="inline-flex items-center px-1.5 py-0.5 rounded-pill text-[10px] font-bold bg-violet-500/15 text-violet-600 dark:text-violet-400">
+                          Avoir
+                        </span>
+                      )}
+                      <StatusBadge status={r.status} />
+                    </div>
                   </div>
                   <div className="flex items-center justify-between gap-2 text-sm">
                     <div className="min-w-0">
@@ -318,7 +339,7 @@ export function InvoicesPage() {
                         {formatDateShort(r.due_date)}
                       </span>
                     </div>
-                    <Amount value={r.total_ttc} size="sm" />
+                    <Amount value={r.total_ttc} size="sm" className={r.type === "credit_note" ? "text-danger" : undefined} />
                   </div>
                 </div>
               );

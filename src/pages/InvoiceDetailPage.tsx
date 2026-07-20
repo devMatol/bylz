@@ -6,6 +6,7 @@ import {
   Send,
   Check,
   Mail,
+  Link2,
 } from "lucide-react";
 import { PageContainer } from "../components/layout/PageContainer";
 import { Button } from "../components/ui/Button";
@@ -43,6 +44,8 @@ export function InvoiceDetailPage() {
     invoice: Invoice;
     lines: InvoiceLine[];
     client: Client | null;
+    linkedCreditNotes: { id: string; number: string }[];
+    sourceInvoice: { id: string; number: string } | null;
   } | null>(null);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
@@ -56,6 +59,8 @@ export function InvoiceDetailPage() {
   const [payDate, setPayDate] = useState(todayISO());
   const [payAmount, setPayAmount] = useState("");
   const [payMethod, setPayMethod] = useState<PaymentMethod>("transfer");
+  const [cnOpen, setCnOpen] = useState(false);
+  const [cnMode, setCnMode] = useState<"total" | "partial">("total");
 
   const load = useCallback(async () => {
     if (!company || !id) return;
@@ -146,8 +151,28 @@ export function InvoiceDetailPage() {
     setBusy(true);
     try {
       const cn = await createCreditNote(company.id, invoice.id);
-      toast("Avoir créé (brouillon)", "success");
-      navigate(`/invoices/new?id=${cn.id}`);
+      if (cnMode === "total") {
+        const emitted = await emitInvoice(company.id, cn.id);
+        toast(`Avoir créé et émis : ${emitted.number}`, "success");
+        if (client?.email) {
+          try {
+            const amount = formatAmount(Number(emitted.total_ttc));
+            await sendDocumentByEmail("invoice", emitted.id, client.email, {
+              subject: `Avoir ${emitted.number} — ${company.commercial_name || company.legal_name}`,
+              body: `Bonjour ${client.name},\n\nVeuillez trouver ci-joint votre avoir ${emitted.number} d'un montant de ${amount}.\n\nCordialement,\n${company.commercial_name || company.legal_name}`,
+            });
+            toast("Avoir envoyé par email au client", "info");
+          } catch (err) {
+            toast(err instanceof Error ? `Email non envoyé : ${err.message}` : "Email non envoyé", "danger");
+          }
+        }
+        setCnOpen(false);
+        void load();
+      } else {
+        toast("Avoir créé (brouillon) — modifiez les lignes puis émettez", "success");
+        setCnOpen(false);
+        navigate(`/invoices/new?id=${cn.id}`);
+      }
     } catch (err) {
       toast(err instanceof Error ? err.message : "Erreur", "danger");
     } finally {
@@ -320,7 +345,10 @@ export function InvoiceDetailPage() {
             {!isCreditNote && !isDraft && (
               <ActionButton
                 icon={<FileText className="w-4 h-4" />}
-                onClick={handleCreditNote}
+                onClick={() => {
+                  setCnMode("total");
+                  setCnOpen(true);
+                }}
                 disabled={busy}
               >
                 Créer un avoir
@@ -364,6 +392,38 @@ export function InvoiceDetailPage() {
               )}
             </div>
           )}
+
+          {/* Linked documents */}
+          {(data.linkedCreditNotes.length > 0 || data.sourceInvoice) && (
+            <div className="border border-border rounded-card p-4 card-shadow">
+              <span className="text-xs font-semibold text-muted uppercase tracking-wide mb-2 block">
+                Documents liés
+              </span>
+              <div className="flex flex-col gap-2">
+                {data.sourceInvoice && (
+                  <button
+                    type="button"
+                    onClick={() => navigate(`/invoices/${data.sourceInvoice!.id}`)}
+                    className="flex items-center gap-2 text-sm text-text hover:text-primary transition-colors text-left"
+                  >
+                    <Link2 className="w-3.5 h-3.5 text-muted flex-shrink-0" />
+                    Avoir sur : <span className="font-semibold">{data.sourceInvoice.number}</span>
+                  </button>
+                )}
+                {data.linkedCreditNotes.map((cn) => (
+                  <button
+                    key={cn.id}
+                    type="button"
+                    onClick={() => navigate(`/invoices/${cn.id}`)}
+                    className="flex items-center gap-2 text-sm text-text hover:text-primary transition-colors text-left"
+                  >
+                    <Link2 className="w-3.5 h-3.5 text-muted flex-shrink-0" />
+                    Avoir lié : <span className="font-semibold">{cn.number}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -404,6 +464,58 @@ export function InvoiceDetailPage() {
             </Button>
             <Button type="button" variant="primary" onClick={handlePay} loading={busy}>
               Encaisser
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Credit note modal */}
+      <Modal open={cnOpen} onClose={() => setCnOpen(false)} title="Créer un avoir">
+        <div className="flex flex-col gap-4">
+          <p className="text-sm text-muted">
+            Créer un avoir pour <span className="font-semibold text-text">{invoice.number}</span> ?
+            L'avoir annulera tout ou partie du montant de cette facture.
+          </p>
+          <div className="flex flex-col gap-2">
+            <label className="text-sm font-semibold text-text">Type d'avoir</label>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => setCnMode("total")}
+                className={cn(
+                  "flex-1 px-3 py-2.5 rounded-card text-sm font-semibold border transition-all",
+                  cnMode === "total"
+                    ? "border-primary bg-primary/10 text-primary"
+                    : "border-border text-muted hover:text-text"
+                )}
+              >
+                Avoir total
+              </button>
+              <button
+                type="button"
+                onClick={() => setCnMode("partial")}
+                className={cn(
+                  "flex-1 px-3 py-2.5 rounded-card text-sm font-semibold border transition-all",
+                  cnMode === "partial"
+                    ? "border-primary bg-primary/10 text-primary"
+                    : "border-border text-muted hover:text-text"
+                )}
+              >
+                Avoir partiel
+              </button>
+            </div>
+            <p className="text-xs text-muted">
+              {cnMode === "total"
+                ? "Toutes les lignes seront copiées avec des montants négatifs, puis l'avoir sera émis automatiquement."
+                : "Un brouillon sera créé avec des montants négatifs — vous pourrez ajuster les lignes avant émission."}
+            </p>
+          </div>
+          <div className="flex justify-end gap-2">
+            <Button type="button" variant="ghost" onClick={() => setCnOpen(false)} disabled={busy}>
+              Annuler
+            </Button>
+            <Button type="button" variant="primary" onClick={handleCreditNote} loading={busy}>
+              {cnMode === "total" ? "Créer et émettre" : "Créer le brouillon"}
             </Button>
           </div>
         </div>
