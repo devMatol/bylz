@@ -14,7 +14,7 @@ import { useAuth } from "../contexts/AuthContext";
 import { useToast } from "../components/ui/Toast";
 import { useDebounce } from "../hooks/useDebounce";
 import { fetchInvoices, fetchInvoiceStats } from "../lib/api";
-import { formatDateLong } from "../lib/date";
+import { formatDateShort } from "../lib/date";
 import { cn } from "../lib/utils";
 import type { InvoiceStatus } from "../types/database";
 
@@ -102,16 +102,18 @@ export function InvoicesPage() {
     >
       {stats && (
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <StatCard label="Total facturé (année)" value={stats.totalFacture} />
-          <StatCard label="En attente" value={stats.enAttente} />
-          <StatCard label="En retard" value={stats.enRetard} />
-          <StatCard label="Encaissé ce mois" value={stats.encaisseMois} />
+          <StatCard variant="compact" label="Total facturé (année)" value={stats.totalFacture} />
+          <StatCard variant="compact" label="En attente" value={stats.enAttente} />
+          <StatCard variant="compact" label="En retard" value={stats.enRetard} />
+          <StatCard variant="compact" label="Encaissé ce mois" value={stats.encaisseMois} />
         </div>
       )}
 
-      <div className="flex flex-col sm:flex-row gap-3 sm:items-center">
-        <FilterPills options={FILTERS} value={filter} onChange={setFilter} />
-        <div className="sm:max-w-xs sm:ml-auto">
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 mb-4">
+        <div className="order-2 lg:order-1 overflow-x-auto lg:overflow-visible -mx-4 px-4 lg:mx-0 lg:px-0 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+          <FilterPills options={FILTERS} value={filter} onChange={setFilter} className="flex-nowrap lg:flex-wrap" />
+        </div>
+        <div className="order-1 lg:order-2 w-full lg:w-64 lg:flex-shrink-0">
           <SearchInput value={search} onChange={setSearch} placeholder="Rechercher une facture…" />
         </div>
       </div>
@@ -131,76 +133,198 @@ export function InvoicesPage() {
           onCta={() => navigate("/invoices/new")}
         />
       ) : (
-        <div className="border border-border rounded-card overflow-hidden">
-          <table className="w-full text-sm">
-            <thead className="bg-surface-hover text-muted text-xs uppercase">
-              <tr>
-                <th className="text-left p-3 font-semibold">Client</th>
-                <th className="text-left p-3 font-semibold">Numéro</th>
-                <th className="text-left p-3 font-semibold">Émise le</th>
-                <th className="text-left p-3 font-semibold">Échéance</th>
-                <th className="text-right p-3 font-semibold">Montant TTC</th>
-                <th className="text-left p-3 font-semibold">Statut</th>
-                <th className="text-right p-3 font-semibold">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((r) => {
-                const isLate =
-                  (r.status === "pending" || r.status === "late") &&
-                  r.due_date < today;
-                return (
-                  <tr
-                    key={r.id}
-                    className="border-t border-border hover:bg-surface-hover transition-colors group"
-                  >
-                    <td
-                      className="p-3 font-semibold text-text cursor-pointer"
-                      onClick={() => navigate(`/invoices/${r.id}`)}
+        <>
+          {/* Desktop table ≥1024px */}
+          <div className="hidden lg:block border border-border rounded-card overflow-hidden">
+            <table className="w-full text-sm table-fixed">
+              <colgroup>
+                <col />
+                <col className="w-[110px]" />
+                <col className="w-[100px]" />
+                <col className="w-[100px]" />
+                <col className="w-[110px]" />
+                <col className="w-[100px]" />
+                <col className="w-[90px]" />
+              </colgroup>
+              <thead className="bg-surface-hover text-muted text-xs uppercase">
+                <tr>
+                  <th className="text-left p-3 font-semibold">Client</th>
+                  <th className="text-left p-3 font-semibold whitespace-nowrap">Numéro</th>
+                  <th className="text-left p-3 font-semibold whitespace-nowrap">Émise</th>
+                  <th className="text-left p-3 font-semibold whitespace-nowrap">Échéance</th>
+                  <th className="text-right p-3 font-semibold whitespace-nowrap">Montant</th>
+                  <th className="text-left p-3 font-semibold">Statut</th>
+                  <th className="text-right p-3 font-semibold">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map((r) => {
+                  const isLate =
+                    (r.status === "pending" || r.status === "late") &&
+                    r.due_date < today;
+                  return (
+                    <tr
+                      key={r.id}
+                      className="border-t border-border hover:bg-surface-hover transition-colors group"
                     >
-                      {r.client_name}
-                    </td>
-                    <td
-                      className="p-3 text-text cursor-pointer"
-                      onClick={() => navigate(`/invoices/${r.id}`)}
+                      <td
+                        className="p-3 font-semibold text-text cursor-pointer truncate max-w-0"
+                        onClick={() => navigate(`/invoices/${r.id}`)}
+                        title={r.client_name}
+                      >
+                        {r.client_name}
+                      </td>
+                      <td
+                        className="p-3 text-text cursor-pointer whitespace-nowrap"
+                        onClick={() => navigate(`/invoices/${r.id}`)}
+                      >
+                        {r.number.startsWith("DRAFT-") ? "Brouillon" : r.number}
+                      </td>
+                      <td className="p-3 text-muted whitespace-nowrap">{formatDateShort(r.issue_date)}</td>
+                      <td
+                        className={cn(
+                          "p-3 whitespace-nowrap",
+                          isLate ? "text-danger font-bold" : "text-muted"
+                        )}
+                      >
+                        {formatDateShort(r.due_date)}
+                      </td>
+                      <td className="p-3 text-right whitespace-nowrap">
+                        <Amount value={r.total_ttc} size="sm" />
+                      </td>
+                      <td className="p-3">
+                        <StatusBadge status={r.status} />
+                      </td>
+                      <td className="p-3">
+                        <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <button
+                            type="button"
+                            onClick={() => navigate(`/invoices/${r.id}`)}
+                            className="p-1.5 rounded bg-surface-hover text-muted hover:text-text"
+                            aria-label="Voir"
+                          >
+                            <Eye className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Tablet 768-1023px: drop ÉMISE column */}
+          <div className="hidden md:block lg:hidden border border-border rounded-card overflow-hidden">
+            <table className="w-full text-sm table-fixed">
+              <colgroup>
+                <col />
+                <col className="w-[110px]" />
+                <col className="w-[100px]" />
+                <col className="w-[110px]" />
+                <col className="w-[100px]" />
+                <col className="w-[90px]" />
+              </colgroup>
+              <thead className="bg-surface-hover text-muted text-xs uppercase">
+                <tr>
+                  <th className="text-left p-3 font-semibold">Client</th>
+                  <th className="text-left p-3 font-semibold whitespace-nowrap">Numéro</th>
+                  <th className="text-left p-3 font-semibold whitespace-nowrap">Échéance</th>
+                  <th className="text-right p-3 font-semibold whitespace-nowrap">Montant</th>
+                  <th className="text-left p-3 font-semibold">Statut</th>
+                  <th className="text-right p-3 font-semibold">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map((r) => {
+                  const isLate =
+                    (r.status === "pending" || r.status === "late") &&
+                    r.due_date < today;
+                  return (
+                    <tr
+                      key={r.id}
+                      className="border-t border-border hover:bg-surface-hover transition-colors group"
                     >
-                      {r.number.startsWith("DRAFT-") ? "Brouillon" : r.number}
-                    </td>
-                    <td className="p-3 text-muted">{formatDateLong(r.issue_date)}</td>
-                    <td
-                      className={cn(
-                        "p-3",
-                        isLate
-                          ? "text-danger font-bold"
-                          : "text-muted"
-                      )}
-                    >
-                      {formatDateLong(r.due_date)}
-                    </td>
-                    <td className="p-3 text-right">
-                      <Amount value={r.total_ttc} size="sm" />
-                    </td>
-                    <td className="p-3">
-                      <StatusBadge status={r.status} />
-                    </td>
-                    <td className="p-3">
-                      <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button
-                          type="button"
-                          onClick={() => navigate(`/invoices/${r.id}`)}
-                          className="p-1.5 rounded bg-surface-hover text-muted hover:text-text"
-                          aria-label="Voir"
-                        >
-                          <Eye className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+                      <td
+                        className="p-3 font-semibold text-text cursor-pointer truncate max-w-0"
+                        onClick={() => navigate(`/invoices/${r.id}`)}
+                        title={r.client_name}
+                      >
+                        {r.client_name}
+                      </td>
+                      <td
+                        className="p-3 text-text cursor-pointer whitespace-nowrap"
+                        onClick={() => navigate(`/invoices/${r.id}`)}
+                      >
+                        {r.number.startsWith("DRAFT-") ? "Brouillon" : r.number}
+                      </td>
+                      <td
+                        className={cn(
+                          "p-3 whitespace-nowrap",
+                          isLate ? "text-danger font-bold" : "text-muted"
+                        )}
+                      >
+                        {formatDateShort(r.due_date)}
+                      </td>
+                      <td className="p-3 text-right whitespace-nowrap">
+                        <Amount value={r.total_ttc} size="sm" />
+                      </td>
+                      <td className="p-3">
+                        <StatusBadge status={r.status} />
+                      </td>
+                      <td className="p-3">
+                        <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <button
+                            type="button"
+                            onClick={() => navigate(`/invoices/${r.id}`)}
+                            className="p-1.5 rounded bg-surface-hover text-muted hover:text-text"
+                            aria-label="Voir"
+                          >
+                            <Eye className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Mobile <768px: stacked cards */}
+          <div className="flex flex-col gap-3 md:hidden">
+            {rows.map((r) => {
+              const isLate =
+                (r.status === "pending" || r.status === "late") &&
+                r.due_date < today;
+              return (
+                <div
+                  key={r.id}
+                  className="border border-border rounded-card p-4 hover:bg-surface-hover transition-colors cursor-pointer"
+                  onClick={() => navigate(`/invoices/${r.id}`)}
+                >
+                  <div className="flex items-start justify-between gap-2 mb-3">
+                    <div className="min-w-0 flex-1">
+                      <p className="font-semibold text-text truncate">{r.client_name}</p>
+                      <p className="text-xs text-muted mt-0.5">
+                        {r.number.startsWith("DRAFT-") ? "Brouillon" : r.number}
+                      </p>
+                    </div>
+                    <StatusBadge status={r.status} />
+                  </div>
+                  <div className="flex items-center justify-between gap-2 text-sm">
+                    <div className="min-w-0">
+                      <span className={cn("block", isLate ? "text-danger font-bold" : "text-muted")}>
+                        {formatDateShort(r.due_date)}
+                      </span>
+                    </div>
+                    <Amount value={r.total_ttc} size="sm" />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </>
       )}
     </PageContainer>
   );

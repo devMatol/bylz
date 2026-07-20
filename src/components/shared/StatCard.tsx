@@ -10,9 +10,18 @@ interface StatCardProps {
   icon?: ReactNode;
   delta?: { value: string; positive: boolean };
   className?: string;
+  variant?: "default" | "compact";
 }
 
-export function StatCard({ label, value, icon, delta, className }: StatCardProps) {
+export function StatCard({ label, value, icon, delta, className, variant = "default" }: StatCardProps) {
+  if (variant === "compact") {
+    return (
+      <Card className={cn("p-4", className)}>
+        <p className="text-xs text-muted mb-1">{label}</p>
+        <Amount value={value} size="md" />
+      </Card>
+    );
+  }
   return (
     <GlowContainer>
       <Card className={cn("relative overflow-hidden", className)}>

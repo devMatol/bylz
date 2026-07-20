@@ -14,6 +14,10 @@ export function formatDateLong(date: string | Date | null | undefined): string {
   return safeFormatDate(date, "d MMMM yyyy");
 }
 
+export function formatDateShort(date: string | Date | null | undefined): string {
+  return safeFormatDate(date, "d MMM yyyy");
+}
+
 export function paymentTermsToDate(
   issueDate: string | Date,
   terms: "on_receipt" | "30d" | "60d"
