@@ -1,0 +1,15 @@
+@import "./styles/theme.css";
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+  .card-shadow {
+    box-shadow: var(--shadow-card);
+  }
+  .input-focus:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px var(--glow-primary), var(--shadow-input-focus);
+  }
+}
