@@ -8,11 +8,13 @@ import {
   CalendarClock,
   Plus,
   BarChart3,
+  Info,
 } from "lucide-react";
 import { parseISO, isValid } from "date-fns";
 import { PageContainer } from "../components/layout/PageContainer";
 import { Card } from "../components/ui/Card";
 import { Skeleton } from "../components/ui/Skeleton";
+import { Tooltip } from "../components/ui/Tooltip";
 import { StatCard } from "../components/shared/StatCard";
 import { Amount } from "../components/shared/Amount";
 import { StatusBadge } from "../components/shared/StatusBadge";
@@ -245,7 +247,14 @@ export function DashboardPage() {
 
             {/* Santé fiscale (40%) */}
             <Card className="lg:col-span-2">
-              <h3 className="text-sm font-bold text-text mb-4">Santé fiscale</h3>
+              <div className="flex items-center gap-1.5 mb-4">
+                <h3 className="text-sm font-bold text-text">Santé fiscale</h3>
+                <Tooltip content="Seuil de franchise de TVA : au-delà, vous devrez facturer la TVA">
+                  <span className="inline-flex text-muted hover:text-text transition-colors cursor-help">
+                    <Info className="w-3.5 h-3.5" />
+                  </span>
+                </Tooltip>
+              </div>
               {loading ? (
                 <Skeleton height="10rem" />
               ) : isMixed ? (
@@ -465,7 +474,7 @@ function NatureBar({
   const safeThreshold = threshold > 0 ? threshold : 1;
   const pct = Math.min((value / safeThreshold) * 100, 100);
   const color =
-    pct < 70 ? accent || "var(--primary)" : pct < 90 ? "#f59e0b" : "#ef4444";
+    pct < 70 ? "var(--success)" : pct < 90 ? "var(--warning)" : "var(--danger)";
   return (
     <div>
       <div className="flex justify-between text-xs mb-1">
@@ -490,7 +499,6 @@ function NatureBar({
 function FiscalHealthGauge({
   ca,
   threshold,
-  accent,
 }: {
   ca: number;
   threshold: number;
@@ -498,56 +506,59 @@ function FiscalHealthGauge({
 }) {
   const safeThreshold = threshold > 0 ? threshold : 1;
   const pct = Math.min(ca / safeThreshold, 1);
-  const angle = pct * 270;
+  const visualPct = Math.max(pct, 0.03);
   const radius = 52;
   const circumference = 2 * Math.PI * radius;
-  const arcLength = (angle / 360) * circumference;
-  const fullArc = (270 / 360) * circumference;
+  const arcLength = visualPct * circumference;
 
   const status =
-    pct < 0.5 ? "Sain" : pct < 0.8 ? "Attention" : pct < 1 ? "Limite" : "Dépassé";
-  const statusColor =
-    pct < 0.5 ? "text-success" : pct < 0.8 ? "text-warning" : "text-danger";
-  const strokeColor = pct < 0.7 ? accent || "var(--primary)" : pct < 0.9 ? "#f59e0b" : "#ef4444";
+    pct < 0.7 ? "Sain" : pct < 0.9 ? "Attention" : "Critique";
+  const pillClass =
+    pct < 0.7
+      ? "bg-success/15 text-success"
+      : pct < 0.9
+      ? "bg-warning/15 text-warning"
+      : "bg-danger/15 text-danger";
+  const strokeColor =
+    pct < 0.7 ? "var(--success)" : pct < 0.9 ? "var(--warning)" : "var(--danger)";
 
   return (
     <div className="flex flex-col items-center">
-      <svg width="140" height="140" viewBox="0 0 140 140" className="-rotate-[135deg]">
-        <circle
-          cx="70"
-          cy="70"
-          r={radius}
-          fill="none"
-          stroke="var(--border)"
-          strokeWidth="10"
-          strokeDasharray={`${fullArc} ${circumference}`}
-          strokeLinecap="round"
-        />
-        <circle
-          cx="70"
-          cy="70"
-          r={radius}
-          fill="none"
-          stroke={strokeColor}
-          strokeWidth="10"
-          strokeDasharray={`${arcLength} ${circumference}`}
-          strokeLinecap="round"
-          className="transition-all duration-500"
-        />
-      </svg>
-      <div className="-mt-20 flex flex-col items-center">
-        <span className="text-2xl font-bold text-text tabular-nums">
-          {Math.round(pct * 100)}%
-        </span>
-        <span className="text-xs text-muted">du seuil TVA</span>
+      <div className="relative" style={{ width: 140, height: 140 }}>
+        <svg width="140" height="140" viewBox="0 0 140 140" className="-rotate-90">
+          <circle
+            cx="70"
+            cy="70"
+            r={radius}
+            fill="none"
+            stroke="var(--surface-hover)"
+            strokeWidth="10"
+          />
+          <circle
+            cx="70"
+            cy="70"
+            r={radius}
+            fill="none"
+            stroke={strokeColor}
+            strokeWidth="10"
+            strokeDasharray={`${arcLength} ${circumference}`}
+            strokeLinecap="round"
+            className="transition-all duration-500"
+          />
+        </svg>
+        <div className="absolute inset-0 flex flex-col items-center justify-center">
+          <span className="text-2xl font-bold text-text tabular-nums">
+            {Math.round(pct * 100)}%
+          </span>
+          <span className="text-xs text-muted">du seuil TVA</span>
+        </div>
       </div>
-      <span className={cn("mt-3 text-sm font-bold", statusColor)}>{status}</span>
-      <p className="text-xs text-muted mt-1 text-center">
+      <span className={cn("mt-4 text-xs font-bold px-3 py-1 rounded-pill", pillClass)}>
+        {status}
+      </span>
+      <p className="text-sm text-muted mt-2 text-center">
         {formatAmount(ca)} / {formatAmount(threshold)}
       </p>
-      {pct >= 0.9 && (
-        <p className="text-xs text-danger mt-1 text-center">Vous approchez du seuil de TVA</p>
-      )}
     </div>
   );
 }
@@ -611,7 +622,7 @@ function CaBarChart({
                 y={y + 3}
                 textAnchor="end"
                 fontSize={9}
-                fill="var(--muted)"
+                fill="var(--text-muted)"
               >
                 {tv >= 1000 ? `${(tv / 1000).toFixed(0)}k` : tv.toFixed(0)}
               </text>
@@ -625,11 +636,11 @@ function CaBarChart({
           y1={vatY}
           x2={width - padRight}
           y2={vatY}
-          stroke="#f59e0b"
+          stroke="var(--warning)"
           strokeWidth={1}
           strokeDasharray="4 4"
         />
-        <text x={width - padRight - 4} y={vatY - 4} textAnchor="end" fontSize={9} fill="#f59e0b">
+        <text x={width - padRight - 4} y={vatY - 4} textAnchor="end" fontSize={9} fill="var(--warning)">
           Seuil TVA
         </text>
 
@@ -665,7 +676,7 @@ function CaBarChart({
                 y={height - 10}
                 textAnchor="middle"
                 fontSize={9}
-                fill="var(--muted)"
+                fill="var(--text-muted)"
               >
                 {monthLabel}
               </text>
