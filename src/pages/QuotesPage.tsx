@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, FileText, Eye, Copy } from "lucide-react";
+import { Plus, FileText, Eye, Copy, Trash2 } from "lucide-react";
 import { PageContainer } from "../components/layout/PageContainer";
 import { Button } from "../components/ui/Button";
 import { Skeleton } from "../components/ui/Skeleton";
@@ -9,11 +9,13 @@ import { SearchInput } from "../components/shared/SearchInput";
 import { FilterPills } from "../components/shared/FilterPills";
 import { StatusBadge } from "../components/shared/StatusBadge";
 import { Amount } from "../components/shared/Amount";
+import { ConfirmModal } from "../components/documents/ConfirmModal";
 import { useAuth } from "../contexts/AuthContext";
 import { useToast } from "../components/ui/Toast";
 import { useDebounce } from "../hooks/useDebounce";
-import { fetchQuotes, duplicateQuote } from "../lib/api";
+import { fetchQuotes, duplicateQuote, deleteQuote } from "../lib/api";
 import { formatDateShort } from "../lib/date";
+import { formatAmount } from "../lib/utils";
 import type { QuoteStatus } from "../types/database";
 
 type Filter = QuoteStatus | "all";
@@ -43,6 +45,7 @@ export function QuotesPage() {
   const [search, setSearch] = useState("");
   const debounced = useDebounce(search);
   const [rows, setRows] = useState<Row[] | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<Row | null>(null);
 
   const load = useCallback(async () => {
     if (!company) return;
@@ -77,6 +80,19 @@ export function QuotesPage() {
       void load();
     } catch (err) {
       toast(err instanceof Error ? err.message : "Erreur", "danger");
+    }
+  }
+
+  async function handleDelete() {
+    if (!company || !deleteTarget) return;
+    try {
+      await deleteQuote(company.id, deleteTarget.id);
+      toast("Brouillon supprimé", "success");
+      setDeleteTarget(null);
+      void load();
+    } catch (err) {
+      toast(err instanceof Error ? err.message : "Erreur", "danger");
+      setDeleteTarget(null);
     }
   }
 
@@ -184,6 +200,16 @@ export function QuotesPage() {
                         >
                           <Copy className="w-4 h-4" />
                         </button>
+                        {r.status === "draft" && (
+                          <button
+                            type="button"
+                            onClick={() => setDeleteTarget(r)}
+                            className="p-1.5 rounded bg-surface-hover text-muted hover:text-danger"
+                            aria-label="Supprimer"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -216,6 +242,15 @@ export function QuotesPage() {
           </div>
         </>
       )}
+      <ConfirmModal
+        open={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={handleDelete}
+        title="Supprimer ce brouillon ?"
+        message={`Cette action est définitive. ${deleteTarget ? `Client : ${deleteTarget.client_name}. Montant : ${formatAmount(deleteTarget.total_ttc)}.` : ""}`}
+        confirmLabel="Supprimer"
+        danger
+      />
     </PageContainer>
   );
 }

@@ -867,6 +867,54 @@ export async function convertQuoteToInvoice(
   return inv;
 }
 
+export async function deleteInvoice(
+  companyId: string,
+  id: string
+): Promise<void> {
+  const { data: inv, error: gErr } = await supabase
+    .from("invoices")
+    .select("id, status, quote_id, credited_invoice_id, type")
+    .eq("company_id", companyId)
+    .eq("id", id)
+    .maybeSingle();
+  if (gErr) throw gErr;
+  if (!inv) throw new Error("Facture introuvable");
+  if (inv.status !== "draft") {
+    throw new Error("Seuls les brouillons peuvent être supprimés");
+  }
+  const { error } = await supabase
+    .from("invoices")
+    .delete()
+    .eq("company_id", companyId)
+    .eq("id", id)
+    .eq("status", "draft");
+  if (error) throw error;
+}
+
+export async function deleteQuote(
+  companyId: string,
+  id: string
+): Promise<void> {
+  const { data: q, error: gErr } = await supabase
+    .from("quotes")
+    .select("id, status")
+    .eq("company_id", companyId)
+    .eq("id", id)
+    .maybeSingle();
+  if (gErr) throw gErr;
+  if (!q) throw new Error("Devis introuvable");
+  if (q.status !== "draft") {
+    throw new Error("Seuls les brouillons peuvent être supprimés");
+  }
+  const { error } = await supabase
+    .from("quotes")
+    .delete()
+    .eq("company_id", companyId)
+    .eq("id", id)
+    .eq("status", "draft");
+  if (error) throw error;
+}
+
 export async function fetchInvoiceStats(
   companyId: string
 ): Promise<{

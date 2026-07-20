@@ -7,6 +7,7 @@ import {
   Check,
   Mail,
   Link2,
+  Trash2,
 } from "lucide-react";
 import { PageContainer } from "../components/layout/PageContainer";
 import { Button } from "../components/ui/Button";
@@ -14,6 +15,7 @@ import { Skeleton } from "../components/ui/Skeleton";
 import { Input } from "../components/ui/Input";
 import { Select } from "../components/ui/Select";
 import { Modal } from "../components/ui/Modal";
+import { ConfirmModal } from "../components/documents/ConfirmModal";
 import { StatusBadge } from "../components/shared/StatusBadge";
 import { DocumentPreview } from "../components/documents/DocumentPreview";
 import { PdfButton } from "../components/documents/PdfButton";
@@ -27,6 +29,7 @@ import {
   fetchInvoiceReminders,
   sendInvoiceReminder,
   sendDocumentByEmail,
+  deleteInvoice,
 } from "../lib/api";
 import { formatDateLong, todayISO, isValidDate } from "../lib/date";
 import { formatAmount, cn } from "../lib/utils";
@@ -61,6 +64,7 @@ export function InvoiceDetailPage() {
   const [payMethod, setPayMethod] = useState<PaymentMethod>("transfer");
   const [cnOpen, setCnOpen] = useState(false);
   const [cnMode, setCnMode] = useState<"total" | "partial">("total");
+  const [deleteOpen, setDeleteOpen] = useState(false);
 
   const load = useCallback(async () => {
     if (!company || !id) return;
@@ -174,6 +178,20 @@ export function InvoiceDetailPage() {
         setCnOpen(false);
         navigate(`/invoices/new?id=${cn.id}`);
       }
+    } catch (err) {
+      toast(err instanceof Error ? err.message : "Erreur", "danger");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function handleDelete() {
+    if (!company || !invoice) return;
+    setBusy(true);
+    try {
+      await deleteInvoice(company.id, invoice.id);
+      toast("Brouillon supprimé", "success");
+      navigate("/invoices");
     } catch (err) {
       toast(err instanceof Error ? err.message : "Erreur", "danger");
     } finally {
@@ -361,6 +379,19 @@ export function InvoiceDetailPage() {
               size="sm"
               variant="ghost"
             />
+            {isDraft && (
+              <>
+                <div className="border-t border-border my-1" />
+                <ActionButton
+                  icon={<Trash2 className="w-4 h-4" />}
+                  onClick={() => setDeleteOpen(true)}
+                  disabled={busy}
+                  danger
+                >
+                  Supprimer le brouillon
+                </ActionButton>
+              </>
+            )}
           </div>
 
           {/* Reminder history */}
@@ -568,6 +599,16 @@ export function InvoiceDetailPage() {
           </div>
         </div>
       </Modal>
+
+      <ConfirmModal
+        open={deleteOpen}
+        onClose={() => setDeleteOpen(false)}
+        onConfirm={handleDelete}
+        title="Supprimer ce brouillon ?"
+        message={`Cette action est définitive. ${client?.name ? `Client : ${client.name}. ` : ""}Montant : ${formatAmount(Number(invoice.total_ttc))}.`}
+        confirmLabel="Supprimer"
+        danger
+      />
     </PageContainer>
   );
 }
@@ -577,20 +618,27 @@ function ActionButton({
   children,
   onClick,
   disabled,
+  danger,
 }: {
   icon: React.ReactNode;
   children: React.ReactNode;
   onClick: () => void;
   disabled?: boolean;
+  danger?: boolean;
 }) {
   return (
     <button
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className="flex items-center gap-2 px-3 h-9 rounded-card text-sm text-text hover:bg-surface-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed w-full text-left"
+      className={cn(
+        "flex items-center gap-2 px-3 h-9 rounded-card text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed w-full text-left",
+        danger
+          ? "text-danger hover:bg-danger/10"
+          : "text-text hover:bg-surface-hover"
+      )}
     >
-      <span className="text-muted flex-shrink-0">{icon}</span>
+      <span className={danger ? "text-danger flex-shrink-0" : "text-muted flex-shrink-0"}>{icon}</span>
       {children}
     </button>
   );

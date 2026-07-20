@@ -8,6 +8,7 @@ import {
   ChevronRight,
   FilePlus2,
   Send,
+  Trash2,
 } from "lucide-react";
 import { PageContainer } from "../components/layout/PageContainer";
 import { Button } from "../components/ui/Button";
@@ -15,6 +16,7 @@ import { Skeleton } from "../components/ui/Skeleton";
 import { StatusBadge } from "../components/shared/StatusBadge";
 import { DocumentPreview } from "../components/documents/DocumentPreview";
 import { PdfButton } from "../components/documents/PdfButton";
+import { ConfirmModal } from "../components/documents/ConfirmModal";
 import { useAuth } from "../contexts/AuthContext";
 import { useToast } from "../components/ui/Toast";
 import {
@@ -24,9 +26,10 @@ import {
   convertQuoteToInvoice,
   quoteHasInvoice,
   sendDocumentByEmail,
+  deleteQuote,
 } from "../lib/api";
 import { formatDateLong } from "../lib/date";
-import { formatAmount } from "../lib/utils";
+import { formatAmount, cn } from "../lib/utils";
 import type { Quote, QuoteLine, Client } from "../types/database";
 
 export function QuoteDetailPage() {
@@ -45,6 +48,7 @@ export function QuoteDetailPage() {
   } | null>(null);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
 
   const load = useCallback(async () => {
     if (!company || !id) return;
@@ -125,6 +129,20 @@ export function QuoteDetailPage() {
       const inv = await convertQuoteToInvoice(company.id, quote.id);
       toast("Facture créée depuis le devis", "success");
       navigate(`/invoices/new?id=${inv.id}`);
+    } catch (err) {
+      toast(err instanceof Error ? err.message : "Erreur", "danger");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function handleDelete() {
+    if (!company || !quote) return;
+    setBusy(true);
+    try {
+      await deleteQuote(company.id, quote.id);
+      toast("Brouillon supprimé", "success");
+      navigate("/quotes");
     } catch (err) {
       toast(err instanceof Error ? err.message : "Erreur", "danger");
     } finally {
@@ -281,9 +299,31 @@ export function QuoteDetailPage() {
               size="sm"
               variant="ghost"
             />
+            {quote.status === "draft" && (
+              <>
+                <div className="border-t border-border my-1" />
+                <ActionButton
+                  icon={<Trash2 className="w-4 h-4" />}
+                  onClick={() => setDeleteOpen(true)}
+                  disabled={busy}
+                  danger
+                >
+                  Supprimer le brouillon
+                </ActionButton>
+              </>
+            )}
           </div>
         </div>
       </div>
+      <ConfirmModal
+        open={deleteOpen}
+        onClose={() => setDeleteOpen(false)}
+        onConfirm={handleDelete}
+        title="Supprimer ce brouillon ?"
+        message={`Cette action est définitive. ${client?.name ? `Client : ${client.name}. ` : ""}Montant : ${formatAmount(Number(quote.total_ttc))}.`}
+        confirmLabel="Supprimer"
+        danger
+      />
     </PageContainer>
   );
 }
@@ -293,20 +333,27 @@ function ActionButton({
   children,
   onClick,
   disabled,
+  danger,
 }: {
   icon: React.ReactNode;
   children: React.ReactNode;
   onClick: () => void;
   disabled?: boolean;
+  danger?: boolean;
 }) {
   return (
     <button
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className="flex items-center gap-2 px-3 h-9 rounded-card text-sm text-text hover:bg-surface-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed w-full text-left"
+      className={cn(
+        "flex items-center gap-2 px-3 h-9 rounded-card text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed w-full text-left",
+        danger
+          ? "text-danger hover:bg-danger/10"
+          : "text-text hover:bg-surface-hover"
+      )}
     >
-      <span className="text-muted flex-shrink-0">{icon}</span>
+      <span className={danger ? "text-danger flex-shrink-0" : "text-muted flex-shrink-0"}>{icon}</span>
       {children}
     </button>
   );

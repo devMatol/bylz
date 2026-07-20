@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback, type FormEvent } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { Plus, Eye } from "lucide-react";
+import { Plus, Eye, Trash2 } from "lucide-react";
 import { PageContainer } from "../components/layout/PageContainer";
 import { Button } from "../components/ui/Button";
 import { Input } from "../components/ui/Input";
@@ -17,6 +17,7 @@ import {
   fetchInvoice,
   saveInvoice,
   emitInvoice,
+  deleteInvoice,
   fetchClients,
   fetchCatalog,
   computeTotals,
@@ -50,6 +51,7 @@ export function InvoiceNewPage() {
   const [clientModalOpen, setClientModalOpen] = useState(false);
   const [emitOpen, setEmitOpen] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
   const [loading, setLoading] = useState(isEdit);
   const [invoiceType, setInvoiceType] = useState<"invoice" | "credit_note">("invoice");
 
@@ -179,6 +181,20 @@ export function InvoiceNewPage() {
       const emitted = await emitInvoice(company.id, invoiceId);
       toast(`Facture émise : ${emitted.number}`, "success");
       navigate(`/invoices/${emitted.id}`);
+    } catch (err) {
+      toast(err instanceof Error ? err.message : "Erreur", "danger");
+    } finally {
+      setPending(false);
+    }
+  }
+
+  async function handleDelete() {
+    if (!company || !id) return;
+    setPending(true);
+    try {
+      await deleteInvoice(company.id, id);
+      toast("Brouillon supprimé", "success");
+      navigate("/invoices");
     } catch (err) {
       toast(err instanceof Error ? err.message : "Erreur", "danger");
     } finally {
@@ -327,12 +343,27 @@ export function InvoiceNewPage() {
 
       {/* Sticky summary bar */}
       <div className="fixed bottom-0 left-0 right-0 md:left-[280px] z-20 border-t border-border px-4 md:px-10 py-3 flex items-center justify-between gap-4" style={{ backgroundColor: "var(--bg)", backdropFilter: "blur(8px)" }}>
-        <span className="text-sm text-muted tabular-nums">
-          {lines.length} ligne{lines.length > 1 ? "s" : ""} · Total TTC{" "}
-          <span className="font-bold text-text">
-            {formatAmount(totals.total_ttc)}
+        <div className="flex items-center gap-3 min-w-0">
+          {isEdit && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              leftIcon={<Trash2 className="w-4 h-4" />}
+              loading={pending}
+              onClick={() => setDeleteOpen(true)}
+              className="text-danger hover:bg-danger/10"
+            >
+              Supprimer
+            </Button>
+          )}
+          <span className="text-sm text-muted tabular-nums">
+            {lines.length} ligne{lines.length > 1 ? "s" : ""} · Total TTC{" "}
+            <span className="font-bold text-text">
+              {formatAmount(totals.total_ttc)}
+            </span>
           </span>
-        </span>
+        </div>
         <div className="flex gap-2">
           <Button
             type="button"
@@ -406,6 +437,15 @@ export function InvoiceNewPage() {
         message="Une fois émise, cette facture ne pourra plus être modifiée. Un avoir sera nécessaire pour toute correction."
         confirmLabel="Émettre"
         danger={false}
+      />
+      <ConfirmModal
+        open={deleteOpen}
+        onClose={() => setDeleteOpen(false)}
+        onConfirm={handleDelete}
+        title="Supprimer ce brouillon ?"
+        message={`Cette action est définitive. ${selectedClient ? `Client : ${selectedClient.name}. ` : ""}Montant : ${formatAmount(totals.total_ttc)}.`}
+        confirmLabel="Supprimer"
+        danger
       />
     </PageContainer>
   );

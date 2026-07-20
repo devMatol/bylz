@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, Receipt, Eye } from "lucide-react";
+import { Plus, Receipt, Eye, Trash2 } from "lucide-react";
 import { PageContainer } from "../components/layout/PageContainer";
 import { Button } from "../components/ui/Button";
 import { Skeleton } from "../components/ui/Skeleton";
@@ -10,12 +10,13 @@ import { FilterPills } from "../components/shared/FilterPills";
 import { StatusBadge } from "../components/shared/StatusBadge";
 import { StatCard } from "../components/shared/StatCard";
 import { Amount } from "../components/shared/Amount";
+import { ConfirmModal } from "../components/documents/ConfirmModal";
 import { useAuth } from "../contexts/AuthContext";
 import { useToast } from "../components/ui/Toast";
 import { useDebounce } from "../hooks/useDebounce";
-import { fetchInvoices, fetchInvoiceStats } from "../lib/api";
+import { fetchInvoices, fetchInvoiceStats, deleteInvoice } from "../lib/api";
 import { formatDateShort } from "../lib/date";
-import { cn } from "../lib/utils";
+import { cn, formatAmount } from "../lib/utils";
 import type { InvoiceStatus, InvoiceType } from "../types/database";
 
 type Filter = InvoiceStatus | "all";
@@ -47,6 +48,7 @@ export function InvoicesPage() {
   const [search, setSearch] = useState("");
   const debounced = useDebounce(search);
   const [rows, setRows] = useState<Row[] | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<Row | null>(null);
   const [stats, setStats] = useState<{
     totalFacture: number;
     enAttente: number;
@@ -83,6 +85,19 @@ export function InvoicesPage() {
   useEffect(() => {
     void load();
   }, [load]);
+
+  async function handleDelete() {
+    if (!company || !deleteTarget) return;
+    try {
+      await deleteInvoice(company.id, deleteTarget.id);
+      toast("Brouillon supprimé", "success");
+      setDeleteTarget(null);
+      void load();
+    } catch (err) {
+      toast(err instanceof Error ? err.message : "Erreur", "danger");
+      setDeleteTarget(null);
+    }
+  }
 
   if (!company) return null;
 
@@ -214,6 +229,19 @@ export function InvoicesPage() {
                           >
                             <Eye className="w-4 h-4" />
                           </button>
+                          {r.status === "draft" && (
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setDeleteTarget(r);
+                              }}
+                              className="p-1.5 rounded bg-surface-hover text-muted hover:text-danger"
+                              aria-label="Supprimer"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -298,6 +326,19 @@ export function InvoicesPage() {
                           >
                             <Eye className="w-4 h-4" />
                           </button>
+                          {r.status === "draft" && (
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setDeleteTarget(r);
+                              }}
+                              className="p-1.5 rounded bg-surface-hover text-muted hover:text-danger"
+                              aria-label="Supprimer"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -341,7 +382,22 @@ export function InvoicesPage() {
                         {formatDateShort(r.due_date)}
                       </span>
                     </div>
-                    <Amount value={r.total_ttc} size="sm" className={r.type === "credit_note" ? "text-danger" : undefined} />
+                    <div className="flex items-center gap-2">
+                      {r.status === "draft" && (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setDeleteTarget(r);
+                          }}
+                          className="p-1.5 rounded bg-surface-hover text-muted hover:text-danger"
+                          aria-label="Supprimer"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      )}
+                      <Amount value={r.total_ttc} size="sm" className={r.type === "credit_note" ? "text-danger" : undefined} />
+                    </div>
                   </div>
                 </div>
               );
@@ -349,6 +405,16 @@ export function InvoicesPage() {
           </div>
         </>
       )}
+
+      <ConfirmModal
+        open={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={handleDelete}
+        title="Supprimer ce brouillon ?"
+        message={`Cette action est définitive. ${deleteTarget ? `Client : ${deleteTarget.client_name}. Montant : ${formatAmount(deleteTarget.total_ttc)}.` : ""}`}
+        confirmLabel="Supprimer"
+        danger
+      />
     </PageContainer>
   );
 }
