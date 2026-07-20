@@ -16,7 +16,7 @@ import { useDebounce } from "../hooks/useDebounce";
 import { fetchInvoices, fetchInvoiceStats } from "../lib/api";
 import { formatDateShort } from "../lib/date";
 import { cn } from "../lib/utils";
-import type { InvoiceStatus } from "../types/database";
+import type { InvoiceStatus, InvoiceType } from "../types/database";
 
 type Filter = InvoiceStatus | "all";
 
@@ -36,6 +36,7 @@ interface Row {
   due_date: string;
   total_ttc: number;
   status: InvoiceStatus;
+  type: InvoiceType;
 }
 
 export function InvoicesPage() {
@@ -69,6 +70,7 @@ export function InvoicesPage() {
           due_date: i.due_date,
           total_ttc: i.total_ttc,
           status: i.status,
+          type: i.type,
         }))
       );
       setStats(s);

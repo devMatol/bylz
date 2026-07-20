@@ -29,7 +29,7 @@ import {
   sendDocumentByEmail,
 } from "../lib/api";
 import { formatDateLong, todayISO, isValidDate } from "../lib/date";
-import { formatAmount } from "../lib/utils";
+import { formatAmount, cn } from "../lib/utils";
 import { parseISO, differenceInCalendarDays } from "date-fns";
 import { fr } from "date-fns/locale";
 import { format } from "date-fns";
@@ -103,6 +103,7 @@ export function InvoiceDetailPage() {
   }
 
   function buildReminderTemplate(): { subject: string; body: string } {
+    if (!company) return { subject: "", body: "" };
     const daysLate = computeDaysLate();
     const clientName = client?.name || "client";
     const amount = formatAmount(Number(invoice.total_ttc));
