@@ -34,6 +34,31 @@ function corsResponse(body: string | object | null, status = 200) {
   });
 }
 
+async function getOrCreateCustomer(userId: string, email?: string, existingCustomerId?: string | null): Promise<string> {
+  if (existingCustomerId) {
+    try {
+      const cust = await stripe.customers.retrieve(existingCustomerId);
+      if (!cust.deleted) {
+        return existingCustomerId;
+      }
+    } catch (_e) {
+      console.log(`Existing customer ${existingCustomerId} not found in current Stripe account, recreating...`);
+    }
+  }
+
+  const newCust = await stripe.customers.create({
+    email,
+    metadata: { user_id: userId },
+  });
+
+  await supabase
+    .from('profiles')
+    .update({ stripe_customer_id: newCust.id })
+    .eq('id', userId);
+
+  return newCust.id;
+}
+
 Deno.serve(async (req) => {
   try {
     if (req.method === 'OPTIONS') {
@@ -73,21 +98,8 @@ Deno.serve(async (req) => {
       return corsResponse({ error: 'Profile not found' }, 404);
     }
 
-    let customerId = profile.stripe_customer_id;
-    if (!customerId) {
-      const newCustomer = await stripe.customers.create({
-        email: user.email,
-        metadata: {
-          user_id: user.id,
-        },
-      });
-      customerId = newCustomer.id;
-
-      await supabase
-        .from('profiles')
-        .update({ stripe_customer_id: customerId })
-        .eq('id', user.id);
-    }
+    // Safely get or recreate Customer ID for current Stripe account
+    const customerId = await getOrCreateCustomer(user.id, user.email, profile.stripe_customer_id);
 
     const origin = req.headers.get('origin') || 'http://localhost:5173';
     const successUrl = `${origin}/settings?checkout=success`;
@@ -117,8 +129,22 @@ Deno.serve(async (req) => {
         },
       });
     } catch (err: any) {
-      // Fallback: If price ID does not exist in the configured Stripe account, create inline price data
-      if (err.message?.includes('No such price') || err.code === 'resource_missing' || err.statusCode === 404) {
+      // Fallback 1: Customer invalid during creation
+      if (err.message?.includes('No such customer')) {
+        const freshCustId = await getOrCreateCustomer(user.id, user.email, null);
+        session = await stripe.checkout.sessions.create({
+          customer: freshCustId,
+          payment_method_types: ['card'],
+          line_items: [{ price: priceId, quantity: 1 }],
+          mode: 'subscription',
+          success_url: successUrl,
+          cancel_url: cancelUrl,
+          ...(eligibleForTrial ? { subscription_data: { trial_period_days: 14 } } : {}),
+          metadata: { user_id: user.id },
+        });
+      }
+      // Fallback 2: Price ID does not exist in current Stripe account -> create inline price data
+      else if (err.message?.includes('No such price') || err.code === 'resource_missing' || err.statusCode === 404) {
         const isPro = priceId.includes('PRO') || priceId === 'price_1TvYnW2X0yCzQQsN930PPkgJ';
         const unitAmount = isPro ? 1900 : 900;
         const planName = isPro ? 'Bylz Pro' : 'Bylz Solo';

@@ -58,21 +58,39 @@ Deno.serve(async (req) => {
       return corsResponse({ error: 'Failed to authenticate user' }, 401);
     }
 
-    const { data: profile, error: profileError } = await supabase
+    const { data: profile } = await supabase
       .from('profiles')
       .select('stripe_customer_id')
       .eq('id', user.id)
       .single();
 
-    if (profileError || !profile?.stripe_customer_id) {
-      return corsResponse({ error: "Aucun compte client Stripe associé" }, 400);
+    let customerId = profile?.stripe_customer_id;
+    if (customerId) {
+      try {
+        const cust = await stripe.customers.retrieve(customerId);
+        if (cust.deleted) customerId = null;
+      } catch (_e) {
+        customerId = null;
+      }
+    }
+
+    if (!customerId) {
+      const newCust = await stripe.customers.create({
+        email: user.email,
+        metadata: { user_id: user.id },
+      });
+      customerId = newCust.id;
+      await supabase
+        .from('profiles')
+        .update({ stripe_customer_id: customerId })
+        .eq('id', user.id);
     }
 
     const origin = req.headers.get('origin') || 'http://localhost:5173';
     const returnUrl = `${origin}/settings`;
 
     const portalSession = await stripe.billingPortal.sessions.create({
-      customer: profile.stripe_customer_id,
+      customer: customerId,
       return_url: returnUrl,
     });
 
