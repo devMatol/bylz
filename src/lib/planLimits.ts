@@ -15,8 +15,8 @@ export type FeatureKey = keyof PlanFeatureLimits;
 
 export const PLAN_LIMITS: Record<PlanType, PlanFeatureLimits> = {
   starter: {
-    invoicesPerMonth: 10,
-    maxClients: 3,
+    invoicesPerMonth: 3,
+    maxClients: 1,
     fiscalDashboard: false,
     reminders: false,
     exports: false,

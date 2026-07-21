@@ -93,9 +93,9 @@ Deno.serve(async (req) => {
         .gte('created_at', startOfMonth)
         .lte('created_at', endOfMonth);
 
-      if ((count ?? 0) >= 10) {
+      if ((count ?? 0) >= 3) {
         return corsResponse(
-          { error: 'Limite de 10 factures mensuelles atteinte sur le plan Starter.' },
+          { error: 'Limite de 3 factures mensuelles atteinte sur le plan Starter.' },
           402
         );
       }

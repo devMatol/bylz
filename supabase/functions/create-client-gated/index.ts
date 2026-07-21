@@ -78,9 +78,9 @@ Deno.serve(async (req) => {
         .select('id', { count: 'exact', head: true })
         .eq('company_id', company.id);
 
-      if ((count ?? 0) >= 3) {
+      if ((count ?? 0) >= 1) {
         return corsResponse(
-          { error: 'Limite de 3 clients atteinte sur le plan Starter. Passez au plan Solo pour des clients illimités.' },
+          { error: 'Limite de 1 client atteinte sur le plan Starter. Passez au plan Solo pour des clients illimités.' },
           402
         );
       }
