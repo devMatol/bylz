@@ -430,23 +430,32 @@ export function DashboardPage() {
           {/* Centered Upgrade Overlay for Starter */}
           {isBlurred && (
             <div className="absolute inset-0 z-20 flex items-center justify-center p-4">
-              <div className="bg-surface/95 backdrop-blur-md border border-amber-500/30 rounded-card p-8 max-w-md text-center shadow-2xl space-y-4">
-                <div className="w-12 h-12 rounded-xl bg-amber-500/10 text-amber-500 flex items-center justify-center mx-auto">
-                  <Lock className="w-6 h-6" />
+              <div className="bg-surface border border-border rounded-card p-8 max-w-md w-full text-center shadow-2xl space-y-4">
+                {/* Icon */}
+                <div className="w-14 h-14 rounded-2xl bg-amber-500 flex items-center justify-center mx-auto shadow-lg">
+                  <Lock className="w-7 h-7 text-white" />
                 </div>
-                <h3 className="text-xl font-bold text-text">Débloquez votre pilotage fiscal</h3>
+                {/* Title */}
+                <h3 className="text-xl font-bold text-text">
+                  Débloquez votre pilotage fiscal
+                </h3>
+                {/* Description */}
                 <p className="text-sm text-muted leading-relaxed">
-                  Suivez votre Chiffre d'Affaires, vos plafonds micro-entrepreneur, vos cotisations URSSAF et vos indicateurs financiers en temps réel.
+                  Suivez votre CA, vos plafonds micro-entrepreneur, vos cotisations URSSAF et vos indicateurs financiers en temps réel.
                 </p>
-                <div className="pt-2">
+                {/* CTA */}
+                <div className="pt-2 space-y-2">
                   <button
                     type="button"
                     onClick={() => setUpgradeModalOpen(true)}
-                    className="w-full h-11 px-6 rounded-pill bg-brand-primary text-white font-bold text-sm hover:opacity-90 transition-all shadow-md flex items-center justify-center space-x-2"
+                    className="w-full h-11 px-6 rounded-pill bg-amber-500 hover:bg-amber-600 active:bg-amber-700 text-white font-bold text-sm transition-colors shadow-md flex items-center justify-center gap-2"
                   >
-                    <Sparkles className="w-4 h-4" />
+                    <Sparkles className="w-4 h-4 flex-shrink-0" />
                     <span>Passer au plan Solo — 9 € / mois</span>
                   </button>
+                  <p className="text-xs text-muted">
+                    Essai gratuit 14 jours · Sans engagement
+                  </p>
                 </div>
               </div>
             </div>
