@@ -110,7 +110,7 @@ export function QuotesPage() {
         </Button>
       }
     >
-      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 mb-4">
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 mt-6 mb-4">
         <div className="order-2 lg:order-1 overflow-x-auto lg:overflow-visible -mx-4 px-4 lg:mx-0 lg:px-0 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
           <FilterPills options={FILTERS} value={filter} onChange={setFilter} className="flex-nowrap lg:flex-wrap" />
         </div>

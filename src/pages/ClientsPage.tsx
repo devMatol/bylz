@@ -94,7 +94,7 @@ export function ClientsPage() {
         </Button>
       }
     >
-      <div className="max-w-md">
+      <div className="max-w-md mb-4">
         <SearchInput value={search} onChange={setSearch} placeholder="Rechercher un client…" />
       </div>
 
