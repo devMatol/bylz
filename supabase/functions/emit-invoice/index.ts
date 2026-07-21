@@ -130,41 +130,43 @@ Deno.serve(async (req) => {
     }
 
     let paymentLinkUrl: string | null = null;
+    const origin = req.headers.get('origin') || 'http://localhost:5173';
 
-    // Generate Stripe Connect Payment Link if Pro & Connect account charges_enabled
+    // Generate Stripe Connect Payment Link if company has Connect account
     if (
       company.stripe_connect_account_id &&
       invoice.type !== 'credit_note' &&
       Number(invoice.total_amount) > 0
     ) {
       try {
-        const account = await stripe.accounts.retrieve(company.stripe_connect_account_id);
-        if (account.charges_enabled) {
-          const unitAmount = Math.round(Number(invoice.total_amount) * 100);
-          const link = await stripe.paymentLinks.create(
+        const unitAmount = Math.round(Number(invoice.total_amount) * 100);
+        const session = await stripe.checkout.sessions.create({
+          payment_method_types: ['card'],
+          line_items: [
             {
-              line_items: [
-                {
-                  price_data: {
-                    currency: 'eur',
-                    product_data: {
-                      name: `Facture ${number}`,
-                    },
-                    unit_amount: unitAmount,
-                  },
-                  quantity: 1,
+              price_data: {
+                currency: 'eur',
+                product_data: {
+                  name: `Facture ${number}`,
                 },
-              ],
-              metadata: {
-                invoice_id: invoice.id,
+                unit_amount: unitAmount,
               },
+              quantity: 1,
             },
-            {
-              stripeAccount: company.stripe_connect_account_id,
-            }
-          );
-          paymentLinkUrl = link.url;
-        }
+          ],
+          mode: 'payment',
+          success_url: `${origin}/invoices/${invoice.id}?payment=success`,
+          cancel_url: `${origin}/invoices/${invoice.id}`,
+          metadata: {
+            invoice_id: invoice.id,
+          },
+          payment_intent_data: {
+            transfer_data: {
+              destination: company.stripe_connect_account_id,
+            },
+          },
+        });
+        paymentLinkUrl = session.url;
       } catch (e) {
         console.error('Error generating Stripe Connect payment link during emission:', e);
       }

@@ -80,47 +80,48 @@ Deno.serve(async (req) => {
       return corsResponse({ error: 'Compte Stripe Connect non configuré' }, 400);
     }
 
-    // Verify charges_enabled on Connect account
-    const account = await stripe.accounts.retrieve(connectAccountId);
-    if (!account.charges_enabled) {
-      return corsResponse({ error: 'Le compte Stripe Connect n\'est pas encore actif pour recevoir des paiements' }, 400);
-    }
-
-    const unitAmount = Math.round(invoice.total_amount * 100);
+    const unitAmount = Math.round(Number(invoice.total_amount) * 100);
     if (unitAmount <= 0) {
       return corsResponse({ error: 'Le montant de la facture doit être supérieur à 0' }, 400);
     }
 
-    const paymentLink = await stripe.paymentLinks.create(
-      {
-        line_items: [
-          {
-            price_data: {
-              currency: 'eur',
-              product_data: {
-                name: `Facture ${invoice.number || 'N° non défini'}`,
-              },
-              unit_amount: unitAmount,
+    const origin = req.headers.get('origin') || 'http://localhost:5173';
+
+    // Create a Checkout Session with Destination Charge for reliable payment handling
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ['card'],
+      line_items: [
+        {
+          price_data: {
+            currency: 'eur',
+            product_data: {
+              name: `Facture ${invoice.number || 'N° non défini'}`,
             },
-            quantity: 1,
+            unit_amount: unitAmount,
           },
-        ],
-        metadata: {
-          invoice_id: invoice.id,
+          quantity: 1,
+        },
+      ],
+      mode: 'payment',
+      success_url: `${origin}/invoices/${invoice.id}?payment=success`,
+      cancel_url: `${origin}/invoices/${invoice.id}`,
+      metadata: {
+        invoice_id: invoice.id,
+      },
+      payment_intent_data: {
+        transfer_data: {
+          destination: connectAccountId,
         },
       },
-      {
-        stripeAccount: connectAccountId,
-      }
-    );
+    });
 
     // Save payment link URL on invoice
     await supabase
       .from('invoices')
-      .update({ stripe_payment_link: paymentLink.url })
+      .update({ stripe_payment_link: session.url })
       .eq('id', invoice.id);
 
-    return corsResponse({ url: paymentLink.url });
+    return corsResponse({ url: session.url });
   } catch (error: any) {
     console.error(`Create payment link error: ${error.message}`);
     return corsResponse({ error: error.message }, 500);

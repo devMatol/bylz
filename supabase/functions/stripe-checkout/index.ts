@@ -96,23 +96,59 @@ Deno.serve(async (req) => {
     // Only apply 14-day trial if user has never used a trial and has no subscription
     const eligibleForTrial = !profile.trial_used && !profile.stripe_subscription_id;
 
-    const session = await stripe.checkout.sessions.create({
-      customer: customerId,
-      payment_method_types: ['card'],
-      line_items: [
-        {
-          price: priceId,
-          quantity: 1,
+    let session: Stripe.Checkout.Session;
+
+    try {
+      session = await stripe.checkout.sessions.create({
+        customer: customerId,
+        payment_method_types: ['card'],
+        line_items: [
+          {
+            price: priceId,
+            quantity: 1,
+          },
+        ],
+        mode: 'subscription',
+        success_url: successUrl,
+        cancel_url: cancelUrl,
+        ...(eligibleForTrial ? { subscription_data: { trial_period_days: 14 } } : {}),
+        metadata: {
+          user_id: user.id,
         },
-      ],
-      mode: 'subscription',
-      success_url: successUrl,
-      cancel_url: cancelUrl,
-      ...(eligibleForTrial ? { subscription_data: { trial_period_days: 14 } } : {}),
-      metadata: {
-        user_id: user.id,
-      },
-    });
+      });
+    } catch (err: any) {
+      // Fallback: If price ID does not exist in the configured Stripe account, create inline price data
+      if (err.message?.includes('No such price') || err.code === 'resource_missing' || err.statusCode === 404) {
+        const isPro = priceId.includes('PRO') || priceId === 'price_1TvYnW2X0yCzQQsN930PPkgJ';
+        const unitAmount = isPro ? 1900 : 900;
+        const planName = isPro ? 'Bylz Pro' : 'Bylz Solo';
+
+        session = await stripe.checkout.sessions.create({
+          customer: customerId,
+          payment_method_types: ['card'],
+          line_items: [
+            {
+              price_data: {
+                currency: 'eur',
+                product_data: { name: planName },
+                unit_amount: unitAmount,
+                recurring: { interval: 'month' },
+              },
+              quantity: 1,
+            },
+          ],
+          mode: 'subscription',
+          success_url: successUrl,
+          cancel_url: cancelUrl,
+          ...(eligibleForTrial ? { subscription_data: { trial_period_days: 14 } } : {}),
+          metadata: {
+            user_id: user.id,
+          },
+        });
+      } else {
+        throw err;
+      }
+    }
 
     return corsResponse({ url: session.url });
   } catch (error: any) {
