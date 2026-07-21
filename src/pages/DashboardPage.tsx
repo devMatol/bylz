@@ -146,8 +146,11 @@ export function DashboardPage() {
           </button>
         </Card>
       ) : (
-        <div className={cn("relative", isBlurred && "overflow-hidden max-h-[calc(100vh-10rem)]")}>
-          <div className={cn("space-y-6 transition-all duration-300", isBlurred && "blur-md pointer-events-none select-none opacity-60")}>
+        <div className={cn(
+          "relative",
+          isBlurred && "overflow-hidden max-h-[calc(100vh-4rem)] -mx-4 md:-mx-10 -mb-20 md:-mb-10"
+        )}>
+          <div className={cn("space-y-6 transition-all duration-300", isBlurred && "blur-md pointer-events-none select-none opacity-60 px-4 md:px-10 pt-6")}>
             {/* Row 1 — StatCards */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
               {loading || !data ? (
