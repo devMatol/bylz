@@ -13,10 +13,11 @@ export type NavItem = {
   label: string;
   path: string;
   icon: LucideIcon;
+  requiredPlan?: "solo" | "pro";
 };
 
 export const NAV_ITEMS: NavItem[] = [
-  { label: "Tableau de bord", path: "/", icon: LayoutDashboard },
+  { label: "Tableau de bord", path: "/", icon: LayoutDashboard, requiredPlan: "solo" },
   { label: "Devis", path: "/quotes", icon: FileText },
   { label: "Factures", path: "/invoices", icon: Receipt },
   { label: "Clients", path: "/clients", icon: Users },

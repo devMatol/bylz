@@ -1,11 +1,17 @@
 import { useState, useEffect, useRef } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
-import { Zap, LogOut } from "lucide-react";
+import { Zap, LogOut, Lock } from "lucide-react";
 import { NAV_ITEMS } from "../../lib/constants";
 import { ThemeToggle } from "../shared/ThemeToggle";
 import { useAuth } from "../../contexts/AuthContext";
 import { useNotifications } from "../../contexts/NotificationsContext";
 import { cn } from "../../lib/utils";
+
+const PLAN_BADGE: Record<string, { label: string; icon: typeof Zap; className: string }> = {
+  starter: { label: "STARTER", icon: Lock, className: "bg-surface-hover text-muted" },
+  solo: { label: "SOLO", icon: Zap, className: "bg-primary/15 text-primary" },
+  pro: { label: "PRO", icon: Zap, className: "bg-amber-500/15 text-amber-500" },
+};
 
 export function Sidebar() {
   const { user, profile, signOut } = useAuth();
@@ -38,14 +44,29 @@ export function Sidebar() {
     <aside className="hidden md:flex fixed left-0 top-0 bottom-0 w-[280px] bg-bg-sidebar border-r border-border flex-col z-30">
       <div className="flex items-center gap-2 px-6 h-16 border-b border-border">
         <span className="text-2xl font-bold text-text">Bylz</span>
-        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-pill text-xs font-semibold bg-primary/15 text-primary">
-          SOLO <Zap className="w-3 h-3" />
-        </span>
+        {(() => {
+          const plan = profile?.plan || "starter";
+          const badge = PLAN_BADGE[plan] ?? PLAN_BADGE.starter;
+          const BadgeIcon = badge.icon;
+          return (
+            <span className={cn("inline-flex items-center gap-1 px-2 py-0.5 rounded-pill text-xs font-semibold", badge.className)}>
+              {badge.label} <BadgeIcon className="w-3 h-3" />
+            </span>
+          );
+        })()}
       </div>
 
       <nav className="flex-1 flex flex-col gap-1 p-4 overflow-y-auto">
         {NAV_ITEMS.map((item) => {
           const Icon = item.icon;
+          const userPlan = profile?.plan || "starter";
+          const isLocked =
+            item.requiredPlan === "pro"
+              ? userPlan !== "pro"
+              : item.requiredPlan === "solo"
+              ? userPlan === "starter"
+              : false;
+
           return (
             <NavLink
               key={item.path}
@@ -62,11 +83,24 @@ export function Sidebar() {
             >
               <Icon className="w-5 h-5" />
               {item.label}
+              {/* Notifications */}
               {item.path === "/invoices" && lateInvoicesCount > 0 && (
                 <span className="ml-auto w-2 h-2 rounded-full bg-danger flex-shrink-0" />
               )}
               {item.path === "/urssaf" && urssafDueSoon && (
                 <span className="ml-auto w-2 h-2 rounded-full bg-danger flex-shrink-0" />
+              )}
+              {/* Plan lock indicator — only for Starter users */}
+              {isLocked && (
+                <span className={cn(
+                  "ml-auto inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-bold flex-shrink-0",
+                  item.requiredPlan === "pro"
+                    ? "bg-amber-500/15 text-amber-500"
+                    : "bg-primary/15 text-primary"
+                )}>
+                  {item.requiredPlan === "pro" ? "PRO" : "SOLO"}
+                  <Zap className="w-2.5 h-2.5" />
+                </span>
               )}
             </NavLink>
           );
