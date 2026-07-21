@@ -13,7 +13,7 @@ import { ClientModal } from "../components/documents/ClientModal";
 import { ConfirmModal } from "../components/documents/ConfirmModal";
 import { useAuth } from "../contexts/AuthContext";
 import { useToast } from "../components/ui/Toast";
-import { canUseFeature, countEmittedInvoicesThisMonth } from "../lib/planLimits";
+import { canUseFeature, countEmittedInvoicesThisMonth, getPlanLimits } from "../lib/planLimits";
 import { UpgradeModal } from "../components/shared/UpgradeModal";
 import {
   fetchInvoice,
@@ -156,9 +156,10 @@ export function InvoiceNewPage() {
 
   async function handleEmit() {
     if (!company || !canSubmit) return;
-    if (!canUseFeature(profile?.plan, "invoicesPerMonth")) {
+    const limits = getPlanLimits(profile?.plan);
+    if (limits.invoicesPerMonth !== null) {
       const count = await countEmittedInvoicesThisMonth(company.id);
-      if (count >= 10) {
+      if (count >= limits.invoicesPerMonth) {
         setEmitOpen(false);
         setUpgradeModalOpen(true);
         return;

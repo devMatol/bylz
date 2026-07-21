@@ -37,7 +37,7 @@ import { parseISO, differenceInCalendarDays } from "date-fns";
 import { fr } from "date-fns/locale";
 import { format } from "date-fns";
 import type { Invoice, InvoiceLine, Client, PaymentMethod, InvoiceReminder } from "../types/database";
-import { canUseFeature, countEmittedInvoicesThisMonth } from "../lib/planLimits";
+import { canUseFeature, countEmittedInvoicesThisMonth, getPlanLimits } from "../lib/planLimits";
 import { UpgradeModal } from "../components/shared/UpgradeModal";
 import { Copy, CheckCircle2 } from "lucide-react";
 
@@ -208,9 +208,10 @@ export function InvoiceDetailPage() {
 
   async function handleEmit() {
     if (!company || !invoice) return;
-    if (!canUseFeature(profile?.plan, "invoicesPerMonth")) {
+    const limits = getPlanLimits(profile?.plan);
+    if (limits.invoicesPerMonth !== null) {
       const count = await countEmittedInvoicesThisMonth(company.id);
-      if (count >= 10) {
+      if (count >= limits.invoicesPerMonth) {
         setUpgradeFeature("invoices");
         setUpgradeModalOpen(true);
         return;

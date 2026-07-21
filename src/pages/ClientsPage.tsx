@@ -16,7 +16,7 @@ import { useDebounce } from "../hooks/useDebounce";
 import { fetchClients } from "../lib/api";
 import { formatDateLong } from "../lib/date";
 import type { Client, ClientType } from "../types/database";
-import { canUseFeature, countActiveClients } from "../lib/planLimits";
+import { canUseFeature, countActiveClients, getPlanLimits } from "../lib/planLimits";
 import { UpgradeModal } from "../components/shared/UpgradeModal";
 
 interface Row {
@@ -42,9 +42,10 @@ export function ClientsPage() {
 
   const handleOpenNewClient = async () => {
     if (!company) return;
-    if (!canUseFeature(profile?.plan, "maxClients")) {
+    const limits = getPlanLimits(profile?.plan);
+    if (limits.maxClients !== null) {
       const count = await countActiveClients(company.id);
-      if (count >= 3) {
+      if (count >= limits.maxClients) {
         setUpgradeModalOpen(true);
         return;
       }
