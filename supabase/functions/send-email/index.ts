@@ -309,6 +309,11 @@ Deno.serve(async (req: Request) => {
 
     const displayName = company.commercial_name || company.legal_name || "Bylz";
 
+    let emailText = body;
+    if (document_type === "invoice" && doc.stripe_payment_link) {
+      emailText += `\n\n----------------------------------------\nPayer votre facture en ligne de manière sécurisée :\n${doc.stripe_payment_link}`;
+    }
+
     const resendRes = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: {
@@ -319,7 +324,7 @@ Deno.serve(async (req: Request) => {
         from: "Bylz <no-reply@bylz.fr>",
         to,
         subject,
-        text: body,
+        text: emailText,
         attachments: [
           {
             filename: fileName,

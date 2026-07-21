@@ -31,6 +31,20 @@ export const PLAN_LABELS: Record<string, string> = {
   pro: "PRO",
 };
 
+export const STRIPE_PRICE_SOLO = "price_1TvYmr2X0yCzQQsNrPbSS9NC";
+export const STRIPE_PRICE_PRO = "price_1TvYnW2X0yCzQQsN930PPkgJ";
+
+export const PRICE_TO_PLAN: Record<string, "solo" | "pro"> = {
+  [STRIPE_PRICE_SOLO]: "solo",
+  [STRIPE_PRICE_PRO]: "pro",
+};
+
+export const PLAN_PRICES: Record<string, number> = {
+  starter: 0,
+  solo: 9,
+  pro: 19,
+};
+
 export const STATUS_LABELS: Record<string, string> = {
   draft: "Brouillon",
   sent: "Envoyé",

@@ -27,6 +27,7 @@ export interface Profile {
   stripe_customer_id: string | null;
   stripe_subscription_id: string | null;
   trial_ends_at: string | null;
+  trial_used: boolean;
   accountant_email: string | null;
   tmi: number | null;
   is_admin: boolean;

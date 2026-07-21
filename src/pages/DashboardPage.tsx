@@ -29,6 +29,9 @@ import {
 } from "../lib/api";
 import { formatAmount, cn } from "../lib/utils";
 import { formatDateLong, todayISO, safeFormatDate } from "../lib/date";
+import { canUseFeature } from "../lib/planLimits";
+import { UpgradeModal } from "../components/shared/UpgradeModal";
+import { Sparkles, Lock } from "lucide-react";
 
 const MONTH_LABELS = [
   "janv.", "févr.", "mars", "avr.", "mai", "juin",
@@ -55,6 +58,9 @@ export function DashboardPage() {
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
+
+  const isBlurred = !canUseFeature(profile?.plan, "fiscalDashboard");
 
   const load = useCallback(async () => {
     if (!company) return;
@@ -140,247 +146,192 @@ export function DashboardPage() {
           </button>
         </Card>
       ) : (
-        <>
-          {/* Row 1 — StatCards */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-            {loading || !data ? (
-              Array.from({ length: 4 }).map((_, i) => (
-                <Card key={i}>
-                  <Skeleton height="1rem" width="60%" className="mb-2" />
-                  <Skeleton height="2rem" width="80%" />
-                </Card>
-              ))
-            ) : (
-              <>
-                <StatCard
-                  label="CA encaissé"
-                  value={safeNum(data.caEncaisse)}
-                  icon={<TrendingUp className="w-4 h-4" />}
-                  delta={
-                    data.caDeltaPct != null && Number.isFinite(data.caDeltaPct)
-                      ? {
-                          value: `${data.caDeltaPct >= 0 ? "+" : ""}${data.caDeltaPct}% vs période précédente`,
-                          positive: data.caDeltaPct >= 0,
-                        }
-                      : undefined
-                  }
-                />
-                <StatCard
-                  label="Bénéfice fiscal"
-                  value={safeNum(data.beneficeFiscal)}
-                  icon={<Wallet className="w-4 h-4" />}
-                />
-                <StatCard
-                  label="Cotisations URSSAF"
-                  value={safeNum(data.cotisationsUrssaf)}
-                  icon={<Landmark className="w-4 h-4" />}
-                />
-                <StatCard
-                  label="Net estimé"
-                  value={safeNum(data.netEstime)}
-                  icon={<Receipt className="w-4 h-4" />}
-                />
-              </>
-            )}
-          </div>
-
-          {/* Subtitles row */}
-          {!loading && data && (
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6 -mt-2">
-              <p className="text-xs text-muted text-center">{periodLabel}</p>
-              <p className="text-xs text-muted text-center">
-                Après abattement de {safeNum(data.abattementPct)}%
-              </p>
-              <p className="text-xs text-muted text-center">
-                {data.nextUrssafDueDate
-                  ? `Prochaine déclaration: ${safeFormatDate(data.nextUrssafDueDate)}`
-                  : "Prochaine déclaration à venir"}
-              </p>
-              <p className="text-xs text-muted text-center">
-                {profile?.tmi != null ? (
-                  data.netSubtitle
-                ) : (
-                  <button
-                    onClick={() => navigate("/settings")}
-                    className="text-primary hover:underline"
-                  >
-                    Renseignez votre TMI
-                  </button>
-                )}
-              </p>
-            </div>
-          )}
-
-          {/* Row 2 — Chart + Santé fiscale */}
-          <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 mb-6">
-            {/* CA chart (60%) */}
-            <Card className="lg:col-span-3">
-              <h3 className="text-sm font-bold text-text mb-4">Évolution du CA</h3>
-              {loading ? (
-                <Skeleton height="12rem" />
+        <div className="relative">
+          <div className={cn("space-y-6 transition-all duration-300", isBlurred && "blur-md pointer-events-none select-none opacity-60")}>
+            {/* Row 1 — StatCards */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+              {loading || !data ? (
+                Array.from({ length: 4 }).map((_, i) => (
+                  <Card key={i}>
+                    <Skeleton height="1rem" width="60%" className="mb-2" />
+                    <Skeleton height="2rem" width="80%" />
+                  </Card>
+                ))
               ) : (
-                <ChartErrorBoundary>
-                  <CaBarChart
-                    data={sanitizeMonthlyCa(data?.monthlyCa)}
-                    accent={company.accent_color}
-                    vatThreshold={VAT_THRESHOLDS.service}
+                <>
+                  <StatCard
+                    label="CA encaissé"
+                    value={safeNum(data.caEncaisse)}
+                    icon={<TrendingUp className="w-4 h-4" />}
+                    delta={
+                      data.caDeltaPct != null && Number.isFinite(data.caDeltaPct)
+                        ? {
+                            value: `${data.caDeltaPct >= 0 ? "+" : ""}${data.caDeltaPct}% vs période précédente`,
+                            positive: data.caDeltaPct >= 0,
+                          }
+                        : undefined
+                    }
                   />
-                  <div className="flex justify-around mt-4 pt-4 border-t border-border">
-                    <div className="text-center">
-                      <p className="text-xs text-muted">Meilleur mois</p>
-                      <p className="text-sm font-bold text-text">
-                        {data?.bestMonth && data.bestMonth.ca > 0
-                          ? `${MONTH_LABELS[parseInt(data.bestMonth.month.slice(5, 7), 10) - 1] ?? data.bestMonth.month} — ${formatAmount(safeNum(data.bestMonth.ca))}`
-                          : "—"}
-                      </p>
+                  <StatCard
+                    label="Bénéfice fiscal"
+                    value={safeNum(data.beneficeFiscal)}
+                    icon={<Wallet className="w-4 h-4" />}
+                  />
+                  <StatCard
+                    label="Cotisations URSSAF"
+                    value={safeNum(data.cotisationsUrssaf)}
+                    icon={<Landmark className="w-4 h-4" />}
+                  />
+                  <StatCard
+                    label="Net estimé"
+                    value={safeNum(data.netEstime)}
+                    icon={<Receipt className="w-4 h-4" />}
+                  />
+                </>
+              )}
+            </div>
+
+            {/* Subtitles row */}
+            {!loading && data && (
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6 -mt-2">
+                <p className="text-xs text-muted text-center">{periodLabel}</p>
+                <p className="text-xs text-muted text-center">
+                  Après abattement de {safeNum(data.abattementPct)}%
+                </p>
+                <p className="text-xs text-muted text-center">
+                  {data.nextUrssafDueDate
+                    ? `Prochaine déclaration: ${safeFormatDate(data.nextUrssafDueDate)}`
+                    : "Prochaine déclaration à venir"}
+                </p>
+                <p className="text-xs text-muted text-center">
+                  {profile?.tmi != null ? (
+                    data.netSubtitle
+                  ) : (
+                    <button
+                      onClick={() => navigate("/settings")}
+                      className="text-primary hover:underline"
+                    >
+                      Renseignez votre TMI
+                    </button>
+                  )}
+                </p>
+              </div>
+            )}
+
+            {/* Row 2 — Chart + Santé fiscale */}
+            <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 mb-6">
+              {/* CA chart (60%) */}
+              <Card className="lg:col-span-3">
+                <h3 className="text-sm font-bold text-text mb-4">Évolution du CA</h3>
+                {loading ? (
+                  <Skeleton height="12rem" />
+                ) : (
+                  <ChartErrorBoundary>
+                    <CaBarChart
+                      data={sanitizeMonthlyCa(data?.monthlyCa)}
+                      accent={company.accent_color}
+                      vatThreshold={VAT_THRESHOLDS.service}
+                    />
+                    <div className="flex justify-around mt-4 pt-4 border-t border-border">
+                      <div className="text-center">
+                        <p className="text-xs text-muted">Meilleur mois</p>
+                        <p className="text-sm font-bold text-text">
+                          {data?.bestMonth && data.bestMonth.ca > 0
+                            ? `${MONTH_LABELS[parseInt(data.bestMonth.month.slice(5, 7), 10) - 1] ?? data.bestMonth.month} — ${formatAmount(safeNum(data.bestMonth.ca))}`
+                            : "—"}
+                        </p>
+                      </div>
+                      <div className="text-center">
+                        <p className="text-xs text-muted">Moyenne mensuelle</p>
+                        <p className="text-sm font-bold text-text">
+                          {formatAmount(safeNum(data?.monthlyAverage))}
+                        </p>
+                      </div>
                     </div>
-                    <div className="text-center">
-                      <p className="text-xs text-muted">Moyenne mensuelle</p>
-                      <p className="text-sm font-bold text-text">
-                        {formatAmount(safeNum(data?.monthlyAverage))}
-                      </p>
+                  </ChartErrorBoundary>
+                )}
+              </Card>
+
+              {/* Santé fiscale (40%) */}
+              <Card className="lg:col-span-2">
+                <div className="flex items-center gap-1.5 mb-4">
+                  <h3 className="text-sm font-bold text-text">Santé fiscale</h3>
+                  <Tooltip content="Seuil de franchise de TVA : au-delà, vous devrez facturer la TVA">
+                    <span className="inline-flex text-muted hover:text-text transition-colors cursor-help">
+                      <Info className="w-3.5 h-3.5" />
+                    </span>
+                  </Tooltip>
+                </div>
+                {loading ? (
+                  <Skeleton height="10rem" />
+                ) : isMixed ? (
+                  <div className="flex flex-col gap-4">
+                    <NatureBar
+                      label="Services"
+                      value={safeNum(data?.caByNature.service)}
+                      threshold={VAT_THRESHOLDS.service}
+                      accent={company.accent_color}
+                    />
+                    <NatureBar
+                      label="Vente de biens"
+                      value={safeNum(data?.caByNature.goods)}
+                      threshold={VAT_THRESHOLDS.goods}
+                      accent={company.accent_color}
+                    />
+                    <div className="pt-2 border-t border-border text-xs text-muted space-y-1">
+                      <div className="flex justify-between">
+                        <span>CA annuel services</span>
+                        <span className="font-semibold text-text">{formatAmount(safeNum(data?.caByNature.service))}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Seuil micro services</span>
+                        <span className="font-semibold text-text">{formatAmount(MICRO_THRESHOLDS.service)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>CA annuel biens</span>
+                        <span className="font-semibold text-text">{formatAmount(safeNum(data?.caByNature.goods))}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Seuil micro biens</span>
+                        <span className="font-semibold text-text">{formatAmount(MICRO_THRESHOLDS.goods)}</span>
+                      </div>
                     </div>
                   </div>
-                </ChartErrorBoundary>
-              )}
-            </Card>
-
-            {/* Santé fiscale (40%) */}
-            <Card className="lg:col-span-2">
-              <div className="flex items-center gap-1.5 mb-4">
-                <h3 className="text-sm font-bold text-text">Santé fiscale</h3>
-                <Tooltip content="Seuil de franchise de TVA : au-delà, vous devrez facturer la TVA">
-                  <span className="inline-flex text-muted hover:text-text transition-colors cursor-help">
-                    <Info className="w-3.5 h-3.5" />
-                  </span>
-                </Tooltip>
-              </div>
-              {loading ? (
-                <Skeleton height="10rem" />
-              ) : isMixed ? (
-                <div className="flex flex-col gap-4">
-                  <NatureBar
-                    label="Services"
-                    value={safeNum(data?.caByNature.service)}
+                ) : (
+                  <FiscalHealthGauge
+                    ca={safeNum(data?.yearlyCa)}
                     threshold={VAT_THRESHOLDS.service}
                     accent={company.accent_color}
                   />
-                  <NatureBar
-                    label="Vente de biens"
-                    value={safeNum(data?.caByNature.goods)}
-                    threshold={VAT_THRESHOLDS.goods}
-                    accent={company.accent_color}
-                  />
-                  <div className="pt-2 border-t border-border text-xs text-muted space-y-1">
-                    <div className="flex justify-between">
-                      <span>CA annuel services</span>
-                      <span className="font-semibold text-text">{formatAmount(safeNum(data?.caByNature.service))}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Seuil micro services</span>
-                      <span className="font-semibold text-text">{formatAmount(MICRO_THRESHOLDS.service)}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>CA annuel biens</span>
-                      <span className="font-semibold text-text">{formatAmount(safeNum(data?.caByNature.goods))}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Seuil micro biens</span>
-                      <span className="font-semibold text-text">{formatAmount(MICRO_THRESHOLDS.goods)}</span>
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                <FiscalHealthGauge
-                  ca={safeNum(data?.yearlyCa)}
-                  threshold={VAT_THRESHOLDS.service}
-                  accent={company.accent_color}
-                />
-              )}
-            </Card>
-          </div>
+                )}
+              </Card>
+            </div>
 
-          {/* Row 3 — Recent invoices + Upcoming deadlines */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Factures récentes */}
-            <Card>
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-sm font-bold text-text">Factures récentes</h3>
-                <button
-                  type="button"
-                  onClick={() => navigate("/invoices")}
-                  className="text-xs text-primary font-semibold hover:underline"
-                >
-                  Voir tout
-                </button>
-              </div>
-              {loading ? (
-                <div className="flex flex-col gap-2">
-                  {Array.from({ length: 3 }).map((_, i) => (
-                    <Skeleton key={i} height="2.5rem" />
-                  ))}
+            {/* Row 3 — Recent invoices + Upcoming deadlines */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Factures récentes */}
+              <Card>
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-sm font-bold text-text">Factures récentes</h3>
+                  <button
+                    type="button"
+                    onClick={() => navigate("/invoices")}
+                    className="text-xs text-primary font-semibold hover:underline"
+                  >
+                    Voir tout
+                  </button>
                 </div>
-              ) : (data?.recentInvoices || []).length === 0 ? (
-                <p className="text-sm text-muted text-center py-8">Aucune facture émise</p>
-              ) : (
-                <div className="flex flex-col">
-                  {(data?.recentInvoices || []).map((inv) => (
-                    <button
-                      key={inv.id}
-                      type="button"
-                      onClick={() => navigate(`/invoices/${inv.id}`)}
-                      className="flex items-center justify-between py-2.5 border-b border-border last:border-0 hover:bg-surface-hover -mx-2 px-2 rounded transition-colors text-left"
-                    >
-                      <div className="min-w-0 flex-1">
-                        <p className="text-sm font-semibold text-text truncate">
-                          {inv.client_name}
-                        </p>
-                        <p className="text-xs text-muted">
-                          {inv.number?.startsWith("DRAFT-") ? "Brouillon" : inv.number}{" "}
-                          · {safeFormatDate(inv.issue_date)}
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-3 flex-shrink-0">
-                        <Amount value={safeNum(inv.total_ttc)} size="sm" />
-                        <StatusBadge status={inv.status} />
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              )}
-            </Card>
-
-            {/* Prochaines échéances */}
-            <Card>
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-sm font-bold text-text">Prochaines échéances</h3>
-                <CalendarClock className="w-4 h-4 text-muted" />
-              </div>
-              {loading ? (
-                <div className="flex flex-col gap-2">
-                  {Array.from({ length: 3 }).map((_, i) => (
-                    <Skeleton key={i} height="2.5rem" />
-                  ))}
-                </div>
-              ) : (data?.upcomingEcheances || []).length === 0 ? (
-                <div className="flex flex-col items-center justify-center text-center py-8">
-                  <div className="w-12 h-12 rounded-card bg-surface-hover flex items-center justify-center text-muted mb-3">
-                    <CalendarClock className="w-6 h-6" />
+                {loading ? (
+                  <div className="flex flex-col gap-2">
+                    {Array.from({ length: 3 }).map((_, i) => (
+                      <Skeleton key={i} height="2.5rem" />
+                    ))}
                   </div>
-                  <p className="text-sm text-muted">Aucune échéance à venir</p>
-                </div>
-              ) : (
-                <div className="flex flex-col">
-                  {(data?.upcomingEcheances || []).map((inv) => {
-                    const today = todayISO();
-                    const isLate = inv.due_date < today;
-                    const dueDate = parseISO(inv.due_date);
-                    const todayDate = parseISO(today);
-                    const days =
-                      isValid(dueDate) && isValid(todayDate)
-                        ? Math.ceil((dueDate.getTime() - todayDate.getTime()) / 86400000)
-                        : 0;
-                    return (
+                ) : (data?.recentInvoices || []).length === 0 ? (
+                  <p className="text-sm text-muted text-center py-8">Aucune facture émise</p>
+                ) : (
+                  <div className="flex flex-col">
+                    {(data?.recentInvoices || []).map((inv) => (
                       <button
                         key={inv.id}
                         type="button"
@@ -391,31 +342,119 @@ export function DashboardPage() {
                           <p className="text-sm font-semibold text-text truncate">
                             {inv.client_name}
                           </p>
-                          <p
-                            className={cn(
-                              "text-xs",
-                              isLate ? "text-danger font-semibold" : "text-muted"
-                            )}
-                          >
-                            {inv.number} · {safeFormatDate(inv.due_date)}
+                          <p className="text-xs text-muted">
+                            {inv.number?.startsWith("DRAFT-") ? "Brouillon" : inv.number}{" "}
+                            · {safeFormatDate(inv.issue_date)}
                           </p>
                         </div>
                         <div className="flex items-center gap-3 flex-shrink-0">
                           <Amount value={safeNum(inv.total_ttc)} size="sm" />
-                          <CountdownPill days={days} isLate={isLate} />
+                          <StatusBadge status={inv.status} />
                         </div>
                       </button>
-                    );
-                  })}
+                    ))}
+                  </div>
+                )}
+              </Card>
+
+              {/* Prochaines échéances */}
+              <Card>
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-sm font-bold text-text">Prochaines échéances</h3>
+                  <CalendarClock className="w-4 h-4 text-muted" />
                 </div>
-              )}
-            </Card>
+                {loading ? (
+                  <div className="flex flex-col gap-2">
+                    {Array.from({ length: 3 }).map((_, i) => (
+                      <Skeleton key={i} height="2.5rem" />
+                    ))}
+                  </div>
+                ) : (data?.upcomingEcheances || []).length === 0 ? (
+                  <div className="flex flex-col items-center justify-center text-center py-8">
+                    <div className="w-12 h-12 rounded-card bg-surface-hover flex items-center justify-center text-muted mb-3">
+                      <CalendarClock className="w-6 h-6" />
+                    </div>
+                    <p className="text-sm text-muted">Aucune échéance à venir</p>
+                  </div>
+                ) : (
+                  <div className="flex flex-col">
+                    {(data?.upcomingEcheances || []).map((inv) => {
+                      const today = todayISO();
+                      const isLate = inv.due_date < today;
+                      const dueDate = parseISO(inv.due_date);
+                      const todayDate = parseISO(today);
+                      const days =
+                        isValid(dueDate) && isValid(todayDate)
+                          ? Math.ceil((dueDate.getTime() - todayDate.getTime()) / 86400000)
+                          : 0;
+                      return (
+                        <button
+                          key={inv.id}
+                          type="button"
+                          onClick={() => navigate(`/invoices/${inv.id}`)}
+                          className="flex items-center justify-between py-2.5 border-b border-border last:border-0 hover:bg-surface-hover -mx-2 px-2 rounded transition-colors text-left"
+                        >
+                          <div className="min-w-0 flex-1">
+                            <p className="text-sm font-semibold text-text truncate">
+                              {inv.client_name}
+                            </p>
+                            <p
+                              className={cn(
+                                "text-xs",
+                                isLate ? "text-danger font-semibold" : "text-muted"
+                              )}
+                            >
+                              {inv.number} · {safeFormatDate(inv.due_date)}
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-3 flex-shrink-0">
+                            <Amount value={safeNum(inv.total_ttc)} size="sm" />
+                            <CountdownPill days={days} isLate={isLate} />
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </Card>
+            </div>
+
+            <p className="text-xs text-muted mt-6 text-center">
+              {periodLabel} · Estimations indicatives basées sur les encaissements enregistrés
+            </p>
           </div>
 
-          <p className="text-xs text-muted mt-6 text-center">
-            {periodLabel} · Estimations indicatives basées sur les encaissements enregistrés
-          </p>
-        </>
+          {/* Centered Upgrade Overlay for Starter */}
+          {isBlurred && (
+            <div className="absolute inset-0 z-20 flex items-center justify-center p-4">
+              <div className="bg-surface/95 backdrop-blur-md border border-amber-500/30 rounded-card p-8 max-w-md text-center shadow-2xl space-y-4">
+                <div className="w-12 h-12 rounded-xl bg-amber-500/10 text-amber-500 flex items-center justify-center mx-auto">
+                  <Lock className="w-6 h-6" />
+                </div>
+                <h3 className="text-xl font-bold text-text">Débloquez votre pilotage fiscal</h3>
+                <p className="text-sm text-muted leading-relaxed">
+                  Suivez votre Chiffre d'Affaires, vos plafonds micro-entrepreneur, vos cotisations URSSAF et vos indicateurs financiers en temps réel.
+                </p>
+                <div className="pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setUpgradeModalOpen(true)}
+                    className="w-full h-11 px-6 rounded-pill bg-brand-primary text-white font-bold text-sm hover:opacity-90 transition-all shadow-md flex items-center justify-center space-x-2"
+                  >
+                    <Sparkles className="w-4 h-4" />
+                    <span>Passer au plan Solo — 9 € / mois</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <UpgradeModal
+            open={upgradeModalOpen}
+            onClose={() => setUpgradeModalOpen(false)}
+            feature="fiscalDashboard"
+          />
+        </div>
       )}
     </PageContainer>
   );

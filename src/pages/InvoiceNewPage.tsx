@@ -13,6 +13,8 @@ import { ClientModal } from "../components/documents/ClientModal";
 import { ConfirmModal } from "../components/documents/ConfirmModal";
 import { useAuth } from "../contexts/AuthContext";
 import { useToast } from "../components/ui/Toast";
+import { canUseFeature, countEmittedInvoicesThisMonth } from "../lib/planLimits";
+import { UpgradeModal } from "../components/shared/UpgradeModal";
 import {
   fetchInvoice,
   saveInvoice,
@@ -30,7 +32,7 @@ import type { Client, CatalogItem, PaymentTerms } from "../types/database";
 export function InvoiceNewPage() {
   const [params] = useSearchParams();
   const id = params.get("id") || undefined;
-  const { company } = useAuth();
+  const { company, profile } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const isEdit = !!id;
@@ -52,6 +54,7 @@ export function InvoiceNewPage() {
   const [emitOpen, setEmitOpen] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
   const [loading, setLoading] = useState(isEdit);
   const [invoiceType, setInvoiceType] = useState<"invoice" | "credit_note">("invoice");
 
@@ -153,6 +156,14 @@ export function InvoiceNewPage() {
 
   async function handleEmit() {
     if (!company || !canSubmit) return;
+    if (!canUseFeature(profile?.plan, "invoicesPerMonth")) {
+      const count = await countEmittedInvoicesThisMonth(company.id);
+      if (count >= 10) {
+        setEmitOpen(false);
+        setUpgradeModalOpen(true);
+        return;
+      }
+    }
     setPending(true);
     try {
       let invoiceId = id;
@@ -446,6 +457,11 @@ export function InvoiceNewPage() {
         message={`Cette action est définitive. ${selectedClient ? `Client : ${selectedClient.name}. ` : ""}Montant : ${formatAmount(totals.total_ttc)}.`}
         confirmLabel="Supprimer"
         danger
+      />
+      <UpgradeModal
+        open={upgradeModalOpen}
+        onClose={() => setUpgradeModalOpen(false)}
+        feature="invoices"
       />
     </PageContainer>
   );

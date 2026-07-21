@@ -58,65 +58,26 @@ Deno.serve(async (req) => {
       return corsResponse({ error: 'Failed to authenticate user' }, 401);
     }
 
-    const { priceId } = await req.json();
-    if (!priceId) {
-      return corsResponse({ error: 'priceId is required' }, 400);
-    }
-
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', user.id)
+    const { data: company } = await supabase
+      .from('companies')
+      .select('stripe_connect_account_id')
+      .eq('user_id', user.id)
       .single();
 
-    if (profileError || !profile) {
-      return corsResponse({ error: 'Profile not found' }, 404);
+    if (!company?.stripe_connect_account_id) {
+      return corsResponse({ hasAccount: false, chargesEnabled: false });
     }
 
-    let customerId = profile.stripe_customer_id;
-    if (!customerId) {
-      const newCustomer = await stripe.customers.create({
-        email: user.email,
-        metadata: {
-          user_id: user.id,
-        },
-      });
-      customerId = newCustomer.id;
+    const account = await stripe.accounts.retrieve(company.stripe_connect_account_id);
 
-      await supabase
-        .from('profiles')
-        .update({ stripe_customer_id: customerId })
-        .eq('id', user.id);
-    }
-
-    const origin = req.headers.get('origin') || 'http://localhost:5173';
-    const successUrl = `${origin}/settings?checkout=success`;
-    const cancelUrl = `${origin}/settings`;
-
-    // Only apply 14-day trial if user has never used a trial and has no subscription
-    const eligibleForTrial = !profile.trial_used && !profile.stripe_subscription_id;
-
-    const session = await stripe.checkout.sessions.create({
-      customer: customerId,
-      payment_method_types: ['card'],
-      line_items: [
-        {
-          price: priceId,
-          quantity: 1,
-        },
-      ],
-      mode: 'subscription',
-      success_url: successUrl,
-      cancel_url: cancelUrl,
-      ...(eligibleForTrial ? { subscription_data: { trial_period_days: 14 } } : {}),
-      metadata: {
-        user_id: user.id,
-      },
+    return corsResponse({
+      hasAccount: true,
+      chargesEnabled: account.charges_enabled,
+      detailsSubmitted: account.details_submitted,
+      payoutsEnabled: account.payouts_enabled,
     });
-
-    return corsResponse({ url: session.url });
   } catch (error: any) {
-    console.error(`Checkout error: ${error.message}`);
+    console.error(`Get connect status error: ${error.message}`);
     return corsResponse({ error: error.message }, 500);
   }
 });

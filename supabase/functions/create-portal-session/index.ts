@@ -58,65 +58,27 @@ Deno.serve(async (req) => {
       return corsResponse({ error: 'Failed to authenticate user' }, 401);
     }
 
-    const { priceId } = await req.json();
-    if (!priceId) {
-      return corsResponse({ error: 'priceId is required' }, 400);
-    }
-
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
-      .select('*')
+      .select('stripe_customer_id')
       .eq('id', user.id)
       .single();
 
-    if (profileError || !profile) {
-      return corsResponse({ error: 'Profile not found' }, 404);
-    }
-
-    let customerId = profile.stripe_customer_id;
-    if (!customerId) {
-      const newCustomer = await stripe.customers.create({
-        email: user.email,
-        metadata: {
-          user_id: user.id,
-        },
-      });
-      customerId = newCustomer.id;
-
-      await supabase
-        .from('profiles')
-        .update({ stripe_customer_id: customerId })
-        .eq('id', user.id);
+    if (profileError || !profile?.stripe_customer_id) {
+      return corsResponse({ error: "Aucun compte client Stripe associé" }, 400);
     }
 
     const origin = req.headers.get('origin') || 'http://localhost:5173';
-    const successUrl = `${origin}/settings?checkout=success`;
-    const cancelUrl = `${origin}/settings`;
+    const returnUrl = `${origin}/settings`;
 
-    // Only apply 14-day trial if user has never used a trial and has no subscription
-    const eligibleForTrial = !profile.trial_used && !profile.stripe_subscription_id;
-
-    const session = await stripe.checkout.sessions.create({
-      customer: customerId,
-      payment_method_types: ['card'],
-      line_items: [
-        {
-          price: priceId,
-          quantity: 1,
-        },
-      ],
-      mode: 'subscription',
-      success_url: successUrl,
-      cancel_url: cancelUrl,
-      ...(eligibleForTrial ? { subscription_data: { trial_period_days: 14 } } : {}),
-      metadata: {
-        user_id: user.id,
-      },
+    const portalSession = await stripe.billingPortal.sessions.create({
+      customer: profile.stripe_customer_id,
+      return_url: returnUrl,
     });
 
-    return corsResponse({ url: session.url });
+    return corsResponse({ url: portalSession.url });
   } catch (error: any) {
-    console.error(`Checkout error: ${error.message}`);
+    console.error(`Portal session error: ${error.message}`);
     return corsResponse({ error: error.message }, 500);
   }
 });

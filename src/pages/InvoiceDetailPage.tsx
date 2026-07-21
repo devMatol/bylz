@@ -37,10 +37,13 @@ import { parseISO, differenceInCalendarDays } from "date-fns";
 import { fr } from "date-fns/locale";
 import { format } from "date-fns";
 import type { Invoice, InvoiceLine, Client, PaymentMethod, InvoiceReminder } from "../types/database";
+import { canUseFeature, countEmittedInvoicesThisMonth } from "../lib/planLimits";
+import { UpgradeModal } from "../components/shared/UpgradeModal";
+import { Copy, CheckCircle2 } from "lucide-react";
 
 export function InvoiceDetailPage() {
   const { id } = useParams();
-  const { company } = useAuth();
+  const { company, profile } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [data, setData] = useState<{
@@ -65,6 +68,10 @@ export function InvoiceDetailPage() {
   const [cnOpen, setCnOpen] = useState(false);
   const [cnMode, setCnMode] = useState<"total" | "partial">("total");
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [copiedLink, setCopiedLink] = useState(false);
+
+  const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
+  const [upgradeFeature, setUpgradeFeature] = useState<"invoices" | "reminders" | "paymentLinks">("invoices");
 
   const load = useCallback(async () => {
     if (!company || !id) return;
@@ -201,6 +208,14 @@ export function InvoiceDetailPage() {
 
   async function handleEmit() {
     if (!company || !invoice) return;
+    if (!canUseFeature(profile?.plan, "invoicesPerMonth")) {
+      const count = await countEmittedInvoicesThisMonth(company.id);
+      if (count >= 10) {
+        setUpgradeFeature("invoices");
+        setUpgradeModalOpen(true);
+        return;
+      }
+    }
     setBusy(true);
     try {
       const emitted = await emitInvoice(company.id, invoice.id);
@@ -228,6 +243,11 @@ export function InvoiceDetailPage() {
   }
 
   function openRemind() {
+    if (!canUseFeature(profile?.plan, "reminders")) {
+      setUpgradeFeature("reminders");
+      setUpgradeModalOpen(true);
+      return;
+    }
     const tpl = buildReminderTemplate();
     setRemindSubject(tpl.subject);
     setRemindBody(tpl.body);
@@ -336,6 +356,40 @@ export function InvoiceDetailPage() {
               )}
             </div>
           </div>
+
+          {/* Stripe Payment Link Card if available */}
+          {invoice.stripe_payment_link && (
+            <div className="border border-emerald-500/30 bg-emerald-500/10 rounded-card p-4 card-shadow space-y-2">
+              <div className="flex items-center space-x-2 text-emerald-600 dark:text-emerald-400 font-bold text-xs uppercase tracking-wide">
+                <CheckCircle2 className="w-4 h-4" />
+                <span>Lien de paiement Stripe</span>
+              </div>
+              <p className="text-xs text-muted leading-relaxed">
+                Permet un paiement sécurisé par carte bancaire.
+              </p>
+              <div className="flex items-center space-x-2 pt-1">
+                <input
+                  type="text"
+                  readOnly
+                  value={invoice.stripe_payment_link}
+                  className="bg-surface border border-border text-xs rounded-lg px-2.5 py-1.5 w-full text-text truncate font-mono"
+                />
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    navigator.clipboard.writeText(invoice.stripe_payment_link!);
+                    setCopiedLink(true);
+                    toast("Lien copié dans le presse-papier !", "success");
+                    setTimeout(() => setCopiedLink(false), 2000);
+                  }}
+                  className="flex-shrink-0"
+                >
+                  {copiedLink ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
+                </Button>
+              </div>
+            </div>
+          )}
 
           {/* Actions card */}
           <div className="border border-border rounded-card p-4 card-shadow flex flex-col gap-2">
@@ -608,6 +662,12 @@ export function InvoiceDetailPage() {
         message={`Cette action est définitive. ${client?.name ? `Client : ${client.name}. ` : ""}Montant : ${formatAmount(Number(invoice.total_ttc))}.`}
         confirmLabel="Supprimer"
         danger
+      />
+
+      <UpgradeModal
+        open={upgradeModalOpen}
+        onClose={() => setUpgradeModalOpen(false)}
+        feature={upgradeFeature}
       />
     </PageContainer>
   );

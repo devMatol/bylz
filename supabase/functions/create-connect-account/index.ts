@@ -58,65 +58,52 @@ Deno.serve(async (req) => {
       return corsResponse({ error: 'Failed to authenticate user' }, 401);
     }
 
-    const { priceId } = await req.json();
-    if (!priceId) {
-      return corsResponse({ error: 'priceId is required' }, 400);
-    }
-
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
+    const { data: company, error: companyError } = await supabase
+      .from('companies')
       .select('*')
-      .eq('id', user.id)
+      .eq('user_id', user.id)
       .single();
 
-    if (profileError || !profile) {
-      return corsResponse({ error: 'Profile not found' }, 404);
+    if (companyError || !company) {
+      return corsResponse({ error: 'Company not found' }, 404);
     }
 
-    let customerId = profile.stripe_customer_id;
-    if (!customerId) {
-      const newCustomer = await stripe.customers.create({
-        email: user.email,
+    let connectAccountId = company.stripe_connect_account_id;
+
+    if (!connectAccountId) {
+      const account = await stripe.accounts.create({
+        type: 'express',
+        country: 'FR',
+        capabilities: {
+          card_payments: { requested: true },
+          transfers: { requested: true },
+        },
+        business_type: 'individual',
         metadata: {
           user_id: user.id,
+          company_id: company.id,
         },
       });
-      customerId = newCustomer.id;
+
+      connectAccountId = account.id;
 
       await supabase
-        .from('profiles')
-        .update({ stripe_customer_id: customerId })
-        .eq('id', user.id);
+        .from('companies')
+        .update({ stripe_connect_account_id: connectAccountId })
+        .eq('id', company.id);
     }
 
     const origin = req.headers.get('origin') || 'http://localhost:5173';
-    const successUrl = `${origin}/settings?checkout=success`;
-    const cancelUrl = `${origin}/settings`;
-
-    // Only apply 14-day trial if user has never used a trial and has no subscription
-    const eligibleForTrial = !profile.trial_used && !profile.stripe_subscription_id;
-
-    const session = await stripe.checkout.sessions.create({
-      customer: customerId,
-      payment_method_types: ['card'],
-      line_items: [
-        {
-          price: priceId,
-          quantity: 1,
-        },
-      ],
-      mode: 'subscription',
-      success_url: successUrl,
-      cancel_url: cancelUrl,
-      ...(eligibleForTrial ? { subscription_data: { trial_period_days: 14 } } : {}),
-      metadata: {
-        user_id: user.id,
-      },
+    const accountLink = await stripe.accountLinks.create({
+      account: connectAccountId,
+      refresh_url: `${origin}/settings`,
+      return_url: `${origin}/settings`,
+      type: 'account_onboarding',
     });
 
-    return corsResponse({ url: session.url });
+    return corsResponse({ url: accountLink.url, accountId: connectAccountId });
   } catch (error: any) {
-    console.error(`Checkout error: ${error.message}`);
+    console.error(`Create connect account error: ${error.message}`);
     return corsResponse({ error: error.message }, 500);
   }
 });

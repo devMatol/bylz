@@ -16,6 +16,8 @@ import { useDebounce } from "../hooks/useDebounce";
 import { fetchClients } from "../lib/api";
 import { formatDateLong } from "../lib/date";
 import type { Client, ClientType } from "../types/database";
+import { canUseFeature, countActiveClients } from "../lib/planLimits";
+import { UpgradeModal } from "../components/shared/UpgradeModal";
 
 interface Row {
   id: string;
@@ -29,13 +31,26 @@ interface Row {
 }
 
 export function ClientsPage() {
-  const { company } = useAuth();
+  const { company, profile } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [search, setSearch] = useState("");
   const debounced = useDebounce(search);
   const [rows, setRows] = useState<Row[] | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
+  const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
+
+  const handleOpenNewClient = async () => {
+    if (!company) return;
+    if (!canUseFeature(profile?.plan, "maxClients")) {
+      const count = await countActiveClients(company.id);
+      if (count >= 3) {
+        setUpgradeModalOpen(true);
+        return;
+      }
+    }
+    setModalOpen(true);
+  };
 
   const load = useCallback(async () => {
     if (!company) return;
@@ -73,7 +88,7 @@ export function ClientsPage() {
         <Button
           variant="primary"
           leftIcon={<Plus className="w-4 h-4" />}
-          onClick={() => setModalOpen(true)}
+          onClick={handleOpenNewClient}
         >
           Nouveau client
         </Button>
@@ -91,7 +106,7 @@ export function ClientsPage() {
           title="Aucun client"
           description="Ajoutez votre premier client pour commencer à le facturer."
           ctaLabel="Ajouter un client"
-          onCta={() => setModalOpen(true)}
+          onCta={handleOpenNewClient}
         />
       ) : (
         <ClientsTable rows={rows} onRowClick={(id) => navigate(`/clients/${id}`)} />
@@ -102,6 +117,12 @@ export function ClientsPage() {
         onClose={() => setModalOpen(false)}
         companyId={company.id}
         onSaved={() => void load()}
+      />
+
+      <UpgradeModal
+        open={upgradeModalOpen}
+        onClose={() => setUpgradeModalOpen(false)}
+        feature="clients"
       />
     </PageContainer>
   );
