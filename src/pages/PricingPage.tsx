@@ -88,26 +88,26 @@ export function PricingPage() {
 
       <MarketingNavbar />
 
-      <main className="pt-32 pb-24">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-16">
+      <main className="pt-28 sm:pt-32 pb-20 sm:pb-24">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12 sm:space-y-16">
           {/* Header */}
           <div className="text-center max-w-3xl mx-auto space-y-4">
             <div className="inline-flex items-center space-x-2 px-3.5 py-1 rounded-full bg-brand-primary/10 text-brand-primary text-xs font-bold border border-brand-primary/20">
               <Sparkles className="w-3.5 h-3.5" />
               <span>Transparence Totale — Sans engagement</span>
             </div>
-            <h1 className="text-4xl sm:text-5xl font-black tracking-tight text-text">
+            <h1 className="text-3xl sm:text-5xl font-black tracking-tight text-text">
               Des tarifs simples pour booster votre activité
             </h1>
-            <p className="text-base text-text/80">
+            <p className="text-sm sm:text-base text-text/80">
               Démarrez gratuitement avec le plan Starter ou libérez tout le potentiel de votre entreprise avec 14 jours d'essai offerts.
             </p>
           </div>
 
           {/* Pricing Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 items-stretch">
             {/* Starter */}
-            <div className="bg-surface border border-border/80 rounded-2xl p-8 flex flex-col justify-between shadow-sm hover:shadow-md transition-shadow">
+            <div className="bg-surface border border-border/80 rounded-2xl p-6 sm:p-8 flex flex-col justify-between shadow-sm hover:shadow-md transition-shadow">
               <div className="space-y-6">
                 <div>
                   <h2 className="text-2xl font-bold text-text">Starter</h2>
@@ -132,7 +132,7 @@ export function PricingPage() {
             </div>
 
             {/* Solo */}
-            <div className="relative bg-surface border-2 border-brand-primary rounded-2xl p-8 flex flex-col justify-between shadow-2xl scale-105 z-10">
+            <div className="relative bg-surface border-2 border-brand-primary rounded-2xl p-6 sm:p-8 flex flex-col justify-between shadow-2xl scale-100 md:scale-105 z-10">
               <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-gradient-to-r from-brand-primary to-brand-accent text-white text-[11px] font-black uppercase tracking-wider px-4 py-1 rounded-full shadow-md">
                 ★ LE PLUS POPULAIRE
               </div>
@@ -160,7 +160,7 @@ export function PricingPage() {
             </div>
 
             {/* Pro */}
-            <div className="bg-surface border border-border/80 rounded-2xl p-8 flex flex-col justify-between shadow-sm hover:shadow-md transition-shadow">
+            <div className="bg-surface border border-border/80 rounded-2xl p-6 sm:p-8 flex flex-col justify-between shadow-sm hover:shadow-md transition-shadow">
               <div className="space-y-6">
                 <div>
                   <h2 className="text-2xl font-bold text-text">Pro</h2>
@@ -185,16 +185,16 @@ export function PricingPage() {
             </div>
           </div>
 
-          {/* Full Comparison Table */}
-          <div className="pt-12 space-y-8">
+          {/* Full Comparison Table with Touch Scroll */}
+          <div className="pt-8 sm:pt-12 space-y-6 sm:space-y-8">
             <div className="text-center space-y-2">
               <h2 className="text-2xl font-bold text-text">Comparatif détaillé des fonctionnalités</h2>
-              <p className="text-xs text-text/80 font-medium">Tout ce qui est inclus dans chaque formule</p>
+              <p className="text-xs text-text/80 font-medium">Glissez horizontalement pour comparer tous les plans</p>
             </div>
 
             <div className="bg-surface border border-border rounded-2xl overflow-hidden shadow-sm">
-              <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse text-xs">
+              <div className="overflow-x-auto touch-pan-x">
+                <table className="w-full min-w-[550px] text-left border-collapse text-xs">
                   <thead>
                     <tr className="bg-surface-hover/80 border-b border-border text-text font-bold">
                       <th className="p-4">Fonctionnalité</th>
