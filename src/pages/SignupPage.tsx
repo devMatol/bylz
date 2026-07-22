@@ -48,6 +48,8 @@ export function SignupPage() {
 
   const strength = getPasswordStrength(password);
 
+  const isGuest = new URLSearchParams(window.location.search).get("guest") === "true";
+
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -63,13 +65,14 @@ export function SignupPage() {
       return;
     }
     await refreshProfile();
-    navigate("/onboarding");
+    navigate(isGuest ? "/onboarding?guest=true" : "/onboarding");
   };
 
   const handleGoogle = async () => {
     setError(null);
     setGoogleLoading(true);
-    const { error: googleError } = await signInWithGoogle();
+    const redirectTo = isGuest ? `${window.location.origin}/?guest=true` : undefined;
+    const { error: googleError } = await signInWithGoogle(redirectTo);
     if (googleError) {
       setError(mapAuthError(googleError.code));
       setGoogleLoading(false);
@@ -83,7 +86,10 @@ export function SignupPage() {
       footer={
         <p>
           Déjà un compte ?{" "}
-          <Link to="/login" className="text-primary font-semibold hover:underline">
+          <Link
+            to={isGuest ? "/login?guest=true" : "/login"}
+            className="text-primary font-semibold hover:underline"
+          >
             Se connecter
           </Link>
         </p>

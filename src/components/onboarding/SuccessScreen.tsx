@@ -3,15 +3,21 @@ import { Receipt, Users, LayoutDashboard, ArrowRight } from "lucide-react";
 import { Card } from "../ui/Card";
 import { cn } from "../../lib/utils";
 
-export function SuccessScreen() {
+interface SuccessScreenProps {
+  migratedInvoiceId?: string | null;
+}
+
+export function SuccessScreen({ migratedInvoiceId }: SuccessScreenProps) {
   const navigate = useNavigate();
 
   const actions = [
     {
       icon: Receipt,
-      title: "Créer ma première facture",
-      desc: "Émettez une facture en quelques minutes",
-      path: "/invoices/new",
+      title: migratedInvoiceId ? "Finaliser ma facture" : "Créer ma première facture",
+      desc: migratedInvoiceId
+        ? "Émettez la facture que vous venez de préparer"
+        : "Émettez une facture en quelques minutes",
+      path: migratedInvoiceId ? `/invoices/${migratedInvoiceId}` : "/invoices/new",
     },
     {
       icon: Users,
@@ -58,9 +64,11 @@ export function SuccessScreen() {
           }
         `}</style>
 
-        <h1 className="text-2xl font-bold text-text mb-2">Votre espace est prêt !</h1>
+        <h1 className="text-2xl font-bold text-text mb-2">
+          {migratedInvoiceId ? "Votre espace est prêt ! Votre facture vous attend." : "Votre espace est prêt !"}
+        </h1>
         <p className="text-sm text-muted mb-8">
-          Félicitations, votre compte Bylz est configuré.
+          {migratedInvoiceId ? "Félicitations, votre compte Bylz est configuré et votre brouillon a été importé." : "Félicitations, votre compte Bylz est configuré."}
         </p>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">

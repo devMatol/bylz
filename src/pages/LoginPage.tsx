@@ -28,6 +28,8 @@ export function LoginPage() {
   const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const isGuest = new URLSearchParams(window.location.search).get("guest") === "true";
+
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -39,13 +41,14 @@ export function LoginPage() {
       return;
     }
     await refreshProfile();
-    navigate("/");
+    navigate(isGuest ? "/?guest=true" : "/");
   };
 
   const handleGoogle = async () => {
     setError(null);
     setGoogleLoading(true);
-    const { error: googleError } = await signInWithGoogle();
+    const redirectTo = isGuest ? `${window.location.origin}/?guest=true` : undefined;
+    const { error: googleError } = await signInWithGoogle(redirectTo);
     if (googleError) {
       setError(mapAuthError(googleError.code));
       setGoogleLoading(false);
@@ -59,7 +62,10 @@ export function LoginPage() {
       footer={
         <p>
           Pas encore de compte ?{" "}
-          <Link to="/signup" className="text-primary font-semibold hover:underline">
+          <Link
+            to={isGuest ? "/signup?guest=true" : "/signup"}
+            className="text-primary font-semibold hover:underline"
+          >
             Créer un compte
           </Link>
         </p>
