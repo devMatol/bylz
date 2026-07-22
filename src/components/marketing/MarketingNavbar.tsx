@@ -26,7 +26,7 @@ export function MarketingNavbar() {
     <header
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
         scrolled
-          ? "bg-surface/80 backdrop-blur-md border-b border-border shadow-sm py-3"
+          ? "bg-surface/90 backdrop-blur-md border-b border-border shadow-sm py-3"
           : "bg-transparent py-5"
       }`}
     >
@@ -41,7 +41,7 @@ export function MarketingNavbar() {
           </span>
         </Link>
 
-        {/* Desktop Nav Links */}
+        {/* Desktop Nav Links with High Contrast */}
         <nav className="hidden md:flex items-center space-x-8">
           {navLinks.map((link) => {
             const isActive = location.pathname === link.path;
@@ -50,7 +50,9 @@ export function MarketingNavbar() {
                 key={link.path}
                 to={link.path}
                 className={`text-sm font-semibold transition-colors ${
-                  isActive ? "text-brand-primary" : "text-muted hover:text-text"
+                  isActive
+                    ? "text-brand-primary font-bold"
+                    : "text-text/80 hover:text-brand-primary"
                 }`}
               >
                 {link.label}
@@ -63,13 +65,13 @@ export function MarketingNavbar() {
         <div className="hidden md:flex items-center space-x-4">
           <Link
             to="/login"
-            className="text-sm font-semibold text-text hover:text-brand-primary transition-colors px-3 py-2"
+            className="text-sm font-bold text-text hover:text-brand-primary bg-surface-hover/50 hover:bg-surface-hover border border-border/80 px-4 py-2 rounded-full transition-all"
           >
             Se connecter
           </Link>
           <Link
             to="/essai"
-            className="inline-flex items-center justify-center space-x-2 text-sm font-bold text-white bg-gradient-to-r from-brand-primary to-brand-primary/90 hover:from-brand-primary/90 hover:to-brand-primary px-4 py-2.5 rounded-full shadow-lg shadow-brand-primary/20 hover:shadow-brand-primary/40 transition-all duration-300 hover:-translate-y-0.5"
+            className="inline-flex items-center justify-center space-x-2 text-sm font-bold text-white bg-gradient-to-r from-brand-primary to-indigo-600 hover:from-indigo-600 hover:to-brand-primary px-5 py-2.5 rounded-full shadow-lg shadow-brand-primary/25 hover:shadow-brand-primary/45 transition-all duration-300 hover:-translate-y-0.5"
           >
             <Sparkles className="w-4 h-4 text-brand-accent animate-pulse" />
             <span>Essayer gratuitement</span>
@@ -80,7 +82,7 @@ export function MarketingNavbar() {
         <button
           type="button"
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          className="md:hidden p-2 rounded-lg text-muted hover:text-text hover:bg-surface-hover transition-colors"
+          className="md:hidden p-2 rounded-lg text-text hover:bg-surface-hover transition-colors"
           aria-label="Toggle menu"
         >
           {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
@@ -96,7 +98,7 @@ export function MarketingNavbar() {
                 key={link.path}
                 to={link.path}
                 onClick={() => setMobileMenuOpen(false)}
-                className="text-base font-medium text-text hover:text-brand-primary transition-colors py-1"
+                className="text-base font-bold text-text hover:text-brand-primary transition-colors py-1"
               >
                 {link.label}
               </Link>
@@ -107,7 +109,7 @@ export function MarketingNavbar() {
             <Link
               to="/login"
               onClick={() => setMobileMenuOpen(false)}
-              className="w-full text-center text-sm font-semibold text-text border border-border py-2.5 rounded-xl hover:bg-surface-hover transition-colors"
+              className="w-full text-center text-sm font-bold text-text border border-border py-2.5 rounded-xl hover:bg-surface-hover transition-colors"
             >
               Se connecter
             </Link>

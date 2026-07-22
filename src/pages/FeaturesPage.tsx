@@ -113,14 +113,14 @@ export function FeaturesPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-16">
           {/* Header */}
           <div className="text-center max-w-3xl mx-auto space-y-4">
-            <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-brand-primary/10 text-brand-primary text-xs font-bold">
-              <Zap className="w-3.5 h-3.5" />
+            <div className="inline-flex items-center space-x-2 px-3.5 py-1 rounded-full bg-brand-primary/10 text-brand-primary text-xs font-bold border border-brand-primary/20">
+              <Zap className="w-3.5 h-3.5 text-brand-accent" />
               <span>Conçu pour gagner du temps au quotidien</span>
             </div>
             <h1 className="text-4xl sm:text-5xl font-black tracking-tight text-text">
               Toutes les fonctionnalités dont votre micro-entreprise a besoin
             </h1>
-            <p className="text-base text-muted">
+            <p className="text-base text-text/80 font-medium">
               Bylz combine un outil de facturation légal ultra-rapide et un véritable copilote fiscal automatisé.
             </p>
           </div>
@@ -132,14 +132,14 @@ export function FeaturesPage() {
               return (
                 <div
                   key={idx}
-                  className="bg-surface border border-border rounded-2xl p-6 space-y-4 shadow-sm hover:shadow-md transition-shadow"
+                  className="bg-surface border border-border/80 rounded-2xl p-6 space-y-4 shadow-sm hover:shadow-md hover:border-brand-primary/30 transition-all"
                 >
                   <div className={`w-12 h-12 rounded-xl ${item.bgColor} flex items-center justify-center ${item.color}`}>
                     <IconComp className="w-6 h-6" />
                   </div>
                   <h2 className="text-lg font-bold text-text">{item.title}</h2>
-                  <p className="text-xs text-muted leading-relaxed">{item.description}</p>
-                  <ul className="space-y-2 pt-2 border-t border-border/50 text-xs text-text font-medium">
+                  <p className="text-xs text-text/80 leading-relaxed font-normal">{item.description}</p>
+                  <ul className="space-y-2 pt-3 border-t border-border/60 text-xs text-text font-semibold">
                     {item.bullets.map((b, bIdx) => (
                       <li key={bIdx} className="flex items-center space-x-2">
                         <CheckCircle2 className="w-3.5 h-3.5 text-brand-primary flex-shrink-0" />
@@ -155,17 +155,17 @@ export function FeaturesPage() {
           <TrustBadgesRow />
 
           {/* CTA Banner */}
-          <div className="bg-surface border border-border rounded-3xl p-10 text-center space-y-6 shadow-xl card-shadow">
+          <div className="bg-surface border border-border/80 rounded-3xl p-10 text-center space-y-6 shadow-xl card-shadow">
             <h2 className="text-2xl sm:text-3xl font-black text-text">
               Prêt à tester l'éditeur de factures par vous-même ?
             </h2>
-            <p className="text-sm text-muted max-w-xl mx-auto">
+            <p className="text-sm text-text/80 font-medium max-w-xl mx-auto">
               Créez votre première facture en mode invité sans inscription ou démarrez avec votre compte gratuit.
             </p>
             <div>
               <Link
                 to="/essai"
-                className="inline-flex items-center space-x-2 text-sm font-bold text-white bg-brand-primary hover:bg-brand-primary/90 px-6 py-3 rounded-full shadow-lg"
+                className="inline-flex items-center space-x-3 text-sm font-black text-white bg-gradient-to-r from-brand-primary via-indigo-600 to-brand-primary hover:from-indigo-600 hover:to-brand-primary px-8 py-3.5 rounded-full shadow-lg shadow-brand-primary/30 transition-all duration-300 hover:-translate-y-0.5"
               >
                 <span>Essayer le générateur gratuit</span>
                 <ArrowRight className="w-4 h-4" />
