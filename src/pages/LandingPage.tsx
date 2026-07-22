@@ -9,11 +9,6 @@ import {
   TrendingUp,
   ChevronDown,
   CheckCircle2,
-  Lock,
-  CreditCard,
-  Bell,
-  Layers,
-  Calculator,
 } from "lucide-react";
 import { SEO } from "../components/seo/SEO";
 import { MarketingNavbar } from "../components/marketing/MarketingNavbar";
@@ -22,6 +17,7 @@ import { HeroInvoiceMockup } from "../components/marketing/HeroInvoiceMockup";
 import { TrustBadgesRow } from "../components/marketing/TrustBadgesRow";
 import { InteractiveInvoiceBuilder } from "../components/marketing/InteractiveInvoiceBuilder";
 import { InteractiveFiscalSimulator } from "../components/marketing/InteractiveFiscalSimulator";
+import { Button } from "../components/ui/Button";
 
 export function LandingPage() {
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(0);
@@ -85,7 +81,7 @@ export function LandingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-bg text-text selection:bg-brand-primary/20 selection:text-brand-primary bg-grid-pattern relative">
+    <div className="min-h-screen bg-bg text-text selection:bg-primary/20 selection:text-primary relative">
       <SEO
         title="Bylz — Facturation et pilotage fiscal pour auto-entrepreneurs | Conforme 2026"
         description="Créez des factures conformes 2026, suivez votre CA et anticipez vos cotisations URSSAF en 2 min/jour. Gratuit sans carte bancaire."
@@ -98,41 +94,40 @@ export function LandingPage() {
       <main>
         {/* HERO SECTION */}
         <section className="relative pt-32 pb-20 md:pt-40 md:pb-28 overflow-hidden">
-          {/* Top Radial Glow Light Beam */}
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-gradient-to-b from-brand-primary/20 via-indigo-600/10 to-transparent blur-3xl pointer-events-none" />
+          {/* Radial Primary Glow */}
+          <div className="bylz-radial-primary" />
 
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center">
               {/* Left Column: Offer */}
               <div className="lg:col-span-7 space-y-6 text-center lg:text-left">
                 {/* Regulatory Trust Badge */}
-                <div className="inline-flex items-center space-x-2 px-4 py-2 rounded-full bg-brand-primary/15 border border-brand-primary/40 text-brand-primary text-xs font-extrabold tracking-wide shadow-[0_0_20px_rgba(124,111,224,0.25)]">
-                  <Sparkles className="w-4 h-4 text-brand-accent animate-pulse" />
+                <div className="inline-flex items-center space-x-2 px-4 py-2 rounded-pill bg-primary/15 border border-primary/30 text-primary text-xs font-extrabold tracking-wide bylz-glow-primary">
+                  <Sparkles className="w-4 h-4 text-accent animate-pulse" />
                   <span>Prêt pour la Réforme Facturation Électronique 2026</span>
                 </div>
 
                 {/* Main Headline */}
                 <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-[1.1]">
                   Vos factures.{" "}
-                  <span className="bg-gradient-to-r from-brand-primary via-indigo-400 to-brand-accent bg-clip-text text-transparent">
+                  <span className="bg-gradient-to-r from-primary via-primary-hover to-accent bg-clip-text text-transparent">
                     Votre fiscal.
                   </span>{" "}
                   Tout en un.
                 </h1>
 
                 {/* Subtitle */}
-                <p className="text-base sm:text-lg text-text/80 max-w-2xl mx-auto lg:mx-0 font-normal leading-relaxed">
+                <p className="text-base sm:text-lg text-muted max-w-2xl mx-auto lg:mx-0 font-normal leading-relaxed">
                   Créez des factures conformes 2026, suivez votre CA en temps réel et anticipez vos cotisations URSSAF — en 2 minutes par jour.
                 </p>
 
                 {/* CTAs */}
                 <div className="pt-3 flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4">
-                  <Link
-                    to="/essai"
-                    className="shimmer-btn w-full sm:w-auto inline-flex items-center justify-center space-x-3 text-base font-black text-white bg-gradient-to-r from-brand-primary via-indigo-600 to-brand-primary hover:from-indigo-600 hover:to-brand-primary px-8 py-4 rounded-full shadow-2xl shadow-brand-primary/40 hover:shadow-brand-primary/60 transition-all duration-300 hover:-translate-y-1 border border-brand-primary/30"
-                  >
-                    <span>Essayer gratuitement — sans carte bancaire</span>
-                    <ArrowRight className="w-5 h-5 text-brand-accent" />
+                  <Link to="/essai" className="w-full sm:w-auto">
+                    <Button variant="primary" size="lg" className="w-full sm:w-auto bylz-glow-cta text-base py-4 px-8">
+                      <span>Essayer gratuitement — sans carte bancaire</span>
+                      <ArrowRight className="w-5 h-5 ml-2 text-accent" />
+                    </Button>
                   </Link>
                 </div>
 
@@ -140,21 +135,21 @@ export function LandingPage() {
                 <div className="pt-2">
                   <a
                     href="#fonctionnalites"
-                    className="inline-flex items-center text-xs font-bold text-text/80 hover:text-brand-primary transition-colors"
+                    className="inline-flex items-center text-xs font-bold text-muted hover:text-primary transition-colors"
                   >
                     Découvrir les simulateurs interactifs ↓
                   </a>
                 </div>
 
                 {/* Inline Trust Badges */}
-                <div className="pt-4 flex flex-wrap items-center justify-center lg:justify-start gap-4 text-xs font-bold text-text/80">
-                  <span className="flex items-center text-emerald-600 dark:text-emerald-400 font-bold bg-emerald-500/10 px-3.5 py-1.5 rounded-full border border-emerald-500/30 shadow-sm">
+                <div className="pt-4 flex flex-wrap items-center justify-center lg:justify-start gap-4 text-xs font-bold text-muted">
+                  <span className="flex items-center text-success font-bold bg-success/10 px-3.5 py-1.5 rounded-pill border border-success/30">
                     ✓ Agréé DGFiP 2026
                   </span>
-                  <span className="flex items-center bg-surface border border-border/80 px-3.5 py-1.5 rounded-full shadow-sm">
+                  <span className="flex items-center bg-surface border border-border px-3.5 py-1.5 rounded-pill">
                     🔒 Données en France
                   </span>
-                  <span className="flex items-center bg-surface border border-border/80 px-3.5 py-1.5 rounded-full shadow-sm">
+                  <span className="flex items-center bg-surface border border-border px-3.5 py-1.5 rounded-pill">
                     ⚡ Prêt en 5 min
                   </span>
                 </div>
@@ -169,23 +164,20 @@ export function LandingPage() {
         </section>
 
         {/* SOCIAL PROOF / REGULATORY STRIP */}
-        <section className="bg-brand-primary/10 border-y border-brand-primary/20 py-6 backdrop-blur-md">
+        <section className="bg-primary/10 border-y border-border py-6 backdrop-blur-md">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-center gap-4 text-center sm:text-left">
             <div className="flex -space-x-2 overflow-hidden">
-              <div className="inline-block h-8 w-8 rounded-full ring-2 ring-surface bg-indigo-500 text-white text-xs font-bold flex items-center justify-center shadow-md">
+              <div className="inline-block h-8 w-8 rounded-full ring-2 ring-surface bg-primary text-white text-xs font-bold flex items-center justify-center">
                 JD
               </div>
-              <div className="inline-block h-8 w-8 rounded-full ring-2 ring-surface bg-sky-500 text-white text-xs font-bold flex items-center justify-center shadow-md">
+              <div className="inline-block h-8 w-8 rounded-full ring-2 ring-surface bg-accent text-white text-xs font-bold flex items-center justify-center">
                 ML
               </div>
-              <div className="inline-block h-8 w-8 rounded-full ring-2 ring-surface bg-emerald-500 text-white text-xs font-bold flex items-center justify-center shadow-md">
+              <div className="inline-block h-8 w-8 rounded-full ring-2 ring-surface bg-success text-white text-xs font-bold flex items-center justify-center">
                 AB
               </div>
-              <div className="inline-block h-8 w-8 rounded-full ring-2 ring-surface bg-amber-500 text-white text-xs font-bold flex items-center justify-center shadow-md">
+              <div className="inline-block h-8 w-8 rounded-full ring-2 ring-surface bg-warning text-white text-xs font-bold flex items-center justify-center">
                 TR
-              </div>
-              <div className="inline-block h-8 w-8 rounded-full ring-2 ring-surface bg-purple-500 text-white text-xs font-bold flex items-center justify-center shadow-md">
-                CP
               </div>
             </div>
             <p className="text-xs sm:text-sm font-extrabold text-text">
@@ -201,30 +193,30 @@ export function LandingPage() {
             {/* Pillar 1: Facturation sans friction */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
               <div className="lg:col-span-6 space-y-6">
-                <div className="w-12 h-12 rounded-2xl bg-brand-primary/20 flex items-center justify-center text-brand-primary shadow-lg shadow-brand-primary/20">
+                <div className="w-12 h-12 rounded-card bg-primary/20 flex items-center justify-center text-primary bylz-glow-primary">
                   <FileText className="w-6 h-6" />
                 </div>
                 <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-text">
                   Facturation sans friction
                 </h2>
-                <p className="text-text/80 text-base leading-relaxed font-normal">
+                <p className="text-muted text-base leading-relaxed font-normal">
                   Créez des devis et factures d'aspect ultra-professionnel en quelques secondes. Bylz s'occupe du format légal et de la conformité sans que vous n'ayez à y penser.
                 </p>
                 <ul className="space-y-3.5 text-sm font-semibold text-text">
                   <li className="flex items-center space-x-3">
-                    <CheckCircle2 className="w-5 h-5 text-brand-primary flex-shrink-0" />
+                    <CheckCircle2 className="w-5 h-5 text-primary flex-shrink-0" />
                     <span>Création de devis & factures en moins de 2 minutes</span>
                   </li>
                   <li className="flex items-center space-x-3">
-                    <CheckCircle2 className="w-5 h-5 text-brand-primary flex-shrink-0" />
+                    <CheckCircle2 className="w-5 h-5 text-primary flex-shrink-0" />
                     <span>Format Factur-X & télétransmission DGFiP automatique</span>
                   </li>
                   <li className="flex items-center space-x-3">
-                    <CheckCircle2 className="w-5 h-5 text-brand-primary flex-shrink-0" />
+                    <CheckCircle2 className="w-5 h-5 text-primary flex-shrink-0" />
                     <span>Relances automatiques des retards de paiement & Liens Stripe</span>
                   </li>
                   <li className="flex items-center space-x-3">
-                    <CheckCircle2 className="w-5 h-5 text-brand-primary flex-shrink-0" />
+                    <CheckCircle2 className="w-5 h-5 text-primary flex-shrink-0" />
                     <span>Recherche SIRET automatique pour remplir les clients B2B</span>
                   </li>
                 </ul>
@@ -236,7 +228,7 @@ export function LandingPage() {
               </div>
             </div>
 
-            {/* Pillar 2: Pilotage fiscal en temps réel (Alternated with Interactive Fiscal Simulator) */}
+            {/* Pillar 2: Pilotage fiscal en temps réel */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
               {/* Left Column: Interactive Live Fiscal Simulator */}
               <div className="lg:col-span-6 order-2 lg:order-1">
@@ -245,30 +237,30 @@ export function LandingPage() {
 
               {/* Right Column: Pillar 2 Description */}
               <div className="lg:col-span-6 space-y-6 order-1 lg:order-2">
-                <div className="w-12 h-12 rounded-2xl bg-brand-accent/20 flex items-center justify-center text-brand-accent shadow-lg shadow-brand-accent/20">
+                <div className="w-12 h-12 rounded-card bg-accent/20 flex items-center justify-center text-accent bylz-glow-accent">
                   <TrendingUp className="w-6 h-6" />
                 </div>
                 <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-text">
                   Pilotage fiscal en temps réel
                 </h2>
-                <p className="text-text/80 text-base leading-relaxed font-normal">
+                <p className="text-muted text-base leading-relaxed font-normal">
                   Ne soyez plus jamais surpris par les plafonds de TVA ou les appels de cotisations URSSAF. Bylz calcule vos charges à chaque euro encaissé.
                 </p>
                 <ul className="space-y-3.5 text-sm font-semibold text-text">
                   <li className="flex items-center space-x-3">
-                    <CheckCircle2 className="w-5 h-5 text-brand-accent flex-shrink-0" />
+                    <CheckCircle2 className="w-5 h-5 text-accent flex-shrink-0" />
                     <span>Calcul automatique de votre bénéfice net & des cotisations URSSAF</span>
                   </li>
                   <li className="flex items-center space-x-3">
-                    <CheckCircle2 className="w-5 h-5 text-brand-accent flex-shrink-0" />
+                    <CheckCircle2 className="w-5 h-5 text-accent flex-shrink-0" />
                     <span>Alerte visuelle à l'approche des seuils de franchise de TVA</span>
                   </li>
                   <li className="flex items-center space-x-3">
-                    <CheckCircle2 className="w-5 h-5 text-brand-accent flex-shrink-0" />
+                    <CheckCircle2 className="w-5 h-5 text-accent flex-shrink-0" />
                     <span>Assistant pour vos déclarations mensuelles ou trimestrielles</span>
                   </li>
                   <li className="flex items-center space-x-3">
-                    <CheckCircle2 className="w-5 h-5 text-brand-accent flex-shrink-0" />
+                    <CheckCircle2 className="w-5 h-5 text-accent flex-shrink-0" />
                     <span>Simulation de l'Impôt sur le Revenu selon votre TMI</span>
                   </li>
                 </ul>
@@ -285,7 +277,7 @@ export function LandingPage() {
               <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-text">
                 Des tarifs simples, transparents et sans surprise
               </h2>
-              <p className="text-base text-text/80 font-medium">
+              <p className="text-base text-muted font-medium">
                 Commencez gratuitement. Évoluez quand votre activité grandit. Résiliable à tout moment.
               </p>
             </div>
@@ -293,105 +285,102 @@ export function LandingPage() {
             {/* 3 Pricing Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-center">
               {/* Starter Plan */}
-              <div className="bg-surface border border-border/80 rounded-3xl p-6 sm:p-8 space-y-6 shadow-sm hover:shadow-lg transition-all">
+              <div className="bg-surface border border-border rounded-card p-6 sm:p-8 space-y-6 card-shadow">
                 <div>
                   <h3 className="text-xl font-bold text-text">Starter</h3>
-                  <p className="text-xs text-text/70 mt-1 font-medium">Pour démarrer en toute sérénité</p>
+                  <p className="text-xs text-muted mt-1 font-medium">Pour démarrer en toute sérénité</p>
                   <div className="mt-4 flex items-baseline space-x-1">
                     <span className="text-4xl font-black text-text font-mono">0 €</span>
-                    <span className="text-xs text-text/70">/ mois</span>
+                    <span className="text-xs text-muted">/ mois</span>
                   </div>
                 </div>
                 <ul className="space-y-3 text-xs text-text font-semibold">
                   <li className="flex items-center space-x-2">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                    <CheckCircle2 className="w-4 h-4 text-success" />
                     <span>Jusqu'à 10 factures / mois</span>
                   </li>
                   <li className="flex items-center space-x-2">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                    <CheckCircle2 className="w-4 h-4 text-success" />
                     <span>Jusqu'à 3 clients actifs</span>
                   </li>
                   <li className="flex items-center space-x-2">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                    <CheckCircle2 className="w-4 h-4 text-success" />
                     <span>Factur-X & Conformité 2026</span>
                   </li>
                 </ul>
-                <Link
-                  to="/signup?plan=starter"
-                  className="block w-full text-center text-sm font-bold text-text bg-surface-hover hover:bg-border/80 border border-border/80 py-3.5 rounded-2xl transition-all shadow-sm hover:text-brand-primary"
-                >
-                  Créer mon compte gratuit
+                <Link to="/signup?plan=starter" className="block w-full">
+                  <Button variant="outline" className="w-full justify-center">
+                    Créer mon compte gratuit
+                  </Button>
                 </Link>
               </div>
 
-              {/* Solo Plan (Visually Dominant - Glow, Gradient Border) */}
-              <div className="relative bg-surface/90 backdrop-blur-xl border-2 border-brand-primary rounded-3xl p-6 sm:p-8 space-y-6 shadow-2xl scale-100 md:scale-105 z-10 glow-primary">
-                <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-gradient-to-r from-brand-primary to-brand-accent text-white text-[11px] font-black uppercase tracking-wider px-4 py-1.5 rounded-full shadow-lg">
+              {/* Solo Plan (Visually Dominant - Bylz Glow & Accent Badge) */}
+              <div className="relative bg-surface border-2 border-primary rounded-card p-6 sm:p-8 space-y-6 bylz-glow-primary scale-100 md:scale-105 z-10">
+                <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-gradient-to-r from-primary to-accent text-white text-[11px] font-black uppercase tracking-wider px-4 py-1.5 rounded-pill shadow-lg">
                   ★ LE PLUS POPULAIRE
                 </div>
                 <div>
                   <h3 className="text-xl font-bold text-text">Solo</h3>
-                  <p className="text-xs text-text/70 mt-1 font-medium">Pour les indépendants actifs</p>
+                  <p className="text-xs text-muted mt-1 font-medium">Pour les indépendants actifs</p>
                   <div className="mt-4 flex items-baseline space-x-1">
-                    <span className="text-4xl font-black text-brand-primary font-mono">9 €</span>
-                    <span className="text-xs text-text/70">/ mois HT</span>
+                    <span className="text-4xl font-black text-primary font-mono">9 €</span>
+                    <span className="text-xs text-muted">/ mois HT</span>
                   </div>
                 </div>
                 <ul className="space-y-3 text-xs text-text font-semibold">
                   <li className="flex items-center space-x-2">
-                    <CheckCircle2 className="w-4 h-4 text-brand-primary" />
+                    <CheckCircle2 className="w-4 h-4 text-primary" />
                     <span>Factures & Devis illimités</span>
                   </li>
                   <li className="flex items-center space-x-2">
-                    <CheckCircle2 className="w-4 h-4 text-brand-primary" />
+                    <CheckCircle2 className="w-4 h-4 text-primary" />
                     <span>Clients illimités</span>
                   </li>
                   <li className="flex items-center space-x-2">
-                    <CheckCircle2 className="w-4 h-4 text-brand-primary" />
+                    <CheckCircle2 className="w-4 h-4 text-primary" />
                     <span>Pilotage fiscal & Alertes TVA</span>
                   </li>
                   <li className="flex items-center space-x-2">
-                    <CheckCircle2 className="w-4 h-4 text-brand-primary" />
+                    <CheckCircle2 className="w-4 h-4 text-primary" />
                     <span>Relances automatiques</span>
                   </li>
                 </ul>
-                <Link
-                  to="/signup?plan=solo"
-                  className="shimmer-btn block w-full text-center text-sm font-black text-white bg-gradient-to-r from-brand-primary via-indigo-600 to-brand-primary hover:from-indigo-600 hover:to-brand-primary py-3.5 rounded-2xl shadow-xl shadow-brand-primary/40 transition-all duration-300"
-                >
-                  Essayer Solo — 14 jours offerts
+                <Link to="/signup?plan=solo" className="block w-full">
+                  <Button variant="primary" className="w-full justify-center bylz-glow-cta py-3.5">
+                    Essayer Solo — 14 jours offerts
+                  </Button>
                 </Link>
               </div>
 
               {/* Pro Plan */}
-              <div className="bg-surface border border-border/80 rounded-3xl p-6 sm:p-8 space-y-6 shadow-sm hover:shadow-lg transition-all">
+              <div className="bg-surface border border-border rounded-card p-6 sm:p-8 space-y-6 card-shadow">
                 <div>
                   <h3 className="text-xl font-bold text-text">Pro</h3>
-                  <p className="text-xs text-text/70 mt-1 font-medium">Pour maximiser votre activité</p>
+                  <p className="text-xs text-muted mt-1 font-medium">Pour maximiser votre activité</p>
                   <div className="mt-4 flex items-baseline space-x-1">
                     <span className="text-4xl font-black text-text font-mono">19 €</span>
-                    <span className="text-xs text-text/70">/ mois HT</span>
+                    <span className="text-xs text-muted">/ mois HT</span>
                   </div>
                 </div>
                 <ul className="space-y-3 text-xs text-text font-semibold">
                   <li className="flex items-center space-x-2">
-                    <CheckCircle2 className="w-4 h-4 text-brand-accent" />
+                    <CheckCircle2 className="w-4 h-4 text-accent" />
                     <span>Tout le plan Solo</span>
                   </li>
                   <li className="flex items-center space-x-2">
-                    <CheckCircle2 className="w-4 h-4 text-brand-accent" />
+                    <CheckCircle2 className="w-4 h-4 text-accent" />
                     <span>Paiement en ligne Stripe Connect</span>
                   </li>
                   <li className="flex items-center space-x-2">
-                    <CheckCircle2 className="w-4 h-4 text-brand-accent" />
+                    <CheckCircle2 className="w-4 h-4 text-accent" />
                     <span>Télétransmission Directe DGFiP</span>
                   </li>
                 </ul>
-                <Link
-                  to="/signup?plan=pro"
-                  className="block w-full text-center text-sm font-bold text-text bg-surface-hover hover:bg-border/80 border border-border/80 py-3.5 rounded-2xl transition-all shadow-sm hover:text-brand-primary"
-                >
-                  Essayer Pro — 14 jours offerts
+                <Link to="/signup?plan=pro" className="block w-full">
+                  <Button variant="outline" className="w-full justify-center">
+                    Essayer Pro — 14 jours offerts
+                  </Button>
                 </Link>
               </div>
             </div>
@@ -405,33 +394,33 @@ export function LandingPage() {
               <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-text">
                 Foire Aux Questions (FAQ)
               </h2>
-              <p className="text-sm text-text/80 font-medium">
+              <p className="text-sm text-muted font-medium">
                 Tout ce que vous devez savoir sur Bylz et la conformité 2026.
               </p>
             </div>
 
-            <div className="space-y-5">
+            <div className="space-y-4">
               {faqs.map((faq, idx) => {
                 const isOpen = openFaqIndex === idx;
                 return (
                   <div
                     key={idx}
-                    className="bg-surface border border-border/80 hover:border-brand-primary/40 rounded-2xl overflow-hidden transition-all shadow-sm"
+                    className="bg-surface border border-border hover:border-primary/40 rounded-card overflow-hidden transition-all card-shadow"
                   >
                     <button
                       type="button"
                       onClick={() => setOpenFaqIndex(isOpen ? null : idx)}
-                      className="w-full text-left px-6 py-5 flex items-center justify-between gap-4 font-bold text-text text-base hover:text-brand-primary transition-colors"
+                      className="w-full text-left px-6 py-5 flex items-center justify-between gap-4 font-bold text-text text-base hover:text-primary transition-colors"
                     >
                       <span>{faq.q}</span>
                       <ChevronDown
-                        className={`w-5 h-5 text-text/70 flex-shrink-0 transition-transform duration-300 ${
-                          isOpen ? "rotate-180 text-brand-primary" : ""
+                        className={`w-5 h-5 text-muted flex-shrink-0 transition-transform duration-300 ${
+                          isOpen ? "rotate-180 text-primary" : ""
                         }`}
                       />
                     </button>
                     {isOpen && (
-                      <div className="px-6 pb-6 pt-3 text-sm text-text/80 leading-relaxed font-normal border-t border-border/40">
+                      <div className="px-6 pb-6 pt-3 text-sm text-muted leading-relaxed font-normal border-t border-border/40">
                         {faq.a}
                       </div>
                     )}
@@ -450,7 +439,7 @@ export function LandingPage() {
         </section>
 
         {/* FOOTER CTA BANNER */}
-        <section className="py-24 bg-gradient-to-r from-brand-primary via-indigo-600 to-brand-accent text-white text-center relative overflow-hidden shadow-2xl">
+        <section className="py-24 bg-gradient-to-r from-primary via-primary-hover to-accent text-white text-center relative overflow-hidden shadow-2xl">
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6 relative z-10">
             <h2 className="text-3xl sm:text-5xl font-black tracking-tight">
               Prêt à simplifier votre vie d'entrepreneur ?
@@ -459,12 +448,11 @@ export function LandingPage() {
               Testez Bylz gratuitement dès aujourd'hui. Aucune carte bancaire requise.
             </p>
             <div className="pt-4">
-              <Link
-                to="/essai"
-                className="shimmer-btn inline-flex items-center space-x-3 text-base font-black text-brand-primary bg-white hover:bg-slate-100 px-9 py-4.5 rounded-full shadow-2xl hover:scale-105 transition-all duration-300"
-              >
-                <span>Démarrer l'essai gratuit</span>
-                <ArrowRight className="w-5 h-5 text-brand-primary" />
+              <Link to="/essai">
+                <Button variant="outline" size="lg" className="px-9 py-4 text-base font-black shadow-2xl hover:scale-105 bg-white text-primary border-white">
+                  <span>Démarrer l'essai gratuit</span>
+                  <ArrowRight className="w-5 h-5 ml-2 text-primary" />
+                </Button>
               </Link>
             </div>
             <p className="text-xs text-white/80 font-semibold">Sans engagement — Résiliable à tout moment</p>

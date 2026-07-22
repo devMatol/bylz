@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Menu, X, ArrowRight, Sparkles } from "lucide-react";
+import { Button } from "../ui/Button";
 
 export function MarketingNavbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -38,22 +39,22 @@ export function MarketingNavbar() {
     <header
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
         scrolled || mobileMenuOpen
-          ? "bg-surface/95 backdrop-blur-md border-b border-border shadow-sm py-3"
+          ? "bg-surface/90 backdrop-blur-md border-b border-border shadow-sm py-3"
           : "bg-transparent py-5"
       }`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
-        {/* Logo */}
+        {/* Logo with official Bylz Design System tokens */}
         <Link
           to="/"
           onClick={() => setMobileMenuOpen(false)}
           className="flex items-center space-x-2.5 group focus:outline-none"
         >
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-brand-primary to-brand-accent flex items-center justify-center text-white font-bold text-lg shadow-md group-hover:scale-105 transition-transform">
+          <div className="w-9 h-9 rounded-card bg-gradient-to-tr from-primary to-accent flex items-center justify-center text-white font-bold text-lg shadow-md group-hover:scale-105 transition-transform">
             B
           </div>
           <span className="text-xl font-black tracking-tight text-text">
-            Bylz<span className="text-brand-primary">.</span>
+            Bylz<span className="text-primary">.</span>
           </span>
         </Link>
 
@@ -66,9 +67,7 @@ export function MarketingNavbar() {
                 key={link.path}
                 to={link.path}
                 className={`text-sm font-semibold transition-colors ${
-                  isActive
-                    ? "text-brand-primary font-bold"
-                    : "text-text/80 hover:text-brand-primary"
+                  isActive ? "text-primary font-bold" : "text-muted hover:text-text"
                 }`}
               >
                 {link.label}
@@ -78,34 +77,32 @@ export function MarketingNavbar() {
         </nav>
 
         {/* Desktop CTAs */}
-        <div className="hidden md:flex items-center space-x-4">
-          <Link
-            to="/login"
-            className="text-sm font-bold text-text hover:text-brand-primary bg-surface-hover/50 hover:bg-surface-hover border border-border/80 px-4 py-2 rounded-full transition-all"
-          >
-            Se connecter
+        <div className="hidden md:flex items-center space-x-3">
+          <Link to="/login">
+            <Button variant="ghost" size="sm">
+              Se connecter
+            </Button>
           </Link>
-          <Link
-            to="/essai"
-            className="inline-flex items-center justify-center space-x-2 text-sm font-bold text-white bg-gradient-to-r from-brand-primary to-indigo-600 hover:from-indigo-600 hover:to-brand-primary px-5 py-2.5 rounded-full shadow-lg shadow-brand-primary/25 hover:shadow-brand-primary/45 transition-all duration-300 hover:-translate-y-0.5"
-          >
-            <Sparkles className="w-4 h-4 text-brand-accent animate-pulse" />
-            <span>Essayer gratuitement</span>
+          <Link to="/essai">
+            <Button variant="primary" size="sm" className="bylz-glow-cta">
+              <Sparkles className="w-4 h-4 mr-1.5 text-accent animate-pulse" />
+              Essayer gratuitement
+            </Button>
           </Link>
         </div>
 
-        {/* Mobile menu button (44px min touch area) */}
+        {/* Mobile menu button */}
         <button
           type="button"
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          className="md:hidden p-2.5 rounded-xl text-text hover:bg-surface-hover transition-colors focus:outline-none"
+          className="md:hidden p-2 rounded-card text-text hover:bg-surface-hover transition-colors focus:outline-none"
           aria-label="Toggle menu"
         >
-          {mobileMenuOpen ? <X className="w-6 h-6 text-brand-primary" /> : <Menu className="w-6 h-6" />}
+          {mobileMenuOpen ? <X className="w-6 h-6 text-primary" /> : <Menu className="w-6 h-6" />}
         </button>
       </div>
 
-      {/* Mobile Full Drawer */}
+      {/* Mobile Drawer */}
       {mobileMenuOpen && (
         <div className="md:hidden fixed inset-x-0 top-[61px] bottom-0 bg-surface/98 backdrop-blur-xl z-50 flex flex-col justify-between p-6 shadow-2xl overflow-y-auto animate-in fade-in slide-in-from-top-2 duration-200">
           <nav className="flex flex-col space-y-4 pt-2">
@@ -117,31 +114,27 @@ export function MarketingNavbar() {
                   to={link.path}
                   onClick={() => setMobileMenuOpen(false)}
                   className={`text-lg font-bold py-2 border-b border-border/40 transition-colors flex items-center justify-between ${
-                    isActive ? "text-brand-primary" : "text-text hover:text-brand-primary"
+                    isActive ? "text-primary" : "text-text hover:text-primary"
                   }`}
                 >
                   <span>{link.label}</span>
-                  <ArrowRight className="w-4 h-4 text-text/40" />
+                  <ArrowRight className="w-4 h-4 text-muted" />
                 </Link>
               );
             })}
           </nav>
 
-          <div className="pt-6 pb-8 space-y-3 border-t border-border">
-            <Link
-              to="/login"
-              onClick={() => setMobileMenuOpen(false)}
-              className="w-full block text-center text-base font-bold text-text bg-surface-hover border border-border py-3.5 rounded-xl shadow-sm hover:bg-border/60 transition-colors"
-            >
-              Se connecter
+          <div className="pt-6 pb-8 space-y-3 border-t border-border flex flex-col">
+            <Link to="/login" onClick={() => setMobileMenuOpen(false)}>
+              <Button variant="outline" className="w-full justify-center">
+                Se connecter
+              </Button>
             </Link>
-            <Link
-              to="/essai"
-              onClick={() => setMobileMenuOpen(false)}
-              className="w-full block text-center text-base font-black text-white bg-gradient-to-r from-brand-primary via-indigo-600 to-brand-primary py-3.5 rounded-xl shadow-lg shadow-brand-primary/30 flex items-center justify-center space-x-2"
-            >
-              <Sparkles className="w-4 h-4 text-brand-accent animate-pulse" />
-              <span>Essayer gratuitement</span>
+            <Link to="/essai" onClick={() => setMobileMenuOpen(false)}>
+              <Button variant="primary" className="w-full justify-center bylz-glow-cta">
+                <Sparkles className="w-4 h-4 mr-2 text-accent" />
+                Essayer gratuitement
+              </Button>
             </Link>
           </div>
         </div>
