@@ -25,7 +25,7 @@ import { SettingsPage } from "./pages/SettingsPage";
 import { AdminPage } from "./pages/AdminPage";
 import { GuestEditorPage } from "./pages/GuestEditorPage";
 
-// Code-split marketing bundle from main app
+// Code-split marketing & tools bundle from main app
 const LandingPage = lazy(() =>
   import("./pages/LandingPage").then((m) => ({ default: m.LandingPage }))
 );
@@ -53,6 +53,15 @@ const CGUPage = lazy(() =>
 const ConfidentialitePage = lazy(() =>
   import("./pages/ConfidentialitePage").then((m) => ({ default: m.ConfidentialitePage }))
 );
+
+// Dedicated SEO Tools & Simulators
+const SimulateurUrssafPage = lazy(() =>
+  import("./pages/outils/SimulateurUrssafPage").then((m) => ({ default: m.SimulateurUrssafPage }))
+);
+const SimulateurTvaPage = lazy(() =>
+  import("./pages/outils/SimulateurTvaPage").then((m) => ({ default: m.SimulateurTvaPage }))
+);
+
 const KitchenSinkPage = lazy(() =>
   import("./pages/KitchenSinkPage").then((m) => ({ default: m.KitchenSinkPage }))
 );
@@ -106,6 +115,22 @@ function App() {
                 element={
                   <MarketingSuspense>
                     <BlogPostPage />
+                  </MarketingSuspense>
+                }
+              />
+              <Route
+                path="/outils/simulateur-urssaf"
+                element={
+                  <MarketingSuspense>
+                    <SimulateurUrssafPage />
+                  </MarketingSuspense>
+                }
+              />
+              <Route
+                path="/outils/simulateur-seuil-tva"
+                element={
+                  <MarketingSuspense>
+                    <SimulateurTvaPage />
                   </MarketingSuspense>
                 }
               />

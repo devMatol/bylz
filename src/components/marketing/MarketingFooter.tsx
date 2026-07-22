@@ -3,7 +3,7 @@ import { ShieldCheck, Heart } from "lucide-react";
 
 export function MarketingFooter() {
   return (
-    <footer className="bg-surface/90 border-t border-border pt-16 pb-12 text-sm text-muted">
+    <footer className="bg-surface/95 border-t border-border pt-16 pb-12 text-sm text-muted">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-5 gap-10 pb-12 border-b border-border">
           {/* Col 1: Brand */}
@@ -16,10 +16,10 @@ export function MarketingFooter() {
                 Bylz<span className="text-brand-primary">.</span>
               </span>
             </Link>
-            <p className="text-xs text-muted max-w-sm leading-relaxed">
+            <p className="text-xs text-text/70 max-w-sm leading-relaxed font-normal">
               La solution intégrée de facturation conforme Factur-X et de pilotage fiscal automatisé pour les micro-entrepreneurs et indépendants en France.
             </p>
-            <div className="flex items-center space-x-2 text-xs text-emerald-600 dark:text-emerald-400 font-medium">
+            <div className="flex items-center space-x-2 text-xs text-emerald-600 dark:text-emerald-400 font-bold">
               <ShieldCheck className="w-4 h-4" />
               <span>Conforme à la réforme DGFiP 2026 & E-Reporting</span>
             </div>
@@ -28,42 +28,42 @@ export function MarketingFooter() {
           {/* Col 2: Produit */}
           <div className="space-y-3">
             <h4 className="font-bold text-text text-xs uppercase tracking-wider">Produit</h4>
-            <ul className="space-y-2 text-xs">
+            <ul className="space-y-2 text-xs font-medium">
               <li>
-                <Link to="/fonctionnalites" className="hover:text-text transition-colors">
+                <Link to="/fonctionnalites" className="text-text/80 hover:text-brand-primary transition-colors">
                   Fonctionnalités
                 </Link>
               </li>
               <li>
-                <Link to="/tarifs" className="hover:text-text transition-colors">
+                <Link to="/tarifs" className="text-text/80 hover:text-brand-primary transition-colors">
                   Tarifs & Abonnements
                 </Link>
               </li>
               <li>
-                <Link to="/essai" className="hover:text-text transition-colors text-brand-primary font-semibold">
+                <Link to="/essai" className="text-brand-primary font-bold hover:underline">
                   Mode Essai Gratuit (Sans CB)
                 </Link>
               </li>
             </ul>
           </div>
 
-          {/* Col 3: Ressources */}
+          {/* Col 3: Outils Fiscaux & Blog */}
           <div className="space-y-3">
-            <h4 className="font-bold text-text text-xs uppercase tracking-wider">Ressources & SEO</h4>
-            <ul className="space-y-2 text-xs">
+            <h4 className="font-bold text-text text-xs uppercase tracking-wider">Outils & Blog SEO</h4>
+            <ul className="space-y-2 text-xs font-medium">
               <li>
-                <Link to="/blog" className="hover:text-text transition-colors">
+                <Link to="/outils/simulateur-urssaf" className="text-text/80 hover:text-brand-primary transition-colors font-bold">
+                  🧮 Simulateur URSSAF 2026
+                </Link>
+              </li>
+              <li>
+                <Link to="/outils/simulateur-seuil-tva" className="text-text/80 hover:text-brand-primary transition-colors font-bold">
+                  📊 Calculateur Seuil TVA
+                </Link>
+              </li>
+              <li>
+                <Link to="/blog" className="text-text/80 hover:text-brand-primary transition-colors">
                   Blog & Guides Fiscaux
-                </Link>
-              </li>
-              <li>
-                <Link to="/blog/reforme-factur-x-2026-auto-entrepreneurs" className="hover:text-text transition-colors">
-                  Guide Réforme Factur-X 2026
-                </Link>
-              </li>
-              <li>
-                <Link to="/blog/franchise-tva-2026-seuils-et-regles" className="hover:text-text transition-colors">
-                  Seuils de TVA Micro-entreprise
                 </Link>
               </li>
             </ul>
@@ -72,24 +72,24 @@ export function MarketingFooter() {
           {/* Col 4: Légales & Contact */}
           <div className="space-y-3">
             <h4 className="font-bold text-text text-xs uppercase tracking-wider">Informations</h4>
-            <ul className="space-y-2 text-xs">
+            <ul className="space-y-2 text-xs font-medium">
               <li>
-                <Link to="/contact" className="hover:text-text transition-colors">
+                <Link to="/contact" className="text-text/80 hover:text-brand-primary transition-colors">
                   Contact & Support
                 </Link>
               </li>
               <li>
-                <Link to="/mentions-legales" className="hover:text-text transition-colors">
+                <Link to="/mentions-legales" className="text-text/80 hover:text-brand-primary transition-colors">
                   Mentions Légales
                 </Link>
               </li>
               <li>
-                <Link to="/cgu" className="hover:text-text transition-colors">
+                <Link to="/cgu" className="text-text/80 hover:text-brand-primary transition-colors">
                   CGU & Conditions
                 </Link>
               </li>
               <li>
-                <Link to="/confidentialite" className="hover:text-text transition-colors">
+                <Link to="/confidentialite" className="text-text/80 hover:text-brand-primary transition-colors">
                   Politique de Confidentialité
                 </Link>
               </li>
@@ -98,7 +98,7 @@ export function MarketingFooter() {
         </div>
 
         {/* Bottom bar */}
-        <div className="pt-8 flex flex-col md:flex-row items-center justify-between text-xs space-y-4 md:space-y-0">
+        <div className="pt-8 flex flex-col md:flex-row items-center justify-between text-xs text-text/70 space-y-4 md:space-y-0 font-medium">
           <p>© {new Date().getFullYear()} Bylz Technologies. Tous droits réservés.</p>
           <p className="flex items-center space-x-1">
             <span>Conçu avec</span>
