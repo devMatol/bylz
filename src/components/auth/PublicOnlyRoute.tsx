@@ -1,9 +1,10 @@
-import { Navigate, Outlet } from "react-router-dom";
+import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import { Skeleton } from "../ui/Skeleton";
 
 export function PublicOnlyRoute() {
   const { user, company, loading } = useAuth();
+  const location = useLocation();
 
   if (loading) {
     return (
@@ -14,7 +15,7 @@ export function PublicOnlyRoute() {
   }
 
   if (user) {
-    return <Navigate to={company ? "/" : "/onboarding"} replace />;
+    return <Navigate to={company ? `/${location.search}` : `/onboarding${location.search}`} replace />;
   }
 
   return <Outlet />;

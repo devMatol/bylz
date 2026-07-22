@@ -1,4 +1,5 @@
 import { useState, useCallback } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Step1Company } from "../components/onboarding/Step1Company";
 import { Step2Activity } from "../components/onboarding/Step2Activity";
 import { Step3Customize } from "../components/onboarding/Step3Customize";
@@ -7,14 +8,17 @@ import { INITIAL_ONBOARDING_DATA, buildInvoiceFooter, type OnboardingData } from
 import { useAuth } from "../contexts/AuthContext";
 import { supabase } from "../lib/supabase";
 import { useToast } from "../components/ui/Toast";
+import { migrateGuestDraft } from "../lib/api";
 
 type Step = 1 | 2 | 3 | "success";
 
 export function OnboardingPage() {
   const { user, refreshProfile } = useAuth();
   const { toast } = useToast();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [step, setStep] = useState<Step>(1);
   const [data, setData] = useState<OnboardingData>(INITIAL_ONBOARDING_DATA);
+  const [migratedInvoiceId, setMigratedInvoiceId] = useState<string | null>(null);
 
   const update = useCallback((patch: Partial<OnboardingData>) => {
     setData((prev) => ({ ...prev, ...patch }));
@@ -45,17 +49,41 @@ export function OnboardingPage() {
       vat_regime: "franchise" as const,
       default_payment_terms: "30d" as const,
     };
-    const { error } = await supabase.from("companies").insert(insert);
+    const { data: insertedComp, error } = await supabase
+      .from("companies")
+      .insert(insert)
+      .select("id")
+      .single();
+
     if (error) {
       toast("Erreur lors de la création de l'entreprise", "danger");
       return;
     }
+
+    const companyId = insertedComp?.id;
+    if (searchParams.get("guest") === "true" && companyId) {
+      try {
+        const invoiceId = await migrateGuestDraft(companyId);
+        if (invoiceId) {
+          setMigratedInvoiceId(invoiceId);
+        }
+      } catch (err) {
+        console.error("Migration error:", err);
+      }
+    }
+
     await refreshProfile();
+    
+    // Set success=true to prevent premature redirect from OnboardingRoute
+    const newParams = new URLSearchParams(searchParams);
+    newParams.set("success", "true");
+    setSearchParams(newParams);
+
     setStep("success");
-  }, [user, data, refreshProfile, toast]);
+  }, [user, data, refreshProfile, searchParams, setSearchParams, toast]);
 
   if (step === "success") {
-    return <SuccessScreen />;
+    return <SuccessScreen migratedInvoiceId={migratedInvoiceId} />;
   }
 
   return (

@@ -1,9 +1,10 @@
-import { Navigate, Outlet } from "react-router-dom";
+import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import { Skeleton } from "../ui/Skeleton";
 
 export function OnboardingRoute() {
   const { user, company, loading } = useAuth();
+  const location = useLocation();
 
   if (loading) {
     return (
@@ -17,7 +18,8 @@ export function OnboardingRoute() {
     return <Navigate to="/login" replace />;
   }
 
-  if (company) {
+  const params = new URLSearchParams(location.search);
+  if (company && !params.get("success")) {
     return <Navigate to="/" replace />;
   }
 
