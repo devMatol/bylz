@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, Receipt, Eye, Trash2 } from "lucide-react";
+import { Plus, Receipt, Eye, Trash2, AlertTriangle } from "lucide-react";
 import { PageContainer } from "../components/layout/PageContainer";
 import { Button } from "../components/ui/Button";
 import { Skeleton } from "../components/ui/Skeleton";
@@ -102,6 +102,7 @@ export function InvoicesPage() {
   if (!company) return null;
 
   const today = new Date().toISOString().slice(0, 10);
+  const isProfileIncomplete = !company.siret || !company.address;
 
   return (
     <PageContainer
@@ -117,6 +118,27 @@ export function InvoicesPage() {
         </Button>
       }
     >
+      {isProfileIncomplete && (
+        <div className="mb-6 p-4 rounded-xl border border-amber-500/20 bg-amber-500/5 text-amber-800 dark:text-amber-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="flex items-center space-x-3">
+            <AlertTriangle className="w-5 h-5 flex-shrink-0 animate-pulse text-amber-500" />
+            <div>
+              <p className="font-semibold text-sm">Profil de l'entreprise incomplet</p>
+              <p className="text-xs opacity-90 text-muted">
+                Renseignez votre SIRET et votre adresse pour que vos factures soient légalement conformes.
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => navigate("/settings?focus=company")}
+            className="w-full sm:w-auto text-xs whitespace-nowrap bg-surface text-text border border-border px-3 h-8 rounded-pill font-semibold hover:bg-surface-hover transition-colors"
+          >
+            Compléter mon profil
+          </button>
+        </div>
+      )}
+
       {stats && (
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <StatCard variant="compact" label="Total facturé (année)" value={stats.totalFacture} />

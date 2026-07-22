@@ -26,6 +26,18 @@ import {
   STRIPE_PRICE_SOLO,
   STRIPE_PRICE_PRO,
 } from "../lib/constants";
+import { Input } from "../components/ui/Input";
+import { Select } from "../components/ui/Select";
+
+function formatSiret(raw: string): string {
+  const digits = raw.replace(/\D/g, "");
+  const groups = [];
+  if (digits.length > 0) groups.push(digits.slice(0, 3));
+  if (digits.length > 3) groups.push(digits.slice(3, 6));
+  if (digits.length > 6) groups.push(digits.slice(6, 9));
+  if (digits.length > 9) groups.push(digits.slice(9, 14));
+  return groups.join(" ");
+}
 import { UpgradeModal } from "../components/shared/UpgradeModal";
 
 interface ConnectStatus {
@@ -49,6 +61,79 @@ export function SettingsPage() {
 
   const currentPlan = profile?.plan || "starter";
 
+  // Company details form states
+  const [legalName, setLegalName] = useState(company?.legal_name || "");
+  const [commercialName, setCommercialName] = useState(company?.commercial_name || "");
+  const [siret, setSiret] = useState(company?.siret ? formatSiret(company.siret) : "");
+  const [address, setAddress] = useState(company?.address || "");
+  const [activityType, setActivityType] = useState(company?.activity_type || "freelance_bnc");
+  const [urssafFrequency, setUrssafFrequency] = useState(company?.urssaf_frequency || "monthly");
+  const [savingCompany, setSavingCompany] = useState(false);
+  const [searchingSiret, setSearchingSiret] = useState(false);
+
+  useEffect(() => {
+    if (company) {
+      setLegalName(company.legal_name || "");
+      setCommercialName(company.commercial_name || "");
+      setSiret(company.siret ? formatSiret(company.siret) : "");
+      setAddress(company.address || "");
+      setActivityType(company.activity_type || "freelance_bnc");
+      setUrssafFrequency(company.urssaf_frequency || "monthly");
+    }
+  }, [company]);
+
+  const handleLookupSiret = async () => {
+    const cleanSiret = siret.replace(/\s/g, "");
+    if (cleanSiret.length !== 14) {
+      toast("Veuillez saisir un SIRET valide à 14 chiffres", "warning");
+      return;
+    }
+    setSearchingSiret(true);
+    try {
+      const { data: json, error } = await supabase.functions.invoke("siret-lookup", {
+        body: { siret: cleanSiret },
+      });
+      if (error || !json) throw new Error(error?.message || "SIRET introuvable.");
+      setLegalName(json.legal_name || "");
+      setAddress(json.address || "");
+      toast("Informations de l'entreprise récupérées avec succès !", "success");
+    } catch (err: any) {
+      toast(err.message || "Impossible de récupérer les informations du SIRET", "danger");
+    } finally {
+      setSearchingSiret(false);
+    }
+  };
+
+  const handleSaveCompany = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!company) return;
+    setSavingCompany(true);
+    try {
+      const cleanSiret = siret.replace(/\s/g, "");
+      const siren = cleanSiret.slice(0, 9);
+      const { error } = await supabase
+        .from("companies")
+        .update({
+          legal_name: legalName,
+          commercial_name: commercialName || null,
+          siret: cleanSiret,
+          siren,
+          address,
+          activity_type: activityType,
+          urssaf_frequency: urssafFrequency,
+        })
+        .eq("id", company.id);
+
+      if (error) throw error;
+      await refreshProfile();
+      toast("Profil d'entreprise mis à jour avec succès !", "success");
+    } catch (err: any) {
+      toast(err.message || "Erreur lors de la sauvegarde", "danger");
+    } finally {
+      setSavingCompany(false);
+    }
+  };
+
   // Check ?checkout=success URL parameter
   useEffect(() => {
     if (searchParams.get("checkout") === "success") {
@@ -58,6 +143,21 @@ export function SettingsPage() {
       setSearchParams(searchParams, { replace: true });
     }
   }, [searchParams, setSearchParams, toast, refreshProfile]);
+
+  // Scroll to company settings if focus=company
+  useEffect(() => {
+    if (searchParams.get("focus") === "company") {
+      const el = document.getElementById("company-settings");
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth" });
+        el.classList.add("ring-2", "ring-primary", "ring-offset-2");
+        const timer = setTimeout(() => {
+          el.classList.remove("ring-2", "ring-primary", "ring-offset-2");
+        }, 3000);
+        return () => clearTimeout(timer);
+      }
+    }
+  }, [searchParams]);
 
   // Fetch Connect status if account exists
   const fetchConnectStatus = useCallback(async () => {
@@ -484,6 +584,100 @@ export function SettingsPage() {
               </div>
             </Card>
           )}
+        </div>
+
+        {/* SECTION 3: MON ENTREPRISE */}
+        <div id="company-settings" className="space-y-6 pt-4 border-t border-border transition-all duration-500 rounded-xl p-0.5">
+          <div className="flex items-center space-x-3 border-b border-border pb-3">
+            <Building className="w-6 h-6 text-brand-primary" />
+            <h2 className="text-xl font-bold text-text">Informations de l'entreprise</h2>
+          </div>
+
+          <Card className="p-6">
+            <form onSubmit={handleSaveCompany} className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="flex gap-2 items-end">
+                  <div className="flex-1">
+                    <Input
+                      label="Numéro SIRET"
+                      placeholder="123 456 789 00012"
+                      value={siret}
+                      onChange={(e) => setSiret(formatSiret(e.target.value))}
+                      required
+                    />
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleLookupSiret}
+                    disabled={searchingSiret || siret.replace(/\s/g, "").length !== 14}
+                    className="h-10 text-xs px-3"
+                  >
+                    {searchingSiret ? (
+                      <Loader2 className="w-4 h-4 animate-spin mr-1" />
+                    ) : null}
+                    Rechercher
+                  </Button>
+                </div>
+
+                <Input
+                  label="Dénomination sociale (Nom légal)"
+                  placeholder="ex: Jean Dupont SAS"
+                  value={legalName}
+                  onChange={(e) => setLegalName(e.target.value)}
+                  required
+                />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Input
+                  label="Nom commercial (optionnel)"
+                  placeholder="ex: Bylz Studio"
+                  value={commercialName}
+                  onChange={(e) => setCommercialName(e.target.value)}
+                />
+
+                <Input
+                  label="Adresse de l'entreprise"
+                  placeholder="12 rue de la Paix, 75002 Paris"
+                  value={address}
+                  onChange={(e) => setAddress(e.target.value)}
+                  required
+                />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Select
+                  label="Nature de l'activité"
+                  value={activityType}
+                  onChange={(e) => setActivityType(e.target.value as any)}
+                >
+                  <option value="freelance_bnc">Profession libérale / Freelance (BNC)</option>
+                  <option value="artisan_bic">Artisan / Prestation de services (BIC)</option>
+                  <option value="commerce">Achat / Vente de marchandises (BIC)</option>
+                  <option value="liberal">Autre profession libérale réglementée</option>
+                </Select>
+
+                <Select
+                  label="Déclaration URSSAF"
+                  value={urssafFrequency}
+                  onChange={(e) => setUrssafFrequency(e.target.value as any)}
+                >
+                  <option value="monthly">Mensuelle</option>
+                  <option value="quarterly">Trimestrielle</option>
+                </Select>
+              </div>
+
+              <div className="flex justify-end pt-2">
+                <Button type="submit" variant="primary" disabled={savingCompany}>
+                  {savingCompany ? (
+                    <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                  ) : null}
+                  Sauvegarder les modifications
+                </Button>
+              </div>
+            </form>
+          </Card>
         </div>
 
       </div>

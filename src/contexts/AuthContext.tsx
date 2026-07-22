@@ -58,7 +58,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setCompany(null);
       return;
     }
-    setCompany(data as Company | null);
+    if (data) {
+      setCompany(data as Company);
+    } else {
+      // Auto-create default company to bypass onboarding funnel
+      const { data: newComp, error: insertError } = await supabase
+        .from("companies")
+        .insert({
+          user_id: userId,
+          siret: "",
+          siren: "",
+          legal_name: "Mon Entreprise",
+          commercial_name: null,
+          address: "",
+          naf_code: null,
+          activity_type: "freelance_bnc",
+          vat_regime: "franchise",
+          urssaf_frequency: "monthly",
+          logo_url: null,
+          accent_color: "var(--primary)",
+          invoice_footer: "",
+          default_payment_terms: "30d",
+        })
+        .select("*")
+        .maybeSingle();
+      if (!insertError && newComp) {
+        setCompany(newComp as Company);
+      } else {
+        setCompany(null);
+      }
+    }
   }, []);
 
   const refreshProfile = useCallback(async () => {

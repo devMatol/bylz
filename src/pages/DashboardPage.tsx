@@ -9,6 +9,7 @@ import {
   Plus,
   BarChart3,
   Info,
+  AlertTriangle,
 } from "lucide-react";
 import { parseISO, isValid } from "date-fns";
 import { PageContainer } from "../components/layout/PageContainer";
@@ -95,6 +96,7 @@ export function DashboardPage() {
     safeNum(data?.caByNature.service) > 0 && safeNum(data?.caByNature.goods) > 0;
 
   if (!company) return null;
+  const isProfileIncomplete = !company.siret || !company.address;
 
   return (
     <PageContainer
@@ -130,6 +132,27 @@ export function DashboardPage() {
         </div>
       }
     >
+      {isProfileIncomplete && (
+        <div className="mb-6 p-4 rounded-xl border border-amber-500/20 bg-amber-500/5 text-amber-800 dark:text-amber-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="flex items-center space-x-3">
+            <AlertTriangle className="w-5 h-5 flex-shrink-0 animate-pulse text-amber-500" />
+            <div>
+              <p className="font-semibold text-sm">Profil de l'entreprise incomplet</p>
+              <p className="text-xs opacity-90 text-muted">
+                Renseignez votre SIRET et votre adresse pour que vos factures soient légalement conformes.
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => navigate("/settings?focus=company")}
+            className="w-full sm:w-auto text-xs whitespace-nowrap bg-surface text-text border border-border px-3 h-8 rounded-pill font-semibold hover:bg-surface-hover transition-colors"
+          >
+            Compléter mon profil
+          </button>
+        </div>
+      )}
+
       {loadError ? (
         <Card className="p-8 text-center">
           <div className="w-12 h-12 rounded-card bg-danger/10 flex items-center justify-center text-danger mx-auto mb-4">
