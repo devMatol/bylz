@@ -182,12 +182,12 @@ function App() {
                 <Route path="/signup" element={<SignupPage />} />
               </Route>
 
-              {/* onboarding — authenticated, standalone layout */}
+              {/* onboarding */}
               <Route path="/onboarding" element={<OnboardingRoute />}>
                 <Route index element={<OnboardingPage />} />
               </Route>
 
-              {/* protected app — AppShell wraps ALL of these */}
+              {/* protected app */}
               <Route element={<ProtectedRoute />}>
                 <Route element={<AppShell />}>
                   <Route path="/dashboard" element={<DashboardPage />} />

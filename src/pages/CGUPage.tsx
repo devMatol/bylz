@@ -5,7 +5,7 @@ import { MarketingFooter } from "../components/marketing/MarketingFooter";
 export function CGUPage() {
   return (
     <div className="min-h-screen bg-bg text-text">
-      <SEO title="Conditions Générales d'Utilisation (CGU) — Bylz" canonical="/cgu" />
+      <SEO title="Conditions Générales d'Utilisation (CGU) | Bylz" canonical="/cgu" />
       <MarketingNavbar />
       <main className="pt-32 pb-24 max-w-3xl mx-auto px-4 space-y-6 text-xs sm:text-sm text-muted">
         <h1 className="text-3xl font-black text-text">Conditions Générales d'Utilisation (CGU)</h1>

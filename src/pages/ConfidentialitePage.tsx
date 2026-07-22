@@ -5,7 +5,7 @@ import { MarketingFooter } from "../components/marketing/MarketingFooter";
 export function ConfidentialitePage() {
   return (
     <div className="min-h-screen bg-bg text-text">
-      <SEO title="Politique de Confidentialité & RGPD — Bylz" canonical="/confidentialite" />
+      <SEO title="Politique de Confidentialité & RGPD | Bylz" canonical="/confidentialite" />
       <MarketingNavbar />
       <main className="pt-32 pb-24 max-w-3xl mx-auto px-4 space-y-6 text-xs sm:text-sm text-muted">
         <h1 className="text-3xl font-black text-text">Politique de Confidentialité & Protection des Données (RGPD)</h1>

@@ -160,7 +160,7 @@ export function Step1Company({ data, update, onNext }: Step1CompanyProps) {
                 </div>
                 <p className="text-sm text-muted">{result.address}</p>
                 <p className="text-sm text-muted mt-1">
-                  {result.naf_label} — NAF {result.naf_code}
+                  {result.naf_label} (NAF {result.naf_code})
                 </p>
                 {status === "inactive" && (
                   <p className="text-sm text-warning mt-2 flex items-center gap-1">

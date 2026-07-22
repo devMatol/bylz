@@ -316,7 +316,7 @@ export async function fetchQuotes(
     total_vat: Number(q.total_vat),
     total_ttc: Number(q.total_ttc),
     created_at: q.created_at,
-    client_name: q.clients?.name || "—",
+    client_name: q.clients?.name || "-",
   }));
 }
 
@@ -560,7 +560,7 @@ export async function fetchInvoices(
     ereporting_status: i.ereporting_status,
     note: i.note,
     created_at: i.created_at,
-    client_name: i.clients?.name || "—",
+    client_name: i.clients?.name || "-",
   }));
 }
 
@@ -1141,7 +1141,7 @@ export async function fetchDashboardData(
     ereporting_status: i.ereporting_status,
     note: i.note,
     created_at: i.created_at,
-    client_name: i.clients?.name || "—",
+    client_name: i.clients?.name || "-",
   })) as (Invoice & { client_name: string })[];
 
   const invoiceIds = invoiceRows.map((i) => i.id);
@@ -1316,7 +1316,7 @@ export async function sendInvoiceReminder(
   emailContent: { subject: string; body: string }
 ): Promise<void> {
   if (!client?.email) {
-    throw new Error("Client sans email — relance impossible");
+    throw new Error("Client sans email : relance impossible");
   }
   const { data, error } = await supabase.functions.invoke<{ success?: boolean; error?: string }>(
     "send-email",

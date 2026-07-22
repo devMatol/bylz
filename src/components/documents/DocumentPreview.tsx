@@ -69,7 +69,7 @@ export function DocumentPreview({
       className="bg-white rounded-card shadow-[0_0_0_1px_rgba(0,0,0,0.06),0_12px_40px_rgba(0,0,0,0.22)] w-full text-gray-900"
       style={{ minHeight: "600px" }}
     >
-      {/* Header — 60/40 grid */}
+      {/* Header (60/40 grid) */}
       <div className="grid grid-cols-[60fr_40fr] gap-4 p-6 pb-5">
         {/* Left: logo + company */}
         <div className="flex items-start gap-3 min-w-0">
@@ -136,7 +136,7 @@ export function DocumentPreview({
           {documentType === "quote" ? "Client" : "Facturé à"}
         </p>
         <p className="font-bold text-gray-900">
-          {client?.name || "—"}
+          {client?.name || "-"}
         </p>
         {client?.address && (
           <p className="text-xs text-gray-500 whitespace-pre-line">
@@ -218,7 +218,7 @@ export function DocumentPreview({
           </div>
           {isFranchise && (
             <p className="text-xs text-gray-400 mt-1">
-              TVA non applicable — Art. 293 B du CGI
+              TVA non applicable, art. 293 B du CGI
             </p>
           )}
         </div>
@@ -263,7 +263,7 @@ export function DocumentPreview({
       {isFranchise && (
         <div className="px-6 pb-6">
           <p className="text-[10px] text-gray-400">
-            Auto-entrepreneur — TVA non applicable, art. 293 B du CGI
+            Auto-entrepreneur : TVA non applicable, art. 293 B du CGI
           </p>
         </div>
       )}

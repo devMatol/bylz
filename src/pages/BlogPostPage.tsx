@@ -36,7 +36,7 @@ export function BlogPostPage() {
   return (
     <div className="min-h-screen bg-bg text-text selection:bg-brand-primary/20 selection:text-brand-primary">
       <SEO
-        title={`${article.title} — Blog Bylz`}
+        title={`${article.title} | Blog Bylz`}
         description={article.excerpt}
         canonical={`/blog/${article.slug}`}
         ogType="article"

@@ -72,7 +72,7 @@ export function LoginPage() {
         </p>
       }
     >
-      <SEO title="Connexion — Bylz" noindex />
+      <SEO title="Connexion | Bylz" noindex />
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         <Input
           label="Email"

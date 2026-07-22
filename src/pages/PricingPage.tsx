@@ -81,7 +81,7 @@ export function PricingPage() {
   return (
     <div className="min-h-screen bg-bg text-text selection:bg-primary/20 selection:text-primary">
       <SEO
-        title="Tarifs Bylz — Logiciel de Facturation et Pilotage Fiscal pour Micro-Entrepreneurs"
+        title="Tarifs Bylz : Logiciel de Facturation et Pilotage Fiscal pour Micro-Entrepreneurs"
         description="Découvrez nos tarifs simples et sans engagement pour auto-entrepreneurs : Starter 0€, Solo 9€/mois et Pro 19€/mois. 14 jours d'essai offerts."
         canonical="/tarifs"
         jsonLd={productSchemas}
@@ -95,7 +95,7 @@ export function PricingPage() {
           <div className="text-center max-w-3xl mx-auto space-y-4">
             <div className="inline-flex items-center space-x-2 px-3.5 py-1 rounded-pill bg-primary/10 text-primary text-xs font-bold border border-primary/20">
               <Sparkles className="w-3.5 h-3.5" />
-              <span>Transparence Totale — Sans engagement</span>
+              <span>Transparence Totale • Sans engagement</span>
             </div>
             <h1 className="text-3xl sm:text-5xl font-black tracking-tight text-text">
               Des tarifs simples pour booster votre activité
@@ -152,7 +152,7 @@ export function PricingPage() {
               <div className="pt-8">
                 <Link to="/signup?plan=solo" className="block w-full">
                   <Button variant="primary" className="w-full justify-center bylz-glow-cta py-3.5">
-                    Essayer Solo — 14 jours offerts
+                    Essayer Solo (14 jours offerts)
                   </Button>
                 </Link>
               </div>
@@ -176,7 +176,7 @@ export function PricingPage() {
               <div className="pt-8">
                 <Link to="/signup?plan=pro" className="block w-full">
                   <Button variant="outline" className="w-full justify-center">
-                    Essayer Pro — 14 jours offerts
+                    Essayer Pro (14 jours offerts)
                   </Button>
                 </Link>
               </div>

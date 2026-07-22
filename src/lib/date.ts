@@ -5,9 +5,9 @@ export function safeFormatDate(
   d: string | Date | null | undefined,
   fmt = "d MMMM yyyy"
 ): string {
-  if (!d) return "—";
+  if (!d) return "-";
   const date = typeof d === "string" ? parseISO(d) : d;
-  return isValid(date) ? format(date, fmt, { locale: fr }) : "—";
+  return isValid(date) ? format(date, fmt, { locale: fr }) : "-";
 }
 
 export function formatDateLong(date: string | Date | null | undefined): string {

@@ -10,7 +10,7 @@ interface SEOProps {
   noindex?: boolean;
 }
 
-const DEFAULT_TITLE = "Bylz — Facturation et pilotage fiscal pour auto-entrepreneurs | Conforme 2026";
+const DEFAULT_TITLE = "Bylz : Facturation et pilotage fiscal pour auto-entrepreneurs | Conforme 2026";
 const DEFAULT_DESCRIPTION =
   "Créez des factures conformes 2026 (Factur-X), suivez votre CA et anticipez vos cotisations URSSAF en 2 minutes par jour. Essai gratuit sans carte bancaire.";
 const SITE_URL = "https://bylz.fr";

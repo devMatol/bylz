@@ -103,7 +103,7 @@ export function UrssafPage() {
         />
       ) : (
         <div className="flex flex-col gap-6">
-          {/* Hero — current period */}
+          {/* Hero */}
           {currentPeriod && (
             <Card className="p-6">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">

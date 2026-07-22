@@ -230,7 +230,7 @@ export function DashboardPage() {
           isBlurred && "overflow-hidden max-h-[calc(100vh-4rem)] -mx-4 md:-mx-10 -mb-20 md:-mb-10"
         )}>
           <div className={cn("space-y-6 transition-all duration-300", isBlurred && "blur-md pointer-events-none select-none opacity-60 px-4 md:px-10 pt-6")}>
-            {/* Row 1 — StatCards */}
+            {/* Row 1 */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
               {loading || !data ? (
                 Array.from({ length: 4 }).map((_, i) => (
@@ -300,7 +300,7 @@ export function DashboardPage() {
               </div>
             )}
 
-            {/* Row 2 — Chart + Santé fiscale */}
+            {/* Row 2 */}
             <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 mb-6">
               {/* CA chart (60%) */}
               <Card className="lg:col-span-3">
@@ -319,8 +319,8 @@ export function DashboardPage() {
                         <p className="text-xs text-muted">Meilleur mois</p>
                         <p className="text-sm font-bold text-text">
                           {data?.bestMonth && data.bestMonth.ca > 0
-                            ? `${MONTH_LABELS[parseInt(data.bestMonth.month.slice(5, 7), 10) - 1] ?? data.bestMonth.month} — ${formatAmount(safeNum(data.bestMonth.ca))}`
-                            : "—"}
+                            ? `${MONTH_LABELS[parseInt(data.bestMonth.month.slice(5, 7), 10) - 1] ?? data.bestMonth.month} : ${formatAmount(safeNum(data.bestMonth.ca))}`
+                            : "-"}
                         </p>
                       </div>
                       <div className="text-center">
@@ -389,7 +389,7 @@ export function DashboardPage() {
               </Card>
             </div>
 
-            {/* Row 3 — Recent invoices + Upcoming deadlines */}
+            {/* Row 3 */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Factures récentes */}
               <Card>
@@ -530,7 +530,7 @@ export function DashboardPage() {
                     className="w-full h-11 px-6 rounded-pill bg-amber-500 hover:bg-amber-600 active:bg-amber-700 text-white font-bold text-sm transition-colors shadow-md flex items-center justify-center gap-2"
                   >
                     <Sparkles className="w-4 h-4 flex-shrink-0" />
-                    <span>Passer au plan Solo — 9 € / mois</span>
+                    <span>Passer au plan Solo (9 € / mois)</span>
                   </button>
                   <p className="text-xs text-muted">
                     Essai gratuit 14 jours · Sans engagement

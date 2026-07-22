@@ -266,7 +266,7 @@ export function SettingsPage() {
               <div className="flex items-center space-x-3">
                 <Sparkles className="w-5 h-5 flex-shrink-0 animate-pulse" />
                 <div>
-                  <p className="font-semibold text-sm">Essai Pro — {trialDaysLeft} jour(s) restant(s)</p>
+                  <p className="font-semibold text-sm">Essai Pro : {trialDaysLeft} jour(s) restant(s)</p>
                   <p className="text-xs opacity-90">
                     Profitez de toutes les fonctionnalités Pro sans restriction durant votre période d'essai.
                   </p>

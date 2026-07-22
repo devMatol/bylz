@@ -142,7 +142,7 @@ export function ClientDetailPage() {
         )}
       </div>
       {stats && stats.delaiMoyen === null && (
-        <p className="text-xs text-muted -mt-3">Délai moyen : —</p>
+        <p className="text-xs text-muted -mt-3">Délai moyen : -</p>
       )}
 
       <Tabs

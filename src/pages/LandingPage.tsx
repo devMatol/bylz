@@ -83,7 +83,7 @@ export function LandingPage() {
   return (
     <div className="min-h-screen bg-bg text-text selection:bg-primary/20 selection:text-primary relative">
       <SEO
-        title="Bylz — Facturation et pilotage fiscal pour auto-entrepreneurs | Conforme 2026"
+        title="Bylz : Facturation et pilotage fiscal pour auto-entrepreneurs | Conforme 2026"
         description="Créez des factures conformes 2026, suivez votre CA et anticipez vos cotisations URSSAF en 2 min/jour. Gratuit sans carte bancaire."
         canonical="/"
         jsonLd={[softwareSchema, organizationSchema, faqSchema]}
@@ -118,14 +118,14 @@ export function LandingPage() {
 
                 {/* Subtitle */}
                 <p className="text-base sm:text-lg text-muted max-w-2xl mx-auto lg:mx-0 font-normal leading-relaxed">
-                  Créez des factures conformes 2026, suivez votre CA en temps réel et anticipez vos cotisations URSSAF — en 2 minutes par jour.
+                  Créez des factures conformes 2026, suivez votre CA en temps réel et anticipez vos cotisations URSSAF en 2 minutes par jour.
                 </p>
 
                 {/* CTAs */}
                 <div className="pt-3 flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4">
                   <Link to="/essai" className="w-full sm:w-auto">
                     <Button variant="primary" size="lg" className="w-full sm:w-auto bylz-glow-cta text-base py-4 px-8">
-                      <span>Essayer gratuitement — sans carte bancaire</span>
+                      <span>Essayer gratuitement (sans carte bancaire)</span>
                       <ArrowRight className="w-5 h-5 ml-2 text-accent" />
                     </Button>
                   </Link>
@@ -348,7 +348,7 @@ export function LandingPage() {
                 </ul>
                 <Link to="/signup?plan=solo" className="block w-full">
                   <Button variant="primary" className="w-full justify-center bylz-glow-cta py-3.5">
-                    Essayer Solo — 14 jours offerts
+                    Essayer Solo (14 jours offerts)
                   </Button>
                 </Link>
               </div>
@@ -379,7 +379,7 @@ export function LandingPage() {
                 </ul>
                 <Link to="/signup?plan=pro" className="block w-full">
                   <Button variant="outline" className="w-full justify-center">
-                    Essayer Pro — 14 jours offerts
+                    Essayer Pro (14 jours offerts)
                   </Button>
                 </Link>
               </div>
@@ -455,7 +455,7 @@ export function LandingPage() {
                 </Button>
               </Link>
             </div>
-            <p className="text-xs text-white/80 font-semibold">Sans engagement — Résiliable à tout moment</p>
+            <p className="text-xs text-white/80 font-semibold">Sans engagement • Résiliable à tout moment</p>
           </div>
         </section>
       </main>

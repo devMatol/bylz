@@ -182,7 +182,7 @@ function ClientsTable({
                   {r.type === "b2b" ? "Professionnel" : "Particulier"}
                 </Badge>
               </td>
-              <td className="p-3 text-muted">{r.siren || "—"}</td>
+              <td className="p-3 text-muted">{r.siren || "-"}</td>
               <td className="p-3 text-right">
                 <Amount value={r.total_ca} size="sm" />
               </td>

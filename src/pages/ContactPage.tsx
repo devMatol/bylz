@@ -30,7 +30,7 @@ export function ContactPage() {
   return (
     <div className="min-h-screen bg-bg text-text selection:bg-brand-primary/20 selection:text-brand-primary">
       <SEO
-        title="Contact & Support — Bylz"
+        title="Contact & Support | Bylz"
         description="Une question sur notre logiciel de facturation ou la conformité 2026 ? Contactez notre équipe dédiée aux micro-entrepreneurs. Réponse sous 24h."
         canonical="/contact"
       />

@@ -9,7 +9,7 @@ export function BlogListPage() {
   return (
     <div className="min-h-screen bg-bg text-text selection:bg-brand-primary/20 selection:text-brand-primary">
       <SEO
-        title="Blog Bylz — Guides Fiscaux et Facturation pour Auto-Entrepreneurs"
+        title="Blog Bylz : Guides Fiscaux et Facturation pour Auto-Entrepreneurs"
         description="Retrouvez nos articles, conseils et guides pratiques pour gérer votre micro-entreprise : réforme Factur-X 2026, plafonds de TVA et cotisations URSSAF."
         canonical="/blog"
       />

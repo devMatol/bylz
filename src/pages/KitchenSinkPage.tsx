@@ -24,7 +24,7 @@ export function KitchenSinkPage() {
   return (
     <PageContainer
       title="Kitchen Sink"
-      subtitle="Tous les composants — dev uniquement"
+      subtitle="Tous les composants (dev uniquement)"
     >
       <div className="flex flex-col gap-8">
         {/* Buttons */}

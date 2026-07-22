@@ -83,7 +83,7 @@ export function SignupPage() {
   return (
     <AuthLayout
       title="Créez votre espace Bylz"
-      subtitle="Gratuit — sans carte bancaire"
+      subtitle="Gratuit (sans carte bancaire)"
       footer={
         <p>
           Déjà un compte ?{" "}
@@ -96,7 +96,7 @@ export function SignupPage() {
         </p>
       }
     >
-      <SEO title="Créer un compte — Bylz" noindex />
+      <SEO title="Créer un compte | Bylz" noindex />
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         <Input
           label="Email"

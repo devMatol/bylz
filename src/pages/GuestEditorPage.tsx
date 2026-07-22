@@ -583,7 +583,7 @@ export function GuestEditorPageContent() {
                         {totals.total_ttc.toFixed(2)} €
                       </span>
                     </div>
-                    <p className="text-xs text-muted mt-1">TVA non applicable — Art. 293 B du CGI</p>
+                    <p className="text-xs text-muted mt-1">TVA non applicable, art. 293 B du CGI</p>
                   </div>
                 )}
               </section>

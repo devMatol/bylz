@@ -90,7 +90,7 @@ export function Sidebar() {
               {item.path === "/urssaf" && urssafDueSoon && (
                 <span className="ml-auto w-2 h-2 rounded-full bg-danger flex-shrink-0" />
               )}
-              {/* Plan lock indicator — only for Starter users */}
+              {/* Plan lock indicator */}
               {isLocked && (
                 <span className={cn(
                   "ml-auto inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-bold flex-shrink-0",

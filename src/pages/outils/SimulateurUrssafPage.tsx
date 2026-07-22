@@ -34,7 +34,7 @@ export function SimulateurUrssafPage() {
   const calculatorSchema = {
     "@context": "https://schema.org",
     "@type": "WebApplication",
-    name: "Simulateur Cotisations URSSAF 2026 — Bylz",
+    name: "Simulateur Cotisations URSSAF 2026 | Bylz",
     applicationCategory: "FinanceApplication",
     operatingSystem: "Web",
     offers: {
@@ -47,7 +47,7 @@ export function SimulateurUrssafPage() {
   return (
     <div className="min-h-screen bg-bg text-text bg-grid-pattern selection:bg-brand-primary/20 selection:text-brand-primary">
       <SEO
-        title="Simulateur Cotisations URSSAF 2026 Gratuit — Micro-Entreprise BNC & BIC"
+        title="Simulateur Cotisations URSSAF 2026 Gratuit : Micro-Entreprise BNC & BIC"
         description="Calculez gratuitement et en direct vos cotisations sociales URSSAF et votre revenu net après impôt en micro-entreprise (BNC, BIC Service, BIC Vente)."
         canonical="/outils/simulateur-urssaf"
         jsonLd={calculatorSchema}

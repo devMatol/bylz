@@ -116,7 +116,7 @@ export function InvoiceNewPage() {
     void load();
   }, [load]);
 
-  // recompute due date when issue date or terms change — only if issue date is valid
+  // recompute due date when issue date or terms change (only if issue date is valid)
   useEffect(() => {
     if (!isValidDate(issueDate)) return;
     setDueDate(paymentTermsToDate(issueDate, paymentTerms));
@@ -370,7 +370,7 @@ export function InvoiceNewPage() {
               </div>
               {company.vat_regime === "franchise" && (
                 <p className="text-xs text-muted mt-0.5">
-                  TVA non applicable — Art. 293 B du CGI
+                  TVA non applicable, art. 293 B du CGI
                 </p>
               )}
             </div>

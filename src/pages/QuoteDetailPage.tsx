@@ -89,7 +89,7 @@ export function QuoteDetailPage() {
         try {
           const amount = formatAmount(Number(quote.total_ttc));
           await sendDocumentByEmail("quote", quote.id, client.email, {
-            subject: `Devis ${quote.number} — ${company.commercial_name || company.legal_name}`,
+            subject: `Devis ${quote.number} : ${company.commercial_name || company.legal_name}`,
             body: `Bonjour ${client.name},\n\nVeuillez trouver ci-joint mon devis ${quote.number} d'un montant de ${amount}.\n\nJe reste à votre disposition pour toute question.\n\nCordialement,\n${company.commercial_name || company.legal_name}`,
           });
           toast("Devis envoyé par email au client", "info");
@@ -97,7 +97,7 @@ export function QuoteDetailPage() {
           toast(err instanceof Error ? `Email non envoyé : ${err.message}` : "Email non envoyé", "danger");
         }
       } else if (status === "sent" && !client?.email) {
-        toast("Client sans email — document non envoyé", "info");
+        toast("Client sans email : document non envoyé", "info");
       }
       toast("Statut mis à jour", "success");
       void load();

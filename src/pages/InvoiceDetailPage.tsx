@@ -129,12 +129,12 @@ export function InvoiceDetailPage() {
     }
     if (daysLate <= 30) {
       return {
-        subject: `Relance : facture ${invoiceNumber} — échéance dépassée`,
+        subject: `Relance : facture ${invoiceNumber} (échéance dépassée)`,
         body: `Bonjour ${clientName},\n\nSauf erreur de ma part, la facture ${invoiceNumber} d'un montant de ${amount}, dont l'échéance était fixée au ${dueDate}, n'a pas encore été réglée (soit ${daysLate} jours de retard).\n\nJe vous remercie de bien vouloir procéder au règlement dès réception de ce courriel.\n\nCordialement,\n${company.commercial_name || company.legal_name}`,
       };
     }
     return {
-      subject: `Mise en demeure : facture ${invoiceNumber} — ${daysLate} jours de retard`,
+      subject: `Mise en demeure : facture ${invoiceNumber} (${daysLate} jours de retard)`,
       body: `Bonjour ${clientName},\n\nMalgré plusieurs relances, la facture ${invoiceNumber} d'un montant de ${amount}, dont l'échéance était fixée au ${dueDate}, reste impayée à ce jour (${daysLate} jours de retard).\n\nJe vous informe que des pénalités de retard sont applicables conformément aux conditions de vente. Une indemnité forfaitaire de 40€ pour frais de recouvrement est également due en application de l'article L441-10 du Code de commerce.\n\nJe vous demande par conséquent de procéder au règlement de cette facture dans un délai de 8 jours.\n\nÀ défaut, je me verrai contraint d'engager les poursuites nécessaires.\n\nCordialement,\n${company.commercial_name || company.legal_name}`,
     };
   }
@@ -170,7 +170,7 @@ export function InvoiceDetailPage() {
           try {
             const amount = formatAmount(Number(emitted.total_ttc));
             await sendDocumentByEmail("invoice", emitted.id, client.email, {
-              subject: `Avoir ${emitted.number} — ${company.commercial_name || company.legal_name}`,
+              subject: `Avoir ${emitted.number} : ${company.commercial_name || company.legal_name}`,
               body: `Bonjour ${client.name},\n\nVeuillez trouver ci-joint votre avoir ${emitted.number} d'un montant de ${amount}.\n\nCordialement,\n${company.commercial_name || company.legal_name}`,
             });
             toast("Avoir envoyé par email au client", "info");
@@ -181,7 +181,7 @@ export function InvoiceDetailPage() {
         setCnOpen(false);
         void load();
       } else {
-        toast("Avoir créé (brouillon) — modifiez les lignes puis émettez", "success");
+        toast("Avoir créé (brouillon) : modifiez les lignes puis émettez", "success");
         setCnOpen(false);
         navigate(`/invoices/new?id=${cn.id}`);
       }
@@ -225,7 +225,7 @@ export function InvoiceDetailPage() {
         try {
           const amount = formatAmount(Number(emitted.total_ttc));
           await sendDocumentByEmail("invoice", emitted.id, client.email, {
-            subject: `${isCreditNote ? "Avoir" : "Facture"} ${emitted.number} — ${company.commercial_name || company.legal_name}`,
+            subject: `${isCreditNote ? "Avoir" : "Facture"} ${emitted.number} : ${company.commercial_name || company.legal_name}`,
             body: `Bonjour ${client.name},\n\nVeuillez trouver ci-joint ${isCreditNote ? "votre avoir" : "votre facture"} ${emitted.number} d'un montant de ${amount}.\n\nCordialement,\n${company.commercial_name || company.legal_name}`,
           });
           toast("Document envoyé par email au client", "info");
@@ -233,7 +233,7 @@ export function InvoiceDetailPage() {
           toast(err instanceof Error ? `Email non envoyé : ${err.message}` : "Email non envoyé", "danger");
         }
       } else {
-        toast("Client sans email — document non envoyé", "info");
+        toast("Client sans email : document non envoyé", "info");
       }
       void load();
     } catch (err) {
@@ -471,7 +471,7 @@ export function InvoiceDetailPage() {
                         <span className="text-text">
                           Relancé le {format(parseISO(r.sent_at), "d MMMM yyyy", { locale: fr })}
                         </span>
-                        <span className="text-muted text-xs">— {ordinal}</span>
+                        <span className="text-muted text-xs">({ordinal})</span>
                       </div>
                     );
                   })}
@@ -594,7 +594,7 @@ export function InvoiceDetailPage() {
             <p className="text-xs text-muted">
               {cnMode === "total"
                 ? "Toutes les lignes seront copiées avec des montants négatifs, puis l'avoir sera émis automatiquement."
-                : "Un brouillon sera créé avec des montants négatifs — vous pourrez ajuster les lignes avant émission."}
+                : "Un brouillon sera créé avec des montants négatifs. Vous pourrez ajuster les lignes avant émission."}
             </p>
           </div>
           <div className="flex justify-end gap-2">
@@ -629,7 +629,7 @@ export function InvoiceDetailPage() {
           </div>
           {!client?.email && (
             <p className="text-sm text-danger">
-              Ce client n'a pas d'email enregistré — la relance ne peut pas être envoyée.
+              Ce client n'a pas d'email enregistré : la relance ne peut pas être envoyée.
             </p>
           )}
           {remindError && (

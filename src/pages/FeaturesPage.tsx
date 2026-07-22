@@ -103,7 +103,7 @@ export function FeaturesPage() {
   return (
     <div className="min-h-screen bg-bg text-text selection:bg-primary/20 selection:text-primary">
       <SEO
-        title="Fonctionnalités Bylz — Facturation, TVA et Cotisations URSSAF"
+        title="Fonctionnalités Bylz : Facturation, TVA et Cotisations URSSAF"
         description="Découvrez l'ensemble des fonctionnalités de Bylz : édition Factur-X, suivi des plafonds de TVA, calcul URSSAF, relances et import PDF historique."
         canonical="/fonctionnalites"
       />

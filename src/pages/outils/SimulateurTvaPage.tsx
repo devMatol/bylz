@@ -24,7 +24,7 @@ export function SimulateurTvaPage() {
   const calculatorSchema = {
     "@context": "https://schema.org",
     "@type": "WebApplication",
-    name: "Simulateur Seuil de Franchise TVA 2026 — Bylz",
+    name: "Simulateur Seuil de Franchise TVA 2026 | Bylz",
     applicationCategory: "FinanceApplication",
     operatingSystem: "Web",
     offers: {
@@ -37,7 +37,7 @@ export function SimulateurTvaPage() {
   return (
     <div className="min-h-screen bg-bg text-text bg-grid-pattern selection:bg-brand-primary/20 selection:text-brand-primary">
       <SEO
-        title="Simulateur Seuil de Franchise TVA 2026 — Plafonds Micro-Entreprise"
+        title="Simulateur Seuil de Franchise TVA 2026 : Plafonds Micro-Entreprise"
         description="Calculez votre positionnement par rapport au seuil de franchise de TVA (39 100 € et 42 500 €) et découvrez quand vous devenez redevable de la TVA."
         canonical="/outils/simulateur-seuil-tva"
         jsonLd={calculatorSchema}

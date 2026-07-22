@@ -238,7 +238,7 @@ export function QuoteNewPage() {
               </div>
               {company.vat_regime === "franchise" && (
                 <p className="text-xs text-muted mt-0.5">
-                  TVA non applicable — Art. 293 B du CGI
+                  TVA non applicable, art. 293 B du CGI
                 </p>
               )}
             </div>
