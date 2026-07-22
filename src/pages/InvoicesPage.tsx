@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, Receipt, Eye, Trash2, AlertTriangle } from "lucide-react";
+import { Plus, Receipt, Eye, Trash2, AlertTriangle, Upload } from "lucide-react";
 import { PageContainer } from "../components/layout/PageContainer";
 import { Button } from "../components/ui/Button";
 import { Skeleton } from "../components/ui/Skeleton";
@@ -11,6 +11,7 @@ import { StatusBadge } from "../components/shared/StatusBadge";
 import { StatCard } from "../components/shared/StatCard";
 import { Amount } from "../components/shared/Amount";
 import { ConfirmModal } from "../components/documents/ConfirmModal";
+import { ImportInvoiceModal } from "../components/documents/ImportInvoiceModal";
 import { useAuth } from "../contexts/AuthContext";
 import { useToast } from "../components/ui/Toast";
 import { useDebounce } from "../hooks/useDebounce";
@@ -49,6 +50,7 @@ export function InvoicesPage() {
   const debounced = useDebounce(search);
   const [rows, setRows] = useState<Row[] | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Row | null>(null);
+  const [importOpen, setImportOpen] = useState(false);
   const [stats, setStats] = useState<{
     totalFacture: number;
     enAttente: number;
@@ -109,13 +111,22 @@ export function InvoicesPage() {
       title="Factures"
       subtitle="Vos factures et encaissements"
       actions={
-        <Button
-          variant="primary"
-          leftIcon={<Plus className="w-4 h-4" />}
-          onClick={() => navigate("/invoices/new")}
-        >
-          Nouvelle facture
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            leftIcon={<Upload className="w-4 h-4" />}
+            onClick={() => setImportOpen(true)}
+          >
+            Importer des PDF
+          </Button>
+          <Button
+            variant="primary"
+            leftIcon={<Plus className="w-4 h-4" />}
+            onClick={() => navigate("/invoices/new")}
+          >
+            Nouvelle facture
+          </Button>
+        </div>
       }
     >
       {isProfileIncomplete && (
@@ -436,6 +447,12 @@ export function InvoicesPage() {
         message={`Cette action est définitive. ${deleteTarget ? `Client : ${deleteTarget.client_name}. Montant : ${formatAmount(deleteTarget.total_ttc)}.` : ""}`}
         confirmLabel="Supprimer"
         danger
+      />
+
+      <ImportInvoiceModal
+        open={importOpen}
+        onClose={() => setImportOpen(false)}
+        onSuccess={load}
       />
     </PageContainer>
   );
