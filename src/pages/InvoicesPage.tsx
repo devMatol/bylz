@@ -301,7 +301,7 @@ export function InvoicesPage() {
                         <Amount value={r.total_ttc} size="sm" className={r.type === "credit_note" ? "text-danger" : undefined} />
                       </td>
                       <td className="p-3">
-                        <div className="flex items-center gap-1.5">
+                        <div className="inline-flex items-center gap-1.5 whitespace-nowrap flex-shrink-0">
                           {r.type === "credit_note" && (
                             <span className="inline-flex items-center px-1.5 py-0.5 rounded-pill text-[10px] font-bold bg-violet-500/15 text-violet-600 dark:text-violet-400">
                               Avoir
@@ -398,7 +398,7 @@ export function InvoicesPage() {
                         <Amount value={r.total_ttc} size="sm" className={r.type === "credit_note" ? "text-danger" : undefined} />
                       </td>
                       <td className="p-3">
-                        <div className="flex items-center gap-1.5">
+                        <div className="inline-flex items-center gap-1.5 whitespace-nowrap flex-shrink-0">
                           {r.type === "credit_note" && (
                             <span className="inline-flex items-center px-1.5 py-0.5 rounded-pill text-[10px] font-bold bg-violet-500/15 text-violet-600 dark:text-violet-400">
                               Avoir
@@ -458,7 +458,7 @@ export function InvoicesPage() {
                         {r.number.startsWith("DRAFT-") ? "Brouillon" : r.number}
                       </p>
                     </div>
-                    <div className="flex items-center gap-1.5">
+                    <div className="inline-flex items-center gap-1.5 whitespace-nowrap flex-shrink-0">
                       {r.type === "credit_note" && (
                         <span className="inline-flex items-center px-1.5 py-0.5 rounded-pill text-[10px] font-bold bg-violet-500/15 text-violet-600 dark:text-violet-400">
                           Avoir

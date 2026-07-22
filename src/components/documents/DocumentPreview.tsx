@@ -105,7 +105,8 @@ export function DocumentPreview({
             {title}
           </p>
           {isDraft ? (
-            <span className="inline-block mt-2 px-2.5 py-1 rounded-pill bg-gray-100 text-gray-500 text-xs font-semibold">
+            <span className="inline-flex items-center gap-1.5 whitespace-nowrap flex-shrink-0 align-middle mt-2 px-2.5 py-1 rounded-pill bg-gray-100 text-gray-500 text-xs font-semibold">
+              <span className="inline-block w-1.5 h-1.5 rounded-full bg-gray-400 flex-shrink-0" />
               Brouillon
             </span>
           ) : (

@@ -32,13 +32,13 @@ export function StatusBadge({ status, className }: StatusBadgeProps) {
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-pill text-xs font-semibold bg-surface-hover",
+        "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-pill text-xs font-semibold bg-surface-hover whitespace-nowrap flex-shrink-0 align-middle",
         style.text,
         className
       )}
     >
-      <span className={cn("w-1.5 h-1.5 rounded-full", style.dot)} />
-      {STATUS_LABELS[status] || status}
+      <span className={cn("inline-block w-1.5 h-1.5 rounded-full flex-shrink-0", style.dot)} />
+      <span>{STATUS_LABELS[status] || status}</span>
     </span>
   );
 }
