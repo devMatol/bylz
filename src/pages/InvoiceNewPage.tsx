@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback, type FormEvent } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { Plus, Eye, Trash2, AlertTriangle } from "lucide-react";
+import { Plus, Eye, Trash2, AlertTriangle, Receipt } from "lucide-react";
 import { PageContainer } from "../components/layout/PageContainer";
 import { Button } from "../components/ui/Button";
 import { Input } from "../components/ui/Input";
@@ -57,6 +57,15 @@ export function InvoiceNewPage() {
   const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
   const [loading, setLoading] = useState(isEdit);
   const [invoiceType, setInvoiceType] = useState<"invoice" | "credit_note">("invoice");
+
+  const [dismissedHistory, setDismissedHistory] = useState(() => {
+    return localStorage.getItem("bylz-dismiss-history-banner") === "true";
+  });
+
+  const handleDismissHistory = () => {
+    localStorage.setItem("bylz-dismiss-history-banner", "true");
+    setDismissedHistory(true);
+  };
 
   const load = useCallback(async () => {
     if (!company) return;
@@ -257,6 +266,44 @@ export function InvoiceNewPage() {
           >
             Compléter mon profil
           </button>
+        </div>
+      )}
+
+      {!dismissedHistory && company && company.previous_ca === 0 && (
+        <div className="mb-6 p-4 rounded-xl border border-indigo-500/20 bg-indigo-500/5 text-indigo-800 dark:text-indigo-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 max-w-[880px] mx-auto w-full">
+          <div className="flex items-center space-x-3">
+            <Receipt className="w-5 h-5 flex-shrink-0 text-indigo-500" />
+            <div>
+              <p className="font-semibold text-sm">Rattraper votre historique fiscal {new Date().getFullYear()}</p>
+              <p className="text-xs opacity-90 text-muted">
+                Renseignez votre chiffre d'affaires antérieur ou importez vos anciennes factures de l'année pour suivre précisément vos plafonds de TVA et micro-entreprise.
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+            <button
+              type="button"
+              onClick={() => navigate("/settings?focus=company")}
+              className="flex-1 sm:flex-none text-xs whitespace-nowrap bg-surface text-text border border-border px-3 h-8 rounded-pill font-semibold hover:bg-surface-hover transition-colors"
+            >
+              Saisir mon CA
+            </button>
+            <button
+              type="button"
+              onClick={() => navigate("/invoices?import=true")}
+              className="flex-1 sm:flex-none text-xs whitespace-nowrap bg-primary text-primary-foreground px-3 h-8 rounded-pill font-semibold hover:bg-primary-hover transition-colors animate-pulse"
+            >
+              Importer des PDF
+            </button>
+            <button
+              type="button"
+              onClick={handleDismissHistory}
+              className="text-xs text-muted hover:text-text px-2 h-8 font-medium transition-colors"
+              title="Masquer l'invitation"
+            >
+              Masquer
+            </button>
+          </div>
         </div>
       )}
 
