@@ -85,7 +85,15 @@ function App() {
         <BrowserRouter>
           <NotificationsProvider>
             <Routes>
-              {/* Standalone public marketing routes (accessible to everyone) */}
+              {/* Standalone public marketing & landing routes (accessible to EVERYONE, logged-in or logged-out) */}
+              <Route
+                path="/"
+                element={
+                  <MarketingSuspense>
+                    <LandingPage />
+                  </MarketingSuspense>
+                }
+              />
               <Route
                 path="/tarifs"
                 element={
@@ -166,18 +174,10 @@ function App() {
                   </MarketingSuspense>
                 }
               />
+              <Route path="/essai" element={<GuestEditorPage />} />
 
-              {/* Unauthenticated-only public routes (logged-in users redirected to /dashboard) */}
+              {/* Unauthenticated-only auth forms (logged-in users accessing /login or /signup redirected to /dashboard) */}
               <Route element={<PublicOnlyRoute />}>
-                <Route
-                  path="/"
-                  element={
-                    <MarketingSuspense>
-                      <LandingPage />
-                    </MarketingSuspense>
-                  }
-                />
-                <Route path="/essai" element={<GuestEditorPage />} />
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/signup" element={<SignupPage />} />
               </Route>

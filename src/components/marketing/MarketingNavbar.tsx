@@ -1,9 +1,11 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Menu, X, ArrowRight, Sparkles } from "lucide-react";
+import { Menu, X, ArrowRight, Sparkles, LayoutDashboard } from "lucide-react";
 import { Button } from "../ui/Button";
+import { useAuth } from "../../contexts/AuthContext";
 
 export function MarketingNavbar() {
+  const { user } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const location = useLocation();
@@ -78,17 +80,29 @@ export function MarketingNavbar() {
 
         {/* Desktop CTAs */}
         <div className="hidden md:flex items-center space-x-3">
-          <Link to="/login">
-            <Button variant="ghost" size="sm">
-              Se connecter
-            </Button>
-          </Link>
-          <Link to="/essai">
-            <Button variant="primary" size="sm" className="bylz-glow-cta">
-              <Sparkles className="w-4 h-4 mr-1.5 text-accent animate-pulse" />
-              Essayer gratuitement
-            </Button>
-          </Link>
+          {user ? (
+            <Link to="/dashboard">
+              <Button variant="primary" size="sm" className="bylz-glow-cta font-bold">
+                <LayoutDashboard className="w-4 h-4 mr-1.5" />
+                Mon tableau de bord
+                <ArrowRight className="w-4 h-4 ml-1.5" />
+              </Button>
+            </Link>
+          ) : (
+            <>
+              <Link to="/login">
+                <Button variant="ghost" size="sm">
+                  Se connecter
+                </Button>
+              </Link>
+              <Link to="/essai">
+                <Button variant="primary" size="sm" className="bylz-glow-cta">
+                  <Sparkles className="w-4 h-4 mr-1.5 text-accent animate-pulse" />
+                  Essayer gratuitement
+                </Button>
+              </Link>
+            </>
+          )}
         </div>
 
         {/* Mobile menu button */}
@@ -125,17 +139,28 @@ export function MarketingNavbar() {
           </nav>
 
           <div className="pt-6 pb-8 space-y-3 border-t border-border flex flex-col">
-            <Link to="/login" onClick={() => setMobileMenuOpen(false)}>
-              <Button variant="outline" className="w-full justify-center">
-                Se connecter
-              </Button>
-            </Link>
-            <Link to="/essai" onClick={() => setMobileMenuOpen(false)}>
-              <Button variant="primary" className="w-full justify-center bylz-glow-cta">
-                <Sparkles className="w-4 h-4 mr-2 text-accent" />
-                Essayer gratuitement
-              </Button>
-            </Link>
+            {user ? (
+              <Link to="/dashboard" onClick={() => setMobileMenuOpen(false)}>
+                <Button variant="primary" className="w-full justify-center bylz-glow-cta font-bold">
+                  <LayoutDashboard className="w-4 h-4 mr-2" />
+                  Mon tableau de bord
+                </Button>
+              </Link>
+            ) : (
+              <>
+                <Link to="/login" onClick={() => setMobileMenuOpen(false)}>
+                  <Button variant="outline" className="w-full justify-center">
+                    Se connecter
+                  </Button>
+                </Link>
+                <Link to="/essai" onClick={() => setMobileMenuOpen(false)}>
+                  <Button variant="primary" className="w-full justify-center bylz-glow-cta">
+                    <Sparkles className="w-4 h-4 mr-2 text-accent" />
+                    Essayer gratuitement
+                  </Button>
+                </Link>
+              </>
+            )}
           </div>
         </div>
       )}
