@@ -234,7 +234,7 @@ export function GuestEditorPageContent() {
             onClick={() => openWall("locked_feature")}
             className="w-full text-xs h-9 bylz-glow-primary"
           >
-            Activer mon compte
+            Créer un compte gratuit
           </Button>
           <Link
             to="/login?guest=true"
@@ -294,7 +294,7 @@ export function GuestEditorPageContent() {
                   onClick={() => openWall("locked_feature")}
                   className="w-full sm:w-auto text-xs bylz-glow-primary"
                 >
-                  Activer mon compte gratuit
+                  S'inscrire gratuitement
                 </Button>
               </div>
 
@@ -707,7 +707,7 @@ export function GuestEditorPageContent() {
 
           <div className="space-y-2">
             <h2 className="text-2xl font-black text-text">
-              {wallTriggerReason === "locked_feature" ? "Activer l'espace complet 🔒" : "Votre facture est prête ! 🎉"}
+              {wallTriggerReason === "locked_feature" ? "Créer un compte pour débloquer 🔒" : "Votre facture est prête ! 🎉"}
             </h2>
             <p className="text-sm text-muted">
               {wallTriggerReason === "locked_feature"
