@@ -88,6 +88,7 @@ export function GuestEditorPageContent() {
     invoice_footer: "",
     default_payment_terms: "30d",
     stripe_connect_account_id: null,
+    previous_ca: 0,
     created_at: new Date().toISOString(),
   };
 

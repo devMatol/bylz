@@ -923,6 +923,13 @@ export async function fetchInvoiceStats(
   enRetard: number;
   encaisseMois: number;
 }> {
+  const { data: comp } = await supabase
+    .from("companies")
+    .select("previous_ca")
+    .eq("id", companyId)
+    .maybeSingle();
+  const previousCa = comp ? Number(comp.previous_ca) || 0 : 0;
+
   const year = new Date().getFullYear();
   const monthStart = new Date();
   monthStart.setDate(1);
@@ -932,7 +939,7 @@ export async function fetchInvoiceStats(
     .eq("company_id", companyId)
     .in("status", ["pending", "late", "paid", "rejected"]);
   if (error) throw error;
-  let totalFacture = 0,
+  let totalFacture = previousCa,
     enAttente = 0,
     enRetard = 0,
     encaisseMois = 0;
@@ -1162,15 +1169,27 @@ export async function fetchDashboardData(
     }
   }
 
+  const { data: comp } = await supabase
+    .from("companies")
+    .select("previous_ca")
+    .eq("id", companyId)
+    .maybeSingle();
+  const previousCa = comp ? Number(comp.previous_ca) || 0 : 0;
+
   const now = new Date();
   const { start, prevStart, prevEnd } = periodRange(period, now);
   const yearStart = new Date(now.getFullYear(), 0, 1);
 
   let caEncaisse = 0;
   let caPrevious = 0;
-  let caEncaisseYear = 0;
+  let caEncaisseYear = previousCa;
   const monthlyMap = new Map<string, number>();
-  const caByNature = { service: 0, goods: 0 };
+  
+  const nature = activityType === "commerce" ? "goods" : "service";
+  const caByNature = {
+    service: nature === "service" ? previousCa : 0,
+    goods: nature === "goods" ? previousCa : 0,
+  };
 
   for (let m = 11; m >= 0; m--) {
     const d = new Date(now.getFullYear(), now.getMonth() - m, 1);

@@ -68,6 +68,7 @@ export function SettingsPage() {
   const [address, setAddress] = useState(company?.address || "");
   const [activityType, setActivityType] = useState(company?.activity_type || "freelance_bnc");
   const [urssafFrequency, setUrssafFrequency] = useState(company?.urssaf_frequency || "monthly");
+  const [previousCa, setPreviousCa] = useState(company?.previous_ca?.toString() || "0");
   const [savingCompany, setSavingCompany] = useState(false);
   const [searchingSiret, setSearchingSiret] = useState(false);
 
@@ -79,6 +80,7 @@ export function SettingsPage() {
       setAddress(company.address || "");
       setActivityType(company.activity_type || "freelance_bnc");
       setUrssafFrequency(company.urssaf_frequency || "monthly");
+      setPreviousCa(company.previous_ca?.toString() || "0");
     }
   }, [company]);
 
@@ -121,6 +123,7 @@ export function SettingsPage() {
           address,
           activity_type: activityType,
           urssaf_frequency: urssafFrequency,
+          previous_ca: parseFloat(previousCa) || 0,
         })
         .eq("id", company.id);
 
@@ -666,6 +669,18 @@ export function SettingsPage() {
                   <option value="monthly">Mensuelle</option>
                   <option value="quarterly">Trimestrielle</option>
                 </Select>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Input
+                  label="Chiffre d'affaires antérieur (de l'année en cours)"
+                  placeholder="ex: 12500"
+                  type="number"
+                  step="0.01"
+                  value={previousCa}
+                  onChange={(e) => setPreviousCa(e.target.value)}
+                  helperText="Indiquez le CA déjà encaissé cette année avant d'utiliser Bylz pour le calcul correct des seuils de TVA et plafonds micro-entreprise."
+                />
               </div>
 
               <div className="flex justify-end pt-2">

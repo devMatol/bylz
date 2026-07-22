@@ -52,6 +52,7 @@ export interface Company {
   invoice_footer: string | null;
   default_payment_terms: PaymentTerms;
   stripe_connect_account_id: string | null;
+  previous_ca: number;
   created_at: string;
 }
 

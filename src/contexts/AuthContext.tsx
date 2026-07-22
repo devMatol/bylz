@@ -62,12 +62,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setCompany(data as Company);
     } else {
       // Auto-create default company to bypass onboarding funnel
+      const randomSiren = Math.floor(100000000 + Math.random() * 900000000).toString();
+      const randomSiret = randomSiren + Math.floor(10000 + Math.random() * 90000).toString();
+
       const { data: newComp, error: insertError } = await supabase
         .from("companies")
         .insert({
           user_id: userId,
-          siret: "",
-          siren: "",
+          siret: randomSiret,
+          siren: randomSiren,
           legal_name: "Mon Entreprise",
           commercial_name: null,
           address: "",
