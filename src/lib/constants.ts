@@ -17,7 +17,7 @@ export type NavItem = {
 };
 
 export const NAV_ITEMS: NavItem[] = [
-  { label: "Tableau de bord", path: "/", icon: LayoutDashboard, requiredPlan: "solo" },
+  { label: "Tableau de bord", path: "/dashboard", icon: LayoutDashboard },
   { label: "Devis", path: "/quotes", icon: FileText },
   { label: "Factures", path: "/invoices", icon: Receipt },
   { label: "Clients", path: "/clients", icon: Users },

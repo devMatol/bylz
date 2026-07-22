@@ -73,10 +73,13 @@ export function DashboardPage() {
   };
 
   useEffect(() => {
-    if (profile?.plan === "starter") {
+    // Only redirect to /invoices on the very first connection of the session
+    const hasLandedFirstTime = sessionStorage.getItem("bylz-first-landing-done");
+    if (!hasLandedFirstTime) {
+      sessionStorage.setItem("bylz-first-landing-done", "true");
       navigate("/invoices", { replace: true });
     }
-  }, [profile, navigate]);
+  }, [navigate]);
 
   const load = useCallback(async () => {
     if (!company) return;
