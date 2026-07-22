@@ -24,8 +24,6 @@ import { UrssafPage } from "./pages/UrssafPage";
 import { SettingsPage } from "./pages/SettingsPage";
 import { AdminPage } from "./pages/AdminPage";
 
-import { GuestEditorPage } from "./pages/GuestEditorPage";
-
 const KitchenSinkPage = lazy(() =>
   import("./pages/KitchenSinkPage").then((m) => ({ default: m.KitchenSinkPage }))
 );
@@ -38,8 +36,6 @@ function App() {
           <NotificationsProvider>
             <Routes>
               {/* public — standalone layout, no AppShell */}
-              <Route path="/essai" element={<GuestEditorPage />} />
-
               <Route element={<PublicOnlyRoute />}>
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/signup" element={<SignupPage />} />

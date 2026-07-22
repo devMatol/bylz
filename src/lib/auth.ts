@@ -21,11 +21,11 @@ export async function signIn(email: string, password: string) {
   return supabase.auth.signInWithPassword({ email, password });
 }
 
-export async function signInWithGoogle(redirectTo?: string) {
+export async function signInWithGoogle() {
   return supabase.auth.signInWithOAuth({
     provider: "google",
     options: {
-      redirectTo: redirectTo || window.location.origin,
+      redirectTo: window.location.origin,
     },
   });
 }
