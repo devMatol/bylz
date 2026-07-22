@@ -63,6 +63,12 @@ export function DashboardPage() {
 
   const isBlurred = !canUseFeature(profile?.plan, "fiscalDashboard");
 
+  useEffect(() => {
+    if (profile?.plan === "starter") {
+      navigate("/invoices", { replace: true });
+    }
+  }, [profile, navigate]);
+
   const load = useCallback(async () => {
     if (!company) return;
     setLoading(true);
