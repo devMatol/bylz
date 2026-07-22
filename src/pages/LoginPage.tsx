@@ -5,6 +5,7 @@ import { AuthLayout } from "../components/auth/AuthLayout";
 import { GoogleIcon } from "../components/auth/GoogleIcon";
 import { Button } from "../components/ui/Button";
 import { Input } from "../components/ui/Input";
+import { SEO } from "../components/seo/SEO";
 import { useAuth } from "../contexts/AuthContext";
 import { signIn, signInWithGoogle } from "../lib/auth";
 
@@ -71,6 +72,7 @@ export function LoginPage() {
         </p>
       }
     >
+      <SEO title="Connexion — Bylz" noindex />
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         <Input
           label="Email"

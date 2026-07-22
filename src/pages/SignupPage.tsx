@@ -5,6 +5,7 @@ import { AuthLayout } from "../components/auth/AuthLayout";
 import { GoogleIcon } from "../components/auth/GoogleIcon";
 import { Button } from "../components/ui/Button";
 import { Input } from "../components/ui/Input";
+import { SEO } from "../components/seo/SEO";
 import { useAuth } from "../contexts/AuthContext";
 import { signUp, signInWithGoogle } from "../lib/auth";
 import { cn } from "../lib/utils";
@@ -95,6 +96,7 @@ export function SignupPage() {
         </p>
       }
     >
+      <SEO title="Créer un compte — Bylz" noindex />
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         <Input
           label="Email"

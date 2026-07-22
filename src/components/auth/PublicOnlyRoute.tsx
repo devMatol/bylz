@@ -15,7 +15,7 @@ export function PublicOnlyRoute() {
   }
 
   if (user) {
-    return <Navigate to={company ? `/${location.search}` : `/onboarding${location.search}`} replace />;
+    return <Navigate to={company ? `/dashboard${location.search}` : `/onboarding${location.search}`} replace />;
   }
 
   return <Outlet />;

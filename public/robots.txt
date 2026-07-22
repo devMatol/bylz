@@ -1,0 +1,23 @@
+User-agent: *
+Allow: /
+Allow: /tarifs
+Allow: /fonctionnalites
+Allow: /blog
+Allow: /contact
+Allow: /essai
+Allow: /mentions-legales
+Allow: /cgu
+Allow: /confidentialite
+Disallow: /dashboard
+Disallow: /invoices
+Disallow: /quotes
+Disallow: /clients
+Disallow: /catalog
+Disallow: /urssaf
+Disallow: /settings
+Disallow: /admin
+Disallow: /login
+Disallow: /signup
+Disallow: /onboarding
+
+Sitemap: https://bylz.fr/sitemap.xml

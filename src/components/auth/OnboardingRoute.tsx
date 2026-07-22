@@ -20,7 +20,7 @@ export function OnboardingRoute() {
 
   const params = new URLSearchParams(location.search);
   if (company && !params.get("success")) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/dashboard" replace />;
   }
 
   return <Outlet />;

@@ -23,11 +23,50 @@ import { CatalogPage } from "./pages/CatalogPage";
 import { UrssafPage } from "./pages/UrssafPage";
 import { SettingsPage } from "./pages/SettingsPage";
 import { AdminPage } from "./pages/AdminPage";
-
 import { GuestEditorPage } from "./pages/GuestEditorPage";
 
+// Code-split marketing bundle from main app
+const LandingPage = lazy(() =>
+  import("./pages/LandingPage").then((m) => ({ default: m.LandingPage }))
+);
+const PricingPage = lazy(() =>
+  import("./pages/PricingPage").then((m) => ({ default: m.PricingPage }))
+);
+const FeaturesPage = lazy(() =>
+  import("./pages/FeaturesPage").then((m) => ({ default: m.FeaturesPage }))
+);
+const BlogListPage = lazy(() =>
+  import("./pages/BlogListPage").then((m) => ({ default: m.BlogListPage }))
+);
+const BlogPostPage = lazy(() =>
+  import("./pages/BlogPostPage").then((m) => ({ default: m.BlogPostPage }))
+);
+const ContactPage = lazy(() =>
+  import("./pages/ContactPage").then((m) => ({ default: m.ContactPage }))
+);
+const MentionsLegalesPage = lazy(() =>
+  import("./pages/MentionsLegalesPage").then((m) => ({ default: m.MentionsLegalesPage }))
+);
+const CGUPage = lazy(() =>
+  import("./pages/CGUPage").then((m) => ({ default: m.CGUPage }))
+);
+const ConfidentialitePage = lazy(() =>
+  import("./pages/ConfidentialitePage").then((m) => ({ default: m.ConfidentialitePage }))
+);
 const KitchenSinkPage = lazy(() =>
   import("./pages/KitchenSinkPage").then((m) => ({ default: m.KitchenSinkPage }))
+);
+
+const MarketingSuspense = ({ children }: { children: React.ReactNode }) => (
+  <Suspense
+    fallback={
+      <div className="min-h-screen bg-bg flex items-center justify-center p-10 text-muted text-sm font-medium">
+        Chargement…
+      </div>
+    }
+  >
+    {children}
+  </Suspense>
 );
 
 function App() {
@@ -37,8 +76,82 @@ function App() {
         <BrowserRouter>
           <NotificationsProvider>
             <Routes>
-              {/* public — standalone layout, no AppShell */}
+              {/* Standalone public marketing routes (accessible to everyone) */}
+              <Route
+                path="/tarifs"
+                element={
+                  <MarketingSuspense>
+                    <PricingPage />
+                  </MarketingSuspense>
+                }
+              />
+              <Route
+                path="/fonctionnalites"
+                element={
+                  <MarketingSuspense>
+                    <FeaturesPage />
+                  </MarketingSuspense>
+                }
+              />
+              <Route
+                path="/blog"
+                element={
+                  <MarketingSuspense>
+                    <BlogListPage />
+                  </MarketingSuspense>
+                }
+              />
+              <Route
+                path="/blog/:slug"
+                element={
+                  <MarketingSuspense>
+                    <BlogPostPage />
+                  </MarketingSuspense>
+                }
+              />
+              <Route
+                path="/contact"
+                element={
+                  <MarketingSuspense>
+                    <ContactPage />
+                  </MarketingSuspense>
+                }
+              />
+              <Route
+                path="/mentions-legales"
+                element={
+                  <MarketingSuspense>
+                    <MentionsLegalesPage />
+                  </MarketingSuspense>
+                }
+              />
+              <Route
+                path="/cgu"
+                element={
+                  <MarketingSuspense>
+                    <CGUPage />
+                  </MarketingSuspense>
+                }
+              />
+              <Route
+                path="/confidentialite"
+                element={
+                  <MarketingSuspense>
+                    <ConfidentialitePage />
+                  </MarketingSuspense>
+                }
+              />
+
+              {/* Unauthenticated-only public routes (logged-in users redirected to /dashboard) */}
               <Route element={<PublicOnlyRoute />}>
+                <Route
+                  path="/"
+                  element={
+                    <MarketingSuspense>
+                      <LandingPage />
+                    </MarketingSuspense>
+                  }
+                />
                 <Route path="/essai" element={<GuestEditorPage />} />
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/signup" element={<SignupPage />} />
@@ -52,7 +165,7 @@ function App() {
               {/* protected app — AppShell wraps ALL of these */}
               <Route element={<ProtectedRoute />}>
                 <Route element={<AppShell />}>
-                  <Route path="/" element={<DashboardPage />} />
+                  <Route path="/dashboard" element={<DashboardPage />} />
                   <Route path="/quotes" element={<QuotesPage />} />
                   <Route path="/quotes/new" element={<QuoteNewPage />} />
                   <Route path="/quotes/:id" element={<QuoteDetailPage />} />
