@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { Search, MousePointer, Eye, TrendingUp, Key, ArrowUpRight, HelpCircle, RefreshCw, CheckCircle2 } from "lucide-react";
+import { Search, MousePointer, Eye, TrendingUp, Key, RefreshCw, Sparkles } from "lucide-react";
 import { supabase } from "../../lib/supabase";
 import { Card } from "../../components/ui/Card";
 import { Skeleton } from "../../components/ui/Skeleton";
@@ -92,7 +92,8 @@ export function AdminSeoPage() {
 
   return (
     <div className="space-y-6 max-w-6xl">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      {/* Header with Main Action Button */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-slate-900/80 p-5 rounded-card border border-slate-800">
         <div>
           <h1 className="text-2xl font-black text-white tracking-tight flex items-center gap-2">
             <Search className="w-6 h-6 text-rose-400" />
@@ -103,16 +104,16 @@ export function AdminSeoPage() {
           </p>
         </div>
 
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-2 flex-shrink-0">
           <Button
             type="button"
             variant="primary"
             onClick={handleSyncGsc}
             loading={syncing}
             leftIcon={<RefreshCw className="w-4 h-4" />}
-            className="bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs"
+            className="bg-gradient-to-r from-rose-600 to-amber-600 hover:from-rose-500 hover:to-amber-500 text-white font-extrabold text-xs px-4 py-2.5 shadow-lg"
           >
-            Synchroniser GSC
+            Synchroniser Google Search Console
           </Button>
         </div>
       </div>
@@ -120,12 +121,15 @@ export function AdminSeoPage() {
       {loading ? (
         <Skeleton height="18rem" />
       ) : !isConnected ? (
-        /* Setup Guide Card when GSC metrics are empty or waiting for first sync */
+        /* Setup & First Sync Card */
         <Card className="bg-slate-900 border-slate-800 p-8 space-y-6 shadow-2xl">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-4">
             <div className="flex items-center space-x-3 text-rose-400">
               <Key className="w-6 h-6" />
-              <h3 className="text-lg font-black text-white">Clé JSON configurée dans Supabase</h3>
+              <div>
+                <h3 className="text-lg font-black text-white">Clé JSON stockée dans Supabase</h3>
+                <p className="text-xs text-slate-400">Secret: <code className="text-rose-300 font-mono">GSC_SERVICE_ACCOUNT</code></p>
+              </div>
             </div>
 
             <Button
@@ -133,21 +137,23 @@ export function AdminSeoPage() {
               variant="primary"
               onClick={handleSyncGsc}
               loading={syncing}
-              leftIcon={<RefreshCw className="w-4 h-4" />}
-              className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs"
+              leftIcon={<Sparkles className="w-4 h-4" />}
+              className="bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs px-5 py-2.5 shadow-xl"
             >
               Lancer la 1ère Synchronisation
             </Button>
           </div>
 
-          <p className="text-xs text-slate-300 leading-relaxed font-medium">
-            Votre clé JSON est enregistrée dans le secret <code className="text-rose-300 font-mono">GSC_SERVICE_ACCOUNT</code>.
-            Assurez-vous d'avoir accordé l'accès à l'e-mail du compte de service dans Google Search Console pour <strong>bylz.fr</strong>, puis cliquez sur <strong>Lancer la 1ère Synchronisation</strong>.
-          </p>
+          <div className="p-4 rounded-card bg-slate-950 border border-slate-800 space-y-3 text-xs leading-relaxed">
+            <p className="font-bold text-white">Prêt pour l'acquisition de vos données Google Search Console !</p>
+            <p className="text-slate-400">
+              Si vous avez accordé l'accès à l'adresse e-mail de votre compte de service dans Google Search Console pour <strong>bylz.fr</strong>, cliquez sur le bouton vert <strong>Lancer la 1ère Synchronisation</strong> ci-dessus pour rapatrier automatiquement vos données SEO.
+            </p>
+          </div>
 
-          <div className="flex items-center justify-between pt-2 border-t border-slate-800">
+          <div className="flex items-center justify-between pt-2">
             <span className="text-[11px] text-slate-500">
-              Les métriques seront enregistrées dans la table de cache de l'espace admin.
+              Les métriques seront enregistrées dans le cache de l'espace admin.
             </span>
             <Button
               type="button"
