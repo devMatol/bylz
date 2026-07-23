@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, UserCheck, Shield, Eye, Lock, RefreshCw, AlertCircle } from "lucide-react";
+import { Search, Shield, Eye, AlertCircle, RefreshCw } from "lucide-react";
 import { supabase } from "../../lib/supabase";
+import { useAuth } from "../../contexts/AuthContext";
 import type { Profile } from "../../types/database";
 import { Card } from "../../components/ui/Card";
 import { Skeleton } from "../../components/ui/Skeleton";
@@ -9,11 +10,33 @@ import { formatDateShort } from "../../lib/date";
 
 export function AdminUsersPage() {
   const navigate = useNavigate();
+  const { user, profile, realProfile } = useAuth();
   const [users, setUsers] = useState<Profile[]>([]);
   const [loading, setLoading] = useState(true);
   const [errorNotice, setErrorNotice] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [planFilter, setPlanFilter] = useState<string>("all");
+
+  const activeProfile = realProfile || profile;
+
+  const getFallbackUser = useCallback((): Profile => {
+    if (activeProfile) return activeProfile;
+    return {
+      id: user?.id || "admin-fallback",
+      email: user?.email || "matthiasollivier123@gmail.com",
+      plan: "pro",
+      stripe_customer_id: null,
+      stripe_subscription_id: null,
+      trial_ends_at: null,
+      trial_used: false,
+      accountant_email: null,
+      tmi: null,
+      is_admin: true,
+      admin_role: "super_admin",
+      suspended_at: null,
+      created_at: new Date().toISOString(),
+    };
+  }, [user, activeProfile]);
 
   const loadUsers = useCallback(async () => {
     setLoading(true);
@@ -27,38 +50,47 @@ export function AdminUsersPage() {
       if (error) {
         console.warn("Supabase profiles query error:", error);
         setErrorNotice(error.message);
+        setUsers([getFallbackUser()]);
       } else {
-        setUsers((data as Profile[]) || []);
+        const fetchedList = (data as Profile[]) || [];
+        // Ensure active user is always included if list is empty or doesn't contain current user
+        if (fetchedList.length === 0) {
+          setUsers([getFallbackUser()]);
+          setErrorNotice("La politique RLS Supabase limite la lecture des profils. Exécutez le script SQL ci-dessous dans votre SQL Editor pour débloquer la totalité des utilisateurs inscrits.");
+        } else {
+          setUsers(fetchedList);
+        }
       }
     } catch (err) {
       console.error("Error loading users:", err);
       setErrorNotice(err instanceof Error ? err.message : "Erreur lors du chargement des utilisateurs");
+      setUsers([getFallbackUser()]);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [getFallbackUser]);
 
   useEffect(() => {
     void loadUsers();
   }, [loadUsers]);
 
   const filteredUsers = users.filter((u) => {
-    const rawUser = u as unknown as { email: string; full_name?: string };
+    const rawUser = u as unknown as { email?: string; full_name?: string };
     const emailMatch = rawUser.email ? rawUser.email.toLowerCase().includes(search.toLowerCase()) : false;
     const nameMatch = rawUser.full_name ? rawUser.full_name.toLowerCase().includes(search.toLowerCase()) : false;
-    const matchesSearch = emailMatch || nameMatch;
+    const matchesSearch = search === "" || emailMatch || nameMatch;
     const matchesPlan = planFilter === "all" || u.plan === planFilter;
     return matchesSearch && matchesPlan;
   });
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 max-w-6xl">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-black text-white tracking-tight flex items-center gap-2">
             <span>Gestion des Utilisateurs</span>
             <span className="text-xs font-mono font-extrabold px-2.5 py-0.5 rounded-pill bg-rose-500/20 text-rose-400 border border-rose-500/30">
-              {filteredUsers.length} au total
+              {filteredUsers.length} affiché(s)
             </span>
           </h1>
           <p className="text-xs text-slate-400">Consultez, gérez et assistez les utilisateurs inscrits sur Bylz</p>
@@ -72,7 +104,7 @@ export function AdminUsersPage() {
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Rechercher par email ou nom..."
+              placeholder="Rechercher par email..."
               className="w-full bg-slate-900 border border-slate-800 rounded-card pl-9 pr-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-rose-500 font-medium"
             />
           </div>
@@ -88,6 +120,15 @@ export function AdminUsersPage() {
             <option value="solo">Solo</option>
             <option value="pro">Pro</option>
           </select>
+
+          <button
+            type="button"
+            onClick={() => void loadUsers()}
+            className="p-2 rounded-card bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800"
+            title="Rafraîchir la liste"
+          >
+            <RefreshCw className="w-4 h-4" />
+          </button>
         </div>
       </div>
 
@@ -96,11 +137,14 @@ export function AdminUsersPage() {
         <div className="p-4 rounded-card bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs font-semibold flex items-start gap-3">
           <AlertCircle className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" />
           <div>
-            <p className="font-bold text-white text-sm">Note RLS Supabase sur la table `profiles`</p>
-            <p className="mt-1">
-              Si seuls vos propres utilisateurs s'affichent, la politique RLS Supabase restreint la lecture.
-              Exécutez le script SQL d'autorisation admin dans votre SQL Editor Supabase pour autoriser la lecture intégrale des utilisateurs.
+            <p className="font-bold text-white text-sm">Action requise : Débloquer l'accès RLS Supabase</p>
+            <p className="mt-1 leading-relaxed">
+              Supabase applique la politique RLS par défaut et bloque la lecture des autres utilisateurs.
+              Exécutez cette commande dans le <strong>SQL Editor</strong> Supabase pour afficher 100% des comptes inscrits :
             </p>
+            <pre className="mt-2 p-2.5 rounded bg-slate-950 text-[11px] font-mono text-emerald-400 overflow-x-auto border border-slate-800">
+              {`CREATE POLICY "Admins read profiles" ON profiles FOR SELECT USING (true);`}
+            </pre>
           </div>
         </div>
       )}
@@ -126,7 +170,7 @@ export function AdminUsersPage() {
                 {filteredUsers.length === 0 ? (
                   <tr>
                     <td colSpan={6} className="p-8 text-center text-slate-500">
-                      Aucun utilisateur trouvé
+                      Aucun utilisateur ne correspond à votre recherche
                     </td>
                   </tr>
                 ) : (
@@ -142,11 +186,6 @@ export function AdminUsersPage() {
                               </span>
                             )}
                           </div>
-                          {(u as unknown as { full_name?: string }).full_name && (
-                            <span className="text-[11px] text-slate-400 font-normal">
-                              {(u as unknown as { full_name?: string }).full_name}
-                            </span>
-                          )}
                         </div>
                       </td>
                       <td className="p-4 font-mono font-bold">
@@ -163,7 +202,7 @@ export function AdminUsersPage() {
                         </span>
                       </td>
                       <td className="p-4">
-                        {u.admin_role === "super_admin" ? (
+                        {u.admin_role === "super_admin" || u.email === "matthiasollivier123@gmail.com" ? (
                           <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-pill bg-amber-500/20 text-amber-400 text-[10px] font-black border border-amber-500/40">
                             <Shield className="w-3 h-3 text-amber-400" /> Super Admin
                           </span>
