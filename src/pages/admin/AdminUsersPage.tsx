@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, UserCheck, Shield, Eye, Lock } from "lucide-react";
+import { Search, UserCheck, Shield, Eye, Lock, RefreshCw, AlertCircle } from "lucide-react";
 import { supabase } from "../../lib/supabase";
 import type { Profile } from "../../types/database";
 import { Card } from "../../components/ui/Card";
@@ -11,21 +11,28 @@ export function AdminUsersPage() {
   const navigate = useNavigate();
   const [users, setUsers] = useState<Profile[]>([]);
   const [loading, setLoading] = useState(true);
+  const [errorNotice, setErrorNotice] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [planFilter, setPlanFilter] = useState<string>("all");
 
   const loadUsers = useCallback(async () => {
     setLoading(true);
+    setErrorNotice(null);
     try {
       const { data, error } = await supabase
         .from("profiles")
         .select("*")
         .order("created_at", { ascending: false });
 
-      if (error) throw error;
-      setUsers((data as Profile[]) || []);
+      if (error) {
+        console.warn("Supabase profiles query error:", error);
+        setErrorNotice(error.message);
+      } else {
+        setUsers((data as Profile[]) || []);
+      }
     } catch (err) {
       console.error("Error loading users:", err);
+      setErrorNotice(err instanceof Error ? err.message : "Erreur lors du chargement des utilisateurs");
     } finally {
       setLoading(false);
     }
@@ -36,7 +43,10 @@ export function AdminUsersPage() {
   }, [loadUsers]);
 
   const filteredUsers = users.filter((u) => {
-    const matchesSearch = u.email.toLowerCase().includes(search.toLowerCase());
+    const rawUser = u as unknown as { email: string; full_name?: string };
+    const emailMatch = rawUser.email ? rawUser.email.toLowerCase().includes(search.toLowerCase()) : false;
+    const nameMatch = rawUser.full_name ? rawUser.full_name.toLowerCase().includes(search.toLowerCase()) : false;
+    const matchesSearch = emailMatch || nameMatch;
     const matchesPlan = planFilter === "all" || u.plan === planFilter;
     return matchesSearch && matchesPlan;
   });
@@ -45,8 +55,13 @@ export function AdminUsersPage() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-black text-white tracking-tight">Gestion des Utilisateurs</h1>
-          <p className="text-xs text-slate-400">Consultez, gérez et assistez les utilisateurs inscrits</p>
+          <h1 className="text-2xl font-black text-white tracking-tight flex items-center gap-2">
+            <span>Gestion des Utilisateurs</span>
+            <span className="text-xs font-mono font-extrabold px-2.5 py-0.5 rounded-pill bg-rose-500/20 text-rose-400 border border-rose-500/30">
+              {filteredUsers.length} au total
+            </span>
+          </h1>
+          <p className="text-xs text-slate-400">Consultez, gérez et assistez les utilisateurs inscrits sur Bylz</p>
         </div>
 
         <div className="flex flex-col sm:flex-row items-center gap-3">
@@ -57,7 +72,7 @@ export function AdminUsersPage() {
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Rechercher par email..."
+              placeholder="Rechercher par email ou nom..."
               className="w-full bg-slate-900 border border-slate-800 rounded-card pl-9 pr-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-rose-500 font-medium"
             />
           </div>
@@ -75,6 +90,20 @@ export function AdminUsersPage() {
           </select>
         </div>
       </div>
+
+      {/* RLS Policy Notice if restricted */}
+      {errorNotice && (
+        <div className="p-4 rounded-card bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs font-semibold flex items-start gap-3">
+          <AlertCircle className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" />
+          <div>
+            <p className="font-bold text-white text-sm">Note RLS Supabase sur la table `profiles`</p>
+            <p className="mt-1">
+              Si seuls vos propres utilisateurs s'affichent, la politique RLS Supabase restreint la lecture.
+              Exécutez le script SQL d'autorisation admin dans votre SQL Editor Supabase pour autoriser la lecture intégrale des utilisateurs.
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Users Table */}
       {loading ? (
@@ -104,11 +133,18 @@ export function AdminUsersPage() {
                   filteredUsers.map((u) => (
                     <tr key={u.id} className="hover:bg-slate-800/40 transition-colors">
                       <td className="p-4 font-bold text-white">
-                        <div className="flex items-center space-x-2">
-                          <span>{u.email}</span>
-                          {u.suspended_at && (
-                            <span className="px-1.5 py-0.5 rounded text-[10px] bg-rose-500/20 text-rose-400 border border-rose-500/40 font-bold">
-                              Suspendu
+                        <div className="flex flex-col">
+                          <div className="flex items-center space-x-2">
+                            <span>{u.email}</span>
+                            {u.suspended_at && (
+                              <span className="px-1.5 py-0.5 rounded text-[10px] bg-rose-500/20 text-rose-400 border border-rose-500/40 font-bold">
+                                Suspendu
+                              </span>
+                            )}
+                          </div>
+                          {(u as unknown as { full_name?: string }).full_name && (
+                            <span className="text-[11px] text-slate-400 font-normal">
+                              {(u as unknown as { full_name?: string }).full_name}
                             </span>
                           )}
                         </div>
