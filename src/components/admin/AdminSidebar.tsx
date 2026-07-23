@@ -15,7 +15,12 @@ import {
 import { useAuth } from "../../contexts/AuthContext";
 import { cn } from "../../lib/utils";
 
-export function AdminSidebar() {
+interface AdminSidebarProps {
+  onItemClick?: () => void;
+  isMobile?: boolean;
+}
+
+export function AdminSidebar({ onItemClick, isMobile = false }: AdminSidebarProps) {
   const { realProfile, profile, user, signOut } = useAuth();
   const navigate = useNavigate();
 
@@ -34,15 +39,20 @@ export function AdminSidebar() {
   ];
 
   const handleSignOut = async () => {
+    if (onItemClick) onItemClick();
     await signOut();
     navigate("/login");
   };
 
+  const sidebarClasses = isMobile
+    ? "flex flex-col h-full bg-slate-950 text-slate-100"
+    : "hidden md:flex fixed left-0 top-0 bottom-0 w-[260px] bg-slate-950 border-r border-rose-950/60 flex-col z-30 text-slate-100";
+
   return (
-    <aside className="hidden md:flex fixed left-0 top-0 bottom-0 w-[260px] bg-slate-950 border-r border-rose-950/60 flex-col z-30 text-slate-100">
+    <aside className={sidebarClasses}>
       {/* Header with ADMIN badge */}
       <div className="flex items-center justify-between px-5 h-16 border-b border-rose-950/80 bg-rose-950/20">
-        <Link to="/admin" className="flex items-center space-x-2">
+        <Link to="/admin" onClick={onItemClick} className="flex items-center space-x-2">
           <span className="text-xl font-black tracking-tight text-white">Bylz</span>
           <span className="text-xs font-mono font-black tracking-wider px-2 py-0.5 rounded-pill bg-rose-600/30 text-rose-400 border border-rose-500/40">
             ADMIN
@@ -69,16 +79,17 @@ export function AdminSidebar() {
             <NavLink
               key={item.path}
               to={item.path}
+              onClick={onItemClick}
               className={({ isActive }) =>
                 cn(
-                  "flex items-center gap-3 px-3.5 py-2.5 rounded-card text-xs font-semibold transition-all duration-200 border-l-2",
+                  "flex items-center gap-3 px-3.5 py-3 rounded-card text-xs font-semibold transition-all duration-200 border-l-2",
                   isActive
-                    ? "bg-rose-950/60 text-white border-rose-500 shadow-md"
+                    ? "bg-rose-950/60 text-white border-rose-500 shadow-md font-bold"
                     : "text-slate-400 border-transparent hover:text-white hover:bg-slate-900"
                 )
               }
             >
-              <Icon className="w-4 h-4 text-rose-400" />
+              <Icon className="w-4 h-4 text-rose-400 flex-shrink-0" />
               <span>{item.label}</span>
               {item.superAdminOnly && (
                 <span title="Super Admin uniquement">
@@ -94,7 +105,8 @@ export function AdminSidebar() {
       <div className="p-3 border-t border-rose-950/80 space-y-2 bg-slate-950">
         <Link
           to="/dashboard"
-          className="flex items-center justify-between px-3 py-2 rounded-card text-xs font-bold text-slate-300 hover:text-white hover:bg-slate-900 transition-colors border border-slate-800"
+          onClick={onItemClick}
+          className="flex items-center justify-between px-3 py-2.5 rounded-card text-xs font-bold text-slate-300 hover:text-white hover:bg-slate-900 transition-colors border border-slate-800"
         >
           <span className="flex items-center gap-2">
             <ArrowLeft className="w-3.5 h-3.5 text-rose-400" />
@@ -106,7 +118,7 @@ export function AdminSidebar() {
         <button
           type="button"
           onClick={handleSignOut}
-          className="w-full flex items-center gap-2 px-3 py-2 rounded-card text-xs font-semibold text-rose-400 hover:bg-rose-950/40 transition-colors"
+          className="w-full flex items-center gap-2 px-3 py-2.5 rounded-card text-xs font-semibold text-rose-400 hover:bg-rose-950/40 transition-colors"
         >
           <LogOut className="w-3.5 h-3.5" />
           Déconnexion Admin
