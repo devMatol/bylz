@@ -18,6 +18,8 @@ export type TicketCategory = "bug" | "question" | "billing" | "feature";
 export type TicketPriority = "high" | "normal" | "low";
 export type TicketStatus = "open" | "in_progress" | "resolved";
 
+export type AdminRole = "super_admin" | "admin" | null;
+
 // Table row interfaces
 
 export interface Profile {
@@ -31,6 +33,7 @@ export interface Profile {
   accountant_email: string | null;
   tmi: number | null;
   is_admin: boolean;
+  admin_role: AdminRole;
   suspended_at: string | null;
   created_at: string;
 }
@@ -213,4 +216,33 @@ export interface AuditLog {
   target_user_id: string | null;
   details: Record<string, unknown> | null;
   created_at: string;
+}
+
+export interface Plan {
+  id: string;
+  key: PlanType;
+  name: string;
+  price_cents: number;
+  stripe_price_id: string | null;
+  features: Record<string, boolean>;
+  invoice_limit: number | null;
+  client_limit: number | null;
+  is_active: boolean;
+  updated_at: string;
+}
+
+export interface AdminImpersonationSession {
+  id: string;
+  admin_id: string;
+  target_user_id: string;
+  started_at: string;
+  ended_at: string | null;
+  expires_at: string;
+}
+
+export interface AdminMetricsCache {
+  cache_key: string;
+  type: string;
+  data: Record<string, unknown>;
+  updated_at: string;
 }

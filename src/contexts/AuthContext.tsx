@@ -10,12 +10,16 @@ import type { Session, User } from "@supabase/supabase-js";
 import { getSession, onAuthStateChange, signOut as authSignOut } from "../lib/auth";
 import { supabase } from "../lib/supabase";
 import type { Profile, Company } from "../types/database";
+import { useImpersonation } from "./ImpersonationContext";
 
 interface AuthContextValue {
   user: User | null;
   session: Session | null;
   profile: Profile | null;
   company: Company | null;
+  realProfile: Profile | null;
+  realCompany: Company | null;
+  isImpersonating: boolean;
   loading: boolean;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
@@ -29,6 +33,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [company, setCompany] = useState<Company | null>(null);
   const [loading, setLoading] = useState(true);
+
+  const impersonation = useImpersonation();
 
   const fetchProfile = useCallback(async (userId: string) => {
     const load = async () => {
@@ -141,9 +147,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setCompany(null);
   }, []);
 
+  const effectiveProfile =
+    impersonation?.isImpersonating && impersonation.targetUser
+      ? impersonation.targetUser
+      : profile;
+
+  const effectiveCompany =
+    impersonation?.isImpersonating && impersonation.targetCompany
+      ? impersonation.targetCompany
+      : company;
+
   return (
     <AuthContext.Provider
-      value={{ user, session, profile, company, loading, signOut, refreshProfile }}
+      value={{
+        user,
+        session,
+        profile: effectiveProfile,
+        company: effectiveCompany,
+        realProfile: profile,
+        realCompany: company,
+        isImpersonating: !!impersonation?.isImpersonating,
+        loading,
+        signOut,
+        refreshProfile,
+      }}
     >
       {children}
     </AuthContext.Provider>

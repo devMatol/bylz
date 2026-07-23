@@ -1,10 +1,11 @@
 import { useState, useEffect, useRef } from "react";
-import { NavLink, useNavigate } from "react-router-dom";
-import { Zap, LogOut, Lock } from "lucide-react";
+import { NavLink, useNavigate, Link } from "react-router-dom";
+import { Zap, LogOut, Lock, LifeBuoy, ShieldAlert } from "lucide-react";
 import { NAV_ITEMS } from "../../lib/constants";
 import { ThemeToggle } from "../shared/ThemeToggle";
 import { useAuth } from "../../contexts/AuthContext";
 import { useNotifications } from "../../contexts/NotificationsContext";
+import { SupportModal } from "../support/SupportModal";
 import { cn } from "../../lib/utils";
 
 const PLAN_BADGE: Record<string, { label: string; icon: typeof Zap; className: string }> = {
@@ -14,11 +15,15 @@ const PLAN_BADGE: Record<string, { label: string; icon: typeof Zap; className: s
 };
 
 export function Sidebar() {
-  const { user, profile, signOut } = useAuth();
+  const { user, profile, realProfile, signOut } = useAuth();
   const { lateInvoicesCount, urssafDueSoon } = useNotifications();
   const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [supportOpen, setSupportOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+
+  const activeProfile = realProfile || profile;
+  const isAdmin = activeProfile?.is_admin === true;
 
   const email = user?.email || profile?.email || "";
   const initial = email.charAt(0).toUpperCase() || "U";
@@ -41,99 +46,125 @@ export function Sidebar() {
   }
 
   return (
-    <aside className="hidden md:flex fixed left-0 top-0 bottom-0 w-[280px] bg-bg-sidebar border-r border-border flex-col z-30">
-      <div className="flex items-center gap-2 px-6 h-16 border-b border-border">
-        <span className="text-2xl font-bold text-text">Bylz</span>
-        {(() => {
-          const plan = profile?.plan || "starter";
-          const badge = PLAN_BADGE[plan] ?? PLAN_BADGE.starter;
-          const BadgeIcon = badge.icon;
-          return (
-            <span className={cn("inline-flex items-center gap-1 px-2 py-0.5 rounded-pill text-xs font-semibold", badge.className)}>
-              {badge.label} <BadgeIcon className="w-3 h-3" />
-            </span>
-          );
-        })()}
-      </div>
+    <>
+      <aside className="hidden md:flex fixed left-0 top-0 bottom-0 w-[280px] bg-bg-sidebar border-r border-border flex-col z-30">
+        <div className="flex items-center gap-2 px-6 h-16 border-b border-border">
+          <Link to="/" className="text-2xl font-bold text-text">Bylz</Link>
+          {(() => {
+            const plan = profile?.plan || "starter";
+            const badge = PLAN_BADGE[plan] ?? PLAN_BADGE.starter;
+            const BadgeIcon = badge.icon;
+            return (
+              <span className={cn("inline-flex items-center gap-1 px-2 py-0.5 rounded-pill text-xs font-semibold", badge.className)}>
+                {badge.label} <BadgeIcon className="w-3 h-3" />
+              </span>
+            );
+          })()}
+        </div>
 
-      <nav className="flex-1 flex flex-col gap-1 p-4 overflow-y-auto">
-        {NAV_ITEMS.map((item) => {
-          const Icon = item.icon;
-          const userPlan = profile?.plan || "starter";
-          const isLocked =
-            item.requiredPlan === "pro"
-              ? userPlan !== "pro"
-              : item.requiredPlan === "solo"
-              ? userPlan === "starter"
-              : false;
+        <nav className="flex-1 flex flex-col gap-1 p-4 overflow-y-auto">
+          {NAV_ITEMS.map((item) => {
+            const Icon = item.icon;
+            const userPlan = profile?.plan || "starter";
+            const isLocked =
+              item.requiredPlan === "pro"
+                ? userPlan !== "pro"
+                : item.requiredPlan === "solo"
+                ? userPlan === "starter"
+                : false;
 
-          return (
-            <NavLink
-              key={item.path}
-              to={item.path}
-              end={item.path === "/"}
-              className={({ isActive }) =>
-                cn(
-                  "flex items-center gap-3 px-3 py-2.5 rounded text-sm font-medium transition-all duration-200 border-l-[3px]",
-                  isActive
-                    ? "bg-primary/10 text-primary border-primary bylz-glow-primary"
-                    : "text-muted border-transparent hover:text-text hover:bg-surface-hover"
-                )
-              }
+            return (
+              <NavLink
+                key={item.path}
+                to={item.path}
+                end={item.path === "/"}
+                className={({ isActive }) =>
+                  cn(
+                    "flex items-center gap-3 px-3 py-2.5 rounded text-sm font-medium transition-all duration-200 border-l-[3px]",
+                    isActive
+                      ? "bg-primary/10 text-primary border-primary bylz-glow-primary"
+                      : "text-muted border-transparent hover:text-text hover:bg-surface-hover"
+                  )
+                }
+              >
+                <Icon className="w-5 h-5" />
+                {item.label}
+                {/* Notifications */}
+                {item.path === "/invoices" && lateInvoicesCount > 0 && (
+                  <span className="ml-auto w-2 h-2 rounded-full bg-danger flex-shrink-0" />
+                )}
+                {item.path === "/urssaf" && urssafDueSoon && (
+                  <span className="ml-auto w-2 h-2 rounded-full bg-danger flex-shrink-0" />
+                )}
+                {/* Plan lock indicator — only for Starter users */}
+                {isLocked && (
+                  <span className={cn(
+                    "ml-auto inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-bold flex-shrink-0",
+                    item.requiredPlan === "pro"
+                      ? "bg-amber-500/15 text-amber-500"
+                      : "bg-primary/15 text-primary"
+                  )}>
+                    {item.requiredPlan === "pro" ? "PRO" : "SOLO"}
+                    <Zap className="w-2.5 h-2.5" />
+                  </span>
+                )}
+              </NavLink>
+            );
+          })}
+        </nav>
+
+        {/* Support & Admin link footer strip */}
+        <div className="px-4 py-2 space-y-1.5 border-t border-border/60">
+          <button
+            type="button"
+            onClick={() => setSupportOpen(true)}
+            className="w-full flex items-center gap-2.5 px-3 py-2 rounded text-xs font-bold text-muted hover:text-text hover:bg-surface-hover transition-colors"
+          >
+            <LifeBuoy className="w-4 h-4 text-primary" />
+            <span>Contacter le support</span>
+          </button>
+
+          {isAdmin && (
+            <Link
+              to="/admin"
+              className="w-full flex items-center gap-2.5 px-3 py-2 rounded text-xs font-bold text-rose-500 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 transition-colors"
             >
-              <Icon className="w-5 h-5" />
-              {item.label}
-              {/* Notifications */}
-              {item.path === "/invoices" && lateInvoicesCount > 0 && (
-                <span className="ml-auto w-2 h-2 rounded-full bg-danger flex-shrink-0" />
-              )}
-              {item.path === "/urssaf" && urssafDueSoon && (
-                <span className="ml-auto w-2 h-2 rounded-full bg-danger flex-shrink-0" />
-              )}
-              {/* Plan lock indicator */}
-              {isLocked && (
-                <span className={cn(
-                  "ml-auto inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-bold flex-shrink-0",
-                  item.requiredPlan === "pro"
-                    ? "bg-amber-500/15 text-amber-500"
-                    : "bg-primary/15 text-primary"
-                )}>
-                  {item.requiredPlan === "pro" ? "PRO" : "SOLO"}
-                  <Zap className="w-2.5 h-2.5" />
-                </span>
-              )}
-            </NavLink>
-          );
-        })}
-      </nav>
+              <ShieldAlert className="w-4 h-4" />
+              <span>Back-Office Admin</span>
+            </Link>
+          )}
+        </div>
 
-      <div className="relative flex items-center gap-3 p-4 border-t border-border" ref={menuRef}>
-        <button
-          onClick={() => setMenuOpen((o) => !o)}
-          className="flex items-center gap-3 flex-1 min-w-0 text-left hover:bg-surface-hover rounded p-1 -m-1 transition-colors"
-        >
-          <div className="w-9 h-9 rounded-pill bg-primary/20 flex items-center justify-center text-primary font-semibold text-sm flex-shrink-0">
-            {initial}
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-text truncate">{email || "Utilisateur"}</p>
-            <p className="text-xs text-muted truncate">{profile?.plan?.toUpperCase() || "STARTER"}</p>
-          </div>
-        </button>
-        <ThemeToggle />
+        <div className="relative flex items-center gap-3 p-4 border-t border-border" ref={menuRef}>
+          <button
+            onClick={() => setMenuOpen((o) => !o)}
+            className="flex items-center gap-3 flex-1 min-w-0 text-left hover:bg-surface-hover rounded p-1 -m-1 transition-colors"
+          >
+            <div className="w-9 h-9 rounded-pill bg-primary/20 flex items-center justify-center text-primary font-semibold text-sm flex-shrink-0">
+              {initial}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-text truncate">{email || "Utilisateur"}</p>
+              <p className="text-xs text-muted truncate">{profile?.plan?.toUpperCase() || "STARTER"}</p>
+            </div>
+          </button>
+          <ThemeToggle />
 
-        {menuOpen && (
-          <div className="absolute bottom-full left-4 right-4 mb-2 bg-surface border border-border rounded-card shadow-lg p-1">
-            <button
-              onClick={handleSignOut}
-              className="w-full flex items-center gap-2 px-3 py-2 rounded text-sm text-text hover:bg-surface-hover transition-colors"
-            >
-              <LogOut className="w-4 h-4" />
-              Déconnexion
-            </button>
-          </div>
-        )}
-      </div>
-    </aside>
+          {menuOpen && (
+            <div className="absolute bottom-full left-4 right-4 mb-2 bg-surface border border-border rounded-card shadow-lg p-1">
+              <button
+                onClick={handleSignOut}
+                className="w-full flex items-center gap-2 px-3 py-2 rounded text-sm text-text hover:bg-surface-hover transition-colors"
+              >
+                <LogOut className="w-4 h-4" />
+                Déconnexion
+              </button>
+            </div>
+          )}
+        </div>
+      </aside>
+
+      <SupportModal open={supportOpen} onClose={() => setSupportOpen(false)} />
+    </>
   );
 }

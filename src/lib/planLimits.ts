@@ -1,5 +1,5 @@
 import { supabase } from "./supabase";
-import type { PlanType } from "../types/database";
+import type { PlanType, Plan } from "../types/database";
 
 export interface PlanFeatureLimits {
   invoicesPerMonth: number | null; // null = unlimited
@@ -13,10 +13,10 @@ export interface PlanFeatureLimits {
 
 export type FeatureKey = keyof PlanFeatureLimits;
 
-export const PLAN_LIMITS: Record<PlanType, PlanFeatureLimits> = {
+export const DEFAULT_PLAN_LIMITS: Record<PlanType, PlanFeatureLimits> = {
   starter: {
-    invoicesPerMonth: 3,
-    maxClients: 1,
+    invoicesPerMonth: 10,
+    maxClients: 3,
     fiscalDashboard: false,
     reminders: false,
     exports: false,
@@ -43,8 +43,59 @@ export const PLAN_LIMITS: Record<PlanType, PlanFeatureLimits> = {
   },
 };
 
+// In-memory cache for dynamic plans fetched from DB
+let dynamicPlanCache: Record<string, PlanFeatureLimits> | null = null;
+let rawPlansCache: Plan[] | null = null;
+
+export async function loadPlansFromDB(): Promise<Plan[]> {
+  try {
+    const { data, error } = await supabase.from("plans").select("*").eq("is_active", true);
+    if (error || !data || data.length === 0) {
+      return [];
+    }
+    const plansList = data as Plan[];
+    rawPlansCache = plansList;
+
+    const cache: Record<string, PlanFeatureLimits> = {};
+    for (const p of plansList) {
+      const feat = p.features || {};
+      cache[p.key] = {
+        invoicesPerMonth: p.invoice_limit,
+        maxClients: p.client_limit,
+        fiscalDashboard: !!feat.fiscalDashboard,
+        reminders: !!feat.reminders,
+        exports: !!feat.exports,
+        paymentLinks: !!feat.paymentLinks,
+        multiCompany: !!feat.multiCompany,
+      };
+    }
+    dynamicPlanCache = cache;
+    return plansList;
+  } catch (err) {
+    console.error("Failed to load dynamic plans:", err);
+    return [];
+  }
+}
+
+export function invalidatePlanCache(): void {
+  dynamicPlanCache = null;
+  rawPlansCache = null;
+}
+
+export function getRawPlansCache(): Plan[] | null {
+  return rawPlansCache;
+}
+
 export function getPlanLimits(plan: PlanType | undefined | null): PlanFeatureLimits {
-  return PLAN_LIMITS[plan ?? "starter"] ?? PLAN_LIMITS.starter;
+  const pKey = plan ?? "starter";
+  if (dynamicPlanCache && dynamicPlanCache[pKey]) {
+    return dynamicPlanCache[pKey];
+  }
+  // Trigger background fetch if cache is null
+  if (!dynamicPlanCache) {
+    void loadPlansFromDB();
+  }
+  return DEFAULT_PLAN_LIMITS[pKey] ?? DEFAULT_PLAN_LIMITS.starter;
 }
 
 export function canUseFeature(
