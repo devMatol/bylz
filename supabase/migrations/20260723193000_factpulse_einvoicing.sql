@@ -3,10 +3,12 @@
 -- 1. FactPulse Token & Service Status Table
 CREATE TABLE IF NOT EXISTS factpulse_status (
   id text PRIMARY KEY DEFAULT 'default',
+  access_token text,
   token_valid boolean NOT NULL DEFAULT true,
   last_checked_at timestamptz NOT NULL DEFAULT now(),
   last_error text
 );
+ALTER TABLE factpulse_status ADD COLUMN IF NOT EXISTS access_token text;
 
 -- Initialize default status row
 INSERT INTO factpulse_status (id, token_valid, last_checked_at)

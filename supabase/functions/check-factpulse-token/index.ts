@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.0";
-import { callFactPulseApi } from "../_shared/factpulse-client.ts";
+import { getOrRefreshFactPulseToken } from "../_shared/factpulse-client.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -17,23 +17,17 @@ serve(async (req) => {
   const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
   try {
-    // Ping FactPulse endpoint
     let isValid = true;
     let lastError: string | null = null;
 
     try {
-      await callFactPulseApi("/me", "GET");
+      // Force token verification & refresh
+      await getOrRefreshFactPulseToken(true);
     } catch (err: any) {
-      if (err.code === "token_expired" || err.status === 401) {
-        isValid = false;
-        lastError = err.message;
-      } else {
-        // Other non-fatal error (e.g. network endpoint variance)
-        console.warn("FactPulse ping warning:", err.message);
-      }
+      isValid = false;
+      lastError = err.message || "Erreur de connexion FactPulse";
     }
 
-    // Update factpulse_status DB
     await supabase.from("factpulse_status").upsert({
       id: "default",
       token_valid: isValid,

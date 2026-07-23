@@ -244,6 +244,7 @@ export interface AdminImpersonationSession {
 
 export interface FactpulseStatus {
   id: string;
+  access_token?: string | null;
   token_valid: boolean;
   last_checked_at: string;
   last_error: string | null;

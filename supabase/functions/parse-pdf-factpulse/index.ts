@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { getOrRefreshFactPulseToken } from "../_shared/factpulse-client.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -11,15 +12,8 @@ serve(async (req) => {
   }
 
   try {
-    const apiToken = Deno.env.get("FACTPULSE_API_TOKEN");
     const clientUid = Deno.env.get("FACTPULSE_CLIENT_UID");
-
-    if (!apiToken || !clientUid) {
-      return new Response(
-        JSON.stringify({ error: "FACTPULSE_API_TOKEN ou FACTPULSE_CLIENT_UID manquant." }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
+    const token = await getOrRefreshFactPulseToken(false);
 
     const formData = await req.formData();
     const file = formData.get("file") as File;
@@ -35,14 +29,26 @@ serve(async (req) => {
     const fpFormData = new FormData();
     fpFormData.append("file", file);
 
-    const factPulseRes = await fetch("https://app.factpulse.fr/api/v1/invoices/parse", {
+    const headers: Record<string, string> = {
+      "Authorization": `Bearer ${token}`,
+    };
+    if (clientUid) headers["X-Client-UID"] = clientUid;
+
+    let factPulseRes = await fetch("https://app.factpulse.fr/api/v1/invoices/parse", {
       method: "POST",
-      headers: {
-        "Authorization": `Bearer ${apiToken}`,
-        "X-Client-UID": clientUid,
-      },
+      headers,
       body: fpFormData,
     });
+
+    if (factPulseRes.status === 401) {
+      const freshToken = await getOrRefreshFactPulseToken(true);
+      headers["Authorization"] = `Bearer ${freshToken}`;
+      factPulseRes = await fetch("https://app.factpulse.fr/api/v1/invoices/parse", {
+        method: "POST",
+        headers,
+        body: fpFormData,
+      });
+    }
 
     if (!factPulseRes.ok) {
       const errText = await factPulseRes.text();
