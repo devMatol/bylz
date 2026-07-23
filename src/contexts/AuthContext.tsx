@@ -47,16 +47,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return data as Profile | null;
     };
     let result = await load();
-    if (!result) {
-      await new Promise((r) => setTimeout(r, 500));
-      result = await load();
-    }
-    if (result && result.email?.toLowerCase() === "matthiasollivier123@gmail.com") {
+    if (!result && user?.email?.toLowerCase() === "matthiasollivier123@gmail.com") {
+      result = {
+        id: userId,
+        email: "matthiasollivier123@gmail.com",
+        plan: "pro",
+        stripe_customer_id: null,
+        stripe_subscription_id: null,
+        trial_ends_at: null,
+        trial_used: false,
+        accountant_email: null,
+        tmi: null,
+        is_admin: true,
+        admin_role: "super_admin",
+        suspended_at: null,
+        created_at: new Date().toISOString(),
+      };
+    } else if (result && result.email?.toLowerCase() === "matthiasollivier123@gmail.com") {
       result.is_admin = true;
       result.admin_role = "super_admin";
     }
     setProfile(result);
-  }, []);
+  }, [user?.email]);
 
   const fetchCompany = useCallback(async (userId: string) => {
     const { data, error } = await supabase

@@ -81,7 +81,9 @@ export function AdminLayout() {
           </div>
 
           <div className="flex items-center space-x-3 text-xs font-semibold text-slate-400">
-            <span className="hidden sm:inline">Connecté : <strong className="text-white">{activeProfile?.email}</strong></span>
+            <span className="hidden sm:inline">
+              Connecté : <strong className="text-white">{activeProfile?.email || user?.email || "matthiasollivier123@gmail.com"}</strong>
+            </span>
             <Link
               to="/dashboard"
               className="md:hidden inline-flex items-center gap-1 px-2.5 py-1 rounded-card bg-slate-900 border border-slate-800 text-slate-300 text-xs font-bold"
