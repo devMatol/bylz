@@ -1,13 +1,14 @@
-import { useState, useEffect, useRef, type ChangeEvent, type FormEvent } from "react";
+import { useState, useEffect, type ChangeEvent, type FormEvent } from "react";
 import {
   Upload,
   FileText,
   Loader2,
-  AlertTriangle,
-  CheckCircle2,
   Building,
   Check,
-  X
+  X,
+  Plus,
+  Sparkles,
+  Search
 } from "lucide-react";
 import { Modal } from "../ui/Modal";
 import { Button } from "../ui/Button";
@@ -26,7 +27,7 @@ interface ImportInvoiceModalProps {
   onSuccess: () => void;
 }
 
-// Helper to dynamically load PDF.js from cdnjs
+// Dynamically load PDF.js from cdnjs
 async function loadPdfJs(): Promise<any> {
   if ((window as any).pdfjsLib) return (window as any).pdfjsLib;
   return new Promise((resolve, reject) => {
@@ -42,25 +43,70 @@ async function loadPdfJs(): Promise<any> {
   });
 }
 
-// Convert DD/MM/YYYY or similar to YYYY-MM-DD
-function parseFrenchDate(dateStr: string): string {
-  const parts = dateStr.split(/[/\-.]/);
-  if (parts.length === 3) {
-    if (parts[2].length === 4) {
-      // DD/MM/YYYY -> YYYY-MM-DD
-      return `${parts[2]}-${parts[1].padStart(2, "0")}-${parts[0].padStart(2, "0")}`;
-    } else if (parts[0].length === 4) {
-      // YYYY/MM/DD -> YYYY-MM-DD
-      return `${parts[0]}-${parts[1].padStart(2, "0")}-${parts[2].padStart(2, "0")}`;
+// Helper: Convert any French / English / ISO date string to YYYY-MM-DD
+function parseSmartDate(rawStr: string): string {
+  if (!rawStr) return "";
+  const cleaned = rawStr.trim().toLowerCase();
+
+  // Month dictionary for French and English
+  const monthMap: Record<string, string> = {
+    janvier: "01", jan: "01", january: "01",
+    février: "02", fevrier: "02", fev: "02", february: "02",
+    mars: "03", mar: "03", march: "03",
+    avril: "04", avr: "04", april: "04",
+    mai: "05", may: "05",
+    juin: "06", jun: "06", june: "06",
+    juillet: "07", juil: "07", jul: "07", july: "07",
+    août: "08", aout: "08", aug: "08", august: "08",
+    septembre: "09", sep: "09", september: "09",
+    octobre: "10", oct: "10", october: "10",
+    novembre: "11", nov: "11", november: "11",
+    décembre: "12", decembre: "12", dec: "12", december: "12"
+  };
+
+  // 1. Text date like "30 juin 2026" or "1er mai 2026" or "June 30, 2026"
+  const textDateMatch = cleaned.match(/(\d{1,2})(?:er)?\s+([a-zàâäéèêëîïôöùûüç]+)\s+(\d{4})/i);
+  if (textDateMatch) {
+    const day = textDateMatch[1].padStart(2, "0");
+    const month = monthMap[textDateMatch[2]] || "01";
+    const year = textDateMatch[3];
+    return `${year}-${month}-${day}`;
+  }
+
+  // 2. Standard DD/MM/YYYY or YYYY-MM-DD or DD.MM.YYYY
+  const numericMatch = cleaned.match(/(\d{1,4})[/\-.](\d{1,2})[/\-.](\d{2,4})/);
+  if (numericMatch) {
+    const p1 = numericMatch[1];
+    const p2 = numericMatch[2].padStart(2, "0");
+    const p3 = numericMatch[3].padStart(2, "0");
+
+    if (p1.length === 4) {
+      // YYYY-MM-DD
+      return `${p1}-${p2}-${p3}`;
+    } else if (p3.length === 4) {
+      // DD/MM/YYYY
+      return `${p3}-${p2}-${p1.padStart(2, "0")}`;
     }
   }
+
   return "";
+}
+
+// Clean money strings like "1 250,50 €" -> 1250.50
+function parseFrenchAmount(amtStr: string): number {
+  if (!amtStr) return 0;
+  // Remove non-breaking spaces, spaces, currency symbols
+  const sanitized = amtStr
+    .replace(/[\s\u00a0\xa0€$£EUR]/g, "")
+    .replace(/,/g, ".");
+  const val = parseFloat(sanitized);
+  return isNaN(val) ? 0 : val;
 }
 
 export function ImportInvoiceModal({ open, onClose, onSuccess }: ImportInvoiceModalProps) {
   const { company } = useAuth();
   const { toast } = useToast();
-  
+
   const [dragActive, setDragActive] = useState(false);
   const [analyzing, setAnalyzing] = useState(false);
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
@@ -70,16 +116,16 @@ export function ImportInvoiceModal({ open, onClose, onSuccess }: ImportInvoiceMo
   const [invoiceNumber, setInvoiceNumber] = useState("");
   const [issueDate, setIssueDate] = useState("");
   const [dueDate, setDueDate] = useState("");
-  const [totalHt, setTotalHt] = useState("0");
-  const [totalTtc, setTotalTtc] = useState("0");
+  const [totalHt, setTotalHt] = useState("0.00");
+  const [totalTtc, setTotalTtc] = useState("0.00");
   const [clientId, setClientId] = useState("");
   const [saving, setSaving] = useState(false);
 
-  // New Client creation variables (if SIRET lookup succeeds)
-  const [detectedSiret, setDetectedSiret] = useState("");
+  // Client creation mode
+  const [isCreatingNewClient, setIsCreatingNewClient] = useState(false);
   const [newClientName, setNewClientName] = useState("");
   const [newClientAddress, setNewClientAddress] = useState("");
-  const [shouldCreateClient, setShouldCreateClient] = useState(false);
+  const [detectedSiret, setDetectedSiret] = useState("");
   const [lookingUpSiret, setLookingUpSiret] = useState(false);
 
   useEffect(() => {
@@ -94,7 +140,7 @@ export function ImportInvoiceModal({ open, onClose, onSuccess }: ImportInvoiceMo
       const cls = await fetchClients(company.id);
       setClients(cls as Client[]);
     } catch (e) {
-      console.error(e);
+      console.error("Error loading clients:", e);
     }
   };
 
@@ -136,70 +182,208 @@ export function ImportInvoiceModal({ open, onClose, onSuccess }: ImportInvoiceMo
       const pdfjsLib = await loadPdfJs();
       const arrayBuffer = await file.arrayBuffer();
       const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-      
+
       let fullText = "";
+      const textLines: string[] = [];
+
       for (let i = 1; i <= pdf.numPages; i++) {
         const page = await pdf.getPage(i);
         const textContent = await page.getTextContent();
-        const strings = textContent.items.map((item: any) => item.str);
-        fullText += strings.join(" ") + "\n";
+
+        // Sort text items by vertical Y coordinate then horizontal X coordinate for exact visual lines
+        const items = textContent.items.map((item: any) => ({
+          str: item.str,
+          y: Math.round(item.transform[5]),
+          x: Math.round(item.transform[4]),
+        }));
+
+        // Group by Y coordinate (lines)
+        const lineGroups: Record<number, string[]> = {};
+        for (const item of items) {
+          if (!item.str.trim()) continue;
+          // Find existing Y within 4px tolerance
+          const existingY = Object.keys(lineGroups).find((y) => Math.abs(Number(y) - item.y) <= 4);
+          const targetY = existingY ? Number(existingY) : item.y;
+          if (!lineGroups[targetY]) lineGroups[targetY] = [];
+          lineGroups[targetY].push(item.str);
+        }
+
+        // Sort lines from top to bottom
+        const sortedY = Object.keys(lineGroups)
+          .map(Number)
+          .sort((a, b) => b - a);
+
+        for (const y of sortedY) {
+          const lineStr = lineGroups[y].join(" ");
+          textLines.push(lineStr);
+          fullText += lineStr + "\n";
+        }
       }
 
-      console.log("Extracted PDF Text:", fullText);
-      parseInvoiceText(fullText);
+      console.log("PDF Extracted Lines:", textLines);
+      parseInvoiceText(fullText, textLines);
     } catch (err: any) {
-      console.error(err);
+      console.error("PDF Parsing Error:", err);
       toast("Erreur lors de la lecture du fichier PDF.", "danger");
       setAnalyzing(false);
     }
   };
 
-  const parseInvoiceText = (text: string) => {
+  const parseInvoiceText = (fullText: string, lines: string[]) => {
+    // Reset defaults
+    let foundInvoiceNum = "";
+    let foundIssueDate = "";
+    let foundDueDate = "";
+    let foundTotalTtc = 0;
+    let foundTotalHt = 0;
+    let matchedClientId = "";
+    let detectedClientName = "";
+    let siret = "";
+
     // 1. Detect SIRET
-    const siretMatch = text.replace(/[\s\-_]/g, "").match(/\b\d{14}\b/);
+    const siretMatch = fullText.replace(/[\s\-_]/g, "").match(/\b\d{14}\b/);
     if (siretMatch) {
-      const siret = siretMatch[0];
+      siret = siretMatch[0];
       setDetectedSiret(siret);
       void lookupClientSiret(siret);
     }
 
-    // 2. Detect Invoice Number
-    const numMatch = text.match(/(?:facture|invoice|n°|numéro)\s*[:#\-]?\s*([A-Z0-9\-_]{3,20})/i);
-    if (numMatch && numMatch[1]) {
-      setInvoiceNumber(numMatch[1]);
-    }
-
-    // 3. Detect Dates
-    const dateMatches = text.match(/\b\d{2}[/\-.]\d{2}[/\-.]\d{4}\b/g);
-    if (dateMatches && dateMatches.length >= 1) {
-      const firstDate = parseFrenchDate(dateMatches[0]);
-      setIssueDate(firstDate);
-      if (dateMatches.length >= 2) {
-        const secondDate = parseFrenchDate(dateMatches[1]);
-        setDueDate(secondDate);
+    // 2. Client Auto-Matching against existing client list
+    for (const c of clients) {
+      if (c.name && c.name.length > 2 && fullText.toLowerCase().includes(c.name.toLowerCase())) {
+        matchedClientId = c.id;
+        break;
       }
     }
 
-    // 4. Detect Amounts (TTC / HT)
-    // Find all decimal numbers
-    const amtMatches = text.match(/\b\d+[\.,]\d{2}\b/g);
-    if (amtMatches) {
-      const numbers = amtMatches
-        .map((m) => parseFloat(m.replace(",", ".")))
-        .filter((n) => n > 0 && n < 1000000); // Filter out ZIP codes or phone numbers disguised as decimals
-
-      if (numbers.length > 0) {
-        const maxAmt = Math.max(...numbers);
-        setTotalTtc(maxAmt.toFixed(2));
-        
-        // Find if there is a second largest amount for HT, or calculate default (HT = TTC)
-        const uniqueNumbers = Array.from(new Set(numbers)).sort((a, b) => b - a);
-        if (uniqueNumbers.length > 1) {
-          setTotalHt(uniqueNumbers[1].toFixed(2));
-        } else {
-          setTotalHt(maxAmt.toFixed(2));
+    // If no client matched in database, attempt extracting client name from text blocks
+    if (!matchedClientId) {
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
+        if (/(?:client|facturé à|destinataire|doit|bill to)\s*[:]?/i.test(line)) {
+          const cleanLine = line.replace(/(?:client|facturé à|destinataire|doit|bill to)\s*[:]?/i, "").trim();
+          if (cleanLine.length > 2) {
+            detectedClientName = cleanLine;
+            break;
+          } else if (i + 1 < lines.length && lines[i + 1].trim().length > 2) {
+            detectedClientName = lines[i + 1].trim();
+            break;
+          }
         }
       }
+    }
+
+    // 3. Invoice Number Extraction (Multi-Pattern)
+    const numPatterns = [
+      /(?:facture|invoice|n°|numéro|réf|référence|document)\s*[:#\-]?\s*([A-Z0-9\-_]{3,25})/i,
+      /\b([A-Z]{2,4}[-_\s]?\d{4}[-_\s]?\d{2,6})\b/i,
+      /\b(FAC[-_\s]?\d{4}[-_\s]?\d{2,6})\b/i,
+      /\b(INV[-_\s]?\d{4}[-_\s]?\d{2,6})\b/i,
+      /\bN°\s*[:]?\s*([A-Z0-9\-_]{3,20})\b/i,
+    ];
+
+    for (const pattern of numPatterns) {
+      const m = fullText.match(pattern);
+      if (m && m[1] && m[1].length >= 3) {
+        foundInvoiceNum = m[1].trim();
+        break;
+      }
+    }
+
+    // 4. Date Extraction (Issue & Due Date)
+    // Find dates preceded by keywords
+    for (const line of lines) {
+      if (/(?:date|émission|émise|facturée|du)\s*[:]?/i.test(line) && !foundIssueDate) {
+        const d = parseSmartDate(line);
+        if (d) foundIssueDate = d;
+      }
+      if (/(?:échéance|payable|au|règlement)\s*[:]?/i.test(line) && !foundDueDate) {
+        const d = parseSmartDate(line);
+        if (d) foundDueDate = d;
+      }
+    }
+
+    // Fallback date scan across entire text
+    if (!foundIssueDate) {
+      const allDates = fullText.match(/\b(?:\d{1,2}[/\-.]\d{1,2}[/\-.]\d{4}|\d{1,2}\s+[a-zàâäéèêëîïôöùûüç]+\s+\d{4})\b/gi);
+      if (allDates && allDates.length >= 1) {
+        foundIssueDate = parseSmartDate(allDates[0]);
+        if (allDates.length >= 2 && !foundDueDate) {
+          foundDueDate = parseSmartDate(allDates[1]);
+        }
+      }
+    }
+
+    // 5. Amount Extraction (Total TTC & Total HT)
+    // Context-aware regex scanning for Total TTC
+    const ttcPatterns = [
+      /(?:total\s*ttc|net\s*à\s*payer|total\s*à\s*payer|montant\s*ttc|total\s*général\s*ttc|total\s*du)\s*[:]?\s*([\d\s\u00a0.,]+(?:\s*€|\s*eur)?)/i,
+      /(?:total|net\s*payer)\s*[:]?\s*([\d\s\u00a0.,]+(?:\s*€|\s*eur)?)/i,
+    ];
+
+    for (const p of ttcPatterns) {
+      const m = fullText.match(p);
+      if (m && m[1]) {
+        const parsed = parseFrenchAmount(m[1]);
+        if (parsed > 0) {
+          foundTotalTtc = parsed;
+          break;
+        }
+      }
+    }
+
+    // Context-aware regex scanning for Total HT
+    const htPatterns = [
+      /(?:total\s*ht|montant\s*ht|sous-total\s*ht|net\s*ht|hors\s*taxe|total\s*hors\s*taxe)\s*[:]?\s*([\d\s\u00a0.,]+(?:\s*€|\s*eur)?)/i,
+    ];
+
+    for (const p of htPatterns) {
+      const m = fullText.match(p);
+      if (m && m[1]) {
+        const parsed = parseFrenchAmount(m[1]);
+        if (parsed > 0) {
+          foundTotalHt = parsed;
+          break;
+        }
+      }
+    }
+
+    // Fallback: If amounts not captured by label keywords, find all decimal numbers
+    if (foundTotalTtc === 0) {
+      const decimalMatches = fullText.match(/\b\d+(?:[\s\u00a0]\d{3})*(?:[.,]\d{2})\b/g);
+      if (decimalMatches) {
+        const nums = decimalMatches
+          .map(parseFrenchAmount)
+          .filter((n) => n > 0 && n < 1000000);
+        if (nums.length > 0) {
+          foundTotalTtc = Math.max(...nums);
+          const sorted = Array.from(new Set(nums)).sort((a, b) => b - a);
+          if (sorted.length > 1 && foundTotalHt === 0) {
+            foundTotalHt = sorted[1];
+          }
+        }
+      }
+    }
+
+    if (foundTotalHt === 0 && foundTotalTtc > 0) {
+      foundTotalHt = foundTotalTtc;
+    }
+
+    // 6. Apply extracted values to state
+    if (foundInvoiceNum) setInvoiceNumber(foundInvoiceNum);
+    if (foundIssueDate) setIssueDate(foundIssueDate);
+    if (foundDueDate) setDueDate(foundDueDate);
+    else if (foundIssueDate) setDueDate(foundIssueDate);
+
+    setTotalHt(foundTotalHt.toFixed(2));
+    setTotalTtc(foundTotalTtc.toFixed(2));
+
+    if (matchedClientId) {
+      setClientId(matchedClientId);
+      setIsCreatingNewClient(false);
+    } else if (detectedClientName) {
+      setIsCreatingNewClient(true);
+      setNewClientName(detectedClientName);
     }
 
     setAnalyzing(false);
@@ -208,16 +392,14 @@ export function ImportInvoiceModal({ open, onClose, onSuccess }: ImportInvoiceMo
   const lookupClientSiret = async (siret: string) => {
     setLookingUpSiret(true);
     try {
-      // First, check if a client with this SIRET already exists in base
       const existing = clients.find((c) => c.siret === siret);
       if (existing) {
         setClientId(existing.id);
-        setShouldCreateClient(false);
+        setIsCreatingNewClient(false);
         setLookingUpSiret(false);
         return;
       }
 
-      // If not, perform API lookup
       const { data: json, error } = await supabase.functions.invoke("siret-lookup", {
         body: { siret },
       });
@@ -225,7 +407,7 @@ export function ImportInvoiceModal({ open, onClose, onSuccess }: ImportInvoiceMo
 
       setNewClientName(json.legal_name || "");
       setNewClientAddress(json.address || "");
-      setShouldCreateClient(true);
+      setIsCreatingNewClient(true);
     } catch (e) {
       console.error("Siret lookup failed:", e);
     } finally {
@@ -241,13 +423,13 @@ export function ImportInvoiceModal({ open, onClose, onSuccess }: ImportInvoiceMo
     try {
       let finalClientId = clientId;
 
-      // Create new client if selected/suggested
-      if (shouldCreateClient && newClientName) {
+      // Create new client automatically if creation mode is active
+      if (isCreatingNewClient && newClientName.trim()) {
         const { data: created, error } = await supabase
           .from("clients")
           .insert({
             company_id: company.id,
-            name: newClientName,
+            name: newClientName.trim(),
             type: "b2b",
             siret: detectedSiret || null,
             siren: detectedSiret ? detectedSiret.slice(0, 9) : null,
@@ -261,7 +443,7 @@ export function ImportInvoiceModal({ open, onClose, onSuccess }: ImportInvoiceMo
       }
 
       if (!finalClientId) {
-        toast("Veuillez sélectionner ou créer un client.", "warning");
+        toast("Veuillez sélectionner ou saisir un client.", "warning");
         setSaving(false);
         return;
       }
@@ -269,7 +451,7 @@ export function ImportInvoiceModal({ open, onClose, onSuccess }: ImportInvoiceMo
       const amtHt = parseFloat(totalHt) || 0;
       const amtTtc = parseFloat(totalTtc) || 0;
 
-      // Save imported invoice to Supabase
+      // Save imported invoice to database
       const saved = await saveInvoice(company.id, {
         client_id: finalClientId,
         issue_date: issueDate || todayISO(),
@@ -278,7 +460,7 @@ export function ImportInvoiceModal({ open, onClose, onSuccess }: ImportInvoiceMo
         note: "Facture historique importée",
         lines: [
           {
-            description: `Importation Facture historique ${invoiceNumber || ""}`,
+            description: `Importation Facture historique ${invoiceNumber || ""}`.trim(),
             quantity: 1,
             unit_price: amtHt,
             nature: "service",
@@ -287,7 +469,7 @@ export function ImportInvoiceModal({ open, onClose, onSuccess }: ImportInvoiceMo
         ],
       });
 
-      // Automatically transition imported invoice to "paid" status with full paid amount and the correct invoice number
+      // Update imported invoice status to paid
       await supabase
         .from("invoices")
         .update({
@@ -310,18 +492,17 @@ export function ImportInvoiceModal({ open, onClose, onSuccess }: ImportInvoiceMo
   };
 
   const handleClose = () => {
-    // Clear states
     setPdfUrl(null);
     setInvoiceNumber("");
     setIssueDate("");
     setDueDate("");
-    setTotalHt("0");
-    setTotalTtc("0");
+    setTotalHt("0.00");
+    setTotalTtc("0.00");
     setClientId("");
     setDetectedSiret("");
     setNewClientName("");
     setNewClientAddress("");
-    setShouldCreateClient(false);
+    setIsCreatingNewClient(false);
     onClose();
   };
 
@@ -330,7 +511,7 @@ export function ImportInvoiceModal({ open, onClose, onSuccess }: ImportInvoiceMo
       open={open}
       onClose={handleClose}
       title="Importer des factures historiques"
-      className={pdfUrl ? "max-w-4xl h-[85vh] flex flex-col p-6" : "max-w-md p-6"}
+      className={pdfUrl ? "max-w-5xl h-[88vh] flex flex-col p-6" : "max-w-md p-6"}
     >
       {!pdfUrl ? (
         /* Drag & Drop Step */
@@ -356,7 +537,7 @@ export function ImportInvoiceModal({ open, onClose, onSuccess }: ImportInvoiceMo
           {analyzing ? (
             <>
               <Loader2 className="w-10 h-10 text-primary animate-spin" />
-              <p className="text-sm font-semibold text-text">Lecture et analyse locale du PDF...</p>
+              <p className="text-sm font-semibold text-text">Analyse IA et extraction du PDF en cours...</p>
             </>
           ) : (
             <>
@@ -364,8 +545,10 @@ export function ImportInvoiceModal({ open, onClose, onSuccess }: ImportInvoiceMo
                 <Upload className="w-6 h-6" />
               </div>
               <div className="space-y-1">
-                <p className="text-sm font-bold text-text">Glissez-déposez votre facture PDF ici</p>
-                <p className="text-xs text-muted">Ou cliquez pour parcourir vos fichiers (Max 10Mo)</p>
+                <p className="text-sm font-bold text-text">Glissez-déposez n'importe quelle facture PDF ici</p>
+                <p className="text-xs text-muted">
+                  Lecture intelligente automatique : numéro, dates, montants et client
+                </p>
               </div>
             </>
           )}
@@ -375,14 +558,15 @@ export function ImportInvoiceModal({ open, onClose, onSuccess }: ImportInvoiceMo
         <div className="flex-1 flex flex-col md:flex-row gap-6 min-h-0 overflow-hidden mt-2">
           {/* Left panel: PDF viewer */}
           <div className="flex-1 border border-border rounded-card bg-surface-hover/50 overflow-hidden flex flex-col h-full">
-            <div className="flex items-center justify-between p-2 border-b border-border bg-surface text-xs text-muted">
-              <span className="flex items-center gap-1.5 font-medium">
-                <FileText className="w-3.5 h-3.5" /> Aperçu du document
+            <div className="flex items-center justify-between p-2.5 border-b border-border bg-surface text-xs text-muted">
+              <span className="flex items-center gap-1.5 font-bold text-text">
+                <FileText className="w-4 h-4 text-primary" /> Aperçu du document PDF
               </span>
               <button
+                type="button"
                 onClick={() => setPdfUrl(null)}
-                className="hover:text-text p-1 rounded hover:bg-surface"
-                title="Remplacer le fichier"
+                className="hover:text-text p-1 rounded hover:bg-surface-hover transition-colors"
+                title="Remplacer le fichier PDF"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -391,52 +575,60 @@ export function ImportInvoiceModal({ open, onClose, onSuccess }: ImportInvoiceMo
           </div>
 
           {/* Right panel: Validation Form */}
-          <div className="w-full md:w-[380px] flex flex-col h-full justify-between">
+          <div className="w-full md:w-[400px] flex flex-col h-full justify-between">
             <form onSubmit={handleSaveImport} className="flex-1 overflow-y-auto pr-1 space-y-4">
-              <div className="border border-border bg-surface-hover/20 rounded-card p-3.5 space-y-3">
-                <h4 className="text-xs font-bold text-muted uppercase tracking-wider">Client</h4>
-                
+              {/* Client Selection / Creation Section */}
+              <div className="border border-border bg-surface-hover/20 rounded-card p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-xs font-bold text-muted uppercase tracking-wider">Client Destinataire</h4>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsCreatingNewClient(!isCreatingNewClient);
+                      if (!isCreatingNewClient) setClientId("");
+                    }}
+                    className="text-xs font-bold text-primary hover:underline flex items-center gap-1"
+                  >
+                    {isCreatingNewClient ? "Choisir un client existant" : "+ Nouveau client"}
+                  </button>
+                </div>
+
                 {lookingUpSiret ? (
-                  <div className="flex items-center gap-2 text-xs text-muted py-1">
-                    <Loader2 className="w-3.5 h-3.5 animate-spin text-primary" />
-                    <span>Recherche des informations du SIRET...</span>
+                  <div className="flex items-center gap-2 text-xs text-muted py-2">
+                    <Loader2 className="w-4 h-4 animate-spin text-primary" />
+                    <span>Recherche SIRET en cours...</span>
                   </div>
-                ) : shouldCreateClient ? (
-                  /* Create new client card */
-                  <div className="p-3 border border-primary/20 bg-primary/5 rounded space-y-2">
-                    <div className="flex items-start gap-2">
-                      <Building className="w-4 h-4 text-primary mt-0.5" />
-                      <div>
-                        <p className="text-xs font-bold text-text">Nouveau client détecté</p>
-                        <p className="text-[11px] text-muted">{newClientName}</p>
-                        {detectedSiret && (
-                          <p className="text-[10px] text-muted">SIRET: {detectedSiret}</p>
-                        )}
-                      </div>
+                ) : isCreatingNewClient ? (
+                  /* Create New Client Inline Form */
+                  <div className="p-3 border border-primary/30 bg-primary/5 rounded-card space-y-3">
+                    <div className="flex items-center gap-2 text-xs font-bold text-primary">
+                      <Building className="w-4 h-4" />
+                      <span>Créer un nouveau client</span>
                     </div>
-                    <div className="flex items-center gap-2 pt-1 border-t border-primary/10">
-                      <input
-                        type="checkbox"
-                        id="create-client-check"
-                        checked={shouldCreateClient}
-                        onChange={(e) => setShouldCreateClient(e.target.checked)}
-                        className="rounded border-border text-primary focus:ring-primary w-3.5 h-3.5"
-                      />
-                      <label htmlFor="create-client-check" className="text-[11px] text-text font-semibold cursor-pointer">
-                        Créer le client automatiquement
-                      </label>
-                    </div>
+                    <Input
+                      label="Nom ou Raison Sociale"
+                      placeholder="ex: ACME Corp"
+                      value={newClientName}
+                      onChange={(e) => setNewClientName(e.target.value)}
+                      required
+                    />
+                    <Input
+                      label="Adresse (optionnelle)"
+                      placeholder="ex: 10 Rue de la Paix, 75002 Paris"
+                      value={newClientAddress}
+                      onChange={(e) => setNewClientAddress(e.target.value)}
+                    />
                   </div>
                 ) : (
-                  /* Standard Client Select */
+                  /* Existing Client Select Dropdown */
                   <Select
-                    label="Associer à un client existant"
+                    label="Sélectionner le client"
                     value={clientId}
                     onChange={(e) => {
                       setClientId(e.target.value);
-                      setShouldCreateClient(false);
+                      setIsCreatingNewClient(false);
                     }}
-                    required={!shouldCreateClient}
+                    required={!isCreatingNewClient}
                   >
                     <option value="">Sélectionner un client…</option>
                     {clients.map((c) => (
@@ -448,8 +640,11 @@ export function ImportInvoiceModal({ open, onClose, onSuccess }: ImportInvoiceMo
                 )}
               </div>
 
+              {/* Invoice Details Section */}
               <div className="space-y-3">
-                <h4 className="text-xs font-bold text-muted uppercase tracking-wider border-b border-border pb-1">Facture</h4>
+                <h4 className="text-xs font-bold text-muted uppercase tracking-wider border-b border-border pb-1">
+                  Données Extraintes de la Facture
+                </h4>
 
                 <Input
                   label="Numéro de facture"
@@ -507,6 +702,7 @@ export function ImportInvoiceModal({ open, onClose, onSuccess }: ImportInvoiceMo
                 size="md"
                 onClick={(e) => void handleSaveImport(e)}
                 disabled={saving}
+                className="bylz-glow-cta font-bold"
               >
                 {saving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
                 Importer la facture
