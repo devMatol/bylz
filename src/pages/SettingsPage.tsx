@@ -39,6 +39,7 @@ function formatSiret(raw: string): string {
   return groups.join(" ");
 }
 import { UpgradeModal } from "../components/shared/UpgradeModal";
+import { ComplianceSection } from "../components/settings/ComplianceSection";
 
 interface ConnectStatus {
   hasAccount: boolean;
@@ -693,6 +694,9 @@ export function SettingsPage() {
               </div>
             </form>
           </Card>
+
+          {/* Compliance & E-invoicing Section */}
+          <ComplianceSection />
         </div>
 
       </div>

@@ -519,11 +519,11 @@ export async function fetchInvoices(
   companyId: string,
   status?: InvoiceStatus | "all",
   search = ""
-): Promise<(Invoice & { client_name: string })[]> {
+): Promise<(Invoice & { client_name: string; client_type: string })[]> {
   let query = supabase
     .from("invoices")
     .select(
-      "id, company_id, client_id, quote_id, credited_invoice_id, number, type, status, pa_status, pa_rejection_reason, issue_date, due_date, payment_terms, total_ht, total_vat, total_ttc, paid_at, paid_amount, payment_method, stripe_payment_link, facturx_pdf_url, ereporting_status, note, created_at, clients(name)"
+      "id, company_id, client_id, quote_id, credited_invoice_id, number, type, status, pa_status, pa_rejection_reason, factpulse_ref, issue_date, due_date, payment_terms, total_ht, total_vat, total_ttc, paid_at, paid_amount, payment_method, stripe_payment_link, facturx_pdf_url, ereporting_status, note, created_at, clients(name, type)"
     )
     .eq("company_id", companyId)
     .order("created_at", { ascending: false });
@@ -546,6 +546,7 @@ export async function fetchInvoices(
     status: i.status,
     pa_status: i.pa_status,
     pa_rejection_reason: i.pa_rejection_reason,
+    factpulse_ref: i.factpulse_ref,
     issue_date: i.issue_date,
     due_date: i.due_date,
     payment_terms: i.payment_terms,
@@ -561,6 +562,7 @@ export async function fetchInvoices(
     note: i.note,
     created_at: i.created_at,
     client_name: i.clients?.name || "-",
+    client_type: i.clients?.type || "b2b",
   }));
 }
 

@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { Plus, Receipt, Eye, Trash2, AlertTriangle, Upload } from "lucide-react";
+import { Plus, Receipt, Eye, Trash2, AlertTriangle, Upload, Send } from "lucide-react";
 import { PageContainer } from "../components/layout/PageContainer";
 import { Button } from "../components/ui/Button";
 import { Skeleton } from "../components/ui/Skeleton";
@@ -18,7 +18,7 @@ import { useDebounce } from "../hooks/useDebounce";
 import { fetchInvoices, fetchInvoiceStats, deleteInvoice } from "../lib/api";
 import { formatDateShort } from "../lib/date";
 import { cn, formatAmount } from "../lib/utils";
-import type { InvoiceStatus, InvoiceType } from "../types/database";
+import type { InvoiceStatus, InvoiceType, PaStatus } from "../types/database";
 
 type Filter = InvoiceStatus | "all";
 
@@ -34,10 +34,12 @@ interface Row {
   id: string;
   number: string;
   client_name: string;
+  client_type?: string;
   issue_date: string;
   due_date: string;
   total_ttc: number;
   status: InvoiceStatus;
+  pa_status?: PaStatus;
   type: InvoiceType;
 }
 
@@ -89,10 +91,12 @@ export function InvoicesPage() {
           id: i.id,
           number: i.number,
           client_name: i.client_name,
+          client_type: i.client_type,
           issue_date: i.issue_date,
           due_date: i.due_date,
           total_ttc: i.total_ttc,
           status: i.status,
+          pa_status: i.pa_status,
           type: i.type,
         }))
       );
@@ -305,6 +309,36 @@ export function InvoicesPage() {
                           {r.type === "credit_note" && (
                             <span className="inline-flex items-center px-1.5 py-0.5 rounded-pill text-[10px] font-bold bg-violet-500/15 text-violet-600 dark:text-violet-400">
                               Avoir
+                            </span>
+                          )}
+                          {r.client_type === "b2b" && (
+                            <span
+                              title={`Transmission FactPulse PA : ${
+                                r.pa_status === "accepted"
+                                  ? "Acceptée"
+                                  : r.pa_status === "received" || r.pa_status === "delivered"
+                                  ? "Reçue"
+                                  : r.pa_status === "submitted"
+                                  ? "Transmise"
+                                  : r.pa_status === "rejected"
+                                  ? "Rejetée"
+                                  : "Non transmise"
+                              }`}
+                              className="p-1 rounded bg-surface-hover"
+                            >
+                              <Send
+                                className={`w-3.5 h-3.5 ${
+                                  r.pa_status === "accepted"
+                                    ? "text-emerald-500"
+                                    : r.pa_status === "received" || r.pa_status === "delivered"
+                                    ? "text-indigo-500"
+                                    : r.pa_status === "submitted"
+                                    ? "text-sky-500 font-bold animate-pulse"
+                                    : r.pa_status === "rejected"
+                                    ? "text-rose-500"
+                                    : "text-muted"
+                                }`}
+                              />
                             </span>
                           )}
                           <StatusBadge status={r.status} />

@@ -120,6 +120,8 @@ export interface Invoice {
   status: InvoiceStatus;
   pa_status: PaStatus;
   pa_rejection_reason: string | null;
+  factpulse_ref?: string | null;
+  pa_submission_choice?: boolean;
   issue_date: string;
   due_date: string;
   payment_terms: PaymentTerms;
@@ -240,9 +242,28 @@ export interface AdminImpersonationSession {
   expires_at: string;
 }
 
-export interface AdminMetricsCache {
-  cache_key: string;
-  type: string;
-  data: Record<string, unknown>;
-  updated_at: string;
+export interface FactpulseStatus {
+  id: string;
+  token_valid: boolean;
+  last_checked_at: string;
+  last_error: string | null;
 }
+
+export interface PaSubmissionError {
+  id: string;
+  invoice_id: string;
+  error: string;
+  error_code: string | null;
+  retried_at: string | null;
+  created_at: string;
+}
+
+export interface PaWebhookEvent {
+  id: string;
+  event_id: string | null;
+  invoice_id: string | null;
+  event_type: string;
+  payload: Record<string, unknown>;
+  received_at: string;
+}
+

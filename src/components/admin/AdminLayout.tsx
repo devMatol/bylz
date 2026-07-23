@@ -5,6 +5,8 @@ import { ImpersonationBanner } from "./ImpersonationBanner";
 import { useAuth } from "../../contexts/AuthContext";
 import { Crown, ShieldAlert, Menu, X, ArrowLeft } from "lucide-react";
 
+import { FactPulseTokenBanner } from "./FactPulseTokenBanner";
+
 export function AdminLayout() {
   const { realProfile, profile, user, isImpersonating } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -22,6 +24,7 @@ export function AdminLayout() {
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 selection:bg-rose-500/30">
       <ImpersonationBanner />
+      <FactPulseTokenBanner />
 
       {/* Main Desktop Admin Sidebar */}
       <AdminSidebar />

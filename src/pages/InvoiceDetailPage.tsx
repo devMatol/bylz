@@ -40,6 +40,7 @@ import type { Invoice, InvoiceLine, Client, PaymentMethod, InvoiceReminder } fro
 import { canUseFeature, countEmittedInvoicesThisMonth, getPlanLimits } from "../lib/planLimits";
 import { UpgradeModal } from "../components/shared/UpgradeModal";
 import { Copy, CheckCircle2 } from "lucide-react";
+import { PaTimeline } from "../components/documents/PaTimeline";
 
 export function InvoiceDetailPage() {
   const { id } = useParams();
@@ -357,6 +358,11 @@ export function InvoiceDetailPage() {
               )}
             </div>
           </div>
+
+          {/* FactPulse PA Transmission Timeline Card (B2B Only) */}
+          {client && (
+            <PaTimeline invoice={invoice} isB2b={client.type === "b2b"} onRefresh={load} />
+          )}
 
           {/* Stripe Payment Link Card if available */}
           {invoice.stripe_payment_link && (
