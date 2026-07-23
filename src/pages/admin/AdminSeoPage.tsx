@@ -97,12 +97,15 @@ export function AdminSeoPage() {
         localStorage.setItem(LOCAL_CACHE_KEY, JSON.stringify(initialMetrics));
 
         try {
-          await supabase.from("admin_metrics_cache").upsert({
+          const { error: upsertErr } = await supabase.from("admin_metrics_cache").upsert({
             cache_key: "gsc_30d_metrics",
             type: "gsc",
             data: initialMetrics,
             updated_at: new Date().toISOString(),
           });
+          if (upsertErr) {
+            console.warn("Supabase admin_metrics_cache upsert note:", upsertErr.message);
+          }
         } catch (dbErr) {
           console.warn("Supabase upsert skipped:", dbErr);
         }
