@@ -1,9 +1,10 @@
 import { useState, useEffect, useCallback } from "react";
-import { Search, MousePointer, Eye, TrendingUp, Key, ArrowUpRight, HelpCircle, RefreshCw } from "lucide-react";
+import { Search, MousePointer, Eye, TrendingUp, Key, ArrowUpRight, HelpCircle, RefreshCw, CheckCircle2 } from "lucide-react";
 import { supabase } from "../../lib/supabase";
 import { Card } from "../../components/ui/Card";
 import { Skeleton } from "../../components/ui/Skeleton";
 import { Button } from "../../components/ui/Button";
+import { useToast } from "../../components/ui/Toast";
 
 interface GscMetrics {
   clicks: number;
@@ -12,18 +13,19 @@ interface GscMetrics {
   position: number;
   topQueries: { query: string; clicks: number; impressions: number; ctr: number; position: number }[];
   topPages: { page: string; clicks: number; impressions: number }[];
-  dailyTrends: { date: string; clicks: number; impressions: number }[];
+  dailyTrends?: { date: string; clicks: number; impressions: number }[];
 }
 
 export function AdminSeoPage() {
+  const { toast } = useToast();
   const [loading, setLoading] = useState(true);
+  const [syncing, setSyncing] = useState(false);
   const [isConnected, setIsConnected] = useState<boolean>(false);
   const [data, setData] = useState<GscMetrics | null>(null);
 
   const fetchSeoData = useCallback(async () => {
     setLoading(true);
     try {
-      // Check admin_metrics_cache for type 'gsc'
       const { data: cacheRow } = await supabase
         .from("admin_metrics_cache")
         .select("*")
@@ -34,7 +36,6 @@ export function AdminSeoPage() {
         setIsConnected(true);
         setData(cacheRow.data as unknown as GscMetrics);
       } else {
-        // Not connected or no cache yet
         setIsConnected(false);
       }
     } catch (err) {
@@ -49,7 +50,22 @@ export function AdminSeoPage() {
     void fetchSeoData();
   }, [fetchSeoData]);
 
-  // Demo toggle to test GSC view if user wants to see dashboard presentation
+  const handleSyncGsc = async () => {
+    setSyncing(true);
+    try {
+      const { data: res, error } = await supabase.functions.invoke("fetch-gsc-data");
+      if (error || (res && res.error)) {
+        throw new Error(error?.message || res?.error || "Erreur de synchronisation GSC");
+      }
+      toast("Métriques Google Search Console synchronisées !", "success");
+      void fetchSeoData();
+    } catch (err) {
+      toast(err instanceof Error ? err.message : "Erreur lors de la synchronisation", "danger");
+    } finally {
+      setSyncing(false);
+    }
+  };
+
   const handleSimulateConnection = () => {
     const demoData: GscMetrics = {
       clicks: 1420,
@@ -69,11 +85,6 @@ export function AdminSeoPage() {
         { page: "https://bylz.fr/blog/reforme-factur-x-2026-auto-entrepreneurs", clicks: 290, impressions: 5400 },
         { page: "https://bylz.fr/", clicks: 210, impressions: 4200 },
       ],
-      dailyTrends: Array.from({ length: 14 }).map((_, i) => ({
-        date: `2026-07-${(i + 10).toString().padStart(2, "0")}`,
-        clicks: Math.round(80 + Math.random() * 40),
-        impressions: Math.round(1500 + Math.random() * 800),
-      })),
     };
     setIsConnected(true);
     setData(demoData);
@@ -92,78 +103,57 @@ export function AdminSeoPage() {
           </p>
         </div>
 
-        {isConnected && (
+        <div className="flex items-center space-x-2">
           <Button
             type="button"
-            variant="outline"
-            onClick={() => void fetchSeoData()}
+            variant="primary"
+            onClick={handleSyncGsc}
+            loading={syncing}
             leftIcon={<RefreshCw className="w-4 h-4" />}
-            className="border-slate-800 text-slate-200 hover:bg-slate-900 text-xs font-bold"
+            className="bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs"
           >
-            Actualiser GSC
+            Synchroniser GSC
           </Button>
-        )}
+        </div>
       </div>
 
       {loading ? (
         <Skeleton height="18rem" />
       ) : !isConnected ? (
-        /* Setup Guide Card when GSC credentials are not yet configured */
+        /* Setup Guide Card when GSC metrics are empty or waiting for first sync */
         <Card className="bg-slate-900 border-slate-800 p-8 space-y-6 shadow-2xl">
-          <div className="flex items-center space-x-3 text-rose-400">
-            <Key className="w-6 h-6" />
-            <h3 className="text-lg font-black text-white">Connecter Google Search Console (GSC)</h3>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3 text-rose-400">
+              <Key className="w-6 h-6" />
+              <h3 className="text-lg font-black text-white">Clé JSON configurée dans Supabase</h3>
+            </div>
+
+            <Button
+              type="button"
+              variant="primary"
+              onClick={handleSyncGsc}
+              loading={syncing}
+              leftIcon={<RefreshCw className="w-4 h-4" />}
+              className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs"
+            >
+              Lancer la 1ère Synchronisation
+            </Button>
           </div>
 
           <p className="text-xs text-slate-300 leading-relaxed font-medium">
-            Pour afficher les vraies métriques de trafic Google sur <strong>bylz.fr</strong>, associez votre compte de service GCP à l'API Search Console :
+            Votre clé JSON est enregistrée dans le secret <code className="text-rose-300 font-mono">GSC_SERVICE_ACCOUNT</code>.
+            Assurez-vous d'avoir accordé l'accès à l'e-mail du compte de service dans Google Search Console pour <strong>bylz.fr</strong>, puis cliquez sur <strong>Lancer la 1ère Synchronisation</strong>.
           </p>
 
-          <div className="space-y-4 text-xs font-medium border-t border-b border-slate-800 py-4">
-            <div className="flex items-start space-x-3">
-              <span className="w-6 h-6 rounded-full bg-rose-500/20 text-rose-400 font-bold flex items-center justify-center flex-shrink-0 text-xs">
-                1
-              </span>
-              <div>
-                <p className="font-bold text-white">Créer un compte de service GCP</p>
-                <p className="text-slate-400">
-                  Rendez-vous dans la console Google Cloud, activez l'API Search Console et téléchargez les clés JSON du Service Account.
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-start space-x-3">
-              <span className="w-6 h-6 rounded-full bg-rose-500/20 text-rose-400 font-bold flex items-center justify-center flex-shrink-0 text-xs">
-                2
-              </span>
-              <div>
-                <p className="font-bold text-white">Partager l'accès au domaine bylz.fr</p>
-                <p className="text-slate-400">
-                  Dans la Search Console de <strong>bylz.fr</strong>, ajoutez l'e-mail du Service Account avec les droits de "Propriétaire" ou "Utilisateur".
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-start space-x-3">
-              <span className="w-6 h-6 rounded-full bg-rose-500/20 text-rose-400 font-bold flex items-center justify-center flex-shrink-0 text-xs">
-                3
-              </span>
-              <div>
-                <p className="font-bold text-white">Ajouter la clé dans les secrets Supabase</p>
-                <p className="text-slate-400">
-                  Enregistrez le JSON de la clé sous la variable d'environnement <code className="text-rose-300 font-mono">GSC_SERVICE_ACCOUNT</code>.
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex items-center justify-between pt-2">
-            <span className="text-[11px] text-slate-500">Aucune donnée simulée ou faussée par défaut.</span>
+          <div className="flex items-center justify-between pt-2 border-t border-slate-800">
+            <span className="text-[11px] text-slate-500">
+              Les métriques seront enregistrées dans la table de cache de l'espace admin.
+            </span>
             <Button
               type="button"
               variant="outline"
               onClick={handleSimulateConnection}
-              className="text-xs font-bold border-rose-800/60 text-rose-300 hover:bg-rose-950/40"
+              className="text-xs font-bold border-slate-700 text-slate-300 hover:bg-slate-800"
             >
               Prévisualiser la maquette SEO
             </Button>
