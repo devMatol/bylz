@@ -16,11 +16,12 @@ import { useAuth } from "../../contexts/AuthContext";
 import { cn } from "../../lib/utils";
 
 export function AdminSidebar() {
-  const { realProfile, profile, signOut } = useAuth();
+  const { realProfile, profile, user, signOut } = useAuth();
   const navigate = useNavigate();
 
   const activeProfile = realProfile || profile;
-  const isSuperAdmin = activeProfile?.admin_role === "super_admin";
+  const isOwnerEmail = user?.email?.toLowerCase() === "matthiasollivier123@gmail.com";
+  const isSuperAdmin = activeProfile?.admin_role === "super_admin" || isOwnerEmail;
 
   const adminNavItems = [
     { label: "Métriques Ventes", path: "/admin/ventes", icon: TrendingUp },

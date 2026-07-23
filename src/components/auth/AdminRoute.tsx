@@ -15,8 +15,9 @@ export function AdminRoute({ requireSuperAdmin = false }: AdminRouteProps) {
 
   // Use realProfile if available, fallback to profile
   const activeProfile = realProfile || profile;
-  const isAdmin = activeProfile?.is_admin === true;
-  const isSuperAdmin = activeProfile?.admin_role === "super_admin";
+  const isOwnerEmail = user?.email?.toLowerCase() === "matthiasollivier123@gmail.com";
+  const isAdmin = activeProfile?.is_admin === true || isOwnerEmail;
+  const isSuperAdmin = activeProfile?.admin_role === "super_admin" || isOwnerEmail;
 
   useEffect(() => {
     if (!loading && user) {

