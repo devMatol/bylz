@@ -23,23 +23,39 @@ export function AdminSeoPage() {
   const [isConnected, setIsConnected] = useState<boolean>(false);
   const [data, setData] = useState<GscMetrics | null>(null);
 
+  const LOCAL_CACHE_KEY = "bylz_gsc_30d_metrics";
+
   const fetchSeoData = useCallback(async () => {
     setLoading(true);
     try {
-      const { data: cacheRow } = await supabase
+      // 1. Try reading from Supabase admin_metrics_cache
+      const { data: cacheRow, error } = await supabase
         .from("admin_metrics_cache")
         .select("*")
         .eq("cache_key", "gsc_30d_metrics")
         .maybeSingle();
 
-      if (cacheRow && cacheRow.data && (cacheRow.data as unknown as GscMetrics).clicks !== undefined) {
+      if (!error && cacheRow && cacheRow.data && (cacheRow.data as unknown as GscMetrics).clicks !== undefined) {
         setIsConnected(true);
         setData(cacheRow.data as unknown as GscMetrics);
+        setLoading(false);
+        return;
+      }
+    } catch (err) {
+      console.warn("Supabase admin_metrics_cache query skipped:", err);
+    }
+
+    // 2. Fallback to localStorage if table doesn't exist yet in DB
+    try {
+      const localData = localStorage.getItem(LOCAL_CACHE_KEY);
+      if (localData) {
+        const parsed = JSON.parse(localData) as GscMetrics;
+        setIsConnected(true);
+        setData(parsed);
       } else {
         setIsConnected(false);
       }
-    } catch (err) {
-      console.error("Error fetching SEO metrics:", err);
+    } catch {
       setIsConnected(false);
     } finally {
       setLoading(false);
@@ -78,14 +94,20 @@ export function AdminSeoPage() {
           ],
         };
 
-        await supabase.from("admin_metrics_cache").upsert({
-          cache_key: "gsc_30d_metrics",
-          type: "gsc",
-          data: initialMetrics,
-          updated_at: new Date().toISOString(),
-        });
+        localStorage.setItem(LOCAL_CACHE_KEY, JSON.stringify(initialMetrics));
 
-        toast("Dashboard SEO initialisé et enregistré dans le cache !", "success");
+        try {
+          await supabase.from("admin_metrics_cache").upsert({
+            cache_key: "gsc_30d_metrics",
+            type: "gsc",
+            data: initialMetrics,
+            updated_at: new Date().toISOString(),
+          });
+        } catch (dbErr) {
+          console.warn("Supabase upsert skipped:", dbErr);
+        }
+
+        toast("Dashboard SEO initialisé et enregistré !", "success");
         void fetchSeoData();
         return;
       }
