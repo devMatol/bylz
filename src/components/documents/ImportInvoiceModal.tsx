@@ -178,6 +178,48 @@ export function ImportInvoiceModal({ open, onClose, onSuccess }: ImportInvoiceMo
     setAnalyzing(true);
     setPdfUrl(URL.createObjectURL(file));
 
+    // 1. Attempt FactPulse API parsing via Edge Function
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const { data: fpRes, error: fpErr } = await supabase.functions.invoke("parse-pdf-factpulse", {
+        body: formData,
+      });
+
+      if (!fpErr && fpRes && fpRes.parsed) {
+        const p = fpRes.parsed;
+        console.log("FactPulse API Parsed Data:", p);
+
+        if (p.invoice_number || p.total_ttc || p.total_ht) {
+          if (p.invoice_number) setInvoiceNumber(p.invoice_number);
+          if (p.issue_date) setIssueDate(p.issue_date);
+          if (p.due_date) setDueDate(p.due_date);
+          if (p.total_ht) setTotalHt(Number(p.total_ht).toFixed(2));
+          if (p.total_ttc) setTotalTtc(Number(p.total_ttc).toFixed(2));
+
+          const clientName = p.buyer_name || p.seller_name;
+          if (clientName) {
+            const existing = clients.find((c) => c.name.toLowerCase().includes(clientName.toLowerCase()));
+            if (existing) {
+              setClientId(existing.id);
+              setIsCreatingNewClient(false);
+            } else {
+              setIsCreatingNewClient(true);
+              setNewClientName(clientName);
+            }
+          }
+
+          toast("Facture analysée avec succès via FactPulse !", "success");
+          setAnalyzing(false);
+          return;
+        }
+      }
+    } catch (fpError) {
+      console.warn("FactPulse Edge Function skipped, using smart PDF.js parser:", fpError);
+    }
+
+    // 2. Fallback to layout-aware PDF.js parser
     try {
       const pdfjsLib = await loadPdfJs();
       const arrayBuffer = await file.arrayBuffer();
