@@ -11,6 +11,7 @@ import { useToast } from "../../components/ui/Toast";
 import { useAuth } from "../../contexts/AuthContext";
 import { formatDateShort } from "../../lib/date";
 import { FactPulseModeToggle } from "../../components/admin/FactPulseModeToggle";
+import { StripeModeToggle } from "../../components/admin/StripeModeToggle";
 
 export function AdminAdminsPage() {
   const { user: currentUser } = useAuth();
@@ -133,8 +134,11 @@ export function AdminAdminsPage() {
 
   return (
     <div className="space-y-6 max-w-5xl">
-      {/* Super Admin FactPulse Mode Toggle */}
-      <FactPulseModeToggle />
+      {/* Super Admin FactPulse & Stripe Mode Toggles */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <FactPulseModeToggle />
+        <StripeModeToggle />
+      </div>
 
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>

@@ -8,6 +8,7 @@ import { Button } from "../ui/Button";
 import { formatAmount } from "../../lib/utils";
 import type { EreportingBatch, FactpulseStatus } from "../../types/database";
 import { FactPulseModeToggle } from "../admin/FactPulseModeToggle";
+import { StripeModeToggle } from "../admin/StripeModeToggle";
 
 export function ComplianceSection() {
   const { company, user, profile, realProfile } = useAuth();
@@ -94,8 +95,13 @@ export function ComplianceSection() {
         </Button>
       </div>
 
-      {/* FactPulse Connection Status */}
-      {isSuperAdmin && <FactPulseModeToggle />}
+      {/* FactPulse & Stripe Connection Status */}
+      {isSuperAdmin && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <FactPulseModeToggle />
+          <StripeModeToggle />
+        </div>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="p-4 rounded-card bg-surface-hover/40 border border-border space-y-1">
