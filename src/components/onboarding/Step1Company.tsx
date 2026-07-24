@@ -89,21 +89,8 @@ export function Step1Company({ data, update, onNext }: Step1CompanyProps) {
         };
       }
 
-      // 1. Try Supabase Edge Function
+      // 1. Direct Free Official State API (recherche-entreprises.api.gouv.fr)
       try {
-        const { data: edgeJson, error } = await supabase.functions.invoke<SiretResult>(
-          "siret-lookup",
-          { body: { siret } }
-        );
-        if (!error && edgeJson) {
-          json = edgeJson;
-        }
-      } catch {
-        // Fallback to direct Open API
-      }
-
-      // 2. Direct Open API Fallback (recherche-entreprises.api.gouv.fr)
-      if (!json) {
         const govRes = await fetch(`https://recherche-entreprises.api.gouv.fr/search?q=${siret}&page=1&per_page=1`);
         if (govRes.ok) {
           const govData = await govRes.json();
@@ -123,6 +110,23 @@ export function Step1Company({ data, update, onNext }: Step1CompanyProps) {
               active: active,
             };
           }
+        }
+      } catch {
+        // Fallback to Edge function if needed
+      }
+
+      // 2. Fallback to Supabase Edge Function if needed
+      if (!json) {
+        try {
+          const { data: edgeJson, error } = await supabase.functions.invoke<SiretResult>(
+            "siret-lookup",
+            { body: { siret } }
+          );
+          if (!error && edgeJson) {
+            json = edgeJson;
+          }
+        } catch {
+          // Ignore
         }
       }
 
