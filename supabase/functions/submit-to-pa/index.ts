@@ -52,8 +52,15 @@ serve(async (req) => {
       );
     }
 
-    // 2. Handle Sandbox / Test Mode Transmission (Guarantees NO live DGFiP submission)
-    const useSandbox = is_sandbox === true || is_sandbox === "true" || invoice.number.includes("TEST");
+    // 2. Read global Super Admin mode from factpulse_status (sandbox vs production)
+    const { data: statusRow } = await supabase
+      .from("factpulse_status")
+      .select("mode")
+      .eq("id", "default")
+      .maybeSingle();
+
+    const globalMode = statusRow?.mode || "sandbox";
+    const useSandbox = is_sandbox === true || is_sandbox === "true" || globalMode === "sandbox" || invoice.number.includes("TEST");
 
     if (useSandbox) {
       const sandboxRef = `FP-SANDBOX-${Date.now().toString(36).toUpperCase()}`;

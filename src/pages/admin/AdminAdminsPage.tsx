@@ -10,6 +10,7 @@ import { Skeleton } from "../../components/ui/Skeleton";
 import { useToast } from "../../components/ui/Toast";
 import { useAuth } from "../../contexts/AuthContext";
 import { formatDateShort } from "../../lib/date";
+import { FactPulseModeToggle } from "../../components/admin/FactPulseModeToggle";
 
 export function AdminAdminsPage() {
   const { user: currentUser } = useAuth();
@@ -132,6 +133,9 @@ export function AdminAdminsPage() {
 
   return (
     <div className="space-y-6 max-w-5xl">
+      {/* Super Admin FactPulse Mode Toggle */}
+      <FactPulseModeToggle />
+
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-black text-white tracking-tight flex items-center gap-2">

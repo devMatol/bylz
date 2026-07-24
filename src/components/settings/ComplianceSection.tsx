@@ -7,9 +7,14 @@ import { Card } from "../ui/Card";
 import { Button } from "../ui/Button";
 import { formatAmount } from "../../lib/utils";
 import type { EreportingBatch, FactpulseStatus } from "../../types/database";
+import { FactPulseModeToggle } from "../admin/FactPulseModeToggle";
 
 export function ComplianceSection() {
-  const { company } = useAuth();
+  const { company, user, profile, realProfile } = useAuth();
+  const activeProfile = realProfile || profile;
+  const isOwnerEmail = user?.email?.toLowerCase() === "matthiasollivier123@gmail.com";
+  const isSuperAdmin = activeProfile?.admin_role === "super_admin" || isOwnerEmail;
+
   const { toast } = useToast();
   const [batches, setBatches] = useState<EreportingBatch[]>([]);
   const [status, setStatus] = useState<FactpulseStatus | null>(null);
@@ -90,6 +95,8 @@ export function ComplianceSection() {
       </div>
 
       {/* FactPulse Connection Status */}
+      {isSuperAdmin && <FactPulseModeToggle />}
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="p-4 rounded-card bg-surface-hover/40 border border-border space-y-1">
           <p className="text-xs font-bold text-muted uppercase">Statut Connexion PDP FactPulse</p>
