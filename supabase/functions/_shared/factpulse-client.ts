@@ -48,12 +48,10 @@ export async function getOrRefreshFactPulseToken(forceRefresh = false): Promise<
 
   console.log("🔄 Autologin FactPulse : Génération automatique d'un nouveau Token Bearer...");
 
-  const authUrl = "https://app.factpulse.fr/api/v1/auth/token/";
+  const authUrl = "https://factpulse.fr/api/token/";
   const authPayload = {
-    email: username,
+    username: username,
     password: password,
-    clientUid: clientUid,
-    client_uid: clientUid,
   };
 
   const res = await fetch(authUrl, {
