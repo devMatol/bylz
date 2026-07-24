@@ -246,6 +246,8 @@ export interface FactpulseStatus {
   id: string;
   access_token?: string | null;
   token_valid: boolean;
+  mode?: "sandbox" | "production";
+  stripe_mode?: "test" | "live";
   last_checked_at: string;
   last_error: string | null;
 }

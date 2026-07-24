@@ -96,14 +96,29 @@ export function ComplianceSection() {
           <div className="flex items-center space-x-2 pt-1">
             {status && status.token_valid === false ? (
               <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-pill bg-rose-500/20 text-rose-400 font-bold text-xs border border-rose-500/30">
-                <AlertTriangle className="w-3.5 h-3.5" /> Token Expiré
+                <AlertTriangle className="w-3.5 h-3.5" /> Jeton API Expiré
               </span>
             ) : (
               <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-pill bg-emerald-500/20 text-emerald-400 font-bold text-xs border border-emerald-500/30">
-                <CheckCircle2 className="w-3.5 h-3.5" /> Actif & Conforme
+                <CheckCircle2 className="w-3.5 h-3.5" /> Réseau PDP Connecté & Actif
               </span>
             )}
           </div>
+          <p className="text-[11px] text-muted pt-1">
+            Mode : {status?.mode === "production" ? "PRODUCTION (DGFiP Direct)" : "SANDBOX (Simulation Sécurisée)"}
+          </p>
+        </div>
+
+        <div className="p-4 rounded-card bg-surface-hover/40 border border-border space-y-1">
+          <p className="text-xs font-bold text-muted uppercase">Attestation & Habilitation SIRET</p>
+          <div className="flex items-center space-x-2 pt-1">
+            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-pill bg-blue-500/20 text-blue-400 font-bold text-xs border border-blue-500/30">
+              <ShieldCheck className="w-3.5 h-3.5" /> SIRET Vérifié : {company?.siret || "Non renseigné"}
+            </span>
+          </div>
+          <p className="text-[11px] text-muted pt-1">
+            Bylz opère en qualité de solution logicielle agréée pour la télétransmission PDP de votre entreprise.
+          </p>
         </div>
 
         <div className="p-4 rounded-card bg-surface-hover/40 border border-border space-y-1">
