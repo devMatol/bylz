@@ -68,12 +68,47 @@ export function Step1Company({ data, update, onNext }: Step1CompanyProps) {
 
   async function lookupSiret(siret: string) {
     try {
-      const { data: json, error } = await supabase.functions.invoke<SiretResult>(
-        "siret-lookup",
-        { body: { siret } }
-      );
-      if (error) throw new Error(error.message || "Erreur de recherche");
-      if (!json) throw new Error("Réponse vide du service SIRET");
+      let json: SiretResult | null = null;
+
+      // 1. Try Supabase Edge Function
+      try {
+        const { data: edgeJson, error } = await supabase.functions.invoke<SiretResult>(
+          "siret-lookup",
+          { body: { siret } }
+        );
+        if (!error && edgeJson) {
+          json = edgeJson;
+        }
+      } catch {
+        // Fallback to direct Open API
+      }
+
+      // 2. Direct Open API Fallback (recherche-entreprises.api.gouv.fr)
+      if (!json) {
+        const govRes = await fetch(`https://recherche-entreprises.api.gouv.fr/search?q=${siret}&page=1&per_page=1`);
+        if (govRes.ok) {
+          const govData = await govRes.json();
+          const firstResult = govData?.results?.[0];
+          if (firstResult) {
+            const etab = firstResult.matching_etablissements?.[0] || firstResult.siege || {};
+            const legalName = firstResult.nom_complet || firstResult.nom_raison_sociale || "Entreprise";
+            const address = etab.adresse || etab.adresse_complete || `${etab.code_postal || ""} ${etab.libelle_commune || ""}`.trim();
+            const nafCode = etab.activite_principale || firstResult.activite_principale || "";
+            const active = etab.etat_administratif === "A" || firstResult.etat_administratif === "A";
+
+            json = {
+              legal_name: legalName,
+              address: address,
+              naf_code: nafCode,
+              naf_label: "",
+              active: active,
+            };
+          }
+        }
+      }
+
+      if (!json) throw new Error("SIRET introuvable dans le registre officiel des entreprises.");
+
       setResult(json);
       update({
         siret,
