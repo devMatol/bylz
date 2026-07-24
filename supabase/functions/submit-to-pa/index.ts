@@ -111,10 +111,10 @@ serve(async (req) => {
           error: err.message,
           error_code: errorCode,
           message: isTokenExpired
-            ? "Token FactPulse expiré"
+            ? "⚠️ Secrets FactPulse manquants ou expirés sur Supabase Cloud (FACTPULSE_USERNAME, FACTPULSE_PASSWORD, FACTPULSE_CLIENT_UID)."
             : "Facture émise — transmission en attente, nouvelle tentative automatique",
         }),
-        { status: isTokenExpired ? 401 : 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
