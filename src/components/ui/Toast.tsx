@@ -17,7 +17,7 @@ interface Toast {
 }
 
 interface ToastContextValue {
-  toast: (message: string, variant?: ToastVariant) => void;
+  toast: (message: any, variant?: ToastVariant) => void;
 }
 
 const ToastContext = createContext<ToastContextValue | null>(null);
@@ -40,10 +40,23 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const toast = useCallback(
-    (message: string, variant: ToastVariant = "info") => {
+    (message: any, variant: ToastVariant = "info") => {
       const id = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
-      setToasts((prev) => [...prev, { id, message, variant }]);
-      setTimeout(() => remove(id), 4000);
+      let strMsg = "Une erreur est survenue.";
+      if (typeof message === "string") {
+        strMsg = message;
+      } else if (message && typeof message === "object") {
+        strMsg = message.message || message.error || message.details || message.description || "";
+        if (!strMsg || typeof strMsg !== "string" || strMsg === "[object Object]") {
+          try {
+            strMsg = JSON.stringify(message);
+          } catch {
+            strMsg = "Erreur inattendue.";
+          }
+        }
+      }
+      setToasts((prev) => [...prev, { id, message: String(strMsg), variant }]);
+      setTimeout(() => remove(id), 5000);
     },
     [remove]
   );
