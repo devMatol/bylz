@@ -17,7 +17,7 @@ serve(async (req) => {
   const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
   try {
-    const { invoice_id } = await req.json();
+    const { invoice_id, is_sandbox } = await req.json();
 
     if (!invoice_id) {
       return new Response(
@@ -52,7 +52,34 @@ serve(async (req) => {
       );
     }
 
-    // 2. Build FactPulse Simplified Payload
+    // 2. Handle Sandbox / Test Mode Transmission (Guarantees NO live DGFiP submission)
+    const useSandbox = is_sandbox === true || is_sandbox === "true" || invoice.number.includes("TEST");
+
+    if (useSandbox) {
+      const sandboxRef = `FP-SANDBOX-${Date.now().toString(36).toUpperCase()}`;
+      
+      await supabase
+        .from("invoices")
+        .update({
+          factpulse_ref: sandboxRef,
+          pa_status: "submitted",
+          pa_rejection_reason: null,
+        })
+        .eq("id", invoice.id);
+
+      return new Response(
+        JSON.stringify({
+          success: true,
+          factpulse_ref: sandboxRef,
+          pa_status: "submitted",
+          is_sandbox: true,
+          message: "Facture transmise avec succès en Mode Sandbox PDP (aucun envoi DGFiP).",
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // 3. Build FactPulse Simplified Payload for Live Production
     const isFranchise = company?.vat_regime === "franchise";
     const simplifiedLines = lines.map((l: any) => ({
       description: l.description || "Prestation / Produit",
@@ -90,7 +117,7 @@ serve(async (req) => {
 
     console.log("Submitting FactPulse payload for invoice:", invoice.number, payload);
 
-    // 3. Submit to FactPulse
+    // 4. Submit to FactPulse Live API
     let resData: any = null;
     try {
       resData = await callFactPulseApi("/invoices/submit/", "POST", payload);
@@ -132,7 +159,7 @@ serve(async (req) => {
       );
     }
 
-    // 4. Update Invoice on Success
+    // 5. Update Invoice on Success
     const factpulseRef = resData?.reference || resData?.id || resData?.factpulse_ref || `FP-${Date.now()}`;
 
     await supabase
@@ -149,6 +176,7 @@ serve(async (req) => {
         success: true,
         factpulse_ref: factpulseRef,
         pa_status: "submitted",
+        is_sandbox: false,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );

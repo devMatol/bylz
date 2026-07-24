@@ -44,11 +44,11 @@ export function PaTimeline({ invoice, isB2b, onRefresh }: PaTimelineProps) {
   const activeStepIdx = getStepIndex(currentStatus);
 
   // Manual Trigger Transmit to FactPulse PA
-  const handleTransmit = async () => {
+  const handleTransmit = async (isSandbox = true) => {
     setSubmitting(true);
     try {
       const { data: res, error } = await supabase.functions.invoke("submit-to-pa", {
-        body: { invoice_id: invoice.id },
+        body: { invoice_id: invoice.id, is_sandbox: isSandbox },
       });
 
       console.log("Response from submit-to-pa:", { res, error });
@@ -190,20 +190,23 @@ export function PaTimeline({ invoice, isB2b, onRefresh }: PaTimelineProps) {
             })}
           </div>
 
-          {/* User Choice Manual Transmit Button */}
+          {/* User Choice Manual Transmit Buttons */}
           {currentStatus === "none" && (
-            <div className="pt-2 border-t border-border">
+            <div className="pt-2 border-t border-border space-y-2">
               <Button
                 type="button"
                 variant="primary"
                 size="sm"
-                onClick={handleTransmit}
+                onClick={() => handleTransmit(true)}
                 loading={submitting}
                 className="w-full justify-center bylz-glow-cta text-xs font-bold py-2"
               >
                 <Send className="w-3.5 h-3.5 mr-1.5" />
-                Transmettre à FactPulse PDP
+                Tester la transmission (Mode Sandbox PDP - 0 envoi DGFiP)
               </Button>
+              <p className="text-[10px] text-muted text-center italic">
+                🔒 Le mode Sandbox permet de tester l'intégration et la frise chronologique en toute sécurité.
+              </p>
             </div>
           )}
         </div>
