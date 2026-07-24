@@ -42,20 +42,36 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   const toast = useCallback(
     (message: any, variant: ToastVariant = "info") => {
       const id = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
-      let strMsg = "Une erreur est survenue.";
-      if (typeof message === "string") {
-        strMsg = message;
-      } else if (message && typeof message === "object") {
-        strMsg = message.message || message.error || message.details || message.description || "";
-        if (!strMsg || typeof strMsg !== "string" || strMsg === "[object Object]") {
+      
+      const extractText = (val: any): string => {
+        if (!val) return "";
+        if (typeof val === "string") return val;
+        if (typeof val === "number" || typeof val === "boolean") return String(val);
+        if (val instanceof Error) return val.message || val.name || String(val);
+        if (typeof val === "object") {
+          const possible = val.message || val.error || val.details || val.description || val.reason || val.data;
+          if (possible && typeof possible === "string") return possible;
+          if (possible && typeof possible === "object") return extractText(possible);
           try {
-            strMsg = JSON.stringify(message);
+            return JSON.stringify(val);
           } catch {
-            strMsg = "Erreur inattendue.";
+            return "";
           }
         }
+        return String(val);
+      };
+
+      let strMsg = extractText(message) || "Une erreur est survenue.";
+
+      // Clean up string concatenation like "Erreur: [object Object]" or raw "[object Object]"
+      if (strMsg.includes("[object Object]")) {
+        strMsg = strMsg.replace(/\[object Object\]/g, "").trim();
+        if (!strMsg || strMsg === "Erreur:" || strMsg === "Erreur") {
+          strMsg = "Erreur de traitement lors de la requête.";
+        }
       }
-      setToasts((prev) => [...prev, { id, message: String(strMsg), variant }]);
+
+      setToasts((prev) => [...prev, { id, message: strMsg, variant }]);
       setTimeout(() => remove(id), 5000);
     },
     [remove]
