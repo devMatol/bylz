@@ -4,6 +4,7 @@ import { Sidebar } from "./Sidebar";
 import { BottomNav } from "./BottomNav";
 import { Topbar } from "./Topbar";
 import { ErrorBoundary } from "../ErrorBoundary";
+import { PaymentSuccessModal } from "../modals/PaymentSuccessModal";
 import {
   PageHeaderProvider,
   usePageHeader,
@@ -41,6 +42,7 @@ function ShellContent() {
 
   return (
     <div className="min-h-screen bg-bg">
+      <PaymentSuccessModal />
       <Sidebar />
       <div className="min-h-screen flex flex-col md:ml-[280px]">
         <Topbar title={title} subtitle={header.subtitle} actions={header.actions} />
