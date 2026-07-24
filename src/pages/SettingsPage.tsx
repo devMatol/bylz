@@ -603,10 +603,11 @@ export function SettingsPage() {
                 <div className="flex gap-2 items-end">
                   <div className="flex-1">
                     <Input
-                      label="Numéro SIRET"
+                      label="Numéro SIRET (14 chiffres)"
                       placeholder="123 456 789 00012"
                       value={siret}
                       onChange={(e) => setSiret(formatSiret(e.target.value))}
+                      helperText="En cas de déménagement (nouveau NIC) ou correction, cliquez sur Rechercher pour mettre à jour automatiquement les données INSEE."
                       required
                     />
                   </div>
