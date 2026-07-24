@@ -163,15 +163,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setCompany(null);
   }, []);
 
+  // When impersonating a target account ("Prise de contrôle du compte"):
+  // ONLY the subscription plan of the target user is applied to your view profile.
+  // ALL data, invoices, quotes, clients, and company workspace remain strictly with matthiasollivier123!
   const effectiveProfile =
-    impersonation?.isImpersonating && impersonation.targetUser
-      ? impersonation.targetUser
+    impersonation?.isImpersonating && impersonation.targetUser && profile
+      ? {
+          ...profile,
+          plan: impersonation.targetUser.plan,
+          trial_ends_at: impersonation.targetUser.trial_ends_at,
+          trial_used: impersonation.targetUser.trial_used,
+          suspended_at: impersonation.targetUser.suspended_at,
+        }
       : profile;
 
-  const effectiveCompany =
-    impersonation?.isImpersonating && impersonation.targetCompany
-      ? impersonation.targetCompany
-      : company;
+  const effectiveCompany = company;
 
   return (
     <AuthContext.Provider
