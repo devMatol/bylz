@@ -49,7 +49,8 @@ export function UrssafPage() {
         company.created_at,
         company.urssaf_frequency,
         payments,
-        declarations
+        declarations,
+        company.activity_type
       );
       setPeriods(computed);
     } catch (err) {
@@ -91,8 +92,23 @@ export function UrssafPage() {
     }
   }
 
+  const legalFormUpper = company.legal_form?.toUpperCase() || "";
+  const isCorporate = company.legal_form && ["sas", "sasu", "sarl", "eurl", "sa", "sci"].includes(company.legal_form);
+
   return (
-    <PageContainer title="URSSAF" subtitle="Vos déclarations URSSAF">
+    <PageContainer title="URSSAF & Cotisations" subtitle="Suivi des déclarations et cotisations sociales">
+      {isCorporate && (
+        <div className="mb-6 p-4 rounded-card bg-slate-900 border border-slate-800 space-y-2">
+          <div className="flex items-center space-x-2 text-amber-400 font-bold text-xs">
+            <Landmark className="w-4 h-4" />
+            <span>Régime des Sociétés ({legalFormUpper})</span>
+          </div>
+          <p className="text-xs text-slate-300 leading-relaxed">
+            En tant que société (<strong>{legalFormUpper}</strong>), vos cotisations sociales ne sont pas calculées au forfait sur votre chiffre d'affaires. Elles dépendent de la rémunération versée au dirigeant (bulletins de paie DSN pour SAS/SASU ou déclaration TNS pour SARL/EURL). Vos déclarations TVA et IS sont transmises via votre comptable ou impots.gouv.fr.
+          </p>
+        </div>
+      )}
+
       {loading ? (
         <Skeleton height="12rem" />
       ) : periods.length === 0 ? (
