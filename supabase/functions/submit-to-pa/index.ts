@@ -21,8 +21,8 @@ serve(async (req) => {
 
     if (!invoice_id) {
       return new Response(
-        JSON.stringify({ error: "invoice_id requis dans le corps de la requête." }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        JSON.stringify({ success: false, error: "invoice_id requis dans le corps de la requête." }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
@@ -35,8 +35,8 @@ serve(async (req) => {
 
     if (invErr || !invoice) {
       return new Response(
-        JSON.stringify({ error: "Facture introuvable." }),
-        { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        JSON.stringify({ success: false, error: "Facture introuvable." }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
@@ -47,8 +47,8 @@ serve(async (req) => {
     // Verify client is B2B
     if (!client || client.type !== "b2b") {
       return new Response(
-        JSON.stringify({ error: "La transmission FactPulse PA est réservée aux clients B2B." }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        JSON.stringify({ success: false, error: "La transmission FactPulse PA est réservée aux clients B2B." }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 

@@ -52,7 +52,11 @@ export function PaTimeline({ invoice, isB2b, onRefresh }: PaTimelineProps) {
       });
 
       if (error || (res && !res.success)) {
-        const errorMsg = res?.message || error?.message || "Échec de la transmission à la plateforme PA.";
+        const errorMsg =
+          (typeof res?.error === "string" && res.error) ||
+          (typeof res?.message === "string" && res.message) ||
+          (typeof error?.message === "string" && error.message) ||
+          "Échec de la transmission à la plateforme PA.";
         toast(errorMsg, "warning");
       } else {
         toast("Facture transmise avec succès à FactPulse !", "success");
