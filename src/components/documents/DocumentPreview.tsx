@@ -241,32 +241,39 @@ export function DocumentPreview({
         </p>
       </div>
 
-      {/* Footer */}
-      {company.invoice_footer && (
-        <div className="px-6 pb-6 pt-3 border-t border-gray-100">
-          <p
-            className="text-xs text-gray-400"
-            title={company.invoice_footer}
-            style={{
-              lineHeight: "1.5",
-              display: "-webkit-box",
-              WebkitLineClamp: 2,
-              WebkitBoxOrient: "vertical",
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-            }}
-          >
-            {company.invoice_footer}
+      {/* Footer Legal Section */}
+      <div className="px-6 pb-6 pt-3 border-t border-gray-100 space-y-2 text-[10px] text-gray-400">
+        {/* Company Legal Identity Line (SAS, SARL, EURL, Capital, RCS, TVA) */}
+        <p className="font-semibold text-gray-600">
+          {[
+            company.legal_name,
+            company.legal_form && company.legal_form !== "micro" ? company.legal_form.toUpperCase() : null,
+            company.share_capital ? `au capital de ${company.share_capital.toLocaleString("fr-FR")} €` : null,
+            company.rcs_city ? `RCS ${company.rcs_city}` : null,
+            company.siret ? `SIRET ${company.siret}` : null,
+            company.vat_number ? `N° TVA Intracommunautaire : ${company.vat_number}` : null,
+          ]
+            .filter(Boolean)
+            .join(" • ")}
+        </p>
+
+        {/* Mandatory B2B Legal Penalties (Code de commerce Art L441-9) */}
+        <p className="leading-normal">
+          Pénalités de retard applicables en cas de non-paiement à la date d'échéance : 3 fois le taux d'intérêt légal. Indemnité forfaitaire pour frais de recouvrement : 40 € (Art. D.441-5 du Code de commerce). Pas d’escompte pour paiement anticipé.
+        </p>
+
+        {/* Custom footer text if provided */}
+        {company.invoice_footer && (
+          <p className="italic text-gray-400">{company.invoice_footer}</p>
+        )}
+
+        {/* Franchise de TVA */}
+        {isFranchise && (
+          <p className="font-medium text-gray-500">
+            TVA non applicable, art. 293 B du CGI
           </p>
-        </div>
-      )}
-      {isFranchise && (
-        <div className="px-6 pb-6">
-          <p className="text-[10px] text-gray-400">
-            Auto-entrepreneur : TVA non applicable, art. 293 B du CGI
-          </p>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }

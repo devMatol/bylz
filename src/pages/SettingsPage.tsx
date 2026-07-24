@@ -65,6 +65,10 @@ export function SettingsPage() {
   // Company details form states
   const [legalName, setLegalName] = useState(company?.legal_name || "");
   const [commercialName, setCommercialName] = useState(company?.commercial_name || "");
+  const [legalForm, setLegalForm] = useState<any>(company?.legal_form || "micro");
+  const [shareCapital, setShareCapital] = useState(company?.share_capital?.toString() || "");
+  const [rcsCity, setRcsCity] = useState(company?.rcs_city || "");
+  const [vatNumber, setVatNumber] = useState(company?.vat_number || "");
   const [siret, setSiret] = useState(company?.siret ? formatSiret(company.siret) : "");
   const [address, setAddress] = useState(company?.address || "");
   const [activityType, setActivityType] = useState(company?.activity_type || "freelance_bnc");
@@ -77,6 +81,10 @@ export function SettingsPage() {
     if (company) {
       setLegalName(company.legal_name || "");
       setCommercialName(company.commercial_name || "");
+      setLegalForm(company.legal_form || "micro");
+      setShareCapital(company.share_capital?.toString() || "");
+      setRcsCity(company.rcs_city || "");
+      setVatNumber(company.vat_number || "");
       setSiret(company.siret ? formatSiret(company.siret) : "");
       setAddress(company.address || "");
       setActivityType(company.activity_type || "freelance_bnc");
@@ -119,6 +127,10 @@ export function SettingsPage() {
         .update({
           legal_name: legalName,
           commercial_name: commercialName || null,
+          legal_form: legalForm,
+          share_capital: shareCapital ? parseFloat(shareCapital) : null,
+          rcs_city: rcsCity || null,
+          vat_number: vatNumber || null,
           siret: cleanSiret,
           siren,
           address,
@@ -634,6 +646,51 @@ export function SettingsPage() {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Select
+                  label="Forme juridique"
+                  value={legalForm}
+                  onChange={(e) => setLegalForm(e.target.value as any)}
+                >
+                  <option value="micro">Micro-entreprise / Auto-entrepreneur</option>
+                  <option value="ei">EI (Entreprise Individuelle)</option>
+                  <option value="sasu">SASU (Société par Actions Simplifiée Unipersonnelle)</option>
+                  <option value="sas">SAS (Société par Actions Simplifiée)</option>
+                  <option value="eurl">EURL (Entreprise Unipersonnelle à Responsabilité Limitée)</option>
+                  <option value="sarl">SARL (Société à Responsabilité Limitée)</option>
+                  <option value="sa">SA (Société Anonyme)</option>
+                  <option value="sci">SCI (Société Civile Immobilière)</option>
+                  <option value="other">Autre forme juridique</option>
+                </Select>
+
+                <Input
+                  label="Capital Social (€)"
+                  placeholder="ex: 10000"
+                  type="number"
+                  step="0.01"
+                  value={shareCapital}
+                  onChange={(e) => setShareCapital(e.target.value)}
+                  helperText="Obligatoire pour les SAS, SASU, SARL, EURL, SA"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Input
+                  label="Greffe du RCS (Ville)"
+                  placeholder="ex: Paris, Lyon, Bordeaux"
+                  value={rcsCity}
+                  onChange={(e) => setRcsCity(e.target.value)}
+                  helperText="Ville d'immatriculation au Registre du Commerce"
+                />
+
+                <Input
+                  label="N° de TVA Intracommunautaire"
+                  placeholder="ex: FR 12 123456789"
+                  value={vatNumber}
+                  onChange={(e) => setVatNumber(e.target.value)}
+                />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <Input
                   label="Nom commercial (optionnel)"
                   placeholder="ex: Bylz Studio"
@@ -642,7 +699,7 @@ export function SettingsPage() {
                 />
 
                 <Input
-                  label="Adresse de l'entreprise"
+                  label="Adresse du siège social"
                   placeholder="12 rue de la Paix, 75002 Paris"
                   value={address}
                   onChange={(e) => setAddress(e.target.value)}
