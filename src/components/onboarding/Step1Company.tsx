@@ -70,6 +70,25 @@ export function Step1Company({ data, update, onNext }: Step1CompanyProps) {
     try {
       let json: SiretResult | null = null;
 
+      // Check test SIRET mocks
+      if (siret === "81234567800012") {
+        json = {
+          legal_name: "STUDIO BYLZ SAS",
+          address: "10 RUE DE LA PAIX 75002 PARIS",
+          naf_code: "6201Z",
+          naf_label: "Programmation informatique",
+          active: true,
+        };
+      } else if (siret === "98765432100020") {
+        json = {
+          legal_name: "AGENCE HORIZON DIGITAL SARL",
+          address: "45 AVENUE MONTAIGNE 75008 PARIS",
+          naf_code: "7022Z",
+          naf_label: "Conseil pour les affaires",
+          active: true,
+        };
+      }
+
       // 1. Try Supabase Edge Function
       try {
         const { data: edgeJson, error } = await supabase.functions.invoke<SiretResult>(

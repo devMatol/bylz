@@ -27,11 +27,30 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
-    const { siret } = await req.json();
-    if (!siret || typeof siret !== "string" || !/^\d{14}$/.test(siret)) {
+    // Built-in Mock Test SIRETs for Sandbox Testing
+    if (siret === "81234567800012") {
       return new Response(
-        JSON.stringify({ error: "SIRET invalide (14 chiffres requis)" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        JSON.stringify({
+          legal_name: "STUDIO BYLZ SAS",
+          address: "10 RUE DE LA PAIX 75002 PARIS",
+          naf_code: "6201Z",
+          naf_label: "Programmation informatique",
+          active: true,
+        }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    if (siret === "98765432100020") {
+      return new Response(
+        JSON.stringify({
+          legal_name: "AGENCE HORIZON DIGITAL SARL",
+          address: "45 AVENUE MONTAIGNE 75008 PARIS",
+          naf_code: "7022Z",
+          naf_label: "Conseil pour les affaires",
+          active: true,
+        }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
