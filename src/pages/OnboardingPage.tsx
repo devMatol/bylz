@@ -49,18 +49,41 @@ export function OnboardingPage() {
       vat_regime: "franchise" as const,
       default_payment_terms: "30d" as const,
     };
-    const { data: insertedComp, error } = await supabase
+    // Update if company already exists for user, otherwise insert
+    const { data: existingComp } = await supabase
       .from("companies")
-      .insert(insert)
       .select("id")
-      .single();
+      .eq("user_id", user.id)
+      .maybeSingle();
 
-    if (error) {
-      toast("Erreur lors de la création de l'entreprise", "danger");
-      return;
+    let companyId: string | null = null;
+
+    if (existingComp) {
+      const { data: updatedComp, error: updateErr } = await supabase
+        .from("companies")
+        .update(insert)
+        .eq("id", existingComp.id)
+        .select("id")
+        .single();
+
+      if (updateErr) {
+        toast(updateErr.message || "Erreur lors de la mise à jour de l'entreprise", "danger");
+        return;
+      }
+      companyId = updatedComp?.id;
+    } else {
+      const { data: insertedComp, error: insertErr } = await supabase
+        .from("companies")
+        .insert(insert)
+        .select("id")
+        .single();
+
+      if (insertErr) {
+        toast(insertErr.message || "Erreur lors de la création de l'entreprise", "danger");
+        return;
+      }
+      companyId = insertedComp?.id;
     }
-
-    const companyId = insertedComp?.id;
     if (searchParams.get("guest") === "true" && companyId) {
       try {
         const invoiceId = await migrateGuestDraft(companyId);

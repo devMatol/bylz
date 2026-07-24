@@ -85,11 +85,17 @@ export const ACTIVITY_INFO: Record<
   liberal: { abattement: "34%", urssaf: "21.2%" },
 };
 
+export function deduceActivityFromNaf(nafCode: string): ActivityType {
+  const code = (nafCode || "").replace(/\D/g, "");
+  const prefix = parseInt(code.slice(0, 2), 10);
+
+  if (isNaN(prefix)) return "freelance_bnc";
+  if (prefix >= 45 && prefix <= 47) return "commerce";
+  if ((prefix >= 41 && prefix <= 43) || prefix === 95 || prefix === 96) return "artisan_bic";
+  if (prefix === 69 || prefix === 86) return "liberal";
+  return "freelance_bnc";
+}
+
 export function nafToActivityType(nafCode: string): ActivityType | null {
-  const prefix = nafCode.slice(0, 2);
-  if (["62", "70", "73", "74"].includes(prefix)) return "freelance_bnc";
-  if (["41", "42", "43"].includes(prefix)) return "artisan_bic";
-  if (["45", "46", "47"].includes(prefix)) return "commerce";
-  if (["69", "85", "86", "88"].includes(prefix)) return "liberal";
-  return null;
+  return deduceActivityFromNaf(nafCode);
 }

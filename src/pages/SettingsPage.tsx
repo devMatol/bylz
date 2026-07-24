@@ -93,10 +93,34 @@ export function SettingsPage() {
     }
     setSearchingSiret(true);
     try {
-      const { data: json, error } = await supabase.functions.invoke("siret-lookup", {
-        body: { siret: cleanSiret },
-      });
-      if (error || !json) throw new Error(error?.message || "SIRET introuvable.");
+      let json: any = null;
+
+      try {
+        const { data: edgeJson, error } = await supabase.functions.invoke("siret-lookup", {
+          body: { siret: cleanSiret },
+        });
+        if (!error && edgeJson && edgeJson.legal_name) {
+          json = edgeJson;
+        }
+      } catch {
+        // Fallback
+      }
+
+      if (!json) {
+        const govRes = await fetch(`https://recherche-entreprises.api.gouv.fr/search?q=${cleanSiret}&page=1&per_page=1`);
+        if (govRes.ok) {
+          const govData = await govRes.json();
+          const firstResult = govData?.results?.[0];
+          if (firstResult) {
+            const etab = firstResult.matching_etablissements?.[0] || firstResult.siege || {};
+            const legalName = firstResult.nom_complet || firstResult.nom_raison_sociale || "Entreprise";
+            const address = etab.adresse || etab.adresse_complete || `${etab.code_postal || ""} ${etab.libelle_commune || ""}`.trim();
+            json = { legal_name: legalName, address };
+          }
+        }
+      }
+
+      if (!json) throw new Error("SIRET introuvable dans le registre officiel des entreprises.");
       setLegalName(json.legal_name || "");
       setAddress(json.address || "");
       toast("Informations de l'entreprise récupérées avec succès !", "success");

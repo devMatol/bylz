@@ -7,7 +7,7 @@ import { Skeleton } from "../ui/Skeleton";
 import { Badge } from "../ui/Badge";
 import { cn } from "../../lib/utils";
 import { supabase } from "../../lib/supabase";
-import type { OnboardingData } from "../../lib/onboarding";
+import { deduceActivityFromNaf, type OnboardingData } from "../../lib/onboarding";
 
 interface SiretResult {
   legal_name: string;
@@ -68,12 +68,49 @@ export function Step1Company({ data, update, onNext }: Step1CompanyProps) {
 
   async function lookupSiret(siret: string) {
     try {
-      const { data: json, error } = await supabase.functions.invoke<SiretResult>(
-        "siret-lookup",
-        { body: { siret } }
-      );
-      if (error) throw new Error(error.message || "Erreur de recherche");
-      if (!json) throw new Error("Réponse vide du service SIRET");
+      let json: SiretResult | null = null;
+
+      // 1. Edge Function Lookup
+      try {
+        const { data: edgeJson, error } = await supabase.functions.invoke<SiretResult>(
+          "siret-lookup",
+          { body: { siret } }
+        );
+        if (!error && edgeJson && edgeJson.legal_name) {
+          json = edgeJson;
+        }
+      } catch {
+        // Fallback
+      }
+
+      // 2. Direct Open API Fallback (recherche-entreprises.api.gouv.fr)
+      if (!json) {
+        const govRes = await fetch(`https://recherche-entreprises.api.gouv.fr/search?q=${siret}&page=1&per_page=1`);
+        if (govRes.ok) {
+          const govData = await govRes.json();
+          const firstResult = govData?.results?.[0];
+          if (firstResult) {
+            const etab = firstResult.matching_etablissements?.[0] || firstResult.siege || {};
+            const legalName = firstResult.nom_complet || firstResult.nom_raison_sociale || "Entreprise";
+            const address = etab.adresse || etab.adresse_complete || `${etab.code_postal || ""} ${etab.libelle_commune || ""}`.trim();
+            const nafCode = etab.activite_principale || firstResult.activite_principale || "";
+            const active = etab.etat_administratif === "A" || firstResult.etat_administratif === "A";
+
+            json = {
+              legal_name: legalName,
+              address: address,
+              naf_code: nafCode,
+              naf_label: "",
+              active: active,
+            };
+          }
+        }
+      }
+
+      if (!json) throw new Error("SIRET introuvable dans le registre officiel des entreprises.");
+
+      const autoActivity = deduceActivityFromNaf(json.naf_code);
+
       setResult(json);
       update({
         siret,
@@ -82,10 +119,11 @@ export function Step1Company({ data, update, onNext }: Step1CompanyProps) {
         nafCode: json.naf_code,
         nafLabel: json.naf_label,
         active: json.active,
+        activityType: autoActivity,
       });
       setStatus(json.active ? "found" : "inactive");
     } catch (err) {
-      setErrorMsg(err instanceof Error ? err.message : "Erreur de recherche");
+      setErrorMsg(err instanceof Error ? err.message : "Erreur de recherche SIRET");
       setStatus("error");
     }
   }
