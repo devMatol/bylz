@@ -103,6 +103,38 @@ serve(async (req) => {
       if (Object.keys(updateData).length > 0) {
         await supabase.from("invoices").update(updateData).eq("id", targetInvoice.id);
       }
+    } else {
+      // Inbound invoice emitted from a third-party platform (Qonto, Pennylane, Sage, SAP) towards a Bylz SIRET
+      const recipientSiret = body.recipient_siret || body.receiver_siret || body.destination_siret || body.recipient?.siret;
+      if (recipientSiret) {
+        const cleanSiret = String(recipientSiret).replace(/\s/g, "");
+        const { data: recipientCompany } = await supabase
+          .from("companies")
+          .select("id")
+          .eq("siret", cleanSiret)
+          .maybeSingle();
+
+        if (recipientCompany) {
+          const invData = body.invoice_data || body;
+          const invNumber = invData.number || invData.invoice_number || `REC-${Date.now()}`;
+          const senderName = invData.sender_name || invData.supplier_name || invData.issuer_name || "Fournisseur B2B";
+
+          await supabase.from("invoices").insert({
+            company_id: recipientCompany.id,
+            number: invNumber,
+            type: "invoice",
+            status: "pending",
+            pa_status: "received",
+            factpulse_ref: factpulseRef || `INB-${Date.now()}`,
+            issue_date: invData.issue_date || new Date().toISOString().split("T")[0],
+            due_date: invData.due_date || null,
+            total_ht: parseFloat(invData.total_ht || invData.amount_ht || 0),
+            total_vat: parseFloat(invData.total_vat || invData.amount_vat || 0),
+            total_ttc: parseFloat(invData.total_ttc || invData.amount_ttc || 0),
+            note: `Facture fournisseur reçue via Réseau PDP (Émetteur: ${senderName})`,
+          });
+        }
+      }
     }
 
     return new Response(JSON.stringify({ success: true, processed: true }), {
