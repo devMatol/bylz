@@ -155,7 +155,20 @@ export async function callFactPulseApi(
   }
 
   if (!response.ok) {
-    const errorMsg = resData?.error || resData?.message || text || `FactPulse API status ${response.status}`;
+    let errorMsg = "";
+    if (typeof resData?.error === "string") {
+      errorMsg = resData.error;
+    } else if (typeof resData?.error?.message === "string") {
+      errorMsg = resData.error.message;
+    } else if (typeof resData?.message === "string") {
+      errorMsg = resData.message;
+    } else if (Array.isArray(resData?.error?.details) && resData.error.details.length > 0) {
+      const firstDetail = resData.error.details[0];
+      errorMsg = firstDetail?.message || "Erreur de validation FactPulse";
+    } else {
+      errorMsg = text && !text.startsWith("{") ? text : `FactPulse API HTTP ${response.status}`;
+    }
+
     const err = new Error(errorMsg);
     (err as any).status = response.status;
     (err as any).data = resData;
