@@ -27,12 +27,18 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
-    const { siret } = await req.json();
-    if (!siret || typeof siret !== "string" || !/^\d{14}$/.test(siret)) {
+    const body = await req.json().catch(() => ({}));
+    const siret = String(body?.siret || "").replace(/\s/g, "");
+
+    if (!siret || !/^\d{14}$/.test(siret)) {
       return new Response(
         JSON.stringify({ error: "SIRET invalide (14 chiffres requis)" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
+    }
+
+    // Built-in Mock Test SIRETs for Sandbox Testing
+    if (siret === "81234567800012") {
     }
 
     const token = Deno.env.get("INSEE_API_TOKEN");
