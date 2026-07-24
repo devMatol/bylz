@@ -14,7 +14,26 @@ export async function getOrRefreshFactPulseToken(forceRefresh = false): Promise<
   const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
   const supabase = supabaseUrl && supabaseServiceKey ? createClient(supabaseUrl, supabaseServiceKey) : null;
 
-  // 1. Try reading active token from DB if not forcing refresh
+  // 1. Check environment variable FACTPULSE_API_TOKEN first
+  const envToken = Deno.env.get("FACTPULSE_API_TOKEN");
+  if (envToken && envToken.trim() !== "") {
+    if (supabase) {
+      try {
+        await supabase.from("factpulse_status").upsert({
+          id: "default",
+          access_token: envToken,
+          token_valid: true,
+          last_checked_at: new Date().toISOString(),
+          last_error: null,
+        });
+      } catch (e) {
+        console.warn("Could not save envToken to DB:", e);
+      }
+    }
+    return envToken;
+  }
+
+  // 2. Try reading active token from DB if not forcing refresh
   if (!forceRefresh && supabase) {
     try {
       const { data: statusRow } = await supabase
@@ -23,7 +42,7 @@ export async function getOrRefreshFactPulseToken(forceRefresh = false): Promise<
         .eq("id", "default")
         .maybeSingle();
 
-      if (statusRow && statusRow.token_valid && statusRow.access_token) {
+      if (statusRow && statusRow.access_token) {
         return statusRow.access_token;
       }
     } catch (e) {
@@ -31,21 +50,13 @@ export async function getOrRefreshFactPulseToken(forceRefresh = false): Promise<
     }
   }
 
-  // Fallback to environment FACTPULSE_API_TOKEN if set
-  const envToken = Deno.env.get("FACTPULSE_API_TOKEN");
-  if (!forceRefresh && envToken) {
-    return envToken;
-  }
-
-  // 2. Perform Automatic Auth via Username/Password & Client UID
+  // 3. Perform Automatic Auth via Username/Password & Client UID
   const username = Deno.env.get("FACTPULSE_USERNAME") || Deno.env.get("FACTPULSE_EMAIL");
   const password = Deno.env.get("FACTPULSE_PASSWORD");
   const clientUid = Deno.env.get("FACTPULSE_CLIENT_UID");
 
   if (!username || !password || !clientUid) {
-    // If no credentials available, fallback to envToken or throw
-    if (envToken) return envToken;
-    throw new Error("Identifiants FactPulse manquants (FACTPULSE_USERNAME, FACTPULSE_PASSWORD, FACTPULSE_CLIENT_UID).");
+    throw new Error("FACTPULSE_API_TOKEN manquant dans les secrets Supabase Edge Functions.");
   }
 
   console.log("🔄 Autologin FactPulse : Génération automatique d'un nouveau Token Bearer...");
@@ -85,7 +96,7 @@ export async function getOrRefreshFactPulseToken(forceRefresh = false): Promise<
         last_error: resData?.error?.message || resData?.message || "Échec d'authentification automatique FactPulse",
       });
     }
-    const err = new Error("Token FactPulse expiré et échec de ré-authentification automatique.");
+    const err = new Error("Identifiants FactPulse invalides ou Token expiré.");
     (err as any).code = "token_expired";
     (err as any).status = 401;
     throw err;
@@ -96,9 +107,8 @@ export async function getOrRefreshFactPulseToken(forceRefresh = false): Promise<
     throw new Error("Réponse d'authentification FactPulse invalide (aucun access_token retourné).");
   }
 
-  console.log("✅ Nouveaux jeton FactPulse généré et sauvegardé avec succès !");
+  console.log("✅ Nouveaux jeton FactPulse généré avec succès !");
 
-  // Save new token in DB
   if (supabase) {
     await supabase.from("factpulse_status").upsert({
       id: "default",
@@ -141,9 +151,8 @@ export async function callFactPulseApi(
 
   let response = await sendRequest(token);
 
-  // If 401, trigger automatic token refresh and retry ONCE
   if (response.status === 401) {
-    console.warn("⚠️ Token 401 détecté lors de l'appel FactPulse. Tentative de rafraîchissement automatique...");
+    console.warn("⚠️ Token 401 détecté lors de l'appel FactPulse. Tentative de rafraîchissement...");
     try {
       token = await getOrRefreshFactPulseToken(true);
       response = await sendRequest(token);
