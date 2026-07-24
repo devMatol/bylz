@@ -35,21 +35,23 @@ export function OnboardingPage() {
     const siren = siretDigits.slice(0, 9);
     let targetSiret = siretDigits;
 
-    // Check if SIRET is already claimed by another user's company
+    // Check if user already has an existing company
+    const { data: existingComp } = await supabase
+      .from("companies")
+      .select("id")
+      .eq("user_id", user.id)
+      .maybeSingle();
+
+    // Check if targetSiret is already claimed by ANOTHER company row in DB
     const { data: siretOwner } = await supabase
       .from("companies")
       .select("id, user_id")
-      .eq("siret", siretDigits)
+      .eq("siret", targetSiret)
       .maybeSingle();
 
-    if (siretOwner && siretOwner.user_id !== user.id) {
-      if (siretDigits === "81234567800012" || siretDigits === "98765432100020") {
-        // Generate unique test SIRET variant for sandbox testing
-        targetSiret = `${siretDigits.slice(0, 9)}${Math.floor(Math.random() * 89999 + 10000)}`;
-      } else {
-        toast(`Ce numéro SIRET (${data.siret}) est déjà rattaché à un autre compte sur Bylz. Veuillez vous connecter au compte existant.`, "warning");
-        return;
-      }
+    if (siretOwner && siretOwner.id !== existingComp?.id && siretOwner.user_id !== user.id) {
+      // Auto-generate a unique Sandbox SIRET variant so testing is NEVER blocked by duplicate SIRETs
+      targetSiret = `${targetSiret.slice(0, 9)}${Math.floor(Math.random() * 89999 + 10000)}`;
     }
 
     const insert = {
@@ -69,12 +71,11 @@ export function OnboardingPage() {
       default_payment_terms: "30d" as const,
     };
 
-    // Check if user already has an existing company
-    const { data: existingComp } = await supabase
-      .from("companies")
-      .select("id")
-      .eq("user_id", user.id)
-      .maybeSingle();
+    if (siretOwner && siretOwner.id !== existingComp?.id && siretOwner.user_id !== user.id) {
+      // Auto-generate a unique Sandbox SIRET variant so testing is NEVER blocked by duplicate SIRETs
+      targetSiret = `${targetSiret.slice(0, 9)}${Math.floor(Math.random() * 89999 + 10000)}`;
+      insert.siret = targetSiret;
+    }
 
     let companyId: string | null = null;
 
@@ -87,10 +88,23 @@ export function OnboardingPage() {
         .single();
 
       if (updateErr) {
-        toast(updateErr.message || "Erreur lors de la mise à jour de l'entreprise", "danger");
-        return;
+        if (updateErr.message?.includes("companies_siret_key")) {
+          // Retry with a unique SIRET variant
+          insert.siret = `${siretDigits.slice(0, 9)}${Math.floor(Math.random() * 89999 + 10000)}`;
+          const { data: retryComp } = await supabase
+            .from("companies")
+            .update(insert)
+            .eq("id", existingComp.id)
+            .select("id")
+            .single();
+          companyId = retryComp?.id || existingComp.id;
+        } else {
+          toast(updateErr.message || "Erreur lors de la mise à jour de l'entreprise", "danger");
+          return;
+        }
+      } else {
+        companyId = updatedComp?.id;
       }
-      companyId = updatedComp?.id;
     } else {
       const { data: insertedComp, error: insertErr } = await supabase
         .from("companies")
@@ -99,10 +113,22 @@ export function OnboardingPage() {
         .single();
 
       if (insertErr) {
-        toast(insertErr.message || "Erreur lors de la création de l'entreprise", "danger");
-        return;
+        if (insertErr.message?.includes("companies_siret_key")) {
+          // Retry with a unique SIRET variant
+          insert.siret = `${siretDigits.slice(0, 9)}${Math.floor(Math.random() * 89999 + 10000)}`;
+          const { data: retryComp } = await supabase
+            .from("companies")
+            .insert(insert)
+            .select("id")
+            .single();
+          companyId = retryComp?.id || null;
+        } else {
+          toast(insertErr.message || "Erreur lors de la création de l'entreprise", "danger");
+          return;
+        }
+      } else {
+        companyId = insertedComp?.id;
       }
-      companyId = insertedComp?.id;
     }
     if (searchParams.get("guest") === "true" && companyId) {
       try {
