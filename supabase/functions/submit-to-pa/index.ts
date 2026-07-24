@@ -61,25 +61,34 @@ serve(async (req) => {
       vatRate: isFranchise ? 0 : (l.vat_rate !== undefined ? Number(l.vat_rate) : 20),
     }));
 
+    // Clean sirets
+    const supplierSiret = (company?.siret || company?.siren || "").replace(/\s/g, "");
+    const recipientSiret = (client?.siret || client?.siren || "").replace(/\s/g, "");
+
     const payload = {
-      invoiceData: {
-        number: invoice.number,
-        supplier: {
-          siret: company?.siret || company?.siren || "00000000000000",
-          routingAddress: company?.address || "",
-          iban: company?.iban || "",
-        },
-        recipient: {
-          siret: client?.siret || client?.siren || "00000000000000",
-        },
-        lines: simplifiedLines,
+      number: invoice.number,
+      issueDate: invoice.issue_date || new Date().toISOString().split("T")[0],
+      dueDate: invoice.due_date || new Date().toISOString().split("T")[0],
+      supplier: {
+        siret: supplierSiret,
+        name: company?.name || "Émetteur",
+        routingAddress: company?.address || "",
+        iban: company?.iban || "",
       },
+      recipient: {
+        siret: recipientSiret,
+        name: client?.name || "Client",
+      },
+      lines: simplifiedLines,
+      totalHt: Number(invoice.total_ht) || 0,
+      totalVat: Number(invoice.total_vat) || 0,
+      totalTtc: Number(invoice.total_ttc) || 0,
       destination: {
         type: "afnor",
       },
     };
 
-    console.log("Submitting FactPulse simplified payload for invoice:", invoice.number, payload);
+    console.log("Submitting FactPulse payload for invoice:", invoice.number, payload);
 
     // 3. Submit to FactPulse
     let resData: any = null;
@@ -88,7 +97,13 @@ serve(async (req) => {
     } catch (err: any) {
       const isTokenExpired = err.code === "token_expired" || err.status === 401;
       const errorCode = isTokenExpired ? "token_expired" : "submission_error";
-      const userMessage = err.message || "Erreur lors de la transmission à la plateforme FactPulse";
+
+      let userMessage = err.message || "Erreur lors de la transmission à la plateforme FactPulse";
+      if (err.data) {
+        userMessage = `FactPulse error: ${JSON.stringify(err.data)}`;
+      }
+
+      console.error("FactPulse submission failed details:", { userMessage, errData: err.data });
 
       // Log failure in pa_submission_errors
       await supabase.from("pa_submission_errors").insert({
