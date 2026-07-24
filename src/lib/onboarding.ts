@@ -17,6 +17,35 @@ export interface OnboardingData {
   customMention: string;
 }
 
+export function deduceActivityFromNaf(nafCode: string): ActivityType {
+  const code = (nafCode || "").replace(/\D/g, "");
+  const prefix = parseInt(code.slice(0, 2), 10);
+
+  if (isNaN(prefix)) return "freelance_bnc";
+
+  // Commerce / Vente (BIC Ventes) : 45 (Auto), 46 (Commerce gros), 47 (Commerce détail)
+  if (prefix >= 45 && prefix <= 47) {
+    return "commerce";
+  }
+
+  // Artisanat / Services BIC : 41-43 (Bâtiment/BTP), 95 (Réparation), 96 (Services personnels, Coiffure, etc.)
+  if ((prefix >= 41 && prefix <= 43) || prefix === 95 || prefix === 96) {
+    return "artisan_bic";
+  }
+
+  // Professions Libérales Réglementées : 69 (Juridique), 86 (Santé)
+  if (prefix === 69 || prefix === 86) {
+    return "liberal";
+  }
+
+  // Par défaut : Prestations BNC / Freelance (62 Informatique, 70 Conseil, 73 Pub, 74 Design, 85 Formation...)
+  return "freelance_bnc";
+}
+
+export function nafToActivityType(nafCode: string): ActivityType {
+  return deduceActivityFromNaf(nafCode);
+}
+
 export const PAYMENT_CONDITIONS = [
   "Paiement à réception de facture",
   "Pénalités de retard : 3 fois le taux d'intérêt légal",
@@ -79,17 +108,8 @@ export const ACTIVITY_INFO: Record<
   ActivityType,
   { abattement: string; urssaf: string }
 > = {
-  freelance_bnc: { abattement: "34%", urssaf: "21.2%" },
+  freelance_bnc: { abattement: "34%", urssaf: "23.1%" },
   artisan_bic: { abattement: "50%", urssaf: "21.2%" },
   commerce: { abattement: "71%", urssaf: "12.3%" },
-  liberal: { abattement: "34%", urssaf: "21.2%" },
+  liberal: { abattement: "34%", urssaf: "23.2%" },
 };
-
-export function nafToActivityType(nafCode: string): ActivityType | null {
-  const prefix = nafCode.slice(0, 2);
-  if (["62", "70", "73", "74"].includes(prefix)) return "freelance_bnc";
-  if (["41", "42", "43"].includes(prefix)) return "artisan_bic";
-  if (["45", "46", "47"].includes(prefix)) return "commerce";
-  if (["69", "85", "86", "88"].includes(prefix)) return "liberal";
-  return null;
-}

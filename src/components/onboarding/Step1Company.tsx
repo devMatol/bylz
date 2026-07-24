@@ -7,7 +7,7 @@ import { Skeleton } from "../ui/Skeleton";
 import { Badge } from "../ui/Badge";
 import { cn } from "../../lib/utils";
 import { supabase } from "../../lib/supabase";
-import type { OnboardingData } from "../../lib/onboarding";
+import { deduceActivityFromNaf, type OnboardingData } from "../../lib/onboarding";
 
 interface SiretResult {
   legal_name: string;
@@ -132,6 +132,8 @@ export function Step1Company({ data, update, onNext }: Step1CompanyProps) {
 
       if (!json) throw new Error("SIRET introuvable dans le registre officiel des entreprises.");
 
+      const autoActivity = deduceActivityFromNaf(json.naf_code);
+
       setResult(json);
       update({
         siret,
@@ -140,6 +142,7 @@ export function Step1Company({ data, update, onNext }: Step1CompanyProps) {
         nafCode: json.naf_code,
         nafLabel: json.naf_label,
         active: json.active,
+        activityType: autoActivity,
       });
       setStatus(json.active ? "found" : "inactive");
     } catch (err) {

@@ -45,9 +45,14 @@ export function Step2Activity({ data, update, onNext, onBack }: Step2ActivityPro
     <OnboardingLayout step={2} onBack={onBack}>
       <div className="text-center mb-6 mt-2">
         <h2 className="text-xl font-bold text-text mb-1">Quel type d'activité exercez-vous ?</h2>
-        <p className="text-sm text-muted">
+        <p className="text-sm text-muted mb-2">
           Cette information détermine vos cotisations et votre abattement fiscal.
         </p>
+        {data.nafCode && (
+          <span className="inline-flex items-center gap-1.5 bg-primary/10 text-primary text-xs font-semibold px-3 py-1 rounded-pill">
+            ⚡ Pré-sélectionné selon votre Code NAF ({data.nafCode})
+          </span>
+        )}
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
