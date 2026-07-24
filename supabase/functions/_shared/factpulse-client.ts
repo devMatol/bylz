@@ -16,21 +16,8 @@ export async function getOrRefreshFactPulseToken(forceRefresh = false): Promise<
 
   // 1. Check environment variable FACTPULSE_API_TOKEN first
   const envToken = Deno.env.get("FACTPULSE_API_TOKEN");
-  if (envToken && envToken.trim() !== "") {
-    if (supabase) {
-      try {
-        await supabase.from("factpulse_status").upsert({
-          id: "default",
-          access_token: envToken,
-          token_valid: true,
-          last_checked_at: new Date().toISOString(),
-          last_error: null,
-        });
-      } catch (e) {
-        console.warn("Could not save envToken to DB:", e);
-      }
-    }
-    return envToken;
+  if (!forceRefresh && envToken && envToken.trim() !== "") {
+    return envToken.trim();
   }
 
   // 2. Try reading active token from DB if not forcing refresh
@@ -42,7 +29,7 @@ export async function getOrRefreshFactPulseToken(forceRefresh = false): Promise<
         .eq("id", "default")
         .maybeSingle();
 
-      if (statusRow && statusRow.access_token) {
+      if (statusRow && statusRow.token_valid && statusRow.access_token) {
         return statusRow.access_token;
       }
     } catch (e) {

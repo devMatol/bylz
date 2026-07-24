@@ -84,15 +84,16 @@ serve(async (req) => {
     // 3. Submit to FactPulse
     let resData: any = null;
     try {
-      resData = await callFactPulseApi("/invoices/submit", "POST", payload);
+      resData = await callFactPulseApi("/invoices/submit/", "POST", payload);
     } catch (err: any) {
       const isTokenExpired = err.code === "token_expired" || err.status === 401;
       const errorCode = isTokenExpired ? "token_expired" : "submission_error";
+      const userMessage = err.message || "Erreur lors de la transmission à la plateforme FactPulse";
 
       // Log failure in pa_submission_errors
       await supabase.from("pa_submission_errors").insert({
         invoice_id: invoice.id,
-        error: err.message || "Erreur de transmission FactPulse",
+        error: userMessage,
         error_code: errorCode,
       });
 
@@ -101,18 +102,16 @@ serve(async (req) => {
           id: "default",
           token_valid: false,
           last_checked_at: new Date().toISOString(),
-          last_error: "401 Token Expired",
+          last_error: userMessage,
         });
       }
 
       return new Response(
         JSON.stringify({
           success: false,
-          error: err.message,
+          error: userMessage,
           error_code: errorCode,
-          message: isTokenExpired
-            ? "⚠️ Secrets FactPulse manquants ou expirés sur Supabase Cloud (FACTPULSE_USERNAME, FACTPULSE_PASSWORD, FACTPULSE_CLIENT_UID)."
-            : "Facture émise — transmission en attente, nouvelle tentative automatique",
+          message: userMessage,
         }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
