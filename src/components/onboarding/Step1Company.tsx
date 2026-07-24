@@ -7,7 +7,7 @@ import { Skeleton } from "../ui/Skeleton";
 import { Badge } from "../ui/Badge";
 import { cn } from "../../lib/utils";
 import { supabase } from "../../lib/supabase";
-import { deduceActivityFromNaf, type OnboardingData } from "../../lib/onboarding";
+import type { OnboardingData } from "../../lib/onboarding";
 
 interface SiretResult {
   legal_name: string;
@@ -68,72 +68,12 @@ export function Step1Company({ data, update, onNext }: Step1CompanyProps) {
 
   async function lookupSiret(siret: string) {
     try {
-      let json: SiretResult | null = null;
-
-      // Check test SIRET mocks
-      if (siret === "81234567800012") {
-        json = {
-          legal_name: "STUDIO BYLZ SAS",
-          address: "10 RUE DE LA PAIX 75002 PARIS",
-          naf_code: "6201Z",
-          naf_label: "Programmation informatique",
-          active: true,
-        };
-      } else if (siret === "98765432100020") {
-        json = {
-          legal_name: "AGENCE HORIZON DIGITAL SARL",
-          address: "45 AVENUE MONTAIGNE 75008 PARIS",
-          naf_code: "7022Z",
-          naf_label: "Conseil pour les affaires",
-          active: true,
-        };
-      }
-
-      // 1. Direct Free Official State API (recherche-entreprises.api.gouv.fr)
-      try {
-        const govRes = await fetch(`https://recherche-entreprises.api.gouv.fr/search?q=${siret}&page=1&per_page=1`);
-        if (govRes.ok) {
-          const govData = await govRes.json();
-          const firstResult = govData?.results?.[0];
-          if (firstResult) {
-            const etab = firstResult.matching_etablissements?.[0] || firstResult.siege || {};
-            const legalName = firstResult.nom_complet || firstResult.nom_raison_sociale || "Entreprise";
-            const address = etab.adresse || etab.adresse_complete || `${etab.code_postal || ""} ${etab.libelle_commune || ""}`.trim();
-            const nafCode = etab.activite_principale || firstResult.activite_principale || "";
-            const active = etab.etat_administratif === "A" || firstResult.etat_administratif === "A";
-
-            json = {
-              legal_name: legalName,
-              address: address,
-              naf_code: nafCode,
-              naf_label: "",
-              active: active,
-            };
-          }
-        }
-      } catch {
-        // Fallback to Edge function if needed
-      }
-
-      // 2. Fallback to Supabase Edge Function if needed
-      if (!json) {
-        try {
-          const { data: edgeJson, error } = await supabase.functions.invoke<SiretResult>(
-            "siret-lookup",
-            { body: { siret } }
-          );
-          if (!error && edgeJson) {
-            json = edgeJson;
-          }
-        } catch {
-          // Ignore
-        }
-      }
-
-      if (!json) throw new Error("SIRET introuvable dans le registre officiel des entreprises.");
-
-      const autoActivity = deduceActivityFromNaf(json.naf_code);
-
+      const { data: json, error } = await supabase.functions.invoke<SiretResult>(
+        "siret-lookup",
+        { body: { siret } }
+      );
+      if (error) throw new Error(error.message || "Erreur de recherche");
+      if (!json) throw new Error("Réponse vide du service SIRET");
       setResult(json);
       update({
         siret,
@@ -142,7 +82,6 @@ export function Step1Company({ data, update, onNext }: Step1CompanyProps) {
         nafCode: json.naf_code,
         nafLabel: json.naf_label,
         active: json.active,
-        activityType: autoActivity,
       });
       setStatus(json.active ? "found" : "inactive");
     } catch (err) {

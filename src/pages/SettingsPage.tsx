@@ -93,40 +93,10 @@ export function SettingsPage() {
     }
     setSearchingSiret(true);
     try {
-      let json: any = null;
-
-      if (cleanSiret === "81234567800012") {
-        json = { legal_name: "STUDIO BYLZ SAS", address: "10 RUE DE LA PAIX 75002 PARIS" };
-      } else if (cleanSiret === "98765432100020") {
-        json = { legal_name: "AGENCE HORIZON DIGITAL SARL", address: "45 AVENUE MONTAIGNE 75008 PARIS" };
-      }
-
-      try {
-        const { data: edgeJson, error } = await supabase.functions.invoke("siret-lookup", {
-          body: { siret: cleanSiret },
-        });
-        if (!error && edgeJson && edgeJson.legal_name) {
-          json = edgeJson;
-        }
-      } catch {
-        // Fallback to direct Open API
-      }
-
-      if (!json) {
-        const govRes = await fetch(`https://recherche-entreprises.api.gouv.fr/search?q=${cleanSiret}&page=1&per_page=1`);
-        if (govRes.ok) {
-          const govData = await govRes.json();
-          const firstResult = govData?.results?.[0];
-          if (firstResult) {
-            const etab = firstResult.matching_etablissements?.[0] || firstResult.siege || {};
-            const legalName = firstResult.nom_complet || firstResult.nom_raison_sociale || "Entreprise";
-            const address = etab.adresse || etab.adresse_complete || `${etab.code_postal || ""} ${etab.libelle_commune || ""}`.trim();
-            json = { legal_name: legalName, address };
-          }
-        }
-      }
-
-      if (!json) throw new Error("SIRET introuvable dans le registre officiel.");
+      const { data: json, error } = await supabase.functions.invoke("siret-lookup", {
+        body: { siret: cleanSiret },
+      });
+      if (error || !json) throw new Error(error?.message || "SIRET introuvable.");
       setLegalName(json.legal_name || "");
       setAddress(json.address || "");
       toast("Informations de l'entreprise récupérées avec succès !", "success");

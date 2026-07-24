@@ -33,30 +33,9 @@ export function OnboardingPage() {
     if (!user) return;
     const siretDigits = data.siret.replace(/\s/g, "");
     const siren = siretDigits.slice(0, 9);
-    let targetSiret = siretDigits;
-
-    // Check if user already has an existing company
-    const { data: existingComp } = await supabase
-      .from("companies")
-      .select("id")
-      .eq("user_id", user.id)
-      .maybeSingle();
-
-    // Check if targetSiret is already claimed by ANOTHER company row in DB
-    const { data: siretOwner } = await supabase
-      .from("companies")
-      .select("id, user_id")
-      .eq("siret", targetSiret)
-      .maybeSingle();
-
-    if (siretOwner && siretOwner.id !== existingComp?.id && siretOwner.user_id !== user.id) {
-      // Auto-generate a unique Sandbox SIRET variant so testing is NEVER blocked by duplicate SIRETs
-      targetSiret = `${targetSiret.slice(0, 9)}${Math.floor(Math.random() * 89999 + 10000)}`;
-    }
-
     const insert = {
       user_id: user.id,
-      siret: targetSiret,
+      siret: siretDigits,
       siren,
       legal_name: data.legalName,
       commercial_name: data.commercialName || null,
@@ -70,66 +49,18 @@ export function OnboardingPage() {
       vat_regime: "franchise" as const,
       default_payment_terms: "30d" as const,
     };
+    const { data: insertedComp, error } = await supabase
+      .from("companies")
+      .insert(insert)
+      .select("id")
+      .single();
 
-    if (siretOwner && siretOwner.id !== existingComp?.id && siretOwner.user_id !== user.id) {
-      // Auto-generate a unique Sandbox SIRET variant so testing is NEVER blocked by duplicate SIRETs
-      targetSiret = `${targetSiret.slice(0, 9)}${Math.floor(Math.random() * 89999 + 10000)}`;
-      insert.siret = targetSiret;
+    if (error) {
+      toast("Erreur lors de la création de l'entreprise", "danger");
+      return;
     }
 
-    let companyId: string | null = null;
-
-    if (existingComp) {
-      const { data: updatedComp, error: updateErr } = await supabase
-        .from("companies")
-        .update(insert)
-        .eq("id", existingComp.id)
-        .select("id")
-        .single();
-
-      if (updateErr) {
-        if (updateErr.message?.includes("companies_siret_key")) {
-          // Retry with a unique SIRET variant
-          insert.siret = `${siretDigits.slice(0, 9)}${Math.floor(Math.random() * 89999 + 10000)}`;
-          const { data: retryComp } = await supabase
-            .from("companies")
-            .update(insert)
-            .eq("id", existingComp.id)
-            .select("id")
-            .single();
-          companyId = retryComp?.id || existingComp.id;
-        } else {
-          toast(updateErr.message || "Erreur lors de la mise à jour de l'entreprise", "danger");
-          return;
-        }
-      } else {
-        companyId = updatedComp?.id;
-      }
-    } else {
-      const { data: insertedComp, error: insertErr } = await supabase
-        .from("companies")
-        .insert(insert)
-        .select("id")
-        .single();
-
-      if (insertErr) {
-        if (insertErr.message?.includes("companies_siret_key")) {
-          // Retry with a unique SIRET variant
-          insert.siret = `${siretDigits.slice(0, 9)}${Math.floor(Math.random() * 89999 + 10000)}`;
-          const { data: retryComp } = await supabase
-            .from("companies")
-            .insert(insert)
-            .select("id")
-            .single();
-          companyId = retryComp?.id || null;
-        } else {
-          toast(insertErr.message || "Erreur lors de la création de l'entreprise", "danger");
-          return;
-        }
-      } else {
-        companyId = insertedComp?.id;
-      }
-    }
+    const companyId = insertedComp?.id;
     if (searchParams.get("guest") === "true" && companyId) {
       try {
         const invoiceId = await migrateGuestDraft(companyId);
