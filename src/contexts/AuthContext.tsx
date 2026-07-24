@@ -164,25 +164,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   // When impersonating a target account ("Prise de contrôle du compte"):
-  // ONLY the subscription plan of the target user is applied to your view profile.
-  // ALL data, invoices, quotes, clients, and company workspace remain strictly with matthiasollivier123!
+  // TOTAL CONTROL: The admin gets full access to the target user's company, profile, invoices, clients & workspace!
+  const effectiveUser =
+    impersonation?.isImpersonating && impersonation.targetUser && user
+      ? ({ ...user, id: impersonation.targetUser.id, email: impersonation.targetUser.email } as User)
+      : user;
+
   const effectiveProfile =
-    impersonation?.isImpersonating && impersonation.targetUser && profile
-      ? {
-          ...profile,
-          plan: impersonation.targetUser.plan,
-          trial_ends_at: impersonation.targetUser.trial_ends_at,
-          trial_used: impersonation.targetUser.trial_used,
-          suspended_at: impersonation.targetUser.suspended_at,
-        }
+    impersonation?.isImpersonating && impersonation.targetUser
+      ? impersonation.targetUser
       : profile;
 
-  const effectiveCompany = company;
+  const effectiveCompany =
+    impersonation?.isImpersonating && impersonation.targetCompany
+      ? impersonation.targetCompany
+      : company;
 
   return (
     <AuthContext.Provider
       value={{
-        user,
+        user: effectiveUser,
         session,
         profile: effectiveProfile,
         company: effectiveCompany,

@@ -16,7 +16,7 @@ export function ImpersonationBanner() {
       <div className="flex items-center space-x-2 min-w-0">
         <Eye className="w-4 h-4 text-amber-200 animate-pulse flex-shrink-0" />
         <span className="truncate">
-          ⚡ Simulation du Plan <strong className="uppercase underline decoration-amber-300 bg-black/30 px-1.5 py-0.5 rounded">{targetUser.plan || "starter"}</strong> ({targetUser.email}) — Vos données et factures restent les vôtres
+          🔍 <strong>Prise de contrôle totale active sur le compte {targetUser.email}</strong> — Vous visualisez et gérez ses factures, clients et espace de travail
         </span>
       </div>
 
