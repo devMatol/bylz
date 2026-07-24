@@ -140,8 +140,8 @@ serve(async (req) => {
   } catch (err: any) {
     console.error("Error in submit-to-pa Edge Function:", err);
     return new Response(
-      JSON.stringify({ error: err.message }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      JSON.stringify({ success: false, error: err.message || "Erreur interne lors de la transmission" }),
+      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
 });

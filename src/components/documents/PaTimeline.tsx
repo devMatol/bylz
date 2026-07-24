@@ -51,19 +51,21 @@ export function PaTimeline({ invoice, isB2b, onRefresh }: PaTimelineProps) {
         body: { invoice_id: invoice.id },
       });
 
+      console.log("Response from submit-to-pa:", { res, error });
+
       if (error || (res && !res.success)) {
         const errorMsg =
           (typeof res?.error === "string" && res.error) ||
           (typeof res?.message === "string" && res.message) ||
           (typeof error?.message === "string" && error.message) ||
-          "Échec de la transmission à la plateforme PA.";
+          "La transmission FactPulse a échoué. Vérifiez le SIRET du client ou le statut de la facture.";
         toast(errorMsg, "warning");
       } else {
         toast("Facture transmise avec succès à FactPulse !", "success");
       }
       if (onRefresh) onRefresh();
     } catch (e: any) {
-      toast(e.message || "Erreur lors de la transmission.", "danger");
+      toast(e?.message || "Erreur réseau lors de la transmission.", "danger");
     } finally {
       setSubmitting(false);
     }
