@@ -74,7 +74,7 @@ export function FactPulseModeToggle() {
         <div className="flex items-center space-x-2">
           <Sparkles className="w-4 h-4 text-amber-400" />
           <h4 className="text-xs font-black uppercase tracking-wider text-slate-200">
-            Mode d'exécution PDP / DGFiP
+            Mode d'exécution Télétransmission PDP / DGFiP
           </h4>
         </div>
         <span className="text-[10px] font-mono font-extrabold px-2 py-0.5 rounded-pill bg-slate-800 text-slate-300 border border-slate-700">
@@ -83,7 +83,7 @@ export function FactPulseModeToggle() {
       </div>
 
       <p className="text-xs text-slate-400 leading-relaxed">
-        Contrôle global du mode de transmission des factures B2B à la plateforme FactPulse et à l'administration fiscale (DGFiP).
+        Contrôle global du mode de transmission des factures B2B au réseau PDP agréé et à l'administration fiscale (DGFiP).
       </p>
 
       {/* Illuminated Toggle Buttons */}

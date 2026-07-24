@@ -38,7 +38,7 @@ export function PaymentSuccessModal() {
   const unlockedFeatures = [
     {
       icon: ShieldCheck,
-      title: "Transmission E-Invoicing PDP FactPulse",
+      title: "Télétransmission E-Invoicing PDP (Conformité 2026)",
       desc: "Conformité réglementaire B2B, émission AFNOR et suivi chronologique en temps réel.",
       color: "text-emerald-400 bg-emerald-500/10 border-emerald-500/20",
     },

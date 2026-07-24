@@ -210,7 +210,7 @@ export function ImportInvoiceModal({ open, onClose, onSuccess }: ImportInvoiceMo
             }
           }
 
-          toast("Facture analysée avec succès via FactPulse !", "success");
+          toast("Facture analysée et extraite avec succès !", "success");
           setAnalyzing(false);
           return;
         }

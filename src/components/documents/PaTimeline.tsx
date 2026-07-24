@@ -58,10 +58,10 @@ export function PaTimeline({ invoice, isB2b, onRefresh }: PaTimelineProps) {
           (typeof res?.error === "string" && res.error) ||
           (typeof res?.message === "string" && res.message) ||
           (typeof error?.message === "string" && error.message) ||
-          "La transmission FactPulse a échoué. Vérifiez le SIRET du client ou le statut de la facture.";
+          "La télétransmission PDP a échoué. Vérifiez le SIRET du client ou le statut de la facture.";
         toast(errorMsg, "warning");
       } else {
-        toast("Facture transmise avec succès à FactPulse !", "success");
+        toast("Facture télétransmise avec succès au réseau PDP agréé !", "success");
       }
       if (onRefresh) onRefresh();
     } catch (e: any) {
@@ -76,34 +76,53 @@ export function PaTimeline({ invoice, isB2b, onRefresh }: PaTimelineProps) {
     setReemitting(true);
     try {
       const fullInv = await fetchInvoice(invoice.company_id, invoice.id);
-      if (!fullInv) {
+      if (!fullInv || !fullInv.invoice) {
         toast("Impossible de charger les détails de la facture.", "danger");
         setReemitting(false);
         return;
       }
-      const lines = fullInv.lines || [];
 
-      // Create new draft invoice
-      const newDraft = await saveInvoice(invoice.company_id, {
-        client_id: invoice.client_id,
-        issue_date: new Date().toISOString().slice(0, 10),
-        due_date: invoice.due_date,
-        payment_terms: invoice.payment_terms,
-        note: `Remplace ${invoice.number}`,
-        lines: lines.map((l: any) => ({
-          catalog_item_id: l.catalog_item_id,
+      const invData = fullInv.invoice;
+      const newInvoiceNumber = `${invData.number}-CORR`;
+      const { data: newInv, error: createErr } = await supabase
+        .from("invoices")
+        .insert({
+          company_id: invData.company_id,
+          client_id: invData.client_id,
+          number: newInvoiceNumber,
+          type: invData.type,
+          status: "draft",
+          pa_status: "none",
+          issue_date: new Date().toISOString().split("T")[0],
+          due_date: invData.due_date,
+          payment_terms: invData.payment_terms,
+          total_ht: invData.total_ht,
+          total_vat: invData.total_vat,
+          total_ttc: invData.total_ttc,
+          note: `Correction de la facture rejetée ${invData.number}`,
+        })
+        .select()
+        .single();
+
+      if (createErr || !newInv) throw createErr;
+
+      // Copy invoice lines
+      if (fullInv.lines && fullInv.lines.length > 0) {
+        const linesToInsert = fullInv.lines.map((l: any) => ({
+          invoice_id: newInv.id,
           description: l.description,
           quantity: l.quantity,
           unit_price: l.unit_price,
           nature: l.nature,
           position: l.position,
-        })),
-      });
+        }));
+        await supabase.from("invoice_lines").insert(linesToInsert);
+      }
 
-      toast(`Nouvelle facture brouillon créée (Remplace ${invoice.number})`, "success");
-      navigate(`/factures/${newDraft.id}`);
-    } catch (e: any) {
-      toast(e.message || "Erreur lors de la création de la facture de remplacement.", "danger");
+      toast(`Brouillon de correction ${newInvoiceNumber} créé. Re-émission prête.`, "success");
+      navigate(`/invoices/${newInv.id}`);
+    } catch (err: any) {
+      toast(err.message || "Erreur lors de la création du brouillon de correction.", "danger");
     } finally {
       setReemitting(false);
     }
@@ -114,7 +133,7 @@ export function PaTimeline({ invoice, isB2b, onRefresh }: PaTimelineProps) {
       <div className="flex items-center justify-between">
         <h4 className="text-xs font-extrabold uppercase tracking-wider text-text flex items-center gap-1.5">
           <Send className="w-3.5 h-3.5 text-primary" />
-          <span>Transmission PDP FactPulse</span>
+          <span>Télétransmission Réseau PDP</span>
         </h4>
         {factpulseRef && (
           <span className="text-[10px] font-mono text-muted bg-surface-hover px-1.5 py-0.5 rounded border border-border">
@@ -131,7 +150,7 @@ export function PaTimeline({ invoice, isB2b, onRefresh }: PaTimelineProps) {
             <div>
               <p className="font-bold text-rose-200">Facture rejetée par le destinataire</p>
               <p className="text-rose-300/80 mt-1 leading-relaxed">
-                Motif : {invoice.pa_rejection_reason || "Rejeté sur le réseau PDP FactPulse"}
+                Motif : {invoice.pa_rejection_reason || "Rejeté sur le réseau PDP officiel"}
               </p>
             </div>
           </div>
