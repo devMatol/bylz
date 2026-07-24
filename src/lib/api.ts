@@ -1065,8 +1065,8 @@ export const MICRO_THRESHOLDS = {
 };
 
 const URSSAF_RATES: Record<ActivityType, { rate: number; abattement: number }> = {
-  freelance_bnc: { rate: 0.231, abattement: 0.34 },
-  liberal: { rate: 0.232, abattement: 0.34 },
+  freelance_bnc: { rate: 0.212, abattement: 0.34 },
+  liberal: { rate: 0.212, abattement: 0.34 },
   artisan_bic: { rate: 0.212, abattement: 0.50 },
   commerce: { rate: 0.123, abattement: 0.71 },
 };
@@ -1076,7 +1076,7 @@ export function abattementFor(activityType: ActivityType): number {
 }
 
 export function urssafRateFor(activityType: ActivityType): number {
-  return URSSAF_RATES[activityType]?.rate ?? 0.231;
+  return URSSAF_RATES[activityType]?.rate ?? 0.212;
 }
 
 // ---------- Dashboard ----------
@@ -1419,8 +1419,7 @@ export function computeUrssafPeriods(
   companyCreatedAt: string,
   frequency: UrssafFreq,
   payments: Payment[],
-  declarations: UrssafDeclaration[],
-  activityType?: ActivityType | null
+  declarations: UrssafDeclaration[]
 ): UrssafPeriod[] {
   const created = parseISO(companyCreatedAt);
   const now = new Date();
@@ -1431,7 +1430,6 @@ export function computeUrssafPeriods(
 
   const stepMonths = frequency === "monthly" ? 1 : 3;
   const declWindowDays = frequency === "monthly" ? 15 : 45;
-  const rate = urssafRateFor(activityType || "freelance_bnc");
 
   for (let d = new Date(start); d < endNow; d.setMonth(d.getMonth() + stepMonths)) {
     const pStart = new Date(d);
@@ -1447,7 +1445,7 @@ export function computeUrssafPeriods(
       .reduce((s, p) => s + (Number(p.amount) || 0), 0);
 
     const matching = declarations.find((decl) => decl.period_start === format(pStart, "yyyy-MM-dd"));
-    const est = rev * rate;
+    const est = rev * 0.212;
 
     periods.push({
       periodStart: format(pStart, "yyyy-MM-dd"),

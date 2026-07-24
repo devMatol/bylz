@@ -313,14 +313,16 @@ export function InvoicesPage() {
                           )}
                           {r.client_type === "b2b" && (
                             <span
-                              title={`Télétransmission Officielle PDP : ${
-                                r.pa_status === "delivered"
-                                  ? "Livrée au client"
+                              title={`Transmission FactPulse PA : ${
+                                r.pa_status === "accepted"
+                                  ? "Acceptée"
+                                  : r.pa_status === "received" || r.pa_status === "delivered"
+                                  ? "Reçue"
                                   : r.pa_status === "submitted"
-                                  ? "Déposée sur le réseau"
+                                  ? "Transmise"
                                   : r.pa_status === "rejected"
-                                  ? "Rejetée par le client"
-                                  : "En attente d'envoi"
+                                  ? "Rejetée"
+                                  : "Non transmise"
                               }`}
                               className="p-1 rounded bg-surface-hover"
                             >

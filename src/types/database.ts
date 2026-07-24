@@ -38,8 +38,6 @@ export interface Profile {
   created_at: string;
 }
 
-export type LegalForm = "micro" | "ei" | "sasu" | "sas" | "eurl" | "sarl" | "sa" | "sci" | "other";
-
 export interface Company {
   id: string;
   user_id: string;
@@ -47,10 +45,6 @@ export interface Company {
   siren: string;
   legal_name: string;
   commercial_name: string | null;
-  legal_form?: LegalForm | null;
-  share_capital?: number | null;
-  rcs_city?: string | null;
-  vat_number?: string | null;
   address: string;
   naf_code: string | null;
   activity_type: ActivityType;
@@ -251,8 +245,6 @@ export interface AdminImpersonationSession {
 export interface FactpulseStatus {
   id: string;
   access_token?: string | null;
-  mode?: "sandbox" | "production";
-  stripe_mode?: "test" | "live";
   token_valid: boolean;
   last_checked_at: string;
   last_error: string | null;

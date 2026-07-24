@@ -17,7 +17,7 @@ serve(async (req) => {
   const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
   try {
-    const { invoice_id, is_sandbox } = await req.json();
+    const { invoice_id } = await req.json();
 
     if (!invoice_id) {
       return new Response(
@@ -52,41 +52,7 @@ serve(async (req) => {
       );
     }
 
-    // 2. Read global Super Admin mode from factpulse_status (sandbox vs production)
-    const { data: statusRow } = await supabase
-      .from("factpulse_status")
-      .select("mode")
-      .eq("id", "default")
-      .maybeSingle();
-
-    const globalMode = statusRow?.mode || "sandbox";
-    const useSandbox = is_sandbox === true || is_sandbox === "true" || globalMode === "sandbox" || invoice.number.includes("TEST");
-
-    if (useSandbox) {
-      const sandboxRef = `FP-SANDBOX-${Date.now().toString(36).toUpperCase()}`;
-      
-      await supabase
-        .from("invoices")
-        .update({
-          factpulse_ref: sandboxRef,
-          pa_status: "submitted",
-          pa_rejection_reason: null,
-        })
-        .eq("id", invoice.id);
-
-      return new Response(
-        JSON.stringify({
-          success: true,
-          factpulse_ref: sandboxRef,
-          pa_status: "submitted",
-          is_sandbox: true,
-          message: "Facture transmise avec succès en Mode Sandbox PDP (aucun envoi DGFiP).",
-        }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    // 3. Build FactPulse Simplified Payload for Live Production
+    // 2. Build FactPulse Simplified Payload
     const isFranchise = company?.vat_regime === "franchise";
     const simplifiedLines = lines.map((l: any) => ({
       description: l.description || "Prestation / Produit",
@@ -95,49 +61,34 @@ serve(async (req) => {
       vatRate: isFranchise ? 0 : (l.vat_rate !== undefined ? Number(l.vat_rate) : 20),
     }));
 
-    // Clean sirets
-    const supplierSiret = (company?.siret || company?.siren || "").replace(/\s/g, "");
-    const recipientSiret = (client?.siret || client?.siren || "").replace(/\s/g, "");
-
     const payload = {
-      number: invoice.number,
-      issueDate: invoice.issue_date || new Date().toISOString().split("T")[0],
-      dueDate: invoice.due_date || new Date().toISOString().split("T")[0],
-      supplier: {
-        siret: supplierSiret,
-        name: company?.name || "Émetteur",
-        routingAddress: company?.address || "",
-        iban: company?.iban || "",
+      invoiceData: {
+        number: invoice.number,
+        supplier: {
+          siret: company?.siret || company?.siren || "00000000000000",
+          routingAddress: company?.address || "",
+          iban: company?.iban || "",
+        },
+        recipient: {
+          siret: client?.siret || client?.siren || "00000000000000",
+        },
+        lines: simplifiedLines,
       },
-      recipient: {
-        siret: recipientSiret,
-        name: client?.name || "Client",
-      },
-      lines: simplifiedLines,
-      totalHt: Number(invoice.total_ht) || 0,
-      totalVat: Number(invoice.total_vat) || 0,
-      totalTtc: Number(invoice.total_ttc) || 0,
       destination: {
         type: "afnor",
       },
     };
 
-    console.log("Submitting FactPulse payload for invoice:", invoice.number, payload);
+    console.log("Submitting FactPulse simplified payload for invoice:", invoice.number, payload);
 
-    // 4. Submit to FactPulse Live API
+    // 3. Submit to FactPulse
     let resData: any = null;
     try {
       resData = await callFactPulseApi("/invoices/submit/", "POST", payload);
     } catch (err: any) {
       const isTokenExpired = err.code === "token_expired" || err.status === 401;
       const errorCode = isTokenExpired ? "token_expired" : "submission_error";
-
-      let userMessage = err.message || "Erreur lors de la transmission à la plateforme FactPulse";
-      if (err.data) {
-        userMessage = `FactPulse error: ${JSON.stringify(err.data)}`;
-      }
-
-      console.error("FactPulse submission failed details:", { userMessage, errData: err.data });
+      const userMessage = err.message || "Erreur lors de la transmission à la plateforme FactPulse";
 
       // Log failure in pa_submission_errors
       await supabase.from("pa_submission_errors").insert({
@@ -166,7 +117,7 @@ serve(async (req) => {
       );
     }
 
-    // 5. Update Invoice on Success
+    // 4. Update Invoice on Success
     const factpulseRef = resData?.reference || resData?.id || resData?.factpulse_ref || `FP-${Date.now()}`;
 
     await supabase
@@ -183,15 +134,14 @@ serve(async (req) => {
         success: true,
         factpulse_ref: factpulseRef,
         pa_status: "submitted",
-        is_sandbox: false,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (err: any) {
     console.error("Error in submit-to-pa Edge Function:", err);
     return new Response(
-      JSON.stringify({ success: false, error: err.message || "Erreur interne lors de la transmission" }),
-      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      JSON.stringify({ error: err.message }),
+      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
 });

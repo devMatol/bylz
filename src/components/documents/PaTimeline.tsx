@@ -44,28 +44,26 @@ export function PaTimeline({ invoice, isB2b, onRefresh }: PaTimelineProps) {
   const activeStepIdx = getStepIndex(currentStatus);
 
   // Manual Trigger Transmit to FactPulse PA
-  const handleTransmit = async (isSandbox = true) => {
+  const handleTransmit = async () => {
     setSubmitting(true);
     try {
       const { data: res, error } = await supabase.functions.invoke("submit-to-pa", {
-        body: { invoice_id: invoice.id, is_sandbox: isSandbox },
+        body: { invoice_id: invoice.id },
       });
-
-      console.log("Response from submit-to-pa:", { res, error });
 
       if (error || (res && !res.success)) {
         const errorMsg =
           (typeof res?.error === "string" && res.error) ||
           (typeof res?.message === "string" && res.message) ||
           (typeof error?.message === "string" && error.message) ||
-          "La télétransmission PDP a échoué. Vérifiez le SIRET du client ou le statut de la facture.";
+          "Échec de la transmission à la plateforme PA.";
         toast(errorMsg, "warning");
       } else {
-        toast("Facture télétransmise avec succès au réseau PDP agréé !", "success");
+        toast("Facture transmise avec succès à FactPulse !", "success");
       }
       if (onRefresh) onRefresh();
     } catch (e: any) {
-      toast(e?.message || "Erreur réseau lors de la transmission.", "danger");
+      toast(e.message || "Erreur lors de la transmission.", "danger");
     } finally {
       setSubmitting(false);
     }
@@ -76,53 +74,34 @@ export function PaTimeline({ invoice, isB2b, onRefresh }: PaTimelineProps) {
     setReemitting(true);
     try {
       const fullInv = await fetchInvoice(invoice.company_id, invoice.id);
-      if (!fullInv || !fullInv.invoice) {
+      if (!fullInv) {
         toast("Impossible de charger les détails de la facture.", "danger");
         setReemitting(false);
         return;
       }
+      const lines = fullInv.lines || [];
 
-      const invData = fullInv.invoice;
-      const newInvoiceNumber = `${invData.number}-CORR`;
-      const { data: newInv, error: createErr } = await supabase
-        .from("invoices")
-        .insert({
-          company_id: invData.company_id,
-          client_id: invData.client_id,
-          number: newInvoiceNumber,
-          type: invData.type,
-          status: "draft",
-          pa_status: "none",
-          issue_date: new Date().toISOString().split("T")[0],
-          due_date: invData.due_date,
-          payment_terms: invData.payment_terms,
-          total_ht: invData.total_ht,
-          total_vat: invData.total_vat,
-          total_ttc: invData.total_ttc,
-          note: `Correction de la facture rejetée ${invData.number}`,
-        })
-        .select()
-        .single();
-
-      if (createErr || !newInv) throw createErr;
-
-      // Copy invoice lines
-      if (fullInv.lines && fullInv.lines.length > 0) {
-        const linesToInsert = fullInv.lines.map((l: any) => ({
-          invoice_id: newInv.id,
+      // Create new draft invoice
+      const newDraft = await saveInvoice(invoice.company_id, {
+        client_id: invoice.client_id,
+        issue_date: new Date().toISOString().slice(0, 10),
+        due_date: invoice.due_date,
+        payment_terms: invoice.payment_terms,
+        note: `Remplace ${invoice.number}`,
+        lines: lines.map((l: any) => ({
+          catalog_item_id: l.catalog_item_id,
           description: l.description,
           quantity: l.quantity,
           unit_price: l.unit_price,
           nature: l.nature,
           position: l.position,
-        }));
-        await supabase.from("invoice_lines").insert(linesToInsert);
-      }
+        })),
+      });
 
-      toast(`Brouillon de correction ${newInvoiceNumber} créé. Re-émission prête.`, "success");
-      navigate(`/invoices/${newInv.id}`);
-    } catch (err: any) {
-      toast(err.message || "Erreur lors de la création du brouillon de correction.", "danger");
+      toast(`Nouvelle facture brouillon créée (Remplace ${invoice.number})`, "success");
+      navigate(`/factures/${newDraft.id}`);
+    } catch (e: any) {
+      toast(e.message || "Erreur lors de la création de la facture de remplacement.", "danger");
     } finally {
       setReemitting(false);
     }
@@ -133,7 +112,7 @@ export function PaTimeline({ invoice, isB2b, onRefresh }: PaTimelineProps) {
       <div className="flex items-center justify-between">
         <h4 className="text-xs font-extrabold uppercase tracking-wider text-text flex items-center gap-1.5">
           <Send className="w-3.5 h-3.5 text-primary" />
-          <span>Télétransmission Réseau PDP</span>
+          <span>Transmission PDP FactPulse</span>
         </h4>
         {factpulseRef && (
           <span className="text-[10px] font-mono text-muted bg-surface-hover px-1.5 py-0.5 rounded border border-border">
@@ -150,7 +129,7 @@ export function PaTimeline({ invoice, isB2b, onRefresh }: PaTimelineProps) {
             <div>
               <p className="font-bold text-rose-200">Facture rejetée par le destinataire</p>
               <p className="text-rose-300/80 mt-1 leading-relaxed">
-                Motif : {invoice.pa_rejection_reason || "Rejeté sur le réseau PDP officiel"}
+                Motif : {invoice.pa_rejection_reason || "Rejeté sur le réseau PDP FactPulse"}
               </p>
             </div>
           </div>
@@ -209,23 +188,20 @@ export function PaTimeline({ invoice, isB2b, onRefresh }: PaTimelineProps) {
             })}
           </div>
 
-          {/* User Choice Manual Transmit Buttons */}
+          {/* User Choice Manual Transmit Button */}
           {currentStatus === "none" && (
-            <div className="pt-2 border-t border-border space-y-2">
+            <div className="pt-2 border-t border-border">
               <Button
                 type="button"
                 variant="primary"
                 size="sm"
-                onClick={() => handleTransmit(true)}
+                onClick={handleTransmit}
                 loading={submitting}
                 className="w-full justify-center bylz-glow-cta text-xs font-bold py-2"
               >
                 <Send className="w-3.5 h-3.5 mr-1.5" />
-                Tester la transmission (Mode Sandbox PDP - 0 envoi DGFiP)
+                Transmettre à FactPulse PDP
               </Button>
-              <p className="text-[10px] text-muted text-center italic">
-                🔒 Le mode Sandbox permet de tester l'intégration et la frise chronologique en toute sécurité.
-              </p>
             </div>
           )}
         </div>

@@ -7,15 +7,9 @@ import { Card } from "../ui/Card";
 import { Button } from "../ui/Button";
 import { formatAmount } from "../../lib/utils";
 import type { EreportingBatch, FactpulseStatus } from "../../types/database";
-import { FactPulseModeToggle } from "../admin/FactPulseModeToggle";
-import { StripeModeToggle } from "../admin/StripeModeToggle";
 
 export function ComplianceSection() {
-  const { company, user, profile, realProfile } = useAuth();
-  const activeProfile = realProfile || profile;
-  const isOwnerEmail = user?.email?.toLowerCase() === "matthiasollivier123@gmail.com";
-  const isSuperAdmin = activeProfile?.admin_role === "super_admin" || isOwnerEmail;
-
+  const { company } = useAuth();
   const { toast } = useToast();
   const [batches, setBatches] = useState<EreportingBatch[]>([]);
   const [status, setStatus] = useState<FactpulseStatus | null>(null);
@@ -75,10 +69,10 @@ export function ComplianceSection() {
         <div>
           <h3 className="text-lg font-black text-text tracking-tight flex items-center gap-2">
             <ShieldCheck className="w-5 h-5 text-primary" />
-            <span>Conformité Fiscale & Facturation Électronique 2026 (PDP)</span>
+            <span>Conformité E-invoicing & FactPulse (PDP)</span>
           </h3>
           <p className="text-xs text-muted mt-1">
-            Transmission réglementaire B2B et télétransmission mensuelle e-reporting B2C centralisées vers l'administration fiscale.
+            Transmission réglementaire B2B et e-reporting mensuel B2C centralisé via la plateforme PDP FactPulse.
           </p>
         </div>
 
@@ -95,25 +89,18 @@ export function ComplianceSection() {
         </Button>
       </div>
 
-      {/* FactPulse & Stripe Connection Status */}
-      {isSuperAdmin && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <FactPulseModeToggle />
-          <StripeModeToggle />
-        </div>
-      )}
-
+      {/* FactPulse Connection Status */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="p-4 rounded-card bg-surface-hover/40 border border-border space-y-1">
-          <p className="text-xs font-bold text-muted uppercase">Statut Connexion Télétransmission PDP</p>
+          <p className="text-xs font-bold text-muted uppercase">Statut Connexion PDP FactPulse</p>
           <div className="flex items-center space-x-2 pt-1">
             {status && status.token_valid === false ? (
               <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-pill bg-rose-500/20 text-rose-400 font-bold text-xs border border-rose-500/30">
-                <AlertTriangle className="w-3.5 h-3.5" /> Jeton Expiré
+                <AlertTriangle className="w-3.5 h-3.5" /> Token Expiré
               </span>
             ) : (
               <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-pill bg-emerald-500/20 text-emerald-400 font-bold text-xs border border-emerald-500/30">
-                <CheckCircle2 className="w-3.5 h-3.5" /> Actif & Conforme PDP
+                <CheckCircle2 className="w-3.5 h-3.5" /> Actif & Conforme
               </span>
             )}
           </div>
@@ -121,24 +108,24 @@ export function ComplianceSection() {
 
         <div className="p-4 rounded-card bg-surface-hover/40 border border-border space-y-1">
           <p className="text-xs font-bold text-muted uppercase">Automatisation Mensuelle Cron</p>
-          <div className="flex items-center space-x-2 pt-1 text-xs text-muted">
-            <Clock className="w-3.5 h-3.5 text-primary" />
-            <span>Tous les 1ers du mois à 00:00 UTC</span>
-          </div>
+          <p className="text-xs text-text font-medium pt-1 flex items-center gap-1.5">
+            <Calendar className="w-3.5 h-3.5 text-primary" />
+            <span>Exécution le <strong>5 du mois à 02:00 UTC</strong></span>
+          </p>
         </div>
       </div>
 
       {/* E-reporting Batches Table */}
       <div className="space-y-3">
         <h4 className="text-xs font-bold text-muted uppercase tracking-wider">
-          Historique des Batches E-Reporting Transmis
+          Historique des Batches E-reporting (B2C)
         </h4>
 
         {loading ? (
           <div className="text-xs text-muted py-4">Chargement des batches...</div>
         ) : batches.length === 0 ? (
-          <div className="p-6 text-center rounded-card bg-surface-hover/20 border border-dashed border-border text-xs text-muted">
-            Aucun batch e-reporting généré pour le moment.
+          <div className="p-6 text-center text-xs text-muted bg-surface-hover/20 rounded-card border border-border">
+            Aucun batch d'e-reporting B2C généré pour le moment.
           </div>
         ) : (
           <div className="overflow-x-auto border border-border rounded-card">
@@ -150,7 +137,7 @@ export function ComplianceSection() {
                   <th className="p-3 text-right">Nb Factures</th>
                   <th className="p-3 text-right">Montant Total TTC</th>
                   <th className="p-3 text-center">Statut</th>
-                  <th className="p-3 font-mono">Réf. Télétransmission PDP</th>
+                  <th className="p-3 font-mono">Réf. FactPulse</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
