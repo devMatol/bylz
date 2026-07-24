@@ -522,18 +522,40 @@ export async function fetchInvoices(
 ): Promise<(Invoice & { client_name: string; client_type: string })[]> {
   let query = supabase
     .from("invoices")
-    .select(
-      "id, company_id, client_id, quote_id, credited_invoice_id, number, type, status, pa_status, pa_rejection_reason, factpulse_ref, issue_date, due_date, payment_terms, total_ht, total_vat, total_ttc, paid_at, paid_amount, payment_method, stripe_payment_link, facturx_pdf_url, ereporting_status, note, created_at, clients(name, type)"
-    )
+    .select("*, clients(name, type)")
     .eq("company_id", companyId)
     .order("created_at", { ascending: false });
+
   if (status && status !== "all") query = query.eq("status", status);
   if (search) {
     query = query.or(
       `number.ilike.%${search}%,clients.name.ilike.%${search}%`
     );
   }
-  const { data, error } = await query;
+
+  let { data, error } = await query;
+
+  // Fallback if clients(name, type) query fails due to missing client type column
+  if (error) {
+    console.warn("fetchInvoices primary query failed, attempting fallback:", error);
+    let fallbackQuery = supabase
+      .from("invoices")
+      .select("*, clients(name)")
+      .eq("company_id", companyId)
+      .order("created_at", { ascending: false });
+
+    if (status && status !== "all") fallbackQuery = fallbackQuery.eq("status", status);
+    if (search) {
+      fallbackQuery = fallbackQuery.or(`number.ilike.%${search}%`);
+    }
+
+    const fallbackResult = await fallbackQuery;
+    if (!fallbackResult.error) {
+      data = fallbackResult.data;
+      error = null;
+    }
+  }
+
   if (error) throw error;
   return (data || []).map((i: any) => ({
     id: i.id,
@@ -1171,12 +1193,17 @@ export async function fetchDashboardData(
     }
   }
 
-  const { data: comp } = await supabase
-    .from("companies")
-    .select("previous_ca")
-    .eq("id", companyId)
-    .maybeSingle();
-  const previousCa = comp ? Number(comp.previous_ca) || 0 : 0;
+  let previousCa = 0;
+  try {
+    const { data: comp } = await supabase
+      .from("companies")
+      .select("*")
+      .eq("id", companyId)
+      .maybeSingle();
+    if (comp) previousCa = Number((comp as any).previous_ca) || 0;
+  } catch (e) {
+    console.warn("Could not load previous_ca from companies:", e);
+  }
 
   const now = new Date();
   const { start, prevStart, prevEnd } = periodRange(period, now);
