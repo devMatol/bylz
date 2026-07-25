@@ -95,13 +95,47 @@ Deno.serve(async (req) => {
         .eq('id', company.id);
     }
 
-    const origin = req.headers.get('origin') || 'http://localhost:5173';
-    const accountLink = await stripe.accountLinks.create({
-      account: connectAccountId,
-      refresh_url: `${origin}/settings`,
-      return_url: `${origin}/settings`,
-      type: 'account_onboarding',
-    });
+    const origin = req.headers.get('origin') || 'https://bylz.fr';
+    let accountLink: Stripe.AccountLink;
+
+    try {
+      accountLink = await stripe.accountLinks.create({
+        account: connectAccountId,
+        refresh_url: `${origin}/settings`,
+        return_url: `${origin}/settings`,
+        type: 'account_onboarding',
+      });
+    } catch (linkErr: any) {
+      console.warn(`Failed to create link for account ${connectAccountId}, creating fresh account:`, linkErr.message);
+      
+      const freshAccount = await stripe.accounts.create({
+        type: 'express',
+        country: 'FR',
+        capabilities: {
+          card_payments: { requested: true },
+          transfers: { requested: true },
+        },
+        business_type: 'individual',
+        metadata: {
+          user_id: user.id,
+          company_id: company.id,
+        },
+      });
+
+      connectAccountId = freshAccount.id;
+
+      await supabase
+        .from('companies')
+        .update({ stripe_connect_account_id: connectAccountId })
+        .eq('id', company.id);
+
+      accountLink = await stripe.accountLinks.create({
+        account: connectAccountId,
+        refresh_url: `${origin}/settings`,
+        return_url: `${origin}/settings`,
+        type: 'account_onboarding',
+      });
+    }
 
     return corsResponse({ url: accountLink.url, accountId: connectAccountId });
   } catch (error: any) {

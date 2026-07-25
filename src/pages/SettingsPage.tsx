@@ -257,6 +257,25 @@ export function SettingsPage() {
     }
   };
 
+  // Reset Stripe Connect account to start fresh onboarding link
+  const handleResetStripeConnect = async () => {
+    setLoadingConnect(true);
+    try {
+      if (company?.id) {
+        await supabase
+          .from("companies")
+          .update({ stripe_connect_account_id: null })
+          .eq("id", company.id);
+      }
+      await refreshProfile();
+      toast("Configuration Stripe réinitialisée avec succès.", "info");
+      await handleConnectOnboarding();
+    } catch (err: any) {
+      toast(err.message || "Erreur lors de la réinitialisation", "danger");
+      setLoadingConnect(false);
+    }
+  };
+
   // Calculate remaining trial days if active
   const getTrialDaysRemaining = () => {
     if (!profile?.trial_ends_at) return null;
@@ -562,14 +581,25 @@ export function SettingsPage() {
                         </p>
                       </div>
                     </div>
-                    <Button
-                      onClick={handleConnectOnboarding}
-                      disabled={loadingConnect}
-                      className="whitespace-nowrap"
-                    >
-                      {loadingConnect ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
-                      Reprendre la configuration
-                    </Button>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Button
+                        onClick={handleConnectOnboarding}
+                        disabled={loadingConnect}
+                        className="whitespace-nowrap"
+                      >
+                        {loadingConnect ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+                        Reprendre la configuration
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={handleResetStripeConnect}
+                        disabled={loadingConnect}
+                        className="whitespace-nowrap text-xs text-rose-500 hover:text-rose-600 hover:bg-rose-500/10"
+                      >
+                        Recommencer la configuration
+                      </Button>
+                    </div>
                   </div>
                 ) : (
                   <div className="p-4 bg-surface-elevated/50 border border-border rounded-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
