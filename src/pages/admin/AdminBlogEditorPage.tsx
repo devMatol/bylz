@@ -21,6 +21,7 @@ import { Input } from "../../components/ui/Input";
 import { Select } from "../../components/ui/Select";
 import { Badge } from "../../components/ui/Badge";
 import { useToast } from "../../components/ui/Toast";
+import { supabase } from "../../lib/supabase";
 import {
   SUGGESTED_KEYWORDS,
   analyzeArticleSeo,
@@ -51,12 +52,34 @@ export function AdminBlogEditorPage() {
   const [author, setAuthor] = useState("Équipe Bylz");
   const [coverImageUrl, setCoverImageUrl] = useState("");
   const [status, setStatus] = useState<BlogPostStatus>("draft");
-  const [keywords, setKeywords] = useState<string[]>(["Factur-X 2026"]);
+  const [keywords, setKeywords] = useState<string[]>([]);
   const [content, setContent] = useState("");
 
-  // AI Generator prompt state
+  // AI Generator state
   const [aiTopic, setAiTopic] = useState("");
   const [aiSelectedKw, setAiSelectedKw] = useState<KeywordIdea | null>(SUGGESTED_KEYWORDS[0]);
+
+  // Real Google Search Console Live Keywords
+  const [gscKeywords, setGscKeywords] = useState<{ query: string; impressions: number; clicks: number }[]>([]);
+
+  useEffect(() => {
+    async function loadGscKeywords() {
+      try {
+        const { data: cacheRow } = await supabase
+          .from("admin_metrics_cache")
+          .select("data")
+          .eq("cache_key", "gsc_30d_metrics")
+          .maybeSingle();
+
+        if (cacheRow?.data && (cacheRow.data as any).topQueries) {
+          setGscKeywords((cacheRow.data as any).topQueries);
+        }
+      } catch (err) {
+        console.warn("Notice: GSC live keywords cache query skipped:", err);
+      }
+    }
+    void loadGscKeywords();
+  }, []);
 
   // Load existing article if editing
   const loadArticle = useCallback(async () => {
@@ -324,6 +347,38 @@ export function AdminBlogEditorPage() {
                   );
                 })}
               </div>
+
+              {/* Live Google Search Console Queries */}
+              {gscKeywords.length > 0 && (
+                <div className="mt-4 pt-4 border-t border-border space-y-2">
+                  <p className="text-xs font-bold text-emerald-400 flex items-center gap-1.5">
+                    <Globe className="w-3.5 h-3.5" />
+                    <span>Mots-clés en direct de votre Google Search Console :</span>
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {gscKeywords.slice(0, 8).map((gsc) => (
+                      <button
+                        key={gsc.query}
+                        type="button"
+                        onClick={() => {
+                          setAiSelectedKw({
+                            keyword: gsc.query,
+                            volume: `${gsc.impressions} impr. / ${gsc.clicks} clics`,
+                            difficulty: "Moyenne",
+                            intent: "Guide Pratique",
+                            suggestedTitle: `Guide ${gsc.query} : Règles et Conseils 2026`,
+                            category: "Législation & Conformité",
+                          });
+                        }}
+                        className="px-2.5 py-1 rounded-lg bg-surface border border-emerald-500/30 text-[11px] font-mono text-text hover:border-emerald-500 flex items-center gap-1.5"
+                      >
+                        <span className="font-bold">{gsc.query}</span>
+                        <span className="text-[10px] text-muted font-normal">({gsc.clicks} clics, {gsc.impressions} imp.)</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </Card>
 
             {/* Custom Prompt Box */}
