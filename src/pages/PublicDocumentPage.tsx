@@ -77,8 +77,11 @@ export function PublicDocumentPage() {
 
     setLoading(true);
     try {
-      // 1. Try Quote
-      const { data: qData, error: qErr } = await supabase
+      // 1. Try Quote by id or public_token
+      let qData: any = null;
+
+      // Try with public_token column first
+      const { data: qTokenData, error: qTokenErr } = await supabase
         .from("quotes")
         .select(`
           id, number, status, issue_date, validity_date, total_ht, total_vat, total_ttc, note, public_token, signature_data,
@@ -86,11 +89,28 @@ export function PublicDocumentPage() {
           client:clients ( name, email, address, siret ),
           lines:quote_lines ( description, quantity, unit_price, nature )
         `)
-        .eq("public_token", token)
+        .or(`public_token.eq.${token},id.eq.${token}`)
         .maybeSingle();
 
-      if (!qErr && qData) {
-        // Fetch sender's profile plan
+      if (!qTokenErr && qTokenData) {
+        qData = qTokenData;
+      } else {
+        // Fallback for standard query by id if public_token column is not migrated yet
+        const { data: qIdData } = await supabase
+          .from("quotes")
+          .select(`
+            id, number, status, issue_date, validity_date, total_ht, total_vat, total_ttc, note,
+            company:companies ( legal_name, commercial_name, siret, address, logo_url, invoice_footer, accent_color, user_id ),
+            client:clients ( name, email, address, siret ),
+            lines:quote_lines ( description, quantity, unit_price, nature )
+          `)
+          .eq("id", token)
+          .maybeSingle();
+
+        qData = qIdData;
+      }
+
+      if (qData) {
         const { data: prof } = await supabase
           .from("profiles")
           .select("plan")
@@ -109,7 +129,7 @@ export function PublicDocumentPage() {
           total_ttc: qData.total_ttc,
           note: qData.note,
           stripe_payment_link: null,
-          signature_data: qData.signature_data as SignatureData | null,
+          signature_data: (qData.signature_data as SignatureData | null) || null,
           public_token: token,
           company: {
             ...(qData.company as any),
@@ -122,8 +142,10 @@ export function PublicDocumentPage() {
         return;
       }
 
-      // 2. Try Invoice
-      const { data: iData, error: iErr } = await supabase
+      // 2. Try Invoice by id or public_token
+      let iData: any = null;
+
+      const { data: iTokenData, error: iTokenErr } = await supabase
         .from("invoices")
         .select(`
           id, number, status, issue_date, due_date, total_ht, total_vat, total_ttc, note, stripe_payment_link, public_token, signature_data,
@@ -131,10 +153,28 @@ export function PublicDocumentPage() {
           client:clients ( name, email, address, siret ),
           lines:invoice_lines ( description, quantity, unit_price, nature )
         `)
-        .eq("public_token", token)
+        .or(`public_token.eq.${token},id.eq.${token}`)
         .maybeSingle();
 
-      if (!iErr && iData) {
+      if (!iTokenErr && iTokenData) {
+        iData = iTokenData;
+      } else {
+        // Fallback for standard query by id if public_token column is not migrated yet
+        const { data: iIdData } = await supabase
+          .from("invoices")
+          .select(`
+            id, number, status, issue_date, due_date, total_ht, total_vat, total_ttc, note, stripe_payment_link,
+            company:companies ( legal_name, commercial_name, siret, address, logo_url, invoice_footer, accent_color, user_id ),
+            client:clients ( name, email, address, siret ),
+            lines:invoice_lines ( description, quantity, unit_price, nature )
+          `)
+          .eq("id", token)
+          .maybeSingle();
+
+        iData = iIdData;
+      }
+
+      if (iData) {
         const { data: prof } = await supabase
           .from("profiles")
           .select("plan")
@@ -153,7 +193,7 @@ export function PublicDocumentPage() {
           total_ttc: iData.total_ttc,
           note: iData.note,
           stripe_payment_link: iData.stripe_payment_link,
-          signature_data: iData.signature_data as SignatureData | null,
+          signature_data: (iData.signature_data as SignatureData | null) || null,
           public_token: token,
           company: {
             ...(iData.company as any),
