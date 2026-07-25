@@ -58,11 +58,13 @@ Deno.serve(async (req) => {
       return corsResponse({ error: 'Failed to authenticate user' }, 401);
     }
 
-    const { data: company } = await supabase
+    const { data: companies } = await supabase
       .from('companies')
-      .select('stripe_connect_account_id')
+      .select('stripe_connect_account_id, legal_name')
       .eq('user_id', user.id)
-      .single();
+      .order('created_at', { ascending: true });
+
+    const company = companies?.find((c: any) => c.legal_name && c.legal_name !== 'Mon Entreprise') || companies?.[0];
 
     if (!company?.stripe_connect_account_id) {
       return corsResponse({ hasAccount: false, chargesEnabled: false });

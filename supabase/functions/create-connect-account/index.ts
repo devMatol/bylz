@@ -58,15 +58,17 @@ Deno.serve(async (req) => {
       return corsResponse({ error: 'Failed to authenticate user' }, 401);
     }
 
-    const { data: company, error: companyError } = await supabase
+    const { data: companies, error: companyError } = await supabase
       .from('companies')
       .select('*')
       .eq('user_id', user.id)
-      .single();
+      .order('created_at', { ascending: true });
 
-    if (companyError || !company) {
+    if (companyError || !companies || companies.length === 0) {
       return corsResponse({ error: 'Company not found' }, 404);
     }
+
+    const company = companies.find((c: any) => c.legal_name && c.legal_name !== 'Mon Entreprise') || companies[0];
 
     let connectAccountId = company.stripe_connect_account_id;
 
