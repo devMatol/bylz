@@ -75,11 +75,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .from("companies")
       .select("*")
       .eq("user_id", userId)
-      .order("created_at", { ascending: false })
-      .limit(1);
+      .order("created_at", { ascending: true });
 
     if (!error && data && data.length > 0) {
-      setCompany(data[0] as Company);
+      // Prefer the company that has a real configured legal_name (not placeholder 'Mon Entreprise')
+      const realComp = data.find((c) => c.legal_name && c.legal_name !== "Mon Entreprise") || data[0];
+      setCompany(realComp as Company);
       return;
     }
 
