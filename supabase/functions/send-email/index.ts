@@ -352,9 +352,70 @@ Deno.serve(async (req: Request) => {
     }
 
     const { to, subject, body, document_type, document_id } = await req.json();
-    if (!to || !subject || !body || !document_type || !document_id) {
-      return new Response(JSON.stringify({ error: "Paramètres manquants (to, subject, body, document_type, document_id)" }), {
+    if (!to || !subject || !body) {
+      return new Response(JSON.stringify({ error: "Paramètres manquants (to, subject, body)" }), {
         status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const resendKey = Deno.env.get("RESEND_API_KEY");
+    if (!resendKey) {
+      return new Response(
+        JSON.stringify({ error: "Clé API Resend non configurée (RESEND_API_KEY)" }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Support ticket email notification branch
+    if (document_type === "support" || !document_id || document_id === "none") {
+      const htmlContent = `<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"/></head>
+<body style="background-color: #090d16; color: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; padding: 40px 20px;">
+  <div style="max-width: 600px; margin: 0 auto; background: #0f172a; border-radius: 16px; border: 1px solid #1e293b; padding: 32px; box-shadow: 0 10px 25px rgba(0,0,0,0.5);">
+    <div style="margin-bottom: 24px;">
+      <span style="font-size: 24px; font-weight: 900; color: #ffffff; letter-spacing: -0.03em;">Bylz</span>
+      <span style="margin-left: 10px; background: rgba(225, 29, 72, 0.2); color: #fb7185; font-size: 10px; font-weight: 800; padding: 3px 10px; border-radius: 9999px; border: 1px solid rgba(225, 29, 72, 0.4); text-transform: uppercase;">Support Client</span>
+    </div>
+    
+    <h2 style="color: #ffffff; font-size: 18px; font-weight: 800; margin-bottom: 16px;">${subject}</h2>
+    
+    <div style="background: #1e293b; border-radius: 12px; border: 1px solid #334155; padding: 20px; color: #e2e8f0; font-size: 14px; line-height: 1.6; white-space: pre-wrap; margin-bottom: 24px;">${body}</div>
+
+    <div style="border-top: 1px solid #1e293b; padding-top: 20px; font-size: 12px; color: #94a3b8; text-align: center;">
+      Besoin d'aide supplémentaire ? Répondez directement à cet e-mail ou rendez-vous sur <a href="https://bylz.fr" style="color: #fb7185; text-decoration: none; font-weight: 700;">bylz.fr</a>.
+    </div>
+  </div>
+</body>
+</html>`;
+
+      const resendRes = await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${resendKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          from: `Support Bylz <no-reply@bylz.fr>`,
+          to,
+          subject,
+          text: body,
+          html: htmlContent,
+          reply_to: "support@bylz.fr",
+        }),
+      });
+
+      if (!resendRes.ok) {
+        const errText = await resendRes.text();
+        return new Response(
+          JSON.stringify({ error: `Erreur Resend (${resendRes.status}): ${errText.slice(0, 200)}` }),
+          { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      return new Response(JSON.stringify({ success: true }), {
+        status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }

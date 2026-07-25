@@ -108,25 +108,43 @@ export function AdminSupportPage() {
     e.preventDefault();
     if (!adminUser || !selectedTicket || !replyBody.trim()) return;
 
+    const messageText = replyBody.trim();
     setSending(true);
     try {
-      // 1. Insert message
+      // 1. Insert message into ticket_messages
       const { error: msgErr } = await supabase.from("ticket_messages").insert({
         ticket_id: selectedTicket.id,
         author_id: adminUser.id,
-        body: replyBody.trim(),
+        body: messageText,
       });
 
       if (msgErr) throw msgErr;
 
-      // 2. Update status to in_progress or resolved if requested
+      // 2. Update status to in_progress
       await supabase
         .from("support_tickets")
         .update({ status: "in_progress" })
         .eq("id", selectedTicket.id);
 
+      // 3. Dispatch Email to Client via send-email Edge Function
+      if (selectedTicket.user_email && selectedTicket.user_email.includes("@")) {
+        try {
+          await supabase.functions.invoke("send-email", {
+            body: {
+              to: selectedTicket.user_email,
+              subject: `Réponse à votre ticket support : ${selectedTicket.subject}`,
+              body: messageText,
+              document_type: "support",
+              document_id: "none",
+            },
+          });
+        } catch (emailErr) {
+          console.warn("Could not send email notification to client:", emailErr);
+        }
+      }
+
       setReplyBody("");
-      toast("Réponse envoyée au client", "success");
+      toast("Réponse enregistrée et e-mail envoyé au client !", "success");
       void loadMessages(selectedTicket.id);
       void fetchTickets();
     } catch (err) {
