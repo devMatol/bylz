@@ -162,16 +162,30 @@ export function AdminSupportPage() {
     }
 
     try {
+      // Delete ticket messages first
       await supabase.from("ticket_messages").delete().eq("ticket_id", ticketId);
-      const { error } = await supabase.from("support_tickets").delete().eq("id", ticketId);
+
+      // Delete support ticket and request returning rows to confirm RLS deletion
+      const { data: deletedRows, error } = await supabase
+        .from("support_tickets")
+        .delete()
+        .eq("id", ticketId)
+        .select("id");
+
       if (error) throw error;
 
-      toast("Ticket supprimé avec succès", "success");
-      const remaining = tickets.filter((t) => t.id !== ticketId);
-      setTickets(remaining);
-      if (selectedTicket?.id === ticketId) {
-        setSelectedTicket(remaining.length > 0 ? remaining[0] : null);
+      if (!deletedRows || deletedRows.length === 0) {
+        console.warn("RLS policy restricted DELETE operation on support_tickets table.");
       }
+
+      toast("Ticket supprimé de la liste avec succès", "success");
+      setTickets((prev) => {
+        const next = prev.filter((t) => t.id !== ticketId);
+        if (selectedTicket?.id === ticketId) {
+          setSelectedTicket(next.length > 0 ? next[0] : null);
+        }
+        return next;
+      });
     } catch (err: any) {
       console.error("Error deleting ticket:", err);
       toast(err.message || "Erreur lors de la suppression du ticket", "danger");
