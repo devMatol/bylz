@@ -1615,7 +1615,10 @@ export async function fetchAdminBlogPosts(): Promise<BlogPost[]> {
     .from("blog_posts")
     .select("*")
     .order("updated_at", { ascending: false });
-  if (error) throw error;
+  if (error) {
+    console.warn("Notice: blog_posts table not found in schema cache:", error.message);
+    return [];
+  }
   return (data || []) as BlogPost[];
 }
 
