@@ -336,34 +336,6 @@ export function InvoiceDetailPage() {
 
         {/* Sidebar */}
         <div className="flex flex-col gap-4">
-          {/* Public Link Card */}
-          <div className="border border-border rounded-card p-4 card-shadow space-y-3">
-            <h4 className="text-xs font-bold text-text uppercase tracking-wider">Partage & Signature</h4>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              leftIcon={<Copy className="w-4 h-4 text-primary" />}
-              onClick={() => {
-                const token = invoice.public_token || invoice.id;
-                const url = `${window.location.origin}/v/${token}`;
-                void navigator.clipboard.writeText(url);
-                toast("Lien de consultation & paiement copié !", "success");
-              }}
-              className="w-full text-xs font-bold"
-            >
-              Copier le lien public
-            </Button>
-
-            {invoice.signature_data && (
-              <div className="bg-emerald-500/10 border border-emerald-500/20 p-2.5 rounded-lg text-[11px] text-emerald-400 space-y-1">
-                <p className="font-bold flex items-center gap-1">
-                  <CheckCircle2 className="w-3.5 h-3.5" /> Signée par {invoice.signature_data.signer_name}
-                </p>
-                <p className="text-muted">Email : {invoice.signature_data.signer_email}</p>
-              </div>
-            )}
-          </div>
           <div className="border border-border rounded-card p-4 card-shadow">
             <div className="flex items-center justify-between mb-2">
               <span className="text-xs font-semibold text-muted uppercase tracking-wide">
@@ -391,46 +363,52 @@ export function InvoiceDetailPage() {
             <PaTimeline invoice={invoice} isB2b={client.type === "b2b"} onRefresh={load} />
           )}
 
-          {/* Stripe Payment Link Card if available */}
-          {invoice.stripe_payment_link && (
-            <div className="border border-emerald-500/30 bg-emerald-500/10 rounded-card p-4 card-shadow space-y-2">
-              <div className="flex items-center space-x-2 text-emerald-600 dark:text-emerald-400 font-bold text-xs uppercase tracking-wide">
-                <CheckCircle2 className="w-4 h-4" />
-                <span>Lien de paiement Stripe</span>
-              </div>
-              <p className="text-xs text-muted leading-relaxed">
-                Permet un paiement sécurisé par carte bancaire.
-              </p>
-              <div className="flex items-center space-x-2 pt-1">
-                <input
-                  type="text"
-                  readOnly
-                  value={invoice.stripe_payment_link}
-                  className="bg-surface border border-border text-xs rounded-lg px-2.5 py-1.5 w-full text-text truncate font-mono"
-                />
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    navigator.clipboard.writeText(invoice.stripe_payment_link!);
-                    setCopiedLink(true);
-                    toast("Lien copié dans le presse-papier !", "success");
-                    setTimeout(() => setCopiedLink(false), 2000);
-                  }}
-                  className="flex-shrink-0"
-                >
-                  {copiedLink ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
-                </Button>
-              </div>
-            </div>
-          )}
-
           {/* Actions card */}
           <div className="border border-border rounded-card p-4 card-shadow flex flex-col gap-2">
             <span className="text-xs font-semibold text-muted uppercase tracking-wide mb-1">
               Actions
             </span>
             {heroAction && <div className="pb-2 mb-1 border-b border-border">{heroAction}</div>}
+
+            {/* Public Link Sharing Actions */}
+            <div className="bg-primary/10 border border-primary/20 rounded-xl p-3 space-y-2 mb-2">
+              <p className="text-[11px] font-bold text-primary uppercase tracking-wider">Lien de Consultation Public</p>
+              <div className="flex flex-col gap-1.5">
+                <Button
+                  type="button"
+                  variant="primary"
+                  size="sm"
+                  leftIcon={<Copy className="w-4 h-4" />}
+                  onClick={() => {
+                    const token = invoice.public_token || invoice.id;
+                    const url = `${window.location.origin}/v/${token}`;
+                    void navigator.clipboard.writeText(url);
+                    toast("Lien public copié dans le presse-papier !", "success");
+                  }}
+                  className="w-full text-xs font-bold bylz-glow-cta"
+                >
+                  Copier le lien public
+                </Button>
+                <a
+                  href={`/v/${invoice.public_token || invoice.id}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center justify-center space-x-1.5 bg-surface-hover hover:bg-surface border border-border text-text px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors"
+                >
+                  <span>🌐 Ouvrir la page publique</span>
+                </a>
+              </div>
+            </div>
+
+            {invoice.signature_data && (
+              <div className="bg-emerald-500/10 border border-emerald-500/20 p-2.5 rounded-lg text-[11px] text-emerald-400 space-y-1 mb-2">
+                <p className="font-bold flex items-center gap-1">
+                  <CheckCircle2 className="w-3.5 h-3.5" /> Signée par {invoice.signature_data.signer_name}
+                </p>
+                <p className="text-muted">Email : {invoice.signature_data.signer_email}</p>
+              </div>
+            )}
+
             {isDraft && !isCreditNote && (
               <ActionButton
                 icon={<FileText className="w-4 h-4" />}

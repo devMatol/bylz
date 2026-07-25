@@ -234,34 +234,7 @@ export function QuoteDetailPage() {
             </div>
           </div>
 
-          {/* Public Link & Actions card */}
-          <div className="border border-border rounded-card p-4 card-shadow space-y-3">
-            <h4 className="text-xs font-bold text-text uppercase tracking-wider">Partage & Signature</h4>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              leftIcon={<Copy className="w-4 h-4 text-primary" />}
-              onClick={() => {
-                const token = quote.public_token || quote.id;
-                const url = `${window.location.origin}/v/${token}`;
-                void navigator.clipboard.writeText(url);
-                toast("Lien de consultation & signature copié !", "success");
-              }}
-              className="w-full text-xs font-bold"
-            >
-              Copier le lien public
-            </Button>
 
-            {quote.signature_data && (
-              <div className="bg-emerald-500/10 border border-emerald-500/20 p-2.5 rounded-lg text-[11px] text-emerald-400 space-y-1">
-                <p className="font-bold flex items-center gap-1">
-                  <Check className="w-3.5 h-3.5" /> Signé par {quote.signature_data.signer_name}
-                </p>
-                <p className="text-muted">Email : {quote.signature_data.signer_email}</p>
-              </div>
-            )}
-          </div>
           <button
             type="button"
             onClick={() =>
@@ -295,6 +268,46 @@ export function QuoteDetailPage() {
               Actions
             </span>
             {heroAction && <div className="pb-2 mb-1 border-b border-border">{heroAction}</div>}
+
+            {/* Public Link Sharing Actions */}
+            <div className="bg-primary/10 border border-primary/20 rounded-xl p-3 space-y-2 mb-2">
+              <p className="text-[11px] font-bold text-primary uppercase tracking-wider">Lien de Signature Public</p>
+              <div className="flex flex-col gap-1.5">
+                <Button
+                  type="button"
+                  variant="primary"
+                  size="sm"
+                  leftIcon={<Copy className="w-4 h-4" />}
+                  onClick={() => {
+                    const token = quote.public_token || quote.id;
+                    const url = `${window.location.origin}/v/${token}`;
+                    void navigator.clipboard.writeText(url);
+                    toast("Lien public copié dans le presse-papier !", "success");
+                  }}
+                  className="w-full text-xs font-bold bylz-glow-cta"
+                >
+                  Copier le lien public
+                </Button>
+                <a
+                  href={`/v/${quote.public_token || quote.id}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center justify-center space-x-1.5 bg-surface-hover hover:bg-surface border border-border text-text px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors"
+                >
+                  <span>🌐 Ouvrir la page de signature</span>
+                </a>
+              </div>
+            </div>
+
+            {quote.signature_data && (
+              <div className="bg-emerald-500/10 border border-emerald-500/20 p-2.5 rounded-lg text-[11px] text-emerald-400 space-y-1 mb-2">
+                <p className="font-bold flex items-center gap-1">
+                  <Check className="w-3.5 h-3.5" /> Signé par {quote.signature_data.signer_name}
+                </p>
+                <p className="text-muted">Email : {quote.signature_data.signer_email}</p>
+              </div>
+            )}
+
             {quote.status === "draft" && (
               <ActionButton
                 icon={<FileText className="w-4 h-4" />}
