@@ -27,7 +27,7 @@ export function ContactPage() {
         .from("support_tickets")
         .insert({
           subject: subject || "Demande via le formulaire de contact",
-          category: "general",
+          category: "question",
           priority: "normal",
           status: "open",
         })
