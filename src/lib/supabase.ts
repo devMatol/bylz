@@ -9,10 +9,16 @@ if (!supabaseUrl || !supabaseAnonKey) {
   );
 }
 
+const isAuthCallback =
+  typeof window !== "undefined" &&
+  (window.location.hash.includes("access_token") ||
+    (window.location.search.includes("code=") &&
+      (window.location.pathname.includes("/login") || window.location.pathname.includes("/auth"))));
+
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     persistSession: true,
     autoRefreshToken: true,
-    detectSessionInUrl: true,
+    detectSessionInUrl: isAuthCallback,
   },
 });
