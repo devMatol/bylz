@@ -51,7 +51,7 @@ export function AdminBlogListPage() {
           author: a.author,
           status: "published",
           keywords: [a.category],
-          views: 120 + idx * 45,
+          views: 0,
           published_at: new Date().toISOString(),
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
