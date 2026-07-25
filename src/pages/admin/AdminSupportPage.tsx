@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, type FormEvent } from "react";
 import { Link } from "react-router-dom";
-import { LifeBuoy, Send, User, CheckCircle2, Clock, Eye, AlertCircle } from "lucide-react";
+import { LifeBuoy, Send, User, CheckCircle2, Clock, Eye, AlertCircle, Trash2 } from "lucide-react";
 import { supabase } from "../../lib/supabase";
 import type { SupportTicket, TicketMessage, TicketStatus, TicketPriority, Profile } from "../../types/database";
 import { Card } from "../../components/ui/Card";
@@ -142,11 +142,36 @@ export function AdminSupportPage() {
         .eq("id", selectedTicket.id);
 
       if (error) throw error;
+
       setSelectedTicket((prev) => (prev ? { ...prev, status: newStatus } : null));
-      toast(`Statut du ticket mis à jour : ${newStatus}`, "info");
-      void fetchTickets();
+      setTickets((prev) =>
+        prev.map((t) => (t.id === selectedTicket.id ? { ...t, status: newStatus } : t))
+      );
+      toast("Statut mis à jour", "success");
     } catch (err) {
-      toast(err instanceof Error ? err.message : "Erreur de mise à jour", "danger");
+      toast("Erreur lors de la mise à jour du statut", "danger");
+    }
+  };
+
+  const handleDeleteTicket = async (ticketId: string) => {
+    if (!window.confirm("Êtes-vous sûr de vouloir supprimer définitivement ce ticket et tous ses messages ?")) {
+      return;
+    }
+
+    try {
+      await supabase.from("ticket_messages").delete().eq("ticket_id", ticketId);
+      const { error } = await supabase.from("support_tickets").delete().eq("id", ticketId);
+      if (error) throw error;
+
+      toast("Ticket supprimé avec succès", "success");
+      const remaining = tickets.filter((t) => t.id !== ticketId);
+      setTickets(remaining);
+      if (selectedTicket?.id === ticketId) {
+        setSelectedTicket(remaining.length > 0 ? remaining[0] : null);
+      }
+    } catch (err: any) {
+      console.error("Error deleting ticket:", err);
+      toast(err.message || "Erreur lors de la suppression du ticket", "danger");
     }
   };
 
@@ -247,14 +272,27 @@ export function AdminSupportPage() {
                       </p>
                     </div>
 
-                    {/* Impersonate & User link */}
-                    <Link
-                      to={`/admin/users/${selectedTicket.user_id}`}
-                      className="px-3 py-1.5 rounded-card bg-rose-950/60 hover:bg-rose-900 text-rose-300 border border-rose-800/60 transition-colors text-xs font-bold inline-flex items-center gap-1.5"
-                    >
-                      <Eye className="w-3.5 h-3.5" />
-                      <span>Fiche Client & Impersonate</span>
-                    </Link>
+                    {/* Impersonate & User link & Delete */}
+                    <div className="flex items-center space-x-2">
+                      <Link
+                        to={`/admin/users/${selectedTicket.user_id}`}
+                        className="px-3 py-1.5 rounded-card bg-rose-950/60 hover:bg-rose-900 text-rose-300 border border-rose-800/60 transition-colors text-xs font-bold inline-flex items-center gap-1.5"
+                      >
+                        <Eye className="w-3.5 h-3.5" />
+                        <span>Fiche Client & Impersonate</span>
+                      </Link>
+
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleDeleteTicket(selectedTicket.id)}
+                        className="bg-rose-950/40 border-rose-800/60 text-rose-400 hover:bg-rose-600 hover:text-white transition-all text-xs font-bold"
+                        leftIcon={<Trash2 className="w-3.5 h-3.5" />}
+                      >
+                        Supprimer
+                      </Button>
+                    </div>
                   </div>
 
                   {/* Status buttons */}
