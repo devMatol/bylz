@@ -1397,8 +1397,18 @@ export async function sendDocumentByEmail(
       },
     }
   );
-  if (error) throw error;
-  if (!data || !data.success) throw new Error(data?.error || "Échec de l'envoi email");
+  if (error) {
+    let msg = error.message || "Erreur lors de l'envoi de l'e-mail";
+    try {
+      if ((error as any).context) {
+        const bodyObj = await (error as any).context.json();
+        if (bodyObj?.error) msg = bodyObj.error;
+      }
+    } catch {}
+    throw new Error(msg);
+  }
+  if (data?.error) throw new Error(data.error);
+  if (!data || !data.success) throw new Error("Échec de l'envoi d'e-mail");
 }
 
 // ---------- URSSAF declarations ----------

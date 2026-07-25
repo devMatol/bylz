@@ -46,12 +46,41 @@ function hexToRgb(hex: string): { r: number; g: number; b: number } {
   return { r, g, b };
 }
 
+function sanitizePdfText(str: string | null | undefined): string {
+  if (!str) return "";
+  return String(str)
+    .replace(/€/g, "EUR")
+    .replace(/—/g, "-")
+    .replace(/–/g, "-")
+    .replace(/\u00a0/g, " ")
+    .replace(/’/g, "'")
+    .replace(/«|»/g, '"')
+    .replace(/[^\x00-\x7F]/g, (c) => {
+      const map: Record<string, string> = {
+        'é': 'e', 'è': 'e', 'ê': 'e', 'ë': 'e',
+        'à': 'a', 'â': 'a', 'ä': 'a',
+        'î': 'i', 'ï': 'i',
+        'ô': 'o', 'ö': 'o',
+        'ù': 'u', 'û': 'u', 'ü': 'u',
+        'ç': 'c',
+        'É': 'E', 'È': 'E', 'Ê': 'E', 'Ë': 'E',
+        'À': 'A', 'Â': 'A', 'Ä': 'A',
+        'Î': 'I', 'Ï': 'I',
+        'Ô': 'O', 'Ö': 'O',
+        'Ù': 'U', 'Û': 'U', 'Ü': 'U',
+        'Ç': 'C',
+      };
+      return map[c] || "";
+    });
+}
+
+function safeDrawText(page: any, text: string, options: any) {
+  const safeStr = sanitizePdfText(text);
+  page.drawText(safeStr, options);
+}
+
 function formatEUR(n: number): string {
-  return new Intl.NumberFormat("fr-FR", {
-    style: "currency",
-    currency: "EUR",
-    minimumFractionDigits: 2,
-  }).format(n);
+  return `${Number(n).toFixed(2)} EUR`;
 }
 
 function formatDateFR(iso: string): string {
@@ -108,22 +137,22 @@ async function renderPdf(
   const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
   const page = pdfDoc.addPage([595.28, 841.89]);
   const { width, height } = page.getSize();
-  const accent = hexToRgb(company.accent_color || "#7C6FE0");
+  const accent = hexToRgb(company?.accent_color || "#7C6FE0");
   const accentRgb = rgb(accent.r, accent.g, accent.b);
   const black = rgb(0.1, 0.1, 0.1);
   const gray = rgb(0.5, 0.5, 0.5);
   const lightGray = rgb(0.9, 0.9, 0.9);
 
   let y = height - 50;
-  const displayName = company.commercial_name || company.legal_name;
-  page.drawText(displayName || "", { x: 50, y, size: 12, font: fontBold, color: black });
+  const displayName = company?.commercial_name || company?.legal_name || "Entreprise";
+  safeDrawText(page, displayName, { x: 50, y, size: 12, font: fontBold, color: black });
   y -= 16;
-  if (company.address) {
-    page.drawText(company.address.slice(0, 60), { x: 50, y, size: 9, font, color: gray });
+  if (company?.address) {
+    safeDrawText(page, company.address.slice(0, 60), { x: 50, y, size: 9, font, color: gray });
     y -= 12;
   }
-  if (company.siret) {
-    page.drawText(`SIRET ${company.siret}`, { x: 50, y, size: 9, font, color: gray });
+  if (company?.siret) {
+    safeDrawText(page, `SIRET ${company.siret}`, { x: 50, y, size: 9, font, color: gray });
     y -= 12;
   }
 
@@ -134,83 +163,83 @@ async function renderPdf(
     : "FACTURE";
   const number = doc.number && doc.number.startsWith("DRAFT-") ? "Brouillon" : doc.number;
   const titleWidth = fontBold.widthOfTextAtSize(title, 20);
-  page.drawText(title, { x: width - 50 - titleWidth, y: height - 50, size: 20, font: fontBold, color: accentRgb });
-  const numWidth = font.widthOfTextAtSize(number, 11);
-  page.drawText(number, { x: width - 50 - numWidth, y: height - 70, size: 11, font: fontBold, color: black });
-  const issueLine = `Émise le ${formatDateFR(doc.issue_date)}`;
-  const issueWidth = font.widthOfTextAtSize(issueLine, 9);
-  page.drawText(issueLine, { x: width - 50 - issueWidth, y: height - 85, size: 9, font, color: gray });
+  safeDrawText(page, title, { x: width - 50 - titleWidth, y: height - 50, size: 20, font: fontBold, color: accentRgb });
+  const numWidth = font.widthOfTextAtSize(sanitizePdfText(number), 11);
+  safeDrawText(page, number, { x: width - 50 - numWidth, y: height - 70, size: 11, font: fontBold, color: black });
+  const issueLine = `Emise le ${formatDateFR(doc.issue_date)}`;
+  const issueWidth = font.widthOfTextAtSize(sanitizePdfText(issueLine), 9);
+  safeDrawText(page, issueLine, { x: width - 50 - issueWidth, y: height - 85, size: 9, font, color: gray });
   if (documentType === "invoice" && doc.due_date) {
-    const dueLine = `Échéance ${formatDateFR(doc.due_date)}`;
-    const dueWidth = font.widthOfTextAtSize(dueLine, 9);
-    page.drawText(dueLine, { x: width - 50 - dueWidth, y: height - 98, size: 9, font, color: gray });
+    const dueLine = `Echeance ${formatDateFR(doc.due_date)}`;
+    const dueWidth = font.widthOfTextAtSize(sanitizePdfText(dueLine), 9);
+    safeDrawText(page, dueLine, { x: width - 50 - dueWidth, y: height - 98, size: 9, font, color: gray });
   }
   if (documentType === "quote" && doc.validity_date) {
     const vLine = `Valide jusqu'au ${formatDateFR(doc.validity_date)}`;
-    const vWidth = font.widthOfTextAtSize(vLine, 9);
-    page.drawText(vLine, { x: width - 50 - vWidth, y: height - 98, size: 9, font, color: gray });
+    const vWidth = font.widthOfTextAtSize(sanitizePdfText(vLine), 9);
+    safeDrawText(page, vLine, { x: width - 50 - vWidth, y: height - 98, size: 9, font, color: gray });
   }
 
   y = height - 150;
-  page.drawText("FACTURÉ À", { x: 50, y, size: 8, font: fontBold, color: gray });
+  safeDrawText(page, "FACTURE A", { x: 50, y, size: 8, font: fontBold, color: gray });
   y -= 16;
-  page.drawText(client?.name || "—", { x: 50, y, size: 11, font: fontBold, color: black });
+  safeDrawText(page, client?.name || "-", { x: 50, y, size: 11, font: fontBold, color: black });
   y -= 14;
   if (client?.address) {
     const addrLines = (client.address as string).split("\n").slice(0, 3);
     for (const line of addrLines) {
-      page.drawText(line.slice(0, 60), { x: 50, y, size: 9, font, color: gray });
+      safeDrawText(page, line.slice(0, 60), { x: 50, y, size: 9, font, color: gray });
       y -= 12;
     }
   }
   if (client?.siret) {
-    page.drawText(`SIRET ${client.siret}`, { x: 50, y, size: 9, font, color: gray });
+    safeDrawText(page, `SIRET ${client.siret}`, { x: 50, y, size: 9, font, color: gray });
     y -= 12;
   }
   if (client?.email) {
-    page.drawText(client.email, { x: 50, y, size: 9, font, color: gray });
+    safeDrawText(page, client.email, { x: 50, y, size: 9, font, color: gray });
     y -= 12;
   }
 
   y = height - 280;
   const colX = { desc: 50, qty: 360, pu: 420, total: 510 };
-  page.drawText("Description", { x: colX.desc, y, size: 9, font: fontBold, color: gray });
-  page.drawText("Qté", { x: colX.qty, y, size: 9, font: fontBold, color: gray });
-  page.drawText("P.U. HT", { x: colX.pu, y, size: 9, font: fontBold, color: gray });
-  page.drawText("Total HT", { x: colX.total, y, size: 9, font: fontBold, color: gray });
+  safeDrawText(page, "Description", { x: colX.desc, y, size: 9, font: fontBold, color: gray });
+  safeDrawText(page, "Qte", { x: colX.qty, y, size: 9, font: fontBold, color: gray });
+  safeDrawText(page, "P.U. HT", { x: colX.pu, y, size: 9, font: fontBold, color: gray });
+  safeDrawText(page, "Total HT", { x: colX.total, y, size: 9, font: fontBold, color: gray });
   y -= 6;
   page.drawLine({ start: { x: 50, y }, end: { x: width - 50, y }, thickness: 0.5, color: lightGray });
   y -= 16;
 
   for (const l of (lines || []) as LineRow[]) {
     const lineTotal = Number(l.quantity) * Number(l.unit_price);
-    page.drawText((l.description || "").slice(0, 45), { x: colX.desc, y, size: 9, font, color: black });
+    safeDrawText(page, (l.description || "").slice(0, 45), { x: colX.desc, y, size: 9, font, color: black });
     const qtyStr = String(Number(l.quantity));
-    page.drawText(qtyStr, { x: colX.qty + 20 - font.widthOfTextAtSize(qtyStr, 9) / 2, y, size: 9, font, color: black });
+    safeDrawText(page, qtyStr, { x: colX.qty + 20 - font.widthOfTextAtSize(qtyStr, 9) / 2, y, size: 9, font, color: black });
     const puStr = formatEUR(Number(l.unit_price));
-    page.drawText(puStr, { x: colX.pu + 60 - font.widthOfTextAtSize(puStr, 9), y, size: 9, font, color: black });
+    safeDrawText(page, puStr, { x: colX.pu + 60 - font.widthOfTextAtSize(sanitizePdfText(puStr), 9), y, size: 9, font, color: black });
     const totStr = formatEUR(lineTotal);
-    page.drawText(totStr, { x: colX.total + 35 - font.widthOfTextAtSize(totStr, 9), y, size: 9, font: fontBold, color: black });
+    safeDrawText(page, totStr, { x: colX.total + 35 - font.widthOfTextAtSize(sanitizePdfText(totStr), 9), y, size: 9, font: fontBold, color: black });
     y -= 18;
   }
 
   y -= 20;
-  const isFranchise = company.vat_regime === "franchise";
-  const totalHt = Number(doc.total_ht);
-  const totalVat = Number(doc.total_vat);
-  const totalTtc = Number(doc.total_ttc);
+  const isFranchise = company?.vat_regime === "franchise";
+  const totalHt = Number(doc.total_ht || 0);
+  const totalVat = Number(doc.total_vat || 0);
+  const totalTtc = Number(doc.total_ttc || 0);
 
   const drawTotalLine = (label: string, value: string, bold = false) => {
     const f = bold ? fontBold : font;
-    page.drawText(label, { x: 350, y, size: 10, font: f, color: black });
-    const w = f.widthOfTextAtSize(value, 10);
-    page.drawText(value, { x: width - 50 - w, y, size: 10, font: f, color: black });
+    safeDrawText(page, label, { x: 350, y, size: 10, font: f, color: black });
+    const w = f.widthOfTextAtSize(sanitizePdfText(value), 10);
+    safeDrawText(page, value, { x: width - 50 - w, y, size: 10, font: f, color: black });
     y -= 16;
   };
 
   drawTotalLine("Total HT", formatEUR(totalHt));
   if (isFranchise) {
-    page.drawText("TVA non applicable — Art. 293 B du CGI", { x: 350, y, size: 8, font, color: gray });
+    safeDrawText(page, "TVA non applicable - Art. 293 B du CGI", { x: 350, y, size: 8, font, color: gray });
     y -= 14;
   } else {
     drawTotalLine("TVA", formatEUR(totalVat));
@@ -218,35 +247,35 @@ async function renderPdf(
   page.drawLine({ start: { x: 350, y }, end: { x: width - 50, y }, thickness: 0.5, color: lightGray });
   y -= 6;
   const ttcStr = formatEUR(totalTtc);
-  page.drawText("Total TTC", { x: 350, y, size: 12, font: fontBold, color: black });
-  const ttcW = fontBold.widthOfTextAtSize(ttcStr, 14);
-  page.drawText(ttcStr, { x: width - 50 - ttcW, y, size: 14, font: fontBold, color: accentRgb });
+  safeDrawText(page, "Total TTC", { x: 350, y, size: 12, font: fontBold, color: black });
+  const ttcW = fontBold.widthOfTextAtSize(sanitizePdfText(ttcStr), 14);
+  safeDrawText(page, ttcStr, { x: width - 50 - ttcW, y, size: 14, font: fontBold, color: accentRgb });
   y -= 30;
 
   if (doc.note) {
-    page.drawText("Note", { x: 50, y, size: 8, font: fontBold, color: gray });
+    safeDrawText(page, "Note", { x: 50, y, size: 8, font: fontBold, color: gray });
     y -= 12;
     const noteLines = (doc.note as string).split("\n").slice(0, 5);
     for (const nl of noteLines) {
-      page.drawText(nl.slice(0, 80), { x: 50, y, size: 9, font, color: gray });
+      safeDrawText(page, nl.slice(0, 80), { x: 50, y, size: 9, font, color: gray });
       y -= 12;
     }
     y -= 10;
   }
 
-  if (company.invoice_footer) {
+  if (company?.invoice_footer) {
     y = 120;
     page.drawLine({ start: { x: 50, y }, end: { x: width - 50, y }, thickness: 0.5, color: lightGray });
     y -= 14;
     const footerLines = (company.invoice_footer as string).split("\n").slice(0, 6);
     for (const fl of footerLines) {
-      page.drawText(fl.slice(0, 90), { x: 50, y, size: 8, font, color: gray });
+      safeDrawText(page, fl.slice(0, 90), { x: 50, y, size: 8, font, color: gray });
       y -= 10;
     }
   }
 
   if (isFranchise) {
-    page.drawText("Auto-entrepreneur — TVA non applicable, art. 293 B du CGI", { x: 50, y: 40, size: 7, font, color: gray });
+    safeDrawText(page, "Auto-entrepreneur - TVA non applicable, art. 293 B du CGI", { x: 50, y: 40, size: 7, font, color: gray });
   }
 
   const bytes = await pdfDoc.save();
@@ -262,7 +291,7 @@ Deno.serve(async (req: Request) => {
     const resendKey = Deno.env.get("RESEND_API_KEY");
     if (!resendKey) {
       return new Response(
-        JSON.stringify({ error: "Service email non configuré (RESEND_API_KEY manquant)" }),
+        JSON.stringify({ error: "Service email non configuré (RESEND_API_KEY manquant sur Supabase)" }),
         { status: 503, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -292,7 +321,7 @@ Deno.serve(async (req: Request) => {
 
     const { to, subject, body, document_type, document_id } = await req.json();
     if (!to || !subject || !body || !document_type || !document_id) {
-      return new Response(JSON.stringify({ error: "Paramètres manquants" }), {
+      return new Response(JSON.stringify({ error: "Paramètres manquants (to, subject, body, document_type, document_id)" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -306,8 +335,6 @@ Deno.serve(async (req: Request) => {
 
     const fileName = `${document_type === "quote" ? "devis" : doc.type === "credit_note" ? "avoir" : "facture"}-${number}.pdf`;
     const b64 = bytesToBase64(bytes);
-
-    const displayName = company.commercial_name || company.legal_name || "Bylz";
 
     let emailText = body;
     if (document_type === "invoice" && doc.stripe_payment_link) {
@@ -338,30 +365,32 @@ Deno.serve(async (req: Request) => {
     if (!resendRes.ok) {
       const errText = await resendRes.text();
       return new Response(
-        JSON.stringify({ error: `Erreur Resend: ${errText.slice(0, 200)}` }),
+        JSON.stringify({ error: `Erreur Resend (${resendRes.status}): ${errText.slice(0, 200)}` }),
         { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    void displayName;
     void client;
 
     return new Response(JSON.stringify({ success: true }), {
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
-  } catch (err) {
+  } catch (err: any) {
+    console.error("send-email Edge Function error:", err);
     return new Response(
-      JSON.stringify({ error: err.message || "Erreur interne" }),
+      JSON.stringify({ error: err.message || "Erreur interne Edge Function" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
 });
 
 function bytesToBase64(bytes: Uint8Array): string {
-  let binary = "";
-  for (let i = 0; i < bytes.length; i++) {
-    binary += String.fromCharCode(bytes[i]);
+  const CHUNK_SIZE = 0x8000;
+  let result = "";
+  for (let i = 0; i < bytes.length; i += CHUNK_SIZE) {
+    const chunk = bytes.subarray(i, i + CHUNK_SIZE);
+    result += String.fromCharCode.apply(null, Array.from(chunk));
   }
-  return btoa(binary);
+  return btoa(result);
 }

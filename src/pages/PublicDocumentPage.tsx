@@ -217,16 +217,17 @@ export function PublicDocumentPage() {
 
     // Trigger Email & Notification to entrepreneur via Edge Function
     try {
-      await supabase.functions.invoke("send-email", {
-        body: {
-          to_email: doc.company.legal_name,
-          subject: `🎉 Signature reçue pour le document ${doc.number}`,
-          signer_name: sig.signerName,
-          document_number: doc.number,
-          document_type: doc.type,
-          document_id: doc.id,
-        },
-      });
+      if (doc.client.email) {
+        await supabase.functions.invoke("send-email", {
+          body: {
+            to: doc.client.email,
+            subject: `🎉 Signature enregistrée pour le document ${doc.number}`,
+            body: `Bonjour ${doc.client.name},\n\nVotre signature pour le document ${doc.number} a bien été enregistrée et certifiée.\n\nCordialement,\n${doc.company.commercial_name || doc.company.legal_name}`,
+            document_type: doc.type,
+            document_id: doc.id,
+          },
+        });
+      }
     } catch (e) {
       console.warn("Notification email trigger warning:", e);
     }
