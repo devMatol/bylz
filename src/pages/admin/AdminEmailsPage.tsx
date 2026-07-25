@@ -32,6 +32,7 @@ export function AdminEmailsPage() {
   const [resendingId, setResendingId] = useState<string | null>(null);
 
   // Logo configuration state
+  const [tableMissing, setTableMissing] = useState(false);
   const [emailLogoUrl, setEmailLogoUrl] = useState("https://bylz.fr/logo.png");
   const [savingLogo, setSavingLogo] = useState(false);
 
@@ -43,15 +44,25 @@ export function AdminEmailsPage() {
         .select("*")
         .order("created_at", { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        if (
+          error.message.includes("schema cache") ||
+          error.code === "PGRST204" ||
+          error.code === "PGRST205" ||
+          error.message.includes("email_logs")
+        ) {
+          setTableMissing(true);
+        }
+        throw error;
+      }
+      setTableMissing(false);
       setLogs((data as EmailLog[]) || []);
     } catch (err: any) {
       console.error("Error fetching email logs:", err);
-      toast(err.message || "Impossible de charger l'historique d'envoi", "danger");
     } finally {
       setLoading(false);
     }
-  }, [toast]);
+  }, []);
 
   const fetchSystemSettings = useCallback(async () => {
     try {
@@ -160,7 +171,96 @@ export function AdminEmailsPage() {
         </Button>
       </div>
 
-      {/* Overview Cards & Admin Logo Setting */}
+      {/* Missing Table Migration Warning Banner */}
+      {tableMissing && (
+        <Card className="bg-rose-950/40 border-rose-900/60 p-5 space-y-4">
+          <div className="flex items-start gap-3">
+            <ShieldAlert className="w-6 h-6 text-rose-400 flex-shrink-0 mt-0.5" />
+            <div className="space-y-2 flex-1">
+              <h3 className="text-sm font-extrabold text-rose-200">
+                La table <code className="font-mono bg-rose-900/50 px-1.5 py-0.5 rounded">public.email_logs</code> n'existe pas encore sur votre base de données Supabase.
+              </h3>
+              <p className="text-xs text-rose-300/80 leading-relaxed">
+                Pour enregistrer les événements et consulter l'historique d'envoi en direct, copiez et exécutez le script SQL ci-dessous dans votre <strong>Supabase SQL Editor</strong> (<em>dashboard.supabase.com &gt; SQL Editor</em>) :
+              </p>
+
+              <div className="relative bg-slate-950 p-3 rounded-lg border border-slate-800 font-mono text-[11px] text-slate-300 overflow-x-auto">
+                <pre>{`CREATE TABLE IF NOT EXISTS email_logs (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  recipient TEXT NOT NULL,
+  subject TEXT NOT NULL,
+  email_type TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'sent',
+  resend_id TEXT,
+  error_message TEXT,
+  metadata JSONB DEFAULT '{}'::jsonb,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
+ALTER TABLE email_logs ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Admins can read email logs" ON email_logs FOR SELECT USING (true);
+CREATE POLICY "Anyone can insert email logs" ON email_logs FOR INSERT WITH CHECK (true);
+
+CREATE TABLE IF NOT EXISTS system_settings (
+  key TEXT PRIMARY KEY,
+  value JSONB NOT NULL,
+  updated_at TIMESTAMPTZ DEFAULT now()
+);
+ALTER TABLE system_settings ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Public read system settings" ON system_settings FOR SELECT USING (true);
+CREATE POLICY "Admins manage system settings" ON system_settings FOR ALL USING (true);`}</pre>
+              </div>
+
+              <div className="pt-2 flex items-center gap-3">
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={() => {
+                    navigator.clipboard.writeText(`CREATE TABLE IF NOT EXISTS email_logs (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  recipient TEXT NOT NULL,
+  subject TEXT NOT NULL,
+  email_type TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'sent',
+  resend_id TEXT,
+  error_message TEXT,
+  metadata JSONB DEFAULT '{}'::jsonb,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
+ALTER TABLE email_logs ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Admins can read email logs" ON email_logs FOR SELECT USING (true);
+CREATE POLICY "Anyone can insert email logs" ON email_logs FOR INSERT WITH CHECK (true);
+
+CREATE TABLE IF NOT EXISTS system_settings (
+  key TEXT PRIMARY KEY,
+  value JSONB NOT NULL,
+  updated_at TIMESTAMPTZ DEFAULT now()
+);
+ALTER TABLE system_settings ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Public read system settings" ON system_settings FOR SELECT USING (true);
+CREATE POLICY "Admins manage system settings" ON system_settings FOR ALL USING (true);`);
+                    toast("Script SQL copié dans le presse-papier !", "success");
+                  }}
+                  className="bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs"
+                >
+                  Copier le Script SQL
+                </Button>
+
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => fetchEmailLogs()}
+                  className="bg-slate-900 border-slate-800 text-slate-300 hover:text-white text-xs"
+                >
+                  Réessayer après exécution
+                </Button>
+              </div>
+            </div>
+          </div>
+        </Card>
+      )}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* KPI Card 1 */}
         <Card className="bg-slate-900 border-slate-800 p-5 space-y-2">

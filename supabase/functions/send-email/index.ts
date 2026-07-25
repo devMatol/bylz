@@ -389,7 +389,7 @@ Deno.serve(async (req: Request) => {
       errorMsg?: string
     ) => {
       try {
-        await userClient.from("email_logs").insert({
+        const { error: insertErr } = await userClient.from("email_logs").insert({
           recipient: Array.isArray(to) ? to.join(", ") : to,
           subject,
           email_type: document_type || "general",
@@ -398,6 +398,9 @@ Deno.serve(async (req: Request) => {
           error_message: errorMsg || null,
           metadata: { document_id, document_type },
         });
+        if (insertErr) {
+          console.warn("Notice: email_logs insert skipped (table may be missing on remote DB):", insertErr.message);
+        }
       } catch (logErr) {
         console.warn("Could not record email_log entry:", logErr);
       }
