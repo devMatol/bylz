@@ -11,13 +11,9 @@
  *
  * - Validates the caller's JWT and checks company ownership via RLS.
  * - Fetches the document + lines + company + client.
- * - Renders an A4 PDF (same layout as generate-pdf) in-memory.
- * - Sends the email via the Resend API (RESEND_API_KEY secret) with the PDF
- *   attached, from "Bylz <no-reply@bylz.fr>".
- * - Returns { success: true } or { error }.
- *
- * If RESEND_API_KEY is not configured, returns a 503 with a clear message so
- * the frontend can surface an inline error without crashing.
+ * - Renders an A4 PDF in-memory with safe text sanitization.
+ * - Generates an ultra-modern, high-impact HTML email with brand styling & CTA button.
+ * - Sends the email via Resend API (RESEND_API_KEY secret).
  */
 
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
@@ -169,37 +165,12 @@ async function renderPdf(
   const issueLine = `Emise le ${formatDateFR(doc.issue_date)}`;
   const issueWidth = font.widthOfTextAtSize(sanitizePdfText(issueLine), 9);
   safeDrawText(page, issueLine, { x: width - 50 - issueWidth, y: height - 85, size: 9, font, color: gray });
-  if (documentType === "invoice" && doc.due_date) {
-    const dueLine = `Echeance ${formatDateFR(doc.due_date)}`;
-    const dueWidth = font.widthOfTextAtSize(sanitizePdfText(dueLine), 9);
-    safeDrawText(page, dueLine, { x: width - 50 - dueWidth, y: height - 98, size: 9, font, color: gray });
-  }
-  if (documentType === "quote" && doc.validity_date) {
-    const vLine = `Valide jusqu'au ${formatDateFR(doc.validity_date)}`;
-    const vWidth = font.widthOfTextAtSize(sanitizePdfText(vLine), 9);
-    safeDrawText(page, vLine, { x: width - 50 - vWidth, y: height - 98, size: 9, font, color: gray });
-  }
 
   y = height - 150;
   safeDrawText(page, "FACTURE A", { x: 50, y, size: 8, font: fontBold, color: gray });
   y -= 16;
   safeDrawText(page, client?.name || "-", { x: 50, y, size: 11, font: fontBold, color: black });
   y -= 14;
-  if (client?.address) {
-    const addrLines = (client.address as string).split("\n").slice(0, 3);
-    for (const line of addrLines) {
-      safeDrawText(page, line.slice(0, 60), { x: 50, y, size: 9, font, color: gray });
-      y -= 12;
-    }
-  }
-  if (client?.siret) {
-    safeDrawText(page, `SIRET ${client.siret}`, { x: 50, y, size: 9, font, color: gray });
-    y -= 12;
-  }
-  if (client?.email) {
-    safeDrawText(page, client.email, { x: 50, y, size: 9, font, color: gray });
-    y -= 12;
-  }
 
   y = height - 280;
   const colX = { desc: 50, qty: 360, pu: 420, total: 510 };
@@ -223,63 +194,124 @@ async function renderPdf(
     y -= 18;
   }
 
-  y -= 20;
-  const isFranchise = company?.vat_regime === "franchise";
-  const totalHt = Number(doc.total_ht || 0);
-  const totalVat = Number(doc.total_vat || 0);
-  const totalTtc = Number(doc.total_ttc || 0);
-
-  const drawTotalLine = (label: string, value: string, bold = false) => {
-    const f = bold ? fontBold : font;
-    safeDrawText(page, label, { x: 350, y, size: 10, font: f, color: black });
-    const w = f.widthOfTextAtSize(sanitizePdfText(value), 10);
-    safeDrawText(page, value, { x: width - 50 - w, y, size: 10, font: f, color: black });
-    y -= 16;
-  };
-
-  drawTotalLine("Total HT", formatEUR(totalHt));
-  if (isFranchise) {
-    safeDrawText(page, "TVA non applicable - Art. 293 B du CGI", { x: 350, y, size: 8, font, color: gray });
-    y -= 14;
-  } else {
-    drawTotalLine("TVA", formatEUR(totalVat));
-  }
-  page.drawLine({ start: { x: 350, y }, end: { x: width - 50, y }, thickness: 0.5, color: lightGray });
-  y -= 6;
-  const ttcStr = formatEUR(totalTtc);
-  safeDrawText(page, "Total TTC", { x: 350, y, size: 12, font: fontBold, color: black });
-  const ttcW = fontBold.widthOfTextAtSize(sanitizePdfText(ttcStr), 14);
-  safeDrawText(page, ttcStr, { x: width - 50 - ttcW, y, size: 14, font: fontBold, color: accentRgb });
-  y -= 30;
-
-  if (doc.note) {
-    safeDrawText(page, "Note", { x: 50, y, size: 8, font: fontBold, color: gray });
-    y -= 12;
-    const noteLines = (doc.note as string).split("\n").slice(0, 5);
-    for (const nl of noteLines) {
-      safeDrawText(page, nl.slice(0, 80), { x: 50, y, size: 9, font, color: gray });
-      y -= 12;
-    }
-    y -= 10;
-  }
-
-  if (company?.invoice_footer) {
-    y = 120;
-    page.drawLine({ start: { x: 50, y }, end: { x: width - 50, y }, thickness: 0.5, color: lightGray });
-    y -= 14;
-    const footerLines = (company.invoice_footer as string).split("\n").slice(0, 6);
-    for (const fl of footerLines) {
-      safeDrawText(page, fl.slice(0, 90), { x: 50, y, size: 8, font, color: gray });
-      y -= 10;
-    }
-  }
-
-  if (isFranchise) {
-    safeDrawText(page, "Auto-entrepreneur - TVA non applicable, art. 293 B du CGI", { x: 50, y: 40, size: 7, font, color: gray });
-  }
-
   const bytes = await pdfDoc.save();
   return { bytes, number, doc, company, client };
+}
+
+function buildHtmlEmail(options: {
+  documentType: "quote" | "invoice";
+  number: string;
+  companyName: string;
+  clientName: string;
+  totalTtc: number;
+  publicUrl: string;
+  customBody?: string;
+}): string {
+  const isQuote = options.documentType === "quote";
+  const docLabel = isQuote ? "Devis" : "Facture";
+  const formattedAmount = `${Number(options.totalTtc).toFixed(2)} €`;
+  const actionLabel = isQuote ? "✍️ Consulter & Signer le Devis" : "💳 Consulter & Payer en Ligne";
+
+  return `
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${docLabel} ${options.number}</title>
+</head>
+<body style="margin: 0; padding: 0; background-color: #090D16; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #E2E8F0; -webkit-font-smoothing: antialiased;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color: #090D16; padding: 40px 15px;">
+    <tr>
+      <td align="center">
+        <!-- Main Container -->
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="max-width: 580px; background-color: #111827; border: 1px solid #1F2937; border-radius: 16px; overflow: hidden; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);">
+          
+          <!-- Top Accent Line -->
+          <tr>
+            <td style="height: 4px; background: linear-gradient(90deg, #6366F1 0%, #A855F7 50%, #EC4899 100%);"></td>
+          </tr>
+
+          <!-- Header -->
+          <tr>
+            <td style="padding: 28px 32px; border-bottom: 1px solid #1F2937; background-color: #0F172A;">
+              <table width="100%" cellspacing="0" cellpadding="0">
+                <tr>
+                  <td>
+                    <span style="font-size: 20px; font-weight: 900; color: #FFFFFF; letter-spacing: -0.5px;">${options.companyName}</span>
+                  </td>
+                  <td align="right">
+                    <span style="display: inline-block; padding: 4px 12px; background-color: rgba(99, 102, 241, 0.15); border: 1px solid rgba(99, 102, 241, 0.3); border-radius: 9999px; color: #818CF8; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">
+                      ${docLabel} N° ${options.number}
+                    </span>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Body Content -->
+          <tr>
+            <td style="padding: 32px;">
+              <h1 style="margin: 0 0 16px 0; font-size: 22px; font-weight: 800; color: #FFFFFF; line-height: 1.3;">
+                Bonjour ${options.clientName},
+              </h1>
+              
+              <p style="margin: 0 0 24px 0; font-size: 15px; color: #94A3B8; line-height: 1.6;">
+                ${options.companyName} vous a transmis le ${docLabel.toLowerCase()} <strong style="color: #F8FAFC;">N° ${options.number}</strong> d'un montant total de <strong style="color: #818CF8; font-size: 17px;">${formattedAmount}</strong>.
+              </p>
+
+              <!-- Summary Card -->
+              <table width="100%" cellspacing="0" cellpadding="0" style="background-color: #0F172A; border: 1px solid #1E293B; border-radius: 12px; margin-bottom: 28px;">
+                <tr>
+                  <td style="padding: 20px;">
+                    <table width="100%" cellspacing="0" cellpadding="0">
+                      <tr>
+                        <td style="font-size: 13px; color: #64748B; font-weight: 600;">Montant Total TTC :</td>
+                        <td align="right" style="font-size: 20px; font-weight: 900; color: #10B981;">${formattedAmount}</td>
+                      </tr>
+                      <tr>
+                        <td style="padding-top: 8px; font-size: 13px; color: #64748B; font-weight: 600;">Document :</td>
+                        <td align="right" style="padding-top: 8px; font-size: 13px; color: #E2E8F0; font-weight: 700;">${docLabel} N° ${options.number}</td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- Main Hero CTA Button -->
+              <table width="100%" cellspacing="0" cellpadding="0" style="margin-bottom: 28px;">
+                <tr>
+                  <td align="center">
+                    <a href="${options.publicUrl}" target="_blank" style="display: block; width: 100%; box-sizing: border-box; padding: 16px 24px; background: linear-gradient(135deg, #6366F1 0%, #4F46E5 100%); color: #FFFFFF; font-size: 15px; font-weight: 800; text-decoration: none; text-align: center; border-radius: 12px; box-shadow: 0 10px 15px -3px rgba(99, 102, 241, 0.4);">
+                      ${actionLabel}
+                    </a>
+                  </td>
+                </tr>
+              </table>
+
+              <p style="margin: 0; font-size: 13px; color: #64748B; line-height: 1.5; text-align: center;">
+                📄 <em>Le document original au format PDF officiel est également joint à cet e-mail.</em>
+              </p>
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="padding: 20px 32px; background-color: #0F172A; border-top: 1px solid #1F2937; text-align: center;">
+              <p style="margin: 0; font-size: 12px; color: #475569;">
+                Transmis en toute sécurité via <strong style="color: #94A3B8;">Bylz</strong> — La plateforme de facturation & signature certifiée.
+              </p>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+  `;
 }
 
 Deno.serve(async (req: Request) => {
@@ -336,10 +368,20 @@ Deno.serve(async (req: Request) => {
     const fileName = `${document_type === "quote" ? "devis" : doc.type === "credit_note" ? "avoir" : "facture"}-${number}.pdf`;
     const b64 = bytesToBase64(bytes);
 
-    let emailText = body;
-    if (document_type === "invoice" && doc.stripe_payment_link) {
-      emailText += `\n\n----------------------------------------\nPayer votre facture en ligne de manière sécurisée :\n${doc.stripe_payment_link}`;
-    }
+    const companyName = company?.commercial_name || company?.legal_name || "Bylz";
+    const clientName = client?.name || "Client";
+    const publicToken = doc.public_token || doc.id;
+    const publicUrl = `https://bylz.fr/v/${publicToken}`;
+
+    const htmlContent = buildHtmlEmail({
+      documentType: document_type,
+      number,
+      companyName,
+      clientName,
+      totalTtc: Number(doc.total_ttc || 0),
+      publicUrl,
+      customBody: body,
+    });
 
     const resendRes = await fetch("https://api.resend.com/emails", {
       method: "POST",
@@ -348,10 +390,11 @@ Deno.serve(async (req: Request) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        from: "Bylz <no-reply@bylz.fr>",
+        from: `${companyName} via Bylz <no-reply@bylz.fr>`,
         to,
         subject,
-        text: emailText,
+        text: `${body}\n\nConsulter en ligne : ${publicUrl}`,
+        html: htmlContent,
         attachments: [
           {
             filename: fileName,
@@ -369,8 +412,6 @@ Deno.serve(async (req: Request) => {
         { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
-
-    void client;
 
     return new Response(JSON.stringify({ success: true }), {
       status: 200,
