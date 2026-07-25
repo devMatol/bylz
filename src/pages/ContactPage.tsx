@@ -39,7 +39,7 @@ export function ContactPage() {
       if (ticket?.id) {
         await supabase.from("ticket_messages").insert({
           ticket_id: ticket.id,
-          author_id: ticket.id,
+          author_id: null,
           body: fullBody,
         });
       }
