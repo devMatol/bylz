@@ -75,43 +75,43 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .from("companies")
       .select("*")
       .eq("user_id", userId)
-      .maybeSingle();
-    if (error) {
-      setCompany(null);
+      .order("created_at", { ascending: false })
+      .limit(1);
+
+    if (!error && data && data.length > 0) {
+      setCompany(data[0] as Company);
       return;
     }
-    if (data) {
-      setCompany(data as Company);
-    } else {
-      // Auto-create default company to bypass onboarding funnel
-      const randomSiren = Math.floor(100000000 + Math.random() * 900000000).toString();
-      const randomSiret = randomSiren + Math.floor(10000 + Math.random() * 90000).toString();
 
-      const { data: newComp, error: insertError } = await supabase
-        .from("companies")
-        .insert({
-          user_id: userId,
-          siret: randomSiret,
-          siren: randomSiren,
-          legal_name: "Mon Entreprise",
-          commercial_name: null,
-          address: "",
-          naf_code: null,
-          activity_type: "freelance_bnc",
-          vat_regime: "franchise",
-          urssaf_frequency: "monthly",
-          logo_url: null,
-          accent_color: "var(--primary)",
-          invoice_footer: "",
-          default_payment_terms: "30d",
-        })
-        .select("*")
-        .maybeSingle();
-      if (!insertError && newComp) {
-        setCompany(newComp as Company);
-      } else {
-        setCompany(null);
-      }
+    // If no company exists yet, auto-create default company
+    const randomSiren = Math.floor(100000000 + Math.random() * 900000000).toString();
+    const randomSiret = randomSiren + Math.floor(10000 + Math.random() * 90000).toString();
+
+    const { data: newComp, error: insertError } = await supabase
+      .from("companies")
+      .insert({
+        user_id: userId,
+        siret: randomSiret,
+        siren: randomSiren,
+        legal_name: "Mon Entreprise",
+        commercial_name: null,
+        address: "",
+        naf_code: null,
+        activity_type: "freelance_bnc",
+        vat_regime: "franchise",
+        urssaf_frequency: "monthly",
+        logo_url: null,
+        accent_color: "var(--primary)",
+        invoice_footer: "",
+        default_payment_terms: "30d",
+      })
+      .select("*")
+      .maybeSingle();
+
+    if (!insertError && newComp) {
+      setCompany(newComp as Company);
+    } else {
+      setCompany(null);
     }
   }, []);
 
