@@ -106,6 +106,16 @@ Deno.serve(async (req) => {
     return corsResponse({ url: accountLink.url, accountId: connectAccountId });
   } catch (error: any) {
     console.error(`Create connect account error: ${error.message}`);
-    return corsResponse({ error: error.message }, 500);
+    const msg = error?.message || "Erreur lors de la création du compte Stripe Connect";
+    if (msg.includes("signed up for Connect")) {
+      return corsResponse(
+        {
+          error:
+            "Stripe Connect n'est pas encore activé sur votre compte Stripe. Rendez-vous sur https://dashboard.stripe.com/connect et cliquez sur 'Activer Connect' pour débloquer les comptes connectés.",
+        },
+        400
+      );
+    }
+    return corsResponse({ error: msg }, 500);
   }
 });

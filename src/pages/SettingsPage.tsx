@@ -247,7 +247,8 @@ export function SettingsPage() {
     try {
       const { data, error } = await supabase.functions.invoke("create-connect-account");
       if (error || !data?.url) {
-        throw new Error(error?.message || "Impossible de démarrer l'onboarding Stripe Connect.");
+        const errorMsg = data?.error || error?.message || "Impossible de démarrer l'onboarding Stripe Connect.";
+        throw new Error(errorMsg);
       }
       window.location.href = data.url;
     } catch (err: any) {
