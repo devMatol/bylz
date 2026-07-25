@@ -46,7 +46,7 @@ export function Topbar({ title, subtitle, actions }: TopbarProps) {
         )}
       </div>
       {actions && (
-        <div className="flex items-center gap-2 flex-shrink-0 ml-4">
+        <div className="hidden md:flex items-center gap-2 flex-shrink-0 ml-4">
           {actions}
         </div>
       )}

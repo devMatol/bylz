@@ -10,6 +10,7 @@ import { FilterPills } from "../components/shared/FilterPills";
 import { StatusBadge } from "../components/shared/StatusBadge";
 import { Amount } from "../components/shared/Amount";
 import { ConfirmModal } from "../components/documents/ConfirmModal";
+import { FloatingActionButton } from "../components/ui/FloatingActionButton";
 import { useAuth } from "../contexts/AuthContext";
 import { useToast } from "../components/ui/Toast";
 import { useDebounce } from "../hooks/useDebounce";
@@ -251,6 +252,9 @@ export function QuotesPage() {
         confirmLabel="Supprimer"
         danger
       />
+
+      {/* Mobile Floating Action Button */}
+      <FloatingActionButton label="Devis" to="/quotes/new" />
     </PageContainer>
   );
 }

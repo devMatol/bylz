@@ -32,6 +32,7 @@ import { formatAmount, cn } from "../lib/utils";
 import { formatDateLong, todayISO, safeFormatDate } from "../lib/date";
 import { canUseFeature } from "../lib/planLimits";
 import { UpgradeModal } from "../components/shared/UpgradeModal";
+import { FloatingActionButton } from "../components/ui/FloatingActionButton";
 import { Sparkles, Lock } from "lucide-react";
 
 const MONTH_LABELS = [
@@ -547,6 +548,9 @@ export function DashboardPage() {
           />
         </div>
       )}
+
+      {/* Mobile Floating Action Button */}
+      <FloatingActionButton label="Facture" to="/invoices/new" />
     </PageContainer>
   );
 }

@@ -12,6 +12,7 @@ import { StatCard } from "../components/shared/StatCard";
 import { Amount } from "../components/shared/Amount";
 import { ConfirmModal } from "../components/documents/ConfirmModal";
 import { ImportInvoiceModal } from "../components/documents/ImportInvoiceModal";
+import { FloatingActionButton } from "../components/ui/FloatingActionButton";
 import { useAuth } from "../contexts/AuthContext";
 import { useToast } from "../components/ui/Toast";
 import { useDebounce } from "../hooks/useDebounce";
@@ -546,6 +547,9 @@ export function InvoicesPage() {
         onClose={() => setImportOpen(false)}
         onSuccess={load}
       />
+
+      {/* Mobile Floating Action Button */}
+      <FloatingActionButton label="Facture" to="/invoices/new" />
     </PageContainer>
   );
 }

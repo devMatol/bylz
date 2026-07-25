@@ -18,6 +18,7 @@ import { formatDateLong } from "../lib/date";
 import type { Client, ClientType } from "../types/database";
 import { canUseFeature, countActiveClients, getPlanLimits } from "../lib/planLimits";
 import { UpgradeModal } from "../components/shared/UpgradeModal";
+import { FloatingActionButton } from "../components/ui/FloatingActionButton";
 
 interface Row {
   id: string;
@@ -125,6 +126,9 @@ export function ClientsPage() {
         onClose={() => setUpgradeModalOpen(false)}
         feature="clients"
       />
+
+      {/* Mobile Floating Action Button */}
+      <FloatingActionButton label="Client" onClick={handleOpenNewClient} />
     </PageContainer>
   );
 }

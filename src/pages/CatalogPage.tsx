@@ -12,6 +12,7 @@ import { ConfirmModal } from "../components/documents/ConfirmModal";
 import { useAuth } from "../contexts/AuthContext";
 import { useToast } from "../components/ui/Toast";
 import { useDebounce } from "../hooks/useDebounce";
+import { FloatingActionButton } from "../components/ui/FloatingActionButton";
 import {
   fetchCatalog,
   deleteCatalogItem,
@@ -162,6 +163,9 @@ export function CatalogPage() {
         message={`Supprimer « ${deleteItem?.description} » ? Cette action est irréversible.`}
         confirmLabel="Supprimer"
       />
+
+      {/* Mobile Floating Action Button */}
+      <FloatingActionButton label="Article" onClick={openCreate} />
     </PageContainer>
   );
 }

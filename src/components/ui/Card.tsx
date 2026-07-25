@@ -17,7 +17,7 @@ export function Card({
   return (
     <div
       className={cn(
-        "bg-surface border border-border rounded-card p-6 transition-all duration-200",
+        "bg-surface border border-border rounded-card p-4 sm:p-6 transition-all duration-200",
         hover && "hover:border-primary/40 hover:-translate-y-0.5",
         glow && "bylz-glow-primary",
         className
