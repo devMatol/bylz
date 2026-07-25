@@ -367,26 +367,89 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    // Support ticket email notification branch
-    if (document_type === "support" || !document_id || document_id === "none") {
+    // Fetch custom logo from system_settings or default
+    let customLogoUrl = "https://bylz.fr/logo.png";
+    try {
+      const { data: logoSetting } = await userClient
+        .from("system_settings")
+        .select("value")
+        .eq("key", "email_logo_url")
+        .maybeSingle();
+      if (logoSetting?.value && typeof logoSetting.value === "string") {
+        customLogoUrl = logoSetting.value;
+      }
+    } catch {
+      // fallback
+    }
+
+    // Helper to record email log in DB
+    const logEmailDispatch = async (
+      status: "sent" | "delivered" | "failed",
+      resendId?: string,
+      errorMsg?: string
+    ) => {
+      try {
+        await userClient.from("email_logs").insert({
+          recipient: Array.isArray(to) ? to.join(", ") : to,
+          subject,
+          email_type: document_type || "general",
+          status,
+          resend_id: resendId || null,
+          error_message: errorMsg || null,
+          metadata: { document_id, document_type },
+        });
+      } catch (logErr) {
+        console.warn("Could not record email_log entry:", logErr);
+      }
+    };
+
+    // Generic Lifecycle & Support Email Branch (without document PDF rendering)
+    if (
+      document_type === "support" ||
+      document_type === "welcome" ||
+      document_type === "urssaf_reminder" ||
+      document_type === "vat_threshold" ||
+      document_type === "trial_ending" ||
+      document_type === "milestone" ||
+      !document_id ||
+      document_id === "none"
+    ) {
+      const isUrssaf = document_type === "urssaf_reminder";
+      const isVat = document_type === "vat_threshold";
+      const badgeText = isUrssaf
+        ? "URSSAF & Fiscalité"
+        : isVat
+        ? "Alerte Seuil TVA"
+        : document_type === "trial_ending"
+        ? "Abonnement Pro"
+        : "Support & Système";
+
       const htmlContent = `<!DOCTYPE html>
 <html>
-<head><meta charset="utf-8"/></head>
-<body style="background-color: #090d16; color: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; padding: 40px 20px;">
-  <div style="max-width: 600px; margin: 0 auto; background: #0f172a; border-radius: 16px; border: 1px solid #1e293b; padding: 32px; box-shadow: 0 10px 25px rgba(0,0,0,0.5);">
-    <div style="margin-bottom: 24px;">
-      <span style="font-size: 24px; font-weight: 900; color: #ffffff; letter-spacing: -0.03em;">Bylz</span>
-      <span style="margin-left: 10px; background: rgba(225, 29, 72, 0.2); color: #fb7185; font-size: 10px; font-weight: 800; padding: 3px 10px; border-radius: 9999px; border: 1px solid rgba(225, 29, 72, 0.4); text-transform: uppercase;">Support Client</span>
-    </div>
-    
-    <h2 style="color: #ffffff; font-size: 18px; font-weight: 800; margin-bottom: 16px;">${subject}</h2>
-    
-    <div style="background: #1e293b; border-radius: 12px; border: 1px solid #334155; padding: 20px; color: #e2e8f0; font-size: 14px; line-height: 1.6; white-space: pre-wrap; margin-bottom: 24px;">${body}</div>
+<head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/></head>
+<body style="background-color: #090d16; color: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; padding: 40px 15px; margin: 0;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+    <tr>
+      <td align="center">
+        <div style="max-width: 580px; background: #0f172a; border-radius: 16px; border: 1px solid #1e293b; padding: 32px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); text-align: left;">
+          <div style="margin-bottom: 24px; display: flex; align-items: center; justify-content: space-between;">
+            <img src="${customLogoUrl}" alt="Bylz" style="height: 36px; max-width: 160px; object-fit: contain;" />
+            <span style="background: rgba(225, 29, 72, 0.2); color: #fb7185; font-size: 10px; font-weight: 800; padding: 4px 10px; border-radius: 9999px; border: 1px solid rgba(225, 29, 72, 0.4); text-transform: uppercase;">
+              ${badgeText}
+            </span>
+          </div>
+          
+          <h2 style="color: #ffffff; font-size: 18px; font-weight: 800; margin-bottom: 16px; letter-spacing: -0.02em;">${subject}</h2>
+          
+          <div style="background: #1e293b; border-radius: 12px; border: 1px solid #334155; padding: 20px; color: #e2e8f0; font-size: 14px; line-height: 1.6; white-space: pre-wrap; margin-bottom: 24px;">${body}</div>
 
-    <div style="border-top: 1px solid #1e293b; padding-top: 20px; font-size: 12px; color: #94a3b8; text-align: center;">
-      Besoin d'aide supplémentaire ? Répondez directement à cet e-mail ou rendez-vous sur <a href="https://bylz.fr" style="color: #fb7185; text-decoration: none; font-weight: 700;">bylz.fr</a>.
-    </div>
-  </div>
+          <div style="border-top: 1px solid #1e293b; padding-top: 20px; font-size: 12px; color: #94a3b8; text-align: center;">
+            Besoin d'aide supplémentaire ? Rendez-vous sur <a href="https://bylz.fr" style="color: #fb7185; text-decoration: none; font-weight: 700;">bylz.fr</a>.
+          </div>
+        </div>
+      </td>
+    </tr>
+  </table>
 </body>
 </html>`;
 
@@ -397,7 +460,7 @@ Deno.serve(async (req: Request) => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          from: `Support Bylz <no-reply@bylz.fr>`,
+          from: `Bylz <no-reply@bylz.fr>`,
           to,
           subject,
           text: body,
@@ -408,13 +471,18 @@ Deno.serve(async (req: Request) => {
 
       if (!resendRes.ok) {
         const errText = await resendRes.text();
+        const fullErr = `Erreur Resend (${resendRes.status}): ${errText.slice(0, 200)}`;
+        await logEmailDispatch("failed", undefined, fullErr);
         return new Response(
-          JSON.stringify({ error: `Erreur Resend (${resendRes.status}): ${errText.slice(0, 200)}` }),
+          JSON.stringify({ error: fullErr }),
           { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
 
-      return new Response(JSON.stringify({ success: true }), {
+      const resData = await resendRes.json();
+      await logEmailDispatch("sent", resData?.id);
+
+      return new Response(JSON.stringify({ success: true, resend_id: resData?.id }), {
         status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -468,13 +536,18 @@ Deno.serve(async (req: Request) => {
 
     if (!resendRes.ok) {
       const errText = await resendRes.text();
+      const fullErr = `Erreur Resend (${resendRes.status}): ${errText.slice(0, 200)}`;
+      await logEmailDispatch("failed", undefined, fullErr);
       return new Response(
-        JSON.stringify({ error: `Erreur Resend (${resendRes.status}): ${errText.slice(0, 200)}` }),
+        JSON.stringify({ error: fullErr }),
         { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    return new Response(JSON.stringify({ success: true }), {
+    const docResData = await resendRes.json();
+    await logEmailDispatch("sent", docResData?.id);
+
+    return new Response(JSON.stringify({ success: true, resend_id: docResData?.id }), {
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

@@ -31,6 +31,7 @@ export function AdminSidebar({ onItemClick, isMobile = false }: AdminSidebarProp
   const adminNavItems = [
     { label: "Métriques Ventes", path: "/admin/ventes", icon: TrendingUp },
     { label: "Blog & Contenu SEO", path: "/admin/blog", icon: FileText },
+    { label: "Centre E-mails & Logs", path: "/admin/emails", icon: FileText },
     { label: "Métriques SEO", path: "/admin/seo", icon: Search },
     { label: "Utilisateurs", path: "/admin/users", icon: Users },
     { label: "Offres", path: "/admin/offres", icon: Tag, superAdminOnly: true },

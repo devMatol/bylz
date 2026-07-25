@@ -18,6 +18,7 @@ import { Modal } from "../components/ui/Modal";
 import { ConfirmModal } from "../components/documents/ConfirmModal";
 import { StatusBadge } from "../components/shared/StatusBadge";
 import { DocumentPreview } from "../components/documents/DocumentPreview";
+import { sendPaymentReceiptEmail } from "../lib/emailNotifier";
 import { PdfButton } from "../components/documents/PdfButton";
 import { useAuth } from "../contexts/AuthContext";
 import { useToast } from "../components/ui/Toast";
@@ -150,6 +151,15 @@ export function InvoiceDetailPage() {
         method: payMethod,
       });
       toast("Facture marquée comme payée", "success");
+      if (client?.email) {
+        void sendPaymentReceiptEmail({
+          clientEmail: client.email,
+          clientName: client.name,
+          invoiceNumber: invoice.number,
+          amountTtc: Number(invoice.total_ttc),
+          companyName: company?.commercial_name || company?.legal_name || "Entreprise",
+        });
+      }
       setPayOpen(false);
       void load();
     } catch (err) {

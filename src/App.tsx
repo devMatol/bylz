@@ -101,6 +101,9 @@ const AdminBlogListPage = lazy(() =>
 const AdminBlogEditorPage = lazy(() =>
   import("./pages/admin/AdminBlogEditorPage").then((m) => ({ default: m.AdminBlogEditorPage }))
 );
+const AdminEmailsPage = lazy(() =>
+  import("./pages/admin/AdminEmailsPage").then((m) => ({ default: m.AdminEmailsPage }))
+);
 
 const KitchenSinkPage = lazy(() =>
   import("./pages/KitchenSinkPage").then((m) => ({ default: m.KitchenSinkPage }))
@@ -250,6 +253,7 @@ function App() {
                     <Route path="users" element={<AdminUsersPage />} />
                     <Route path="users/:id" element={<AdminUserDetailPage />} />
                     <Route path="support" element={<AdminSupportPage />} />
+                    <Route path="emails" element={<AdminEmailsPage />} />
                     <Route path="logs" element={<AdminLogsPage />} />
 
                     {/* Super Admin Only Sub-Routes */}

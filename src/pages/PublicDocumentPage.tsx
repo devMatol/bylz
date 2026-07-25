@@ -15,6 +15,8 @@ import {
   AlertCircle,
 } from "lucide-react";
 import { supabase } from "../lib/supabase";
+import { useToast } from "../components/ui/Toast";
+import { sendQuoteSignedNotification } from "../lib/emailNotifier";
 import { Button } from "../components/ui/Button";
 import { SignatureModal } from "../components/documents/SignatureModal";
 import { formatAmount } from "../lib/utils";

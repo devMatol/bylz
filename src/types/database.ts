@@ -232,6 +232,26 @@ export interface AuditLog {
   created_at: string;
 }
 
+export type EmailStatus = "sent" | "delivered" | "failed" | "pending";
+
+export interface EmailLog {
+  id: string;
+  recipient: string;
+  subject: string;
+  email_type: string;
+  status: EmailStatus;
+  resend_id: string | null;
+  error_message: string | null;
+  metadata?: Record<string, any> | null;
+  created_at: string;
+}
+
+export interface SystemSetting {
+  key: string;
+  value: any;
+  updated_at: string;
+}
+
 export interface Plan {
   id: string;
   key: PlanType;

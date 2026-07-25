@@ -8,6 +8,7 @@ import { Input } from "../components/ui/Input";
 import { SEO } from "../components/seo/SEO";
 import { useAuth } from "../contexts/AuthContext";
 import { signUp, signInWithGoogle } from "../lib/auth";
+import { sendWelcomeEmail } from "../lib/emailNotifier";
 import { cn } from "../lib/utils";
 
 function mapAuthError(code: string | undefined): string {
@@ -65,6 +66,8 @@ export function SignupPage() {
       setLoading(false);
       return;
     }
+    // Send Welcome Email
+    void sendWelcomeEmail(email.trim());
     await refreshProfile();
     navigate(isGuest ? "/onboarding?guest=true" : "/onboarding");
   };
