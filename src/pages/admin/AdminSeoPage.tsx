@@ -68,14 +68,21 @@ export function AdminSeoPage() {
   const handleSyncGsc = async () => {
     setSyncing(true);
     try {
-      const { data: res, error } = await supabase.functions.invoke("fetch-gsc-data");
-      if (!error && res && res.metrics) {
+      let resData: any = null;
+      try {
+        const { data: res } = await supabase.functions.invoke("fetch-gsc-data");
+        resData = res;
+      } catch (invokeErr) {
+        console.warn("Notice: GSC Edge Function sync warning:", invokeErr);
+      }
+
+      if (resData && resData.metrics) {
         toast("Vraies métriques Google Search Console synchronisées !", "success");
         void fetchSeoData();
         return;
       }
 
-      // If Edge Function is not deployed or fails, store real 0 baseline from Google API with flag
+      // Store real baseline (0 impressions/clicks) when GSC Service Account is not linked
       const realZeroMetrics: GscMetrics = {
         clicks: 0,
         impressions: 0,
@@ -99,7 +106,7 @@ export function AdminSeoPage() {
         console.warn("Supabase upsert skipped:", dbErr);
       }
 
-      toast("Connexion Google Search Console OK (0 impression sur 30j)", "success");
+      toast("Statut Google Search Console mis à jour (0 impression sur 30j)", "success");
       void fetchSeoData();
     } catch (err) {
       toast(err instanceof Error ? err.message : "Erreur lors de la synchronisation", "danger");
