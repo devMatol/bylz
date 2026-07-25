@@ -242,7 +242,13 @@ export function PublicDocumentPage() {
         })
         .eq("id", doc.id);
 
-      if (updateErr) throw updateErr;
+      if (updateErr) {
+        const { error: statusErr } = await supabase
+          .from("quotes")
+          .update({ status: "accepted" })
+          .eq("id", doc.id);
+        if (statusErr) throw statusErr;
+      }
     } else {
       const { error: updateErr } = await supabase
         .from("invoices")
@@ -252,7 +258,13 @@ export function PublicDocumentPage() {
         })
         .eq("id", doc.id);
 
-      if (updateErr) throw updateErr;
+      if (updateErr) {
+        const { error: statusErr } = await supabase
+          .from("invoices")
+          .update({ status: "signed" })
+          .eq("id", doc.id);
+        if (statusErr) throw statusErr;
+      }
     }
 
     // Trigger Email & Notification to entrepreneur via Edge Function
