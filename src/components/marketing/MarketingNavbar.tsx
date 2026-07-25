@@ -43,92 +43,120 @@ export function MarketingNavbar() {
   ];
 
   return (
-    <header
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        scrolled || mobileMenuOpen
-          ? "bg-surface/95 backdrop-blur-xl border-b border-border shadow-lg py-3.5"
-          : "bg-transparent py-5"
-      }`}
-    >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between relative z-[110]">
-        {/* Logo */}
-        <Link
-          to="/"
-          onClick={() => setMobileMenuOpen(false)}
-          className="flex items-center space-x-2.5 group focus:outline-none"
-        >
-          <div className="w-9 h-9 rounded-card bg-gradient-to-tr from-primary to-accent flex items-center justify-center text-white font-bold text-lg shadow-md group-hover:scale-105 transition-transform">
-            B
+    <>
+      <header
+        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+          scrolled || mobileMenuOpen
+            ? "bg-surface/95 backdrop-blur-xl border-b border-border shadow-lg py-3.5"
+            : "bg-transparent py-5"
+        }`}
+      >
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
+          {/* Logo */}
+          <Link
+            to="/"
+            onClick={() => setMobileMenuOpen(false)}
+            className="flex items-center space-x-2.5 group focus:outline-none"
+          >
+            <div className="w-9 h-9 rounded-card bg-gradient-to-tr from-primary to-accent flex items-center justify-center text-white font-bold text-lg shadow-md group-hover:scale-105 transition-transform">
+              B
+            </div>
+            <span className="text-xl font-black tracking-tight text-text">
+              Bylz<span className="text-primary">.</span>
+            </span>
+          </Link>
+
+          {/* Desktop Nav Links */}
+          <nav className="hidden md:flex items-center space-x-8">
+            {navLinks.map((link) => {
+              const isActive = location.pathname === link.path;
+              return (
+                <Link
+                  key={link.path}
+                  to={link.path}
+                  className={`text-sm font-semibold transition-colors ${
+                    isActive ? "text-primary font-bold" : "text-muted hover:text-text"
+                  }`}
+                >
+                  {link.label}
+                </Link>
+              );
+            })}
+          </nav>
+
+          {/* Desktop CTAs */}
+          <div className="hidden md:flex items-center space-x-3">
+            {user ? (
+              <Link to="/dashboard">
+                <Button variant="primary" size="sm" className="bylz-glow-cta font-bold">
+                  <LayoutDashboard className="w-4 h-4 mr-1.5" />
+                  Mon tableau de bord
+                  <ArrowRight className="w-4 h-4 ml-1.5" />
+                </Button>
+              </Link>
+            ) : (
+              <>
+                <Link to="/login">
+                  <Button variant="ghost" size="sm">
+                    Se connecter
+                  </Button>
+                </Link>
+                <Link to="/essai">
+                  <Button variant="primary" size="sm" className="bylz-glow-cta">
+                    <Sparkles className="w-4 h-4 mr-1.5 text-accent animate-pulse" />
+                    Essayer gratuitement
+                  </Button>
+                </Link>
+              </>
+            )}
           </div>
-          <span className="text-xl font-black tracking-tight text-text">
-            Bylz<span className="text-primary">.</span>
-          </span>
-        </Link>
 
-        {/* Desktop Nav Links */}
-        <nav className="hidden md:flex items-center space-x-8">
-          {navLinks.map((link) => {
-            const isActive = location.pathname === link.path;
-            return (
-              <Link
-                key={link.path}
-                to={link.path}
-                className={`text-sm font-semibold transition-colors ${
-                  isActive ? "text-primary font-bold" : "text-muted hover:text-text"
-                }`}
-              >
-                {link.label}
-              </Link>
-            );
-          })}
-        </nav>
-
-        {/* Desktop CTAs */}
-        <div className="hidden md:flex items-center space-x-3">
-          {user ? (
-            <Link to="/dashboard">
-              <Button variant="primary" size="sm" className="bylz-glow-cta font-bold">
-                <LayoutDashboard className="w-4 h-4 mr-1.5" />
-                Mon tableau de bord
-                <ArrowRight className="w-4 h-4 ml-1.5" />
-              </Button>
-            </Link>
-          ) : (
-            <>
-              <Link to="/login">
-                <Button variant="ghost" size="sm">
-                  Se connecter
-                </Button>
-              </Link>
-              <Link to="/essai">
-                <Button variant="primary" size="sm" className="bylz-glow-cta">
-                  <Sparkles className="w-4 h-4 mr-1.5 text-accent animate-pulse" />
-                  Essayer gratuitement
-                </Button>
-              </Link>
-            </>
-          )}
+          {/* Mobile Burger Menu Button */}
+          <button
+            type="button"
+            onClick={() => setMobileMenuOpen((prev) => !prev)}
+            className="md:hidden p-2.5 rounded-card text-text hover:bg-surface-hover transition-colors focus:outline-none flex items-center justify-center min-w-[44px] min-h-[44px]"
+            aria-label="Toggle Navigation Menu"
+          >
+            {mobileMenuOpen ? (
+              <X className="w-6 h-6 text-primary stroke-[2.5]" />
+            ) : (
+              <Menu className="w-6 h-6 text-text stroke-[2.5]" />
+            )}
+          </button>
         </div>
+      </header>
 
-        {/* Mobile Burger Menu Button */}
-        <button
-          type="button"
-          onClick={() => setMobileMenuOpen((prev) => !prev)}
-          className="md:hidden p-2.5 rounded-card text-text hover:bg-surface-hover transition-colors focus:outline-none flex items-center justify-center min-w-[44px] min-h-[44px]"
-          aria-label="Toggle Navigation Menu"
-        >
-          {mobileMenuOpen ? (
-            <X className="w-6 h-6 text-primary stroke-[2.5]" />
-          ) : (
-            <Menu className="w-6 h-6 text-text stroke-[2.5]" />
-          )}
-        </button>
-      </div>
-
-      {/* Mobile Drawer Overlay */}
+      {/* Mobile Drawer Overlay Portal */}
       {mobileMenuOpen && (
-        <div className="md:hidden fixed inset-0 top-0 pt-20 bg-surface/98 backdrop-blur-2xl z-[100] flex flex-col justify-between p-6 shadow-2xl overflow-y-auto animate-in fade-in duration-200 border-b border-border">
-          <nav className="flex flex-col space-y-3 pt-4">
+        <div className="md:hidden fixed inset-0 z-[999] bg-bg/98 backdrop-blur-2xl flex flex-col justify-between p-6 overflow-y-auto animate-in fade-in duration-200">
+          {/* Top Bar inside Overlay */}
+          <div className="flex items-center justify-between pb-6 border-b border-border">
+            <Link
+              to="/"
+              onClick={() => setMobileMenuOpen(false)}
+              className="flex items-center space-x-2.5"
+            >
+              <div className="w-9 h-9 rounded-card bg-gradient-to-tr from-primary to-accent flex items-center justify-center text-white font-bold text-lg shadow-md">
+                B
+              </div>
+              <span className="text-xl font-black tracking-tight text-text">
+                Bylz<span className="text-primary">.</span>
+              </span>
+            </Link>
+
+            <button
+              type="button"
+              onClick={() => setMobileMenuOpen(false)}
+              className="p-2.5 rounded-card text-primary hover:bg-surface-hover transition-colors focus:outline-none flex items-center justify-center min-w-[44px] min-h-[44px]"
+              aria-label="Fermer le menu"
+            >
+              <X className="w-6 h-6 stroke-[2.5]" />
+            </button>
+          </div>
+
+          {/* Links */}
+          <nav className="flex flex-col space-y-3 py-6">
             {navLinks.map((link) => {
               const isActive = location.pathname === link.path;
               return (
@@ -136,7 +164,7 @@ export function MarketingNavbar() {
                   key={link.path}
                   to={link.path}
                   onClick={() => setMobileMenuOpen(false)}
-                  className={`text-lg font-bold py-3.5 px-4 border-b border-border/40 transition-colors flex items-center justify-between rounded-card ${
+                  className={`text-lg font-extrabold py-3.5 px-4 border-b border-border/40 transition-colors flex items-center justify-between rounded-card ${
                     isActive ? "text-primary bg-primary/10" : "text-text hover:text-primary hover:bg-surface-hover"
                   }`}
                 >
@@ -147,7 +175,8 @@ export function MarketingNavbar() {
             })}
           </nav>
 
-          <div className="pt-6 pb-8 space-y-3 border-t border-border flex flex-col">
+          {/* Bottom CTAs */}
+          <div className="pt-6 pb-6 space-y-3 border-t border-border flex flex-col">
             {user ? (
               <Link to="/dashboard" onClick={() => setMobileMenuOpen(false)}>
                 <Button variant="primary" className="w-full justify-center bylz-glow-cta font-bold text-sm py-3.5">
@@ -173,6 +202,6 @@ export function MarketingNavbar() {
           </div>
         </div>
       )}
-    </header>
+    </>
   );
 }
