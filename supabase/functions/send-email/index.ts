@@ -92,7 +92,7 @@ function formatDateFR(iso: string): string {
 }
 
 async function renderPdf(
-  userClient: ReturnType<typeof createClient>,
+  userClient: any,
   documentType: "quote" | "invoice",
   documentId: string
 ): Promise<{ bytes: Uint8Array; number: string; doc: any; company: any; client: any }> {
