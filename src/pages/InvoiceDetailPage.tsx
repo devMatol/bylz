@@ -372,7 +372,7 @@ export function InvoiceDetailPage() {
 
             {/* Public Link Sharing Actions */}
             <div className="bg-primary/10 border border-primary/20 rounded-xl p-3 space-y-2 mb-2">
-              <p className="text-[11px] font-bold text-primary uppercase tracking-wider">Lien de Consultation Public</p>
+              <p className="text-[11px] font-bold text-primary uppercase tracking-wider">Partage & Paiement Client</p>
               <div className="flex flex-col gap-1.5">
                 <Button
                   type="button"
@@ -389,13 +389,46 @@ export function InvoiceDetailPage() {
                 >
                   Copier le lien public
                 </Button>
+
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  leftIcon={<Send className="w-4 h-4 text-primary" />}
+                  onClick={async () => {
+                    if (!client?.email) {
+                      toast("Veuillez renseigner un e-mail pour ce client dans la fiche Client.", "warning");
+                      return;
+                    }
+                    setBusy(true);
+                    try {
+                      const token = invoice.public_token || invoice.id;
+                      const publicUrl = `${window.location.origin}/v/${token}`;
+                      const amount = formatAmount(Number(invoice.total_ttc));
+                      await sendDocumentByEmail("invoice", invoice.id, client.email, {
+                        subject: `Facture N° ${invoice.number} - ${company.commercial_name || company.legal_name}`,
+                        body: `Bonjour ${client.name},\n\nVeuillez trouver ci-joint votre facture N° ${invoice.number} d'un montant de ${amount}.\n\nVous pouvez consulter et régler votre facture en ligne via ce lien sécurisé :\n${publicUrl}\n\nCordialement,\n${company.commercial_name || company.legal_name}`,
+                      });
+                      toast(`Facture envoyée par e-mail à ${client.email} !`, "success");
+                    } catch (err: any) {
+                      toast(err.message || "Erreur d'envoi email", "danger");
+                    } finally {
+                      setBusy(false);
+                    }
+                  }}
+                  loading={busy}
+                  className="w-full text-xs font-semibold"
+                >
+                  Envoyer par e-mail au client
+                </Button>
+
                 <a
                   href={`/v/${invoice.public_token || invoice.id}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center justify-center space-x-1.5 bg-surface-hover hover:bg-surface border border-border text-text px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors"
+                  className="inline-flex items-center justify-center space-x-1.5 bg-surface-hover hover:bg-surface border border-border text-text px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-colors"
                 >
-                  <span>🌐 Ouvrir la page publique</span>
+                  <span>🌐 Tester la vue client & paiement</span>
                 </a>
               </div>
             </div>
