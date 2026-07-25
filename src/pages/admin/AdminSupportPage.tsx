@@ -44,17 +44,20 @@ export function AdminSupportPage() {
         return;
       }
 
-      // Fetch user emails for all unique user_ids
-      const userIds = Array.from(new Set(ticketsList.map((t) => t.user_id)));
-      const { data: profs } = await supabase
-        .from("profiles")
-        .select("id, email, plan")
-        .in("id", userIds);
-
+      // Fetch user emails for all unique valid non-null user_ids
+      const userIds = Array.from(new Set(ticketsList.map((t) => t.user_id).filter((id): id is string => Boolean(id))));
       const userMap: Record<string, { email: string; plan: string }> = {};
-      if (profs) {
-        for (const p of profs) {
-          userMap[p.id] = { email: p.email, plan: p.plan };
+
+      if (userIds.length > 0) {
+        const { data: profs } = await supabase
+          .from("profiles")
+          .select("id, email, plan")
+          .in("id", userIds);
+
+        if (profs) {
+          for (const p of profs) {
+            userMap[p.id] = { email: p.email, plan: p.plan };
+          }
         }
       }
 
