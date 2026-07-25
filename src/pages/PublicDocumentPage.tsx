@@ -19,6 +19,7 @@ import { Button } from "../components/ui/Button";
 import { SignatureModal } from "../components/documents/SignatureModal";
 import { formatAmount } from "../lib/utils";
 import { formatDateLong } from "../lib/date";
+import { downloadPdf } from "../lib/api";
 import type { SignatureData } from "../types/database";
 
 interface PublicDocData {
@@ -67,6 +68,7 @@ export function PublicDocumentPage() {
   const [error, setError] = useState<string | null>(null);
   const [isSignModalOpen, setIsSignModalOpen] = useState(false);
   const [signedSuccess, setSignedSuccess] = useState(false);
+  const [downloadingPdf, setDownloadingPdf] = useState(false);
 
   const fetchDocument = useCallback(async () => {
     if (!token) {
@@ -336,11 +338,23 @@ export function PublicDocumentPage() {
             type="button"
             variant="outline"
             size="sm"
-            onClick={() => window.print()}
+            loading={downloadingPdf}
+            onClick={async () => {
+              setDownloadingPdf(true);
+              try {
+                const url = await downloadPdf(doc.type, doc.id);
+                window.open(url, "_blank");
+              } catch (e) {
+                // Fallback to print dialog if generate-pdf fails
+                window.print();
+              } finally {
+                setDownloadingPdf(false);
+              }
+            }}
             className="text-xs font-semibold"
           >
             <Download className="w-3.5 h-3.5 mr-1.5" />
-            Télécharger / Imprimer
+            Télécharger le PDF
           </Button>
 
           {!isSigned && (
