@@ -234,7 +234,34 @@ export function QuoteDetailPage() {
             </div>
           </div>
 
-          {/* Linked invoice row */}
+          {/* Public Link & Actions card */}
+          <div className="border border-border rounded-card p-4 card-shadow space-y-3">
+            <h4 className="text-xs font-bold text-text uppercase tracking-wider">Partage & Signature</h4>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              leftIcon={<Copy className="w-4 h-4 text-primary" />}
+              onClick={() => {
+                const token = quote.public_token || quote.id;
+                const url = `${window.location.origin}/v/${token}`;
+                void navigator.clipboard.writeText(url);
+                toast("Lien de consultation & signature copié !", "success");
+              }}
+              className="w-full text-xs font-bold"
+            >
+              Copier le lien public
+            </Button>
+
+            {quote.signature_data && (
+              <div className="bg-emerald-500/10 border border-emerald-500/20 p-2.5 rounded-lg text-[11px] text-emerald-400 space-y-1">
+                <p className="font-bold flex items-center gap-1">
+                  <Check className="w-3.5 h-3.5" /> Signé par {quote.signature_data.signer_name}
+                </p>
+                <p className="text-muted">Email : {quote.signature_data.signer_email}</p>
+              </div>
+            )}
+          </div>
           <button
             type="button"
             onClick={() =>

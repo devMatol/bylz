@@ -31,6 +31,7 @@ import { ClientDetailPage } from "./pages/ClientDetailPage";
 import { CatalogPage } from "./pages/CatalogPage";
 import { UrssafPage } from "./pages/UrssafPage";
 import { SettingsPage } from "./pages/SettingsPage";
+import { PublicDocumentPage } from "./pages/PublicDocumentPage";
 
 // Code-split marketing & tools bundle from main app
 const LandingPage = lazy(() =>
@@ -195,13 +196,16 @@ function App() {
                   }
                 />
                 <Route
-                  path="/cgu"
+                  path="/cgv"
                   element={
                     <MarketingSuspense>
                       <CGUPage />
                     </MarketingSuspense>
                   }
                 />
+
+                {/* Secure Public Document View Route */}
+                <Route path="/v/:token" element={<PublicDocumentPage />} />
                 <Route
                   path="/confidentialite"
                   element={

@@ -336,7 +336,34 @@ export function InvoiceDetailPage() {
 
         {/* Sidebar */}
         <div className="flex flex-col gap-4">
-          {/* Status card */}
+          {/* Public Link Card */}
+          <div className="border border-border rounded-card p-4 card-shadow space-y-3">
+            <h4 className="text-xs font-bold text-text uppercase tracking-wider">Partage & Signature</h4>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              leftIcon={<Copy className="w-4 h-4 text-primary" />}
+              onClick={() => {
+                const token = invoice.public_token || invoice.id;
+                const url = `${window.location.origin}/v/${token}`;
+                void navigator.clipboard.writeText(url);
+                toast("Lien de consultation & paiement copié !", "success");
+              }}
+              className="w-full text-xs font-bold"
+            >
+              Copier le lien public
+            </Button>
+
+            {invoice.signature_data && (
+              <div className="bg-emerald-500/10 border border-emerald-500/20 p-2.5 rounded-lg text-[11px] text-emerald-400 space-y-1">
+                <p className="font-bold flex items-center gap-1">
+                  <CheckCircle2 className="w-3.5 h-3.5" /> Signée par {invoice.signature_data.signer_name}
+                </p>
+                <p className="text-muted">Email : {invoice.signature_data.signer_email}</p>
+              </div>
+            )}
+          </div>
           <div className="border border-border rounded-card p-4 card-shadow">
             <div className="flex items-center justify-between mb-2">
               <span className="text-xs font-semibold text-muted uppercase tracking-wide">

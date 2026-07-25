@@ -82,6 +82,14 @@ export interface CatalogItem {
   created_at: string;
 }
 
+export interface SignatureData {
+  signer_name: string;
+  signer_email: string;
+  signed_at: string;
+  ip_address: string | null;
+  signature_image: string | null;
+}
+
 export interface Quote {
   id: string;
   company_id: string;
@@ -95,6 +103,8 @@ export interface Quote {
   total_ht: number;
   total_vat: number;
   total_ttc: number;
+  public_token?: string | null;
+  signature_data?: SignatureData | null;
   created_at: string;
 }
 
@@ -135,6 +145,8 @@ export interface Invoice {
   facturx_pdf_url: string | null;
   ereporting_status: EreportingStatus | null;
   note: string | null;
+  public_token?: string | null;
+  signature_data?: SignatureData | null;
   created_at: string;
 }
 
