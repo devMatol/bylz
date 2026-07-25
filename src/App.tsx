@@ -95,6 +95,12 @@ const AdminSupportPage = lazy(() =>
 const AdminLogsPage = lazy(() =>
   import("./pages/admin/AdminLogsPage").then((m) => ({ default: m.AdminLogsPage }))
 );
+const AdminBlogListPage = lazy(() =>
+  import("./pages/admin/AdminBlogListPage").then((m) => ({ default: m.AdminBlogListPage }))
+);
+const AdminBlogEditorPage = lazy(() =>
+  import("./pages/admin/AdminBlogEditorPage").then((m) => ({ default: m.AdminBlogEditorPage }))
+);
 
 const KitchenSinkPage = lazy(() =>
   import("./pages/KitchenSinkPage").then((m) => ({ default: m.KitchenSinkPage }))
@@ -238,6 +244,8 @@ function App() {
                   >
                     <Route index element={<Navigate to="/admin/ventes" replace />} />
                     <Route path="ventes" element={<AdminSalesPage />} />
+                    <Route path="blog" element={<AdminBlogListPage />} />
+                    <Route path="blog/editor" element={<AdminBlogEditorPage />} />
                     <Route path="seo" element={<AdminSeoPage />} />
                     <Route path="users" element={<AdminUsersPage />} />
                     <Route path="users/:id" element={<AdminUserDetailPage />} />

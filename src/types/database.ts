@@ -282,3 +282,28 @@ export interface PaWebhookEvent {
   received_at: string;
 }
 
+export type BlogPostStatus = "draft" | "published";
+
+export interface BlogPost {
+  id: string;
+  slug: string;
+  title: string;
+  excerpt: string;
+  content: string;
+  category: string;
+  read_time: string;
+  author: string;
+  cover_image_url?: string | null;
+  status: BlogPostStatus;
+  keywords?: string[];
+  meta_description?: string | null;
+  seo_score?: number;
+  views?: number;
+  published_at?: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export type BlogPostInput = Omit<BlogPost, "id" | "created_at" | "updated_at" | "views">;
+
+

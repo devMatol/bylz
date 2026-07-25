@@ -1579,3 +1579,92 @@ export async function migrateGuestDraft(companyId: string): Promise<string | nul
     return null;
   }
 }
+
+// ---------- Blog API ----------
+
+import type { BlogPost, BlogPostInput } from "../types/database";
+
+export async function fetchPublishedBlogPosts(): Promise<BlogPost[]> {
+  const { data, error } = await supabase
+    .from("blog_posts")
+    .select("*")
+    .eq("status", "published")
+    .order("published_at", { ascending: false });
+  if (error) {
+    console.warn("Could not fetch blog_posts from DB:", error);
+    return [];
+  }
+  return (data || []) as BlogPost[];
+}
+
+export async function fetchBlogPostBySlug(slug: string): Promise<BlogPost | null> {
+  const { data, error } = await supabase
+    .from("blog_posts")
+    .select("*")
+    .eq("slug", slug)
+    .maybeSingle();
+  if (error) {
+    console.warn("Could not fetch blog_post by slug:", error);
+    return null;
+  }
+  return data as BlogPost | null;
+}
+
+export async function fetchAdminBlogPosts(): Promise<BlogPost[]> {
+  const { data, error } = await supabase
+    .from("blog_posts")
+    .select("*")
+    .order("updated_at", { ascending: false });
+  if (error) throw error;
+  return (data || []) as BlogPost[];
+}
+
+export async function saveBlogPost(post: Partial<BlogPost> & { title: string; slug: string; content: string }): Promise<BlogPost> {
+  const payload = {
+    ...post,
+    updated_at: new Date().toISOString(),
+    published_at: post.status === "published" && !post.published_at ? new Date().toISOString() : post.published_at,
+  };
+
+  if (post.id) {
+    const { data, error } = await supabase
+      .from("blog_posts")
+      .update(payload)
+      .eq("id", post.id)
+      .select("*")
+      .single();
+    if (error) throw error;
+    return data as BlogPost;
+  } else {
+    const { data, error } = await supabase
+      .from("blog_posts")
+      .insert(payload)
+      .select("*")
+      .single();
+    if (error) throw error;
+    return data as BlogPost;
+  }
+}
+
+export async function deleteBlogPost(id: string): Promise<void> {
+  const { error } = await supabase
+    .from("blog_posts")
+    .delete()
+    .eq("id", id);
+  if (error) throw error;
+}
+
+export async function incrementBlogPostViews(id: string): Promise<void> {
+  try {
+    const { data: current } = await supabase
+      .from("blog_posts")
+      .select("views")
+      .eq("id", id)
+      .maybeSingle();
+    const newViews = ((current?.views as number) || 0) + 1;
+    await supabase.from("blog_posts").update({ views: newViews }).eq("id", id);
+  } catch (err) {
+    console.warn("Failed to increment views:", err);
+  }
+}
+
