@@ -343,10 +343,15 @@ export function PublicDocumentPage() {
               setDownloadingPdf(true);
               try {
                 const url = await downloadPdf(doc.type, doc.id);
-                window.open(url, "_blank");
-              } catch (e) {
-                // Fallback to print dialog if generate-pdf fails
-                window.print();
+                const a = document.createElement("a");
+                a.href = url;
+                a.target = "_blank";
+                a.download = `${doc.type === "quote" ? "devis" : "facture"}-${doc.number}.pdf`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+              } catch (e: any) {
+                console.error("Erreur téléchargement PDF:", e);
               } finally {
                 setDownloadingPdf(false);
               }
