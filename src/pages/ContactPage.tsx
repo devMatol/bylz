@@ -22,19 +22,36 @@ export function ContactPage() {
     e.preventDefault();
     setLoading(true);
     try {
-      // 1. Create support_tickets row
-      const { data: ticket, error: ticketErr } = await supabase
+      // 1. Create support_tickets row with fallback
+      let ticket: any = null;
+      const { data: tData, error: ticketErr } = await supabase
         .from("support_tickets")
         .insert({
           subject: subject || "Demande via le formulaire de contact",
-          category: "question",
+          category: "question" as any,
           priority: "normal",
           status: "open",
         })
         .select("*")
-        .single();
+        .maybeSingle();
 
-      if (ticketErr) throw ticketErr;
+      if (ticketErr || !tData) {
+        // Fallback insert without specifying category enum column
+        const { data: fbData, error: fbErr } = await supabase
+          .from("support_tickets")
+          .insert({
+            subject: subject || "Demande via le formulaire de contact",
+            priority: "normal",
+            status: "open",
+          })
+          .select("*")
+          .single();
+
+        if (fbErr) throw fbErr;
+        ticket = fbData;
+      } else {
+        ticket = tData;
+      }
 
       // 2. Create ticket_messages row
       const fullBody = `De: ${name} (${email})\nObjet: ${subject}\n\n${message}`;
