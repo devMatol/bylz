@@ -232,10 +232,10 @@ export function DashboardPage() {
         )}>
           <div className={cn("space-y-6 transition-all duration-300", isBlurred && "blur-md pointer-events-none select-none opacity-60 px-4 md:px-10 pt-6")}>
             {/* Row 1 */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 items-stretch">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
               {loading || !data ? (
                 Array.from({ length: 4 }).map((_, i) => (
-                  <Card key={i} className="h-full">
+                  <Card key={i}>
                     <Skeleton height="1rem" width="60%" className="mb-2" />
                     <Skeleton height="2rem" width="80%" />
                   </Card>
@@ -249,7 +249,7 @@ export function DashboardPage() {
                     delta={
                       data.caDeltaPct != null && Number.isFinite(data.caDeltaPct)
                         ? {
-                            value: `${data.caDeltaPct >= 0 ? "+" : ""}${data.caDeltaPct}% vs préc.`,
+                            value: `${data.caDeltaPct >= 0 ? "+" : ""}${data.caDeltaPct}% vs période précédente`,
                             positive: data.caDeltaPct >= 0,
                           }
                         : undefined
@@ -261,7 +261,7 @@ export function DashboardPage() {
                     icon={<Wallet className="w-4 h-4" />}
                   />
                   <StatCard
-                    label="Cotisations"
+                    label="Cotisations URSSAF"
                     value={safeNum(data.cotisationsUrssaf)}
                     icon={<Landmark className="w-4 h-4" />}
                   />

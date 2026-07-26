@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback, type FormEvent } from "react";
-import { sendDirectEmail } from "../../lib/resendClient";
 import { Link } from "react-router-dom";
 import { LifeBuoy, Send, User, CheckCircle2, Clock, Eye, AlertCircle, Trash2 } from "lucide-react";
 import { supabase } from "../../lib/supabase";
@@ -127,23 +126,30 @@ export function AdminSupportPage() {
         .update({ status: "in_progress" })
         .eq("id", selectedTicket.id);
 
-      // 3. Dispatch Email to Client via Direct Resend API
+      // 3. Dispatch Email to Client via send-email Edge Function (isolated background tick)
       if (selectedTicket.user_email && selectedTicket.user_email.includes("@")) {
         const emailTarget = selectedTicket.user_email;
         const emailSubject = `Réponse à votre ticket support : ${selectedTicket.subject}`;
         const emailBody = messageText;
-
-        void sendDirectEmail({
-          to: emailTarget,
-          subject: emailSubject,
-          body: emailBody,
-          emailType: "support_reply",
-          metadata: { ticket_id: selectedTicket.id },
-        });
+        setTimeout(() => {
+          supabase.functions
+            .invoke("send-email", {
+              body: {
+                to: emailTarget,
+                subject: emailSubject,
+                body: emailBody,
+                document_type: "support",
+                document_id: "none",
+              },
+            })
+            .catch((emailErr) => {
+              console.warn("Notice: Email notification via Edge Function skipped:", emailErr);
+            });
+        }, 10);
       }
 
       setReplyBody("");
-      toast("Réponse enregistrée et transmise au client !", "success");
+      toast("Réponse enregistrée et e-mail envoyé au client !", "success");
       void loadMessages(selectedTicket.id);
       void fetchTickets();
     } catch (err) {
