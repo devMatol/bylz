@@ -320,11 +320,33 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
-    const resendKey = Deno.env.get("RESEND_API_KEY");
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const adminSupabase = createClient(supabaseUrl, serviceKey);
+
+    let resendKey = Deno.env.get("RESEND_API_KEY");
+
+    // Fallback: Check system_settings table for resend_api_key if secret not in Deno.env
+    if (!resendKey) {
+      try {
+        const { data: settingRow } = await adminSupabase
+          .from("system_settings")
+          .select("value")
+          .eq("key", "resend_api_key")
+          .maybeSingle();
+
+        if (settingRow && settingRow.value) {
+          resendKey = typeof settingRow.value === "string" ? settingRow.value : (settingRow.value as any).key;
+        }
+      } catch (sErr) {
+        console.warn("Could not query system_settings for resend_api_key:", sErr);
+      }
+    }
+
     if (!resendKey) {
       return new Response(
-        JSON.stringify({ error: "Service email non configuré (RESEND_API_KEY manquant sur Supabase)" }),
-        { status: 503, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        JSON.stringify({ success: false, warning: "Service email non configuré (RESEND_API_KEY manquant)" }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
