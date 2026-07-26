@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, type FormEvent } from "react";
+import { sendDirectEmail } from "../../lib/resendClient";
 import { Link } from "react-router-dom";
 import { LifeBuoy, Send, User, CheckCircle2, Clock, Eye, AlertCircle, Trash2 } from "lucide-react";
 import { supabase } from "../../lib/supabase";
@@ -126,22 +127,19 @@ export function AdminSupportPage() {
         .update({ status: "in_progress" })
         .eq("id", selectedTicket.id);
 
-      // 3. Log Email to Client in email_logs table for Back-Office tracking
+      // 3. Dispatch Email to Client via Direct Resend API
       if (selectedTicket.user_email && selectedTicket.user_email.includes("@")) {
         const emailTarget = selectedTicket.user_email;
         const emailSubject = `Réponse à votre ticket support : ${selectedTicket.subject}`;
         const emailBody = messageText;
 
-        // Log directly to email_logs table
-        void supabase
-          .from("email_logs")
-          .insert({
-            recipient: emailTarget,
-            subject: emailSubject,
-            email_type: "support_reply",
-            status: "sent",
-            metadata: { ticket_id: selectedTicket.id, body_preview: emailBody.slice(0, 100) },
-          });
+        void sendDirectEmail({
+          to: emailTarget,
+          subject: emailSubject,
+          body: emailBody,
+          emailType: "support_reply",
+          metadata: { ticket_id: selectedTicket.id },
+        });
       }
 
       setReplyBody("");

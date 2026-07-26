@@ -1,4 +1,4 @@
-import { supabase } from "./supabase";
+import { sendDirectEmail } from "./resendClient";
 
 export interface EmailDispatchOptions {
   to: string;
@@ -19,27 +19,19 @@ export interface EmailDispatchOptions {
 }
 
 export async function dispatchEmail(options: EmailDispatchOptions): Promise<{ success: boolean; resend_id?: string; error?: string }> {
-  try {
-    const { data, error } = await supabase.functions.invoke("send-email", {
-      body: {
-        to: options.to,
-        subject: options.subject,
-        body: options.body,
-        document_type: options.documentType,
-        document_id: options.documentId || "none",
-      },
-    });
+  const result = await sendDirectEmail({
+    to: options.to,
+    subject: options.subject,
+    body: options.body,
+    emailType: options.documentType,
+    metadata: { document_id: options.documentId || "none" },
+  });
 
-    if (error) {
-      console.warn(`Email dispatch notice (${options.documentType}):`, error.message);
-      return { success: false, error: error.message };
-    }
-
-    return { success: true, resend_id: data?.resend_id };
-  } catch (err: any) {
-    console.warn(`Email dispatch exception (${options.documentType}):`, err);
-    return { success: false, error: err?.message || "Erreur lors de l'envoi" };
-  }
+  return {
+    success: result.success,
+    resend_id: result.resendId,
+    error: result.error,
+  };
 }
 
 /**
