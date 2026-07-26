@@ -15,7 +15,7 @@ export function GlowContainer({
   className,
 }: GlowContainerProps) {
   return (
-    <div className={cn("relative", className)}>
+    <div className={cn("relative h-full flex flex-col", className)}>
       <div
         className={cn(
           variant === "primary" ? "bylz-radial-primary" : "bylz-radial-accent",
