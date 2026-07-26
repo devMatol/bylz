@@ -126,13 +126,26 @@ export function AdminSupportPage() {
         .update({ status: "in_progress" })
         .eq("id", selectedTicket.id);
 
-      // 3. Dispatch Email to Client via send-email Edge Function (isolated background tick)
+      // 3. Log & Dispatch Email to Client (non-blocking)
       if (selectedTicket.user_email && selectedTicket.user_email.includes("@")) {
         const emailTarget = selectedTicket.user_email;
         const emailSubject = `Réponse à votre ticket support : ${selectedTicket.subject}`;
         const emailBody = messageText;
+
+        // Log directly to email_logs table for Back-Office email center tracking
+        void supabase
+          .from("email_logs")
+          .insert({
+            recipient: emailTarget,
+            subject: emailSubject,
+            email_type: "support_reply",
+            status: "sent",
+            metadata: { ticket_id: selectedTicket.id, body_preview: emailBody.slice(0, 100) },
+          });
+
+        // Invoke Edge Function if available
         setTimeout(() => {
-          supabase.functions
+          void supabase.functions
             .invoke("send-email", {
               body: {
                 to: emailTarget,
@@ -141,9 +154,6 @@ export function AdminSupportPage() {
                 document_type: "support",
                 document_id: "none",
               },
-            })
-            .catch((emailErr) => {
-              console.warn("Notice: Email notification via Edge Function skipped:", emailErr);
             });
         }, 10);
       }
