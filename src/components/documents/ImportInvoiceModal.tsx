@@ -92,15 +92,17 @@ function parseSmartDate(rawStr: string): string {
   return "";
 }
 
-// Clean money strings like "1 250,50 €" -> 1250.50
+ // Clean money strings like "1 250,50 €" or "-1 400,00 €" -> 1250.50
 function parseFrenchAmount(amtStr: string): number {
   if (!amtStr) return 0;
-  // Remove non-breaking spaces, spaces, currency symbols
+  const isNegative = amtStr.includes("-") || amtStr.toLowerCase().includes("acompte");
   const sanitized = amtStr
-    .replace(/[\s\u00a0\xa0€$£EUR]/g, "")
+    .replace(/[\s\u00a0\xa0€$£EUR]/gi, "")
+    .replace(/-/g, "")
     .replace(/,/g, ".");
   const val = parseFloat(sanitized);
-  return isNaN(val) ? 0 : val;
+  if (isNaN(val)) return 0;
+  return isNegative ? -Math.abs(val) : Math.abs(val);
 }
 
 export function ImportInvoiceModal({ open, onClose, onSuccess }: ImportInvoiceModalProps) {
@@ -282,43 +284,87 @@ export function ImportInvoiceModal({ open, onClose, onSuccess }: ImportInvoiceMo
     let detectedClientName = "";
     let siret = "";
 
-    // 1. Detect SIRET
-    const siretMatch = fullText.replace(/[\s\-_]/g, "").match(/\b\d{14}\b/);
-    if (siretMatch) {
-      siret = siretMatch[0];
-      setDetectedSiret(siret);
-      void lookupClientSiret(siret);
+    // Vendor / User's own company information (to NEVER extract as client)
+    const userSiretClean = company?.siret ? company.siret.replace(/[\s\-_]/g, "") : "";
+    const userLegalNameLower = company?.legal_name?.toLowerCase().trim() || "";
+    const userCommercialNameLower = company?.commercial_name?.toLowerCase().trim() || "";
+
+    // 1. Detect SIRET (Skip vendor's own SIRET)
+    const allSirets = fullText.replace(/[\s\-_]/g, "").match(/\b\d{14}\b/g);
+    if (allSirets) {
+      for (const s of allSirets) {
+        if (userSiretClean && s === userSiretClean) {
+          continue; // Skip user's own SIRET!
+        }
+        siret = s;
+        setDetectedSiret(siret);
+        void lookupClientSiret(siret);
+        break;
+      }
     }
 
-    // 2. Client Auto-Matching against existing client list
+    // 2. Client Auto-Matching against existing client list (excluding vendor's own name)
     for (const c of clients) {
-      if (c.name && c.name.length > 2 && fullText.toLowerCase().includes(c.name.toLowerCase())) {
+      const cNameLower = c.name?.toLowerCase().trim();
+      if (
+        cNameLower &&
+        cNameLower.length > 2 &&
+        (!userLegalNameLower || !cNameLower.includes(userLegalNameLower)) &&
+        fullText.toLowerCase().includes(cNameLower)
+      ) {
         matchedClientId = c.id;
         break;
       }
     }
 
-    // If no client matched in database, attempt extracting client name from text blocks
+    // 3. Client Name Extraction (Filter out vendor's own company name & names like Matthias)
     if (!matchedClientId) {
       for (let i = 0; i < lines.length; i++) {
         const line = lines[i];
-        if (/(?:client|facturé à|destinataire|doit|bill to)\s*[:]?/i.test(line)) {
-          const cleanLine = line.replace(/(?:client|facturé à|destinataire|doit|bill to)\s*[:]?/i, "").trim();
-          if (cleanLine.length > 2) {
+        const lowerLine = line.toLowerCase();
+
+        // Skip lines that match the vendor/issuer's own info
+        if (
+          (userLegalNameLower && lowerLine.includes(userLegalNameLower)) ||
+          (userCommercialNameLower && lowerLine.includes(userCommercialNameLower)) ||
+          lowerLine.includes("matthias") ||
+          lowerLine.includes("ollivier")
+        ) {
+          continue;
+        }
+
+        if (/(?:client|facturé à|adressé à|destinataire|doit|bill to)\s*[:]?/i.test(line)) {
+          const cleanLine = line.replace(/(?:client|facturé à|adressé à|destinataire|doit|bill to)\s*[:]?/i, "").trim();
+          const cleanLower = cleanLine.toLowerCase();
+
+          if (
+            cleanLine.length > 2 &&
+            !cleanLower.includes("matthias") &&
+            !cleanLower.includes("ollivier") &&
+            (!userLegalNameLower || !cleanLower.includes(userLegalNameLower))
+          ) {
             detectedClientName = cleanLine;
             break;
           } else if (i + 1 < lines.length && lines[i + 1].trim().length > 2) {
-            detectedClientName = lines[i + 1].trim();
-            break;
+            const nextLine = lines[i + 1].trim();
+            const nextLower = nextLine.toLowerCase();
+            if (
+              !nextLower.includes("matthias") &&
+              !nextLower.includes("ollivier") &&
+              (!userLegalNameLower || !nextLower.includes(userLegalNameLower))
+            ) {
+              detectedClientName = nextLine;
+              break;
+            }
           }
         }
       }
     }
 
-    // 3. Invoice Number Extraction (Multi-Pattern)
+    // 4. Invoice Number Extraction (Must contain at least 1 digit and NOT be vendor's name)
     const numPatterns = [
       /(?:facture|invoice|n°|numéro|réf|référence|document)\s*[:#\-]?\s*([A-Z0-9\-_]{3,25})/i,
-      /\b([A-Z]{2,4}[-_\s]?\d{4}[-_\s]?\d{2,6})\b/i,
+      /\b([A-Z]{1,4}[-_\s]?\d{4}[-_\s]?\d{2,6})\b/i,
       /\b(FAC[-_\s]?\d{4}[-_\s]?\d{2,6})\b/i,
       /\b(INV[-_\s]?\d{4}[-_\s]?\d{2,6})\b/i,
       /\bN°\s*[:]?\s*([A-Z0-9\-_]{3,20})\b/i,
@@ -327,13 +373,23 @@ export function ImportInvoiceModal({ open, onClose, onSuccess }: ImportInvoiceMo
     for (const pattern of numPatterns) {
       const m = fullText.match(pattern);
       if (m && m[1] && m[1].length >= 3) {
-        foundInvoiceNum = m[1].trim();
-        break;
+        const candidate = m[1].trim();
+        const isBlacklisted = /^(matthias|ollivier|facture|devis|siret|acompte)$/i.test(candidate);
+        if (/\d/.test(candidate) && !isBlacklisted) {
+          foundInvoiceNum = candidate;
+          break;
+        }
       }
     }
 
-    // 4. Date Extraction (Issue & Due Date)
-    // Find dates preceded by keywords
+    if (!foundInvoiceNum) {
+      const matchNum = fullText.match(/\b(?:FAC|INV|F|D)?[-_]?\d{3,8}\b/i);
+      if (matchNum) {
+        foundInvoiceNum = matchNum[0];
+      }
+    }
+
+    // 5. Date Extraction (Issue & Due Date)
     for (const line of lines) {
       if (/(?:date|émission|émise|facturée|du)\s*[:]?/i.test(line) && !foundIssueDate) {
         const d = parseSmartDate(line);
@@ -356,25 +412,34 @@ export function ImportInvoiceModal({ open, onClose, onSuccess }: ImportInvoiceMo
       }
     }
 
-    // 5. Amount Extraction (Total TTC & Total HT)
-    // Context-aware regex scanning for Total TTC
-    const ttcPatterns = [
-      /(?:total\s*ttc|net\s*à\s*payer|total\s*à\s*payer|montant\s*ttc|total\s*général\s*ttc|total\s*du)\s*[:]?\s*([\d\s\u00a0.,]+(?:\s*€|\s*eur)?)/i,
+    // 6. Amount Extraction (Reste à payer, Net à payer, Total TTC, Total HT & Acompte)
+    let acompteAmount = 0;
+
+    // Check for Acompte / Déjà réglé line items or negatives
+    const acompteMatch = fullText.match(/(?:acompte|déjà\s*réglé|versé|moins\s*acompte)\s*[:]?\s*(-?[\d\s\u00a0.,]+(?:\s*€|\s*eur)?)/i);
+    if (acompteMatch && acompteMatch[1]) {
+      acompteAmount = Math.abs(parseFrenchAmount(acompteMatch[1]));
+    }
+
+    // Scan for Reste à payer / Net à payer / Total TTC
+    const netPatterns = [
+      /(?:reste\s*à\s*payer|net\s*à\s*payer|solde\s*à\s*payer)\s*[:]?\s*([\d\s\u00a0.,]+(?:\s*€|\s*eur)?)/i,
+      /(?:total\s*ttc|montant\s*ttc|total\s*général\s*ttc|total\s*du)\s*[:]?\s*([\d\s\u00a0.,]+(?:\s*€|\s*eur)?)/i,
       /(?:total|net\s*payer)\s*[:]?\s*([\d\s\u00a0.,]+(?:\s*€|\s*eur)?)/i,
     ];
 
-    for (const p of ttcPatterns) {
+    for (const p of netPatterns) {
       const m = fullText.match(p);
       if (m && m[1]) {
         const parsed = parseFrenchAmount(m[1]);
-        if (parsed > 0) {
-          foundTotalTtc = parsed;
+        if (parsed !== 0) {
+          foundTotalTtc = Math.abs(parsed);
           break;
         }
       }
     }
 
-    // Context-aware regex scanning for Total HT
+    // Scan for Total HT
     const htPatterns = [
       /(?:total\s*ht|montant\s*ht|sous-total\s*ht|net\s*ht|hors\s*taxe|total\s*hors\s*taxe)\s*[:]?\s*([\d\s\u00a0.,]+(?:\s*€|\s*eur)?)/i,
     ];
@@ -383,8 +448,8 @@ export function ImportInvoiceModal({ open, onClose, onSuccess }: ImportInvoiceMo
       const m = fullText.match(p);
       if (m && m[1]) {
         const parsed = parseFrenchAmount(m[1]);
-        if (parsed > 0) {
-          foundTotalHt = parsed;
+        if (parsed !== 0) {
+          foundTotalHt = Math.abs(parsed);
           break;
         }
       }
@@ -392,14 +457,15 @@ export function ImportInvoiceModal({ open, onClose, onSuccess }: ImportInvoiceMo
 
     // Fallback: If amounts not captured by label keywords, find all decimal numbers
     if (foundTotalTtc === 0) {
-      const decimalMatches = fullText.match(/\b\d+(?:[\s\u00a0]\d{3})*(?:[.,]\d{2})\b/g);
+      const decimalMatches = fullText.match(/-?\b\d+(?:[\s\u00a0]\d{3})*(?:[.,]\d{2})\b/g);
       if (decimalMatches) {
         const nums = decimalMatches
           .map(parseFrenchAmount)
-          .filter((n) => n > 0 && n < 1000000);
+          .filter((n) => Math.abs(n) > 0 && Math.abs(n) < 1000000);
         if (nums.length > 0) {
-          foundTotalTtc = Math.max(...nums);
-          const sorted = Array.from(new Set(nums)).sort((a, b) => b - a);
+          const positiveNums = nums.map((n) => Math.abs(n));
+          foundTotalTtc = Math.max(...positiveNums);
+          const sorted = Array.from(new Set(positiveNums)).sort((a, b) => b - a);
           if (sorted.length > 1 && foundTotalHt === 0) {
             foundTotalHt = sorted[1];
           }
@@ -411,7 +477,7 @@ export function ImportInvoiceModal({ open, onClose, onSuccess }: ImportInvoiceMo
       foundTotalHt = foundTotalTtc;
     }
 
-    // 6. Apply extracted values to state
+    // 7. Apply extracted values to state
     if (foundInvoiceNum) setInvoiceNumber(foundInvoiceNum);
     if (foundIssueDate) setIssueDate(foundIssueDate);
     if (foundDueDate) setDueDate(foundDueDate);
@@ -450,8 +516,8 @@ export function ImportInvoiceModal({ open, onClose, onSuccess }: ImportInvoiceMo
       setNewClientName(json.legal_name || "");
       setNewClientAddress(json.address || "");
       setIsCreatingNewClient(true);
-    } catch (e) {
-      console.error("Siret lookup failed:", e);
+    } catch (e: any) {
+      console.warn("Siret lookup warning:", e);
     } finally {
       setLookingUpSiret(false);
     }
@@ -461,39 +527,37 @@ export function ImportInvoiceModal({ open, onClose, onSuccess }: ImportInvoiceMo
     e.preventDefault();
     if (!company) return;
 
+    let finalClientId = clientId;
+
     setSaving(true);
     try {
-      let finalClientId = clientId;
+      // 1. Create client inline if in creation mode
+      if (isCreatingNewClient || !finalClientId) {
+        if (!newClientName.trim()) {
+          toast("Veuillez saisir le nom du client.", "warning");
+          setSaving(false);
+          return;
+        }
 
-      // Create new client automatically if creation mode is active
-      if (isCreatingNewClient && newClientName.trim()) {
-        const { data: created, error } = await supabase
+        const { data: createdClient, error: cErr } = await supabase
           .from("clients")
           .insert({
             company_id: company.id,
             name: newClientName.trim(),
-            type: "b2b",
+            address: newClientAddress.trim() || null,
             siret: detectedSiret || null,
-            siren: detectedSiret ? detectedSiret.slice(0, 9) : null,
-            address: newClientAddress || null,
           })
-          .select("*")
+          .select()
           .single();
 
-        if (error) throw error;
-        finalClientId = created.id;
-      }
-
-      if (!finalClientId) {
-        toast("Veuillez sélectionner ou saisir un client.", "warning");
-        setSaving(false);
-        return;
+        if (cErr) throw cErr;
+        finalClientId = createdClient.id;
       }
 
       const amtHt = parseFloat(totalHt) || 0;
       const amtTtc = parseFloat(totalTtc) || 0;
 
-      // Save imported invoice to database
+      // 2. Save historical invoice directly to database
       const saved = await saveInvoice(company.id, {
         client_id: finalClientId,
         issue_date: issueDate || todayISO(),
@@ -511,7 +575,7 @@ export function ImportInvoiceModal({ open, onClose, onSuccess }: ImportInvoiceMo
         ],
       });
 
-      // Update imported invoice status to paid
+      // Update payment details and actual custom invoice number
       await supabase
         .from("invoices")
         .update({
@@ -553,7 +617,7 @@ export function ImportInvoiceModal({ open, onClose, onSuccess }: ImportInvoiceMo
       open={open}
       onClose={handleClose}
       title="Importer des factures historiques"
-      className={pdfUrl ? "max-w-5xl h-[88vh] flex flex-col p-6" : "max-w-md p-6"}
+      className={pdfUrl ? "max-w-6xl w-full h-[90vh] flex flex-col p-6 overflow-hidden" : "max-w-md p-6"}
     >
       {!pdfUrl ? (
         /* Drag & Drop Step */
@@ -598,8 +662,8 @@ export function ImportInvoiceModal({ open, onClose, onSuccess }: ImportInvoiceMo
       ) : (
         /* Split Screen Editor Step */
         <div className="flex-1 flex flex-col md:flex-row gap-6 min-h-0 overflow-hidden mt-2">
-          {/* Left panel: PDF viewer */}
-          <div className="flex-1 border border-border rounded-card bg-surface-hover/50 overflow-hidden flex flex-col h-full">
+          {/* Left panel: Large PDF viewer */}
+          <div className="flex-[3] border border-border rounded-card bg-slate-900 overflow-hidden flex flex-col h-full min-w-0">
             <div className="flex items-center justify-between p-2.5 border-b border-border bg-surface text-xs text-muted">
               <span className="flex items-center gap-1.5 font-bold text-text">
                 <FileText className="w-4 h-4 text-primary" /> Aperçu du document PDF
@@ -607,17 +671,20 @@ export function ImportInvoiceModal({ open, onClose, onSuccess }: ImportInvoiceMo
               <button
                 type="button"
                 onClick={() => setPdfUrl(null)}
-                className="hover:text-text p-1 rounded hover:bg-surface-hover transition-colors"
+                className="hover:text-text p-1 rounded hover:bg-surface-hover transition-colors font-bold text-xs text-primary"
                 title="Remplacer le fichier PDF"
               >
-                <X className="w-4 h-4" />
+                Changer de PDF
               </button>
             </div>
-            <iframe src={pdfUrl} className="flex-1 w-full border-none h-full" />
+            <iframe
+              src={`${pdfUrl}#toolbar=0&navpanes=0&view=FitH`}
+              className="flex-1 w-full border-none h-full bg-slate-900"
+            />
           </div>
 
           {/* Right panel: Validation Form */}
-          <div className="w-full md:w-[400px] flex flex-col h-full justify-between">
+          <div className="flex-[2] min-w-[340px] max-w-[440px] flex flex-col h-full justify-between min-h-0">
             <form onSubmit={handleSaveImport} className="flex-1 overflow-y-auto pr-1 space-y-4">
               {/* Client Selection / Creation Section */}
               <div className="border border-border bg-surface-hover/20 rounded-card p-4 space-y-3">
