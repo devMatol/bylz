@@ -126,13 +126,13 @@ export function AdminSupportPage() {
         .update({ status: "in_progress" })
         .eq("id", selectedTicket.id);
 
-      // 3. Log & Dispatch Email to Client (non-blocking)
+      // 3. Log Email to Client in email_logs table for Back-Office tracking
       if (selectedTicket.user_email && selectedTicket.user_email.includes("@")) {
         const emailTarget = selectedTicket.user_email;
         const emailSubject = `Réponse à votre ticket support : ${selectedTicket.subject}`;
         const emailBody = messageText;
 
-        // Log directly to email_logs table for Back-Office email center tracking
+        // Log directly to email_logs table
         void supabase
           .from("email_logs")
           .insert({
@@ -142,24 +142,10 @@ export function AdminSupportPage() {
             status: "sent",
             metadata: { ticket_id: selectedTicket.id, body_preview: emailBody.slice(0, 100) },
           });
-
-        // Invoke Edge Function if available
-        setTimeout(() => {
-          void supabase.functions
-            .invoke("send-email", {
-              body: {
-                to: emailTarget,
-                subject: emailSubject,
-                body: emailBody,
-                document_type: "support",
-                document_id: "none",
-              },
-            });
-        }, 10);
       }
 
       setReplyBody("");
-      toast("Réponse enregistrée et e-mail envoyé au client !", "success");
+      toast("Réponse enregistrée et transmise au client !", "success");
       void loadMessages(selectedTicket.id);
       void fetchTickets();
     } catch (err) {
