@@ -371,7 +371,17 @@ function parseFacturXXml(xmlStr: string): {
     const userLegalNameLower = company?.legal_name?.toLowerCase().trim() || "";
     const userCommercialNameLower = company?.commercial_name?.toLowerCase().trim() || "";
 
-    // 1. Detect SIRET (Skip vendor's own SIRET)
+    // Helper: Test if string matches vendor/user identity
+    const isVendorIdentity = (str: string) => {
+      const s = str.toLowerCase();
+      if (userLegalNameLower && s.includes(userLegalNameLower)) return true;
+      if (userCommercialNameLower && s.includes(userCommercialNameLower)) return true;
+      if (s.includes("matthias") || s.includes("ollivier")) return true;
+      if (userSiretClean && s.replace(/[\s\-_]/g, "").includes(userSiretClean)) return true;
+      return false;
+    };
+
+    // 1. Detect Client SIRET (Skip vendor's own SIRET)
     const allSirets = fullText.replace(/[\s\-_]/g, "").match(/\b\d{14}\b/g);
     if (allSirets) {
       for (const s of allSirets) {
@@ -385,13 +395,13 @@ function parseFacturXXml(xmlStr: string): {
       }
     }
 
-    // 2. Client Auto-Matching against existing client list (excluding vendor's own name)
+    // 2. Client Auto-Matching against existing client list
     for (const c of clients) {
       const cNameLower = c.name?.toLowerCase().trim();
       if (
         cNameLower &&
         cNameLower.length > 2 &&
-        (!userLegalNameLower || !cNameLower.includes(userLegalNameLower)) &&
+        !isVendorIdentity(cNameLower) &&
         fullText.toLowerCase().includes(cNameLower)
       ) {
         matchedClientId = c.id;
@@ -403,38 +413,17 @@ function parseFacturXXml(xmlStr: string): {
     if (!matchedClientId) {
       for (let i = 0; i < lines.length; i++) {
         const line = lines[i];
-        const lowerLine = line.toLowerCase();
-
-        // Skip lines that match the vendor/issuer's own info
-        if (
-          (userLegalNameLower && lowerLine.includes(userLegalNameLower)) ||
-          (userCommercialNameLower && lowerLine.includes(userCommercialNameLower)) ||
-          lowerLine.includes("matthias") ||
-          lowerLine.includes("ollivier")
-        ) {
-          continue;
-        }
+        if (isVendorIdentity(line)) continue;
 
         if (/(?:client|facturé à|adressé à|destinataire|doit|bill to)\s*[:]?/i.test(line)) {
           const cleanLine = line.replace(/(?:client|facturé à|adressé à|destinataire|doit|bill to)\s*[:]?/i, "").trim();
-          const cleanLower = cleanLine.toLowerCase();
 
-          if (
-            cleanLine.length > 2 &&
-            !cleanLower.includes("matthias") &&
-            !cleanLower.includes("ollivier") &&
-            (!userLegalNameLower || !cleanLower.includes(userLegalNameLower))
-          ) {
+          if (cleanLine.length > 2 && !isVendorIdentity(cleanLine)) {
             detectedClientName = cleanLine;
             break;
-          } else if (i + 1 < lines.length && lines[i + 1].trim().length > 2) {
+          } else if (i + 1 < lines.length) {
             const nextLine = lines[i + 1].trim();
-            const nextLower = nextLine.toLowerCase();
-            if (
-              !nextLower.includes("matthias") &&
-              !nextLower.includes("ollivier") &&
-              (!userLegalNameLower || !nextLower.includes(userLegalNameLower))
-            ) {
+            if (nextLine.length > 2 && !isVendorIdentity(nextLine)) {
               detectedClientName = nextLine;
               break;
             }
@@ -494,23 +483,28 @@ function parseFacturXXml(xmlStr: string): {
       }
     }
 
-    // 6. Amount Extraction (Reste à payer, Net à payer, Total TTC, Total HT & Acompte)
-    let acompteAmount = 0;
-
-    // Check for Acompte / Déjà réglé line items or negatives
-    const acompteMatch = fullText.match(/(?:acompte|déjà\s*réglé|versé|moins\s*acompte)\s*[:]?\s*(-?[\d\s\u00a0.,]+(?:\s*€|\s*eur)?)/i);
+    // 6. Financial Accounting Engine (Acompte, Total HT, Total TTC & Reste à payer)
+    let acompteVal = 0;
+    const acompteMatch = fullText.match(/(?:acompte|déjà\s*versé|déjà\s*réglé|moins\s*acompte)\s*[:]?\s*(-?[\d\s\u00a0.,]+(?:\s*€|\s*eur)?)/i);
     if (acompteMatch && acompteMatch[1]) {
-      acompteAmount = Math.abs(parseFrenchAmount(acompteMatch[1]));
+      acompteVal = Math.abs(parseFrenchAmount(acompteMatch[1]));
     }
 
-    // Scan for Reste à payer / Net à payer / Total TTC
-    const netPatterns = [
-      /(?:reste\s*à\s*payer|net\s*à\s*payer|solde\s*à\s*payer)\s*[:]?\s*([\d\s\u00a0.,]+(?:\s*€|\s*eur)?)/i,
+    // Priority A: Reste à payer / Net à payer / Solde dû
+    let resteAPayerVal: number | null = null;
+    const resteMatch = fullText.match(/(?:reste\s*à\s*payer|net\s*à\s*payer|solde\s*dû|solde\s*à\s*payer)\s*[:]?\s*([\d\s\u00a0.,]+(?:\s*€|\s*eur)?)/i);
+    if (resteMatch && resteMatch[1]) {
+      const p = parseFrenchAmount(resteMatch[1]);
+      if (!isNaN(p)) resteAPayerVal = Math.abs(p);
+    }
+
+    // Priority B: Total TTC
+    const ttcPatterns = [
       /(?:total\s*ttc|montant\s*ttc|total\s*général\s*ttc|total\s*du)\s*[:]?\s*([\d\s\u00a0.,]+(?:\s*€|\s*eur)?)/i,
       /(?:total|net\s*payer)\s*[:]?\s*([\d\s\u00a0.,]+(?:\s*€|\s*eur)?)/i,
     ];
 
-    for (const p of netPatterns) {
+    for (const p of ttcPatterns) {
       const m = fullText.match(p);
       if (m && m[1]) {
         const parsed = parseFrenchAmount(m[1]);
@@ -521,7 +515,7 @@ function parseFacturXXml(xmlStr: string): {
       }
     }
 
-    // Scan for Total HT
+    // Priority C: Total HT
     const htPatterns = [
       /(?:total\s*ht|montant\s*ht|sous-total\s*ht|net\s*ht|hors\s*taxe|total\s*hors\s*taxe)\s*[:]?\s*([\d\s\u00a0.,]+(?:\s*€|\s*eur)?)/i,
     ];
@@ -537,21 +531,13 @@ function parseFacturXXml(xmlStr: string): {
       }
     }
 
-    // Fallback: If amounts not captured by label keywords, find all decimal numbers
-    if (foundTotalTtc === 0) {
-      const decimalMatches = fullText.match(/-?\b\d+(?:[\s\u00a0]\d{3})*(?:[.,]\d{2})\b/g);
-      if (decimalMatches) {
-        const nums = decimalMatches
-          .map(parseFrenchAmount)
-          .filter((n) => Math.abs(n) > 0 && Math.abs(n) < 1000000);
-        if (nums.length > 0) {
-          const positiveNums = nums.map((n) => Math.abs(n));
-          foundTotalTtc = Math.max(...positiveNums);
-          const sorted = Array.from(new Set(positiveNums)).sort((a, b) => b - a);
-          if (sorted.length > 1 && foundTotalHt === 0) {
-            foundTotalHt = sorted[1];
-          }
-        }
+    // Apply accounting logic when an acompte (deposit) is present
+    if (resteAPayerVal !== null) {
+      foundTotalTtc = resteAPayerVal;
+    } else if (acompteVal > 0 && foundTotalTtc > 0) {
+      // If acompte was 1400 € and Total TTC was 1400 €, reste à payer is 0 €
+      if (Math.abs(foundTotalTtc - acompteVal) < 0.05) {
+        foundTotalTtc = 0.0;
       }
     }
 
