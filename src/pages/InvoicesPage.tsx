@@ -55,7 +55,6 @@ export function InvoicesPage() {
   const [rows, setRows] = useState<Row[] | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Row | null>(null);
   const [importOpen, setImportOpen] = useState(false);
-  const [seeding, setSeeding] = useState(false);
   const [stats, setStats] = useState<{
     totalFacture: number;
     enAttente: number;
@@ -70,21 +69,6 @@ export function InvoicesPage() {
   const handleDismissHistory = () => {
     localStorage.setItem("bylz-dismiss-history-banner", "true");
     setDismissedHistory(true);
-  };
-
-  const handleSeedFactpulseInbound = async () => {
-    if (!company) return;
-    setSeeding(true);
-    try {
-      const invId = await seedInboundFactpulseInvoice(company.id);
-      toast("Facture fournisseur reçue et certifiée via FactPulse (PDP) !", "success");
-      void load();
-      navigate(`/invoices/${invId}`);
-    } catch (err: any) {
-      toast(err.message || "Erreur lors de la capture de la facture", "danger");
-    } finally {
-      setSeeding(false);
-    }
   };
 
   useEffect(() => {
@@ -128,6 +112,19 @@ export function InvoicesPage() {
     void load();
   }, [load]);
 
+  // Auto-seed captured Factur-X PDP invoice once for testing
+  useEffect(() => {
+    if (!company || !rows) return;
+    const hasReceived = rows.some((r) => r.pa_status === "received");
+    const seeded = localStorage.getItem("bylz_seeded_inbound_pdp");
+    if (!hasReceived && !seeded) {
+      localStorage.setItem("bylz_seeded_inbound_pdp", "true");
+      void seedInboundFactpulseInvoice(company.id).then(() => {
+        void load();
+      });
+    }
+  }, [company, rows, load]);
+
   async function handleDelete() {
     if (!company || !deleteTarget) return;
     try {
@@ -152,16 +149,7 @@ export function InvoicesPage() {
       title="Factures"
       subtitle="Vos factures et encaissements"
       actions={
-        <div className="flex flex-wrap items-center gap-2">
-          <Button
-            variant="outline"
-            leftIcon={<Send className="w-4 h-4 text-emerald-400" />}
-            onClick={handleSeedFactpulseInbound}
-            loading={seeding}
-            className="border-emerald-500/30 text-emerald-300 hover:bg-emerald-500/10"
-          >
-            Capturer Facture PDP
-          </Button>
+        <div className="flex gap-2">
           <Button
             variant="outline"
             leftIcon={<Upload className="w-4 h-4" />}
