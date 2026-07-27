@@ -588,6 +588,79 @@ export async function fetchInvoices(
   }));
 }
 
+export async function seedInboundFactpulseInvoice(companyId: string): Promise<string> {
+  // 1. Check if client QONTO / PENNYLANE exists, or create one
+  let { data: existingClient } = await supabase
+    .from("clients")
+    .select("id")
+    .eq("company_id", companyId)
+    .ilike("name", "%Pennylane%")
+    .maybeSingle();
+
+  let clientId = existingClient?.id;
+
+  if (!clientId) {
+    const { data: newClient, error: cErr } = await supabase
+      .from("clients")
+      .insert({
+        company_id: companyId,
+        name: "Qonto SAS / Pennylane (Réseau PDP)",
+        type: "b2b",
+        siren: "842918201",
+        siret: "84291820100019",
+        vat_number: "FR84842918201",
+        email: "facturation@qonto-pennylane.fr",
+        address: "18 Rue du Faubourg Poissonnière, 75010 Paris",
+      })
+      .select("id")
+      .single();
+
+    if (cErr) throw cErr;
+    clientId = newClient.id;
+  }
+
+  const issueDate = new Date().toISOString().slice(0, 10);
+  const invNumber = `FP-REC-${Math.floor(Math.random() * 8999 + 1000)}`;
+  const fpRef = `FP-PDP-INB-${Math.floor(Math.random() * 899999 + 100000)}`;
+
+  // 2. Insert Invoice
+  const { data: inv, error: iErr } = await supabase
+    .from("invoices")
+    .insert({
+      company_id: companyId,
+      client_id: clientId,
+      number: invNumber,
+      type: "standard",
+      status: "pending",
+      pa_status: "received",
+      ereporting_status: "confirmed",
+      factpulse_ref: fpRef,
+      issue_date: issueDate,
+      due_date: new Date(Date.now() + 30 * 24 * 3600 * 1000).toISOString().slice(0, 10),
+      payment_terms: "30d",
+      total_ht: 1200.0,
+      total_vat: 240.0,
+      total_ttc: 1440.0,
+      note: "Facture fournisseur certifiée Factur-X reçue automatiquement via le réseau PDP FactPulse (Émetteur: PENNYLANE / QONTO SAS - SIRET 842 918 201 00019)",
+    })
+    .select("id")
+    .single();
+
+  if (iErr) throw iErr;
+
+  // 3. Insert Invoice Line
+  await supabase.from("invoice_lines").insert({
+    invoice_id: inv.id,
+    description: "Prestation cloud & intégration PDP Factur-X certifiée (Réseau Électronique B2B)",
+    quantity: 1,
+    unit_price: 1200.0,
+    nature: "service",
+    position: 0,
+  });
+
+  return inv.id;
+}
+
 export async function fetchInvoice(
   companyId: string,
   id: string

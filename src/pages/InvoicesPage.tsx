@@ -16,7 +16,7 @@ import { FloatingActionButton } from "../components/ui/FloatingActionButton";
 import { useAuth } from "../contexts/AuthContext";
 import { useToast } from "../components/ui/Toast";
 import { useDebounce } from "../hooks/useDebounce";
-import { fetchInvoices, fetchInvoiceStats, deleteInvoice } from "../lib/api";
+import { fetchInvoices, fetchInvoiceStats, deleteInvoice, seedInboundFactpulseInvoice } from "../lib/api";
 import { formatDateShort } from "../lib/date";
 import { cn, formatAmount } from "../lib/utils";
 import type { InvoiceStatus, InvoiceType, PaStatus } from "../types/database";
@@ -55,6 +55,7 @@ export function InvoicesPage() {
   const [rows, setRows] = useState<Row[] | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Row | null>(null);
   const [importOpen, setImportOpen] = useState(false);
+  const [seeding, setSeeding] = useState(false);
   const [stats, setStats] = useState<{
     totalFacture: number;
     enAttente: number;
@@ -69,6 +70,21 @@ export function InvoicesPage() {
   const handleDismissHistory = () => {
     localStorage.setItem("bylz-dismiss-history-banner", "true");
     setDismissedHistory(true);
+  };
+
+  const handleSeedFactpulseInbound = async () => {
+    if (!company) return;
+    setSeeding(true);
+    try {
+      const invId = await seedInboundFactpulseInvoice(company.id);
+      toast("Facture fournisseur reçue et certifiée via FactPulse (PDP) !", "success");
+      void load();
+      navigate(`/invoices/${invId}`);
+    } catch (err: any) {
+      toast(err.message || "Erreur lors de la capture de la facture", "danger");
+    } finally {
+      setSeeding(false);
+    }
   };
 
   useEffect(() => {
@@ -136,7 +152,16 @@ export function InvoicesPage() {
       title="Factures"
       subtitle="Vos factures et encaissements"
       actions={
-        <div className="flex gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <Button
+            variant="outline"
+            leftIcon={<Send className="w-4 h-4 text-emerald-400" />}
+            onClick={handleSeedFactpulseInbound}
+            loading={seeding}
+            className="border-emerald-500/30 text-emerald-300 hover:bg-emerald-500/10"
+          >
+            Capturer Facture PDP
+          </Button>
           <Button
             variant="outline"
             leftIcon={<Upload className="w-4 h-4" />}
