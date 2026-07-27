@@ -1188,9 +1188,11 @@ export async function fetchDashboardData(
         .filter(
           (i) =>
             i.ereporting_status === "submitted" ||
+            i.ereporting_status === "confirmed" ||
             i.pa_status === "submitted" ||
-            !!i.facturx_pdf_url ||
-            (i.number && !i.number.startsWith("IMP-"))
+            i.pa_status === "delivered" ||
+            i.pa_status === "accepted" ||
+            !!i.facturx_pdf_url
         )
         .map((i) => i.id)
     );

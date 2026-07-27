@@ -41,9 +41,11 @@ export function UrssafPage() {
         eligibleInvoices = eligibleInvoices.filter(
           (i: any) =>
             i.ereporting_status === "submitted" ||
+            i.ereporting_status === "confirmed" ||
             i.pa_status === "submitted" ||
-            !!i.facturx_pdf_url ||
-            (i.number && !i.number.startsWith("IMP-"))
+            i.pa_status === "delivered" ||
+            i.pa_status === "accepted" ||
+            !!i.facturx_pdf_url
         );
       }
 
@@ -109,14 +111,14 @@ export function UrssafPage() {
       title="URSSAF"
       subtitle="Vos déclarations URSSAF"
       actions={
-        <div className="flex rounded-pill border border-border p-0.5 bg-surface shadow-inner">
+        <div className="flex rounded-pill border border-border/80 p-1 bg-surface-hover/40 shadow-inner">
           <button
             type="button"
             onClick={() => setDataView("total")}
             className={cn(
-              "px-3 h-8 rounded-pill text-xs font-bold transition-all flex items-center gap-1.5",
+              "px-3.5 h-8 rounded-pill text-xs font-extrabold transition-all flex items-center gap-1.5",
               dataView === "total"
-                ? "bg-primary text-white shadow-sm"
+                ? "bg-amber-500 text-slate-950 shadow-md scale-[1.02]"
                 : "text-muted hover:text-text"
             )}
           >
@@ -126,9 +128,9 @@ export function UrssafPage() {
             type="button"
             onClick={() => setDataView("electronic")}
             className={cn(
-              "px-3 h-8 rounded-pill text-xs font-bold transition-all flex items-center gap-1.5",
+              "px-3.5 h-8 rounded-pill text-xs font-extrabold transition-all flex items-center gap-1.5",
               dataView === "electronic"
-                ? "bg-primary text-white shadow-sm"
+                ? "bg-primary text-white shadow-md scale-[1.02]"
                 : "text-muted hover:text-text"
             )}
           >
