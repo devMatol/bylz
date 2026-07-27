@@ -394,14 +394,14 @@ export function NotificationCenter() {
                           onClick={() => handleOpenPayModal(n.data)}
                           className="text-[11px] font-bold bg-emerald-500 text-white px-2.5 py-1 rounded-pill hover:bg-emerald-600 transition-colors shadow-xs"
                         >
-                          💰 C'est payé
+                          Marquer payée
                         </button>
                         <button
                           type="button"
                           onClick={() => handleOpenRemindModal(n.data)}
                           className="text-[11px] font-bold bg-surface-hover text-text border border-border px-2.5 py-1 rounded-pill hover:bg-surface-hover/80 transition-colors"
                         >
-                          ✉️ Relancer
+                          Relancer
                         </button>
                       </>
                     )}
@@ -413,14 +413,14 @@ export function NotificationCenter() {
                           onClick={() => handleOpenPayModal(n.data)}
                           className="text-[11px] font-bold bg-emerald-500 text-white px-2.5 py-1 rounded-pill hover:bg-emerald-600 transition-colors shadow-xs"
                         >
-                          💰 C'est payé
+                          Marquer payée
                         </button>
                         <button
                           type="button"
                           onClick={() => handleOpenRemindModal(n.data)}
                           className="text-[11px] font-bold bg-primary text-white px-2.5 py-1 rounded-pill hover:bg-primary-hover transition-colors shadow-xs"
                         >
-                          🚀 Relancer le client
+                          Relancer le client
                         </button>
                       </>
                     )}

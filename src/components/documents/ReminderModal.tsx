@@ -77,7 +77,7 @@ export function ReminderModal({
             </div>
             {clientEmail ? (
               <div className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-pill">
-                📧 {clientEmail}
+                Email : {clientEmail}
               </div>
             ) : (
               <div className="text-xs font-semibold text-danger bg-danger/10 border border-danger/20 px-2.5 py-1 rounded-pill flex items-center space-x-1">

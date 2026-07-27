@@ -137,7 +137,7 @@ export function DashboardPage() {
                   : "text-muted hover:text-text"
               )}
             >
-              <span>🌐 Total</span>
+              <span>Total</span>
             </button>
             <button
               type="button"
@@ -149,7 +149,7 @@ export function DashboardPage() {
                   : "text-muted hover:text-text"
               )}
             >
-              <span>⚡ Facturation électronique</span>
+              <span>Facturation électronique</span>
             </button>
           </div>
 
