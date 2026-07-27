@@ -1,5 +1,6 @@
 import { type ReactNode } from "react";
 import { useLocation } from "react-router-dom";
+import { NotificationCenter } from "../notifications/NotificationCenter";
 
 const routeTitles: Record<string, string> = {
   "/": "Tableau de bord",
@@ -36,7 +37,7 @@ export function Topbar({ title, subtitle, actions }: TopbarProps) {
       : "");
 
   return (
-    <header className="sticky top-0 z-20 bg-bg/80 backdrop-blur-sm border-b border-border h-16 flex items-center justify-between px-4 md:px-10">
+    <header className="sticky top-0 z-20 bg-bg/80 backdrop-blur-sm border-b border-border h-16 flex items-center justify-between px-4 md:px-10 gap-3">
       <div className="min-w-0 flex-1">
         <h2 className="text-lg font-bold text-text truncate">
           {resolvedTitle}
@@ -45,11 +46,15 @@ export function Topbar({ title, subtitle, actions }: TopbarProps) {
           <p className="text-xs text-muted truncate -mt-0.5">{subtitle}</p>
         )}
       </div>
-      {actions && (
-        <div className="hidden md:flex items-center gap-2 flex-shrink-0 ml-4">
-          {actions}
-        </div>
-      )}
+
+      <div className="flex items-center gap-2 flex-shrink-0">
+        {actions && (
+          <div className="hidden md:flex items-center gap-2">
+            {actions}
+          </div>
+        )}
+        <NotificationCenter />
+      </div>
     </header>
   );
 }
