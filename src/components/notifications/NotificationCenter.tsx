@@ -47,7 +47,6 @@ export function NotificationCenter() {
   const navigate = useNavigate();
 
   const [open, setOpen] = useState(false);
-  const [tab, setTab] = useState<"all" | "invoices" | "urssaf" | "ereporting">("all");
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -192,13 +191,6 @@ export function NotificationCenter() {
 
   const unreadCount = notifications.filter((n) => !n.read).length;
 
-  const filteredNotifications = notifications.filter((n) => {
-    if (tab === "invoices") return n.category === "invoice";
-    if (tab === "urssaf") return n.category === "urssaf";
-    if (tab === "ereporting") return n.category === "ereporting";
-    return true;
-  });
-
   // Action handlers
   const handleOpenPayModal = (data: any) => {
     setPayModalData(data);
@@ -325,43 +317,15 @@ export function NotificationCenter() {
             )}
           </div>
 
-          {/* Category Tabs */}
-          <div className="flex border-b border-border bg-surface px-2 pt-2 gap-1 overflow-x-auto text-xs">
-            <button
-              onClick={() => setTab("all")}
-              className={`px-3 py-1.5 rounded-t-card font-bold transition-colors ${
-                tab === "all" ? "bg-surface-hover text-primary border-b-2 border-primary" : "text-muted hover:text-text"
-              }`}
-            >
-              Toutes
-            </button>
-            <button
-              onClick={() => setTab("invoices")}
-              className={`px-3 py-1.5 rounded-t-card font-bold transition-colors ${
-                tab === "invoices" ? "bg-surface-hover text-primary border-b-2 border-primary" : "text-muted hover:text-text"
-              }`}
-            >
-              Factures
-            </button>
-            <button
-              onClick={() => setTab("urssaf")}
-              className={`px-3 py-1.5 rounded-t-card font-bold transition-colors ${
-                tab === "urssaf" ? "bg-surface-hover text-primary border-b-2 border-primary" : "text-muted hover:text-text"
-              }`}
-            >
-              URSSAF
-            </button>
-          </div>
-
           {/* Notifications List */}
           <div className="flex-1 overflow-y-auto p-3 space-y-3">
-            {filteredNotifications.length === 0 ? (
+            {notifications.length === 0 ? (
               <div className="py-8 text-center space-y-2 text-muted">
                 <Check className="w-8 h-8 mx-auto text-emerald-500/70" />
                 <p className="text-xs font-semibold">Aucune alerte en attente !</p>
               </div>
             ) : (
-              filteredNotifications.map((n) => (
+              notifications.map((n) => (
                 <div
                   key={n.id}
                   className={`p-3.5 rounded-card border transition-all space-y-2.5 ${
