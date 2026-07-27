@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Bell,
   Check,
@@ -42,6 +43,7 @@ export interface AppNotification {
 export function NotificationCenter() {
   const { company } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const [open, setOpen] = useState(false);
   const [tab, setTab] = useState<"all" | "invoices" | "urssaf" | "ereporting">("all");
@@ -407,17 +409,17 @@ export function NotificationCenter() {
                       <>
                         <button
                           type="button"
+                          onClick={() => handleOpenPayModal(n.data)}
+                          className="text-[11px] font-bold bg-emerald-500 text-white px-2.5 py-1 rounded-pill hover:bg-emerald-600 transition-colors shadow-xs"
+                        >
+                          💰 C'est payé
+                        </button>
+                        <button
+                          type="button"
                           onClick={() => handleOpenRemindModal(n.data)}
                           className="text-[11px] font-bold bg-primary text-white px-2.5 py-1 rounded-pill hover:bg-primary-hover transition-colors shadow-xs"
                         >
                           🚀 Relancer le client
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleOpenPayModal(n.data)}
-                          className="text-[11px] font-bold bg-surface-hover text-text border border-border px-2.5 py-1 rounded-pill hover:bg-surface-hover/80 transition-colors"
-                        >
-                          💰 Marquer payée
                         </button>
                       </>
                     )}
@@ -425,11 +427,14 @@ export function NotificationCenter() {
                     {n.actionType === "copy_urssaf" && (
                       <button
                         type="button"
-                        onClick={() => handleCopyUrssaf(n.data)}
-                        className="text-[11px] font-bold bg-primary text-white px-2.5 py-1 rounded-pill hover:bg-primary-hover transition-colors flex items-center gap-1 shadow-xs"
+                        onClick={() => {
+                          setOpen(false);
+                          navigate("/urssaf");
+                        }}
+                        className="text-[11px] font-bold bg-primary text-white px-3 py-1 rounded-pill hover:bg-primary-hover transition-colors flex items-center gap-1 shadow-xs"
                       >
                         <ExternalLink className="w-3 h-3" />
-                        <span>Copier & Ouvrir URSSAF.fr</span>
+                        <span>Ouvrir</span>
                       </button>
                     )}
                   </div>
