@@ -2,9 +2,16 @@ import { useState } from "react";
 import { Sparkles, Check, Loader2 } from "lucide-react";
 import { Modal } from "../ui/Modal";
 import { Button } from "../ui/Button";
-import { STRIPE_PRICE_SOLO, STRIPE_PRICE_PRO } from "../../lib/constants";
+import {
+  STRIPE_PRICE_SOLO_ANNUAL,
+  STRIPE_PRICE_SOLO_MONTHLY,
+  STRIPE_PRICE_PRO_ANNUAL,
+  STRIPE_PRICE_PRO_MONTHLY,
+  type BillingCycle,
+} from "../../lib/constants";
 import { supabase } from "../../lib/supabase";
 import { useToast } from "../ui/Toast";
+import { BillingToggle } from "./BillingToggle";
 
 export interface UpgradeModalProps {
   open: boolean;
@@ -17,49 +24,42 @@ export interface UpgradeModalProps {
 
 const FEATURE_CONFIG: Record<
   string,
-  { title: string; benefit: string; targetPlan: "solo" | "pro"; priceLabel: string }
+  { title: string; benefit: string; targetPlan: "solo" | "pro" }
 > = {
   invoices: {
     title: "Limite de factures atteinte",
     benefit: "Passez au plan Solo pour émettre des factures et devis illimités.",
     targetPlan: "solo",
-    priceLabel: "9 € / mois",
   },
   clients: {
     title: "Limite de clients atteinte",
     benefit: "Passez au plan Solo pour gérer un nombre illimité de clients.",
     targetPlan: "solo",
-    priceLabel: "9 € / mois",
   },
   fiscalDashboard: {
     title: "Débloquez le pilotage fiscal",
     benefit: "Suivez votre Chiffre d'Affaires, vos plafonds et vos estimations de cotisations en temps réel.",
     targetPlan: "solo",
-    priceLabel: "9 € / mois",
   },
   reminders: {
     title: "Relances de paiement automatiques",
     benefit: "Relancez vos factures impayées en un clic et évitez les retards de paiement.",
     targetPlan: "solo",
-    priceLabel: "9 € / mois",
   },
   exports: {
     title: "Exports comptables",
     benefit: "Exportez vos bilans et registres d'achats/ventes en un clic pour votre comptable.",
     targetPlan: "solo",
-    priceLabel: "9 € / mois",
   },
   paymentLinks: {
     title: "Paiement en ligne par carte",
     benefit: "Permettez à vos clients de régler leurs factures en ligne directement avec Stripe Connect.",
     targetPlan: "pro",
-    priceLabel: "19 € / mois",
   },
   multiCompany: {
     title: "Multi-activités",
     benefit: "Gérez plusieurs activités micro-entrepreneur sous un même compte Pro.",
     targetPlan: "pro",
-    priceLabel: "19 € / mois",
   },
 };
 
@@ -72,14 +72,31 @@ export function UpgradeModal({
   targetPlan: customTargetPlan,
 }: UpgradeModalProps) {
   const [loading, setLoading] = useState(false);
+  const [billingCycle, setBillingCycle] = useState<BillingCycle>("annual");
   const { toast } = useToast();
 
   const config = FEATURE_CONFIG[feature] || FEATURE_CONFIG.invoices;
   const title = customTitle || config.title;
   const benefit = customBenefit || config.benefit;
   const targetPlan = customTargetPlan || config.targetPlan;
-  const priceLabel = targetPlan === "pro" ? "19 € / mois" : "9 € / mois";
-  const priceId = targetPlan === "pro" ? STRIPE_PRICE_PRO : STRIPE_PRICE_SOLO;
+
+  const priceLabel =
+    billingCycle === "annual"
+      ? targetPlan === "pro"
+        ? "75 € / an (6,25 €/mois)"
+        : "50 € / an (4,17 €/mois)"
+      : targetPlan === "pro"
+      ? "12,90 € / mois"
+      : "8,90 € / mois";
+
+  const priceId =
+    targetPlan === "pro"
+      ? billingCycle === "annual"
+        ? STRIPE_PRICE_PRO_ANNUAL
+        : STRIPE_PRICE_PRO_MONTHLY
+      : billingCycle === "annual"
+      ? STRIPE_PRICE_SOLO_ANNUAL
+      : STRIPE_PRICE_SOLO_MONTHLY;
 
   const handleUpgrade = async () => {
     setLoading(true);
@@ -117,6 +134,11 @@ export function UpgradeModal({
 
         <p className="text-sm text-muted leading-relaxed">{benefit}</p>
 
+        {/* Annual / Monthly Switch */}
+        <div className="bg-surface-hover/30 p-3 rounded-card border border-border">
+          <BillingToggle billingCycle={billingCycle} onChange={setBillingCycle} />
+        </div>
+
         <div className="bg-surface-elevated/50 rounded-xl p-4 border border-border/50 space-y-2">
           <div className="flex items-center text-xs text-text space-x-2">
             <Check className="w-4 h-4 text-emerald-500" />
@@ -132,7 +154,7 @@ export function UpgradeModal({
           <Button variant="ghost" onClick={onClose} disabled={loading} className="w-full sm:w-auto">
             Plus tard
           </Button>
-          <Button onClick={handleUpgrade} disabled={loading} className="w-full sm:w-auto">
+          <Button onClick={handleUpgrade} disabled={loading} className="w-full sm:w-auto bylz-glow-cta font-bold">
             {loading ? (
               <>
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />

@@ -143,11 +143,29 @@ Deno.serve(async (req) => {
           metadata: { user_id: user.id },
         });
       }
-      // Fallback 2: Price ID does not exist in current Stripe account -> create inline price data
+      // Fallback 2: Price ID does not exist in current Stripe account -> create inline price data matching plan & interval
       else if (err.message?.includes('No such price') || err.code === 'resource_missing' || err.statusCode === 404) {
-        const isPro = priceId.includes('PRO') || priceId === 'price_1TvYnW2X0yCzQQsN930PPkgJ';
-        const unitAmount = isPro ? 1900 : 900;
-        const planName = isPro ? 'Bylz Pro' : 'Bylz Solo';
+        const pLower = (priceId || '').toLowerCase();
+        const isPro = pLower.includes('pro');
+        const isMonthly = pLower.includes('_m') || pLower.includes('month');
+        
+        let unitAmount = 5000; // Solo Annual default (50 €)
+        let interval: 'year' | 'month' = 'year';
+        let planName = 'Bylz Solo (Annuel)';
+
+        if (isPro && !isMonthly) {
+          unitAmount = 7500; // Pro Annual (75 €)
+          planName = 'Bylz Pro (Annuel)';
+          interval = 'year';
+        } else if (isPro && isMonthly) {
+          unitAmount = 1290; // Pro Monthly (12.90 €)
+          planName = 'Bylz Pro (Mensuel)';
+          interval = 'month';
+        } else if (!isPro && isMonthly) {
+          unitAmount = 890; // Solo Monthly (8.90 €)
+          planName = 'Bylz Solo (Mensuel)';
+          interval = 'month';
+        }
 
         session = await stripe.checkout.sessions.create({
           customer: customerId,
@@ -158,7 +176,7 @@ Deno.serve(async (req) => {
                 currency: 'eur',
                 product_data: { name: planName },
                 unit_amount: unitAmount,
-                recurring: { interval: 'month' },
+                recurring: { interval },
               },
               quantity: 1,
             },

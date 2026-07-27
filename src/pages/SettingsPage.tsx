@@ -20,11 +20,15 @@ import { Badge } from "../components/ui/Badge";
 import { useAuth } from "../contexts/AuthContext";
 import { useToast } from "../components/ui/Toast";
 import { supabase } from "../lib/supabase";
+import { BillingToggle } from "../components/shared/BillingToggle";
 import {
   PLAN_LABELS,
   PLAN_PRICES,
-  STRIPE_PRICE_SOLO,
-  STRIPE_PRICE_PRO,
+  STRIPE_PRICE_SOLO_ANNUAL,
+  STRIPE_PRICE_SOLO_MONTHLY,
+  STRIPE_PRICE_PRO_ANNUAL,
+  STRIPE_PRICE_PRO_MONTHLY,
+  type BillingCycle,
 } from "../lib/constants";
 import { Input } from "../components/ui/Input";
 import { Select } from "../components/ui/Select";
@@ -59,6 +63,7 @@ export function SettingsPage() {
   const [connectStatus, setConnectStatus] = useState<ConnectStatus | null>(null);
   const [loadingStatus, setLoadingStatus] = useState(false);
   const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
+  const [billingCycle, setBillingCycle] = useState<BillingCycle>("annual");
 
   const currentPlan = profile?.plan || "starter";
 
@@ -331,7 +336,11 @@ export function SettingsPage() {
                   </Badge>
                 </div>
                 <div className="text-2xl font-extrabold text-text pt-1">
-                  {PLAN_PRICES[currentPlan] === 0 ? "Gratuit" : `${PLAN_PRICES[currentPlan]} € / mois`}
+                  {currentPlan === "starter"
+                    ? "Gratuit"
+                    : `${PLAN_PRICES[currentPlan as keyof typeof PLAN_PRICES]?.annual || 50} € / an (${
+                        PLAN_PRICES[currentPlan as keyof typeof PLAN_PRICES]?.annualMonthlyEquiv || "4,17 €"
+                      }/mois)`}
                 </div>
                 {profile?.trial_ends_at && (
                   <p className="text-xs text-muted">
@@ -357,6 +366,15 @@ export function SettingsPage() {
               )}
             </div>
           </Card>
+
+          {/* Billing Cycle Switch */}
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-border pb-4 pt-2 gap-4">
+            <div>
+              <h3 className="text-base font-bold text-text">Choisir un plan et un cycle de facturation</h3>
+              <p className="text-xs text-muted">Bénéficiez de jusqu'à 53% de réduction en choisissant la facturation annuelle</p>
+            </div>
+            <BillingToggle billingCycle={billingCycle} onChange={setBillingCycle} />
+          </div>
 
           {/* 3 Columns Comparison */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-2">
@@ -422,7 +440,21 @@ export function SettingsPage() {
                   {currentPlan === "solo" && <Badge variant="success">Actif</Badge>}
                 </div>
 
-                <div className="text-3xl font-extrabold text-text">9 € <span className="text-xs font-normal text-muted">/ mois</span></div>
+                <div>
+                  <div className="text-3xl font-extrabold text-text font-mono">
+                    {billingCycle === "annual" ? "4,17 €" : "8,90 €"}{" "}
+                    <span className="text-xs font-normal text-muted font-sans">/ mois HT</span>
+                  </div>
+                  {billingCycle === "annual" ? (
+                    <p className="text-[11px] font-bold text-emerald-500 mt-1">
+                      soit 50 € / an HT (proratisé au mois)
+                    </p>
+                  ) : (
+                    <p className="text-[11px] font-medium text-muted mt-1">
+                      facturé 8,90 € par mois
+                    </p>
+                  )}
+                </div>
 
                 <ul className="space-y-2 text-xs text-text pt-2">
                   <li className="flex items-center space-x-2">
@@ -453,14 +485,17 @@ export function SettingsPage() {
                   <Button variant="outline" disabled className="w-full">Votre plan</Button>
                 ) : (
                   <Button
-                    onClick={() => handleCheckout(STRIPE_PRICE_SOLO)}
-                    disabled={loadingCheckout === STRIPE_PRICE_SOLO}
+                    onClick={() => {
+                      const pId = billingCycle === "annual" ? STRIPE_PRICE_SOLO_ANNUAL : STRIPE_PRICE_SOLO_MONTHLY;
+                      void handleCheckout(pId);
+                    }}
+                    disabled={!!loadingCheckout}
                     className="w-full"
                   >
-                    {loadingCheckout === STRIPE_PRICE_SOLO ? (
+                    {loadingCheckout ? (
                       <Loader2 className="w-4 h-4 animate-spin" />
                     ) : (
-                      "Passer au plan Solo"
+                      `Passer au plan Solo (${billingCycle === "annual" ? "50€/an" : "8,90€/mois"})`
                     )}
                   </Button>
                 )}
@@ -482,7 +517,21 @@ export function SettingsPage() {
                   {currentPlan === "pro" && <Badge variant="success">Actif</Badge>}
                 </div>
 
-                <div className="text-3xl font-extrabold text-text">19 € <span className="text-xs font-normal text-muted">/ mois</span></div>
+                <div>
+                  <div className="text-3xl font-extrabold text-text font-mono">
+                    {billingCycle === "annual" ? "6,25 €" : "12,90 €"}{" "}
+                    <span className="text-xs font-normal text-muted font-sans">/ mois HT</span>
+                  </div>
+                  {billingCycle === "annual" ? (
+                    <p className="text-[11px] font-bold text-emerald-500 mt-1">
+                      soit 75 € / an HT (proratisé au mois)
+                    </p>
+                  ) : (
+                    <p className="text-[11px] font-medium text-muted mt-1">
+                      facturé 12,90 € par mois
+                    </p>
+                  )}
+                </div>
 
                 <ul className="space-y-2 text-xs text-text pt-2">
                   <li className="flex items-center space-x-2">
@@ -509,20 +558,22 @@ export function SettingsPage() {
                   <Button variant="outline" disabled className="w-full">Votre plan</Button>
                 ) : (
                   <Button
-                    onClick={() => handleCheckout(STRIPE_PRICE_PRO)}
-                    disabled={loadingCheckout === STRIPE_PRICE_PRO}
+                    onClick={() => {
+                      const pId = billingCycle === "annual" ? STRIPE_PRICE_PRO_ANNUAL : STRIPE_PRICE_PRO_MONTHLY;
+                      void handleCheckout(pId);
+                    }}
+                    disabled={!!loadingCheckout}
                     className="w-full"
                   >
-                    {loadingCheckout === STRIPE_PRICE_PRO ? (
+                    {loadingCheckout ? (
                       <Loader2 className="w-4 h-4 animate-spin" />
                     ) : (
-                      "Passer au plan Pro"
+                      `Passer au plan Pro (${billingCycle === "annual" ? "75€/an" : "12,90€/mois"})`
                     )}
                   </Button>
                 )}
               </div>
             </Card>
-
           </div>
         </div>
 

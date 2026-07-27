@@ -18,9 +18,12 @@ import { TrustBadgesRow } from "../components/marketing/TrustBadgesRow";
 import { InteractiveInvoiceBuilder } from "../components/marketing/InteractiveInvoiceBuilder";
 import { InteractiveFiscalSimulator } from "../components/marketing/InteractiveFiscalSimulator";
 import { Button } from "../components/ui/Button";
+import { BillingToggle } from "../components/shared/BillingToggle";
+import { type BillingCycle } from "../lib/constants";
 
 export function LandingPage() {
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(0);
+  const [billingCycle, setBillingCycle] = useState<BillingCycle>("annual");
 
   const faqs = [
     {
@@ -272,7 +275,7 @@ export function LandingPage() {
 
         {/* PRICING SECTION */}
         <section className="py-28 bg-surface-hover/40 border-y border-border">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-16">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
             <div className="text-center max-w-3xl mx-auto space-y-4">
               <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-text">
                 Des tarifs simples, transparents et sans surprise
@@ -280,6 +283,11 @@ export function LandingPage() {
               <p className="text-base text-muted font-medium">
                 Commencez gratuitement. Évoluez quand votre activité grandit. Résiliable à tout moment.
               </p>
+
+              {/* Annual / Monthly Toggle Switch */}
+              <div className="pt-4">
+                <BillingToggle billingCycle={billingCycle} onChange={setBillingCycle} />
+              </div>
             </div>
 
             {/* 3 Pricing Cards */}
@@ -324,9 +332,20 @@ export function LandingPage() {
                   <h3 className="text-xl font-bold text-text">Solo</h3>
                   <p className="text-xs text-muted mt-1 font-medium">Pour les indépendants actifs</p>
                   <div className="mt-4 flex items-baseline space-x-1">
-                    <span className="text-4xl font-black text-primary font-mono">9 €</span>
+                    <span className="text-4xl font-black text-primary font-mono">
+                      {billingCycle === "annual" ? "4,17 €" : "8,90 €"}
+                    </span>
                     <span className="text-xs text-muted">/ mois HT</span>
                   </div>
+                  {billingCycle === "annual" ? (
+                    <p className="text-[11px] font-bold text-emerald-500 mt-1">
+                      soit 50 € / an HT (proratisé au mois)
+                    </p>
+                  ) : (
+                    <p className="text-[11px] font-medium text-muted mt-1">
+                      facturé 8,90 € par mois sans engagement
+                    </p>
+                  )}
                 </div>
                 <ul className="space-y-3 text-xs text-text font-semibold">
                   <li className="flex items-center space-x-2">
@@ -346,7 +365,7 @@ export function LandingPage() {
                     <span>Relances automatiques</span>
                   </li>
                 </ul>
-                <Link to="/signup?plan=solo" className="block w-full">
+                <Link to={`/signup?plan=solo&billing=${billingCycle}`} className="block w-full">
                   <Button variant="primary" className="w-full justify-center bylz-glow-cta py-3.5">
                     Essayer Solo (14 jours offerts)
                   </Button>
@@ -359,9 +378,20 @@ export function LandingPage() {
                   <h3 className="text-xl font-bold text-text">Pro</h3>
                   <p className="text-xs text-muted mt-1 font-medium">Pour maximiser votre activité</p>
                   <div className="mt-4 flex items-baseline space-x-1">
-                    <span className="text-4xl font-black text-text font-mono">19 €</span>
+                    <span className="text-4xl font-black text-text font-mono">
+                      {billingCycle === "annual" ? "6,25 €" : "12,90 €"}
+                    </span>
                     <span className="text-xs text-muted">/ mois HT</span>
                   </div>
+                  {billingCycle === "annual" ? (
+                    <p className="text-[11px] font-bold text-emerald-500 mt-1">
+                      soit 75 € / an HT (proratisé au mois)
+                    </p>
+                  ) : (
+                    <p className="text-[11px] font-medium text-muted mt-1">
+                      facturé 12,90 € par mois sans engagement
+                    </p>
+                  )}
                 </div>
                 <ul className="space-y-3 text-xs text-text font-semibold">
                   <li className="flex items-center space-x-2">
@@ -377,7 +407,7 @@ export function LandingPage() {
                     <span>Télétransmission Directe DGFiP</span>
                   </li>
                 </ul>
-                <Link to="/signup?plan=pro" className="block w-full">
+                <Link to={`/signup?plan=pro&billing=${billingCycle}`} className="block w-full">
                   <Button variant="outline" className="w-full justify-center">
                     Essayer Pro (14 jours offerts)
                   </Button>
