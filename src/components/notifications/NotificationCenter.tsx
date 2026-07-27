@@ -26,6 +26,7 @@ import { Modal } from "../ui/Modal";
 import { Button } from "../ui/Button";
 import { Input } from "../ui/Input";
 import { Select } from "../ui/Select";
+import { ReminderModal } from "../documents/ReminderModal";
 
 export interface AppNotification {
   id: string;
@@ -52,7 +53,7 @@ export function NotificationCenter() {
 
   // Quick Action Modal States
   const [payModalData, setPayModalData] = useState<{ invoiceId: string; number: string; amount: number } | null>(null);
-  const [remindModalData, setRemindModalData] = useState<{ invoiceId: string; number: string; clientName: string; clientEmail?: string } | null>(null);
+  const [remindModalData, setRemindModalData] = useState<{ invoiceId: string; number: string; amount: number; clientName: string; clientEmail?: string } | null>(null);
 
   // Pay Modal Form
   const [payDate, setPayDate] = useState(todayISO());
@@ -492,33 +493,29 @@ export function NotificationCenter() {
 
       {/* QUICK REMINDER MODAL */}
       {remindModalData && (
-        <Modal open={true} onClose={() => setRemindModalData(null)} title={`Relancer ${remindModalData.clientName}`}>
-          <div className="space-y-4 pt-2">
-            <Input
-              label="Objet de l'e-mail"
-              value={remindSubject}
-              onChange={(e) => setRemindSubject(e.target.value)}
-            />
-            <div className="space-y-1">
-              <label className="text-xs font-bold text-text">Message de relance</label>
-              <textarea
-                value={remindBody}
-                onChange={(e) => setRemindBody(e.target.value)}
-                rows={6}
-                className="w-full bg-surface border border-border rounded-card p-3 text-xs text-text focus:outline-none focus:border-primary font-mono leading-relaxed"
-              />
-            </div>
-
-            <div className="flex items-center justify-end gap-2 pt-3 border-t border-border">
-              <Button variant="outline" size="sm" onClick={() => setRemindModalData(null)}>
-                Annuler
-              </Button>
-              <Button variant="primary" size="sm" onClick={handleSendReminder} disabled={sendingRemind} className="bylz-glow-cta font-bold">
-                Envoyer la relance par e-mail
-              </Button>
-            </div>
-          </div>
-        </Modal>
+        <ReminderModal
+          open={true}
+          onClose={() => setRemindModalData(null)}
+          clientName={remindModalData.clientName}
+          clientEmail={remindModalData.clientEmail}
+          invoiceNumber={remindModalData.number}
+          invoiceAmount={remindModalData.amount}
+          onSend={async (subject, body) => {
+            if (!remindModalData.clientEmail) return;
+            const { error } = await supabase.functions.invoke("send-email", {
+              body: {
+                to: remindModalData.clientEmail,
+                subject,
+                html: `<div style="font-family: sans-serif; line-height: 1.6; color: #1e293b;">
+                  <p>${body.replace(/\n/g, "<br/>")}</p>
+                </div>`,
+              },
+            });
+            if (error) throw error;
+            toast(`Relance e-mail envoyée à ${remindModalData.clientEmail} !`, "success");
+            setRemindModalData(null);
+          }}
+        />
       )}
     </div>
   );

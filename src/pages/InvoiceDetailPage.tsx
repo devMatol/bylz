@@ -16,6 +16,7 @@ import { Input } from "../components/ui/Input";
 import { Select } from "../components/ui/Select";
 import { Modal } from "../components/ui/Modal";
 import { ConfirmModal } from "../components/documents/ConfirmModal";
+import { ReminderModal } from "../components/documents/ReminderModal";
 import { StatusBadge } from "../components/shared/StatusBadge";
 import { DocumentPreview } from "../components/documents/DocumentPreview";
 import { sendPaymentReceiptEmail } from "../lib/emailNotifier";
@@ -663,51 +664,34 @@ export function InvoiceDetailPage() {
       </Modal>
 
       {/* Reminder modal */}
-      <Modal open={remindOpen} onClose={() => setRemindOpen(false)} title="Relancer le client">
-        <div className="flex flex-col gap-4">
-          <Input
-            label="Sujet"
-            value={remindSubject}
-            onChange={(e) => setRemindSubject(e.target.value)}
-            required
-          />
-          <div className="flex flex-col gap-1.5">
-            <label className="text-sm font-semibold text-text">Message</label>
-            <textarea
-              value={remindBody}
-              onChange={(e) => setRemindBody(e.target.value)}
-              rows={10}
-              className="w-full rounded-card border border-border bg-surface px-3 py-2 text-sm text-text resize-y focus:outline-none focus:border-primary"
-              required
-            />
-          </div>
-          {!client?.email && (
-            <p className="text-sm text-danger">
-              Ce client n'a pas d'email enregistré : la relance ne peut pas être envoyée.
-            </p>
-          )}
-          {remindError && (
-            <p className="text-sm text-danger">{remindError}</p>
-          )}
-          <p className="text-xs text-muted">
-            La facture sera jointe automatiquement au format PDF.
-          </p>
-          <div className="flex justify-end gap-2">
-            <Button type="button" variant="ghost" onClick={() => setRemindOpen(false)} disabled={busy}>
-              Annuler
-            </Button>
-            <Button
-              type="button"
-              variant="primary"
-              onClick={handleSendReminder}
-              loading={busy}
-              disabled={!client?.email}
-            >
-              Envoyer la relance
-            </Button>
-          </div>
-        </div>
-      </Modal>
+      {invoice && (
+        <ReminderModal
+          open={remindOpen}
+          onClose={() => setRemindOpen(false)}
+          clientName={client?.name || "Client"}
+          clientEmail={client?.email}
+          invoiceNumber={invoice.number}
+          invoiceAmount={Number(invoice.total_ttc)}
+          onSend={async (subject, body) => {
+            if (!company || !id) return;
+            setBusy(true);
+            try {
+              await sendInvoiceReminder(company.id, id, invoice, client, {
+                subject,
+                body,
+              });
+              toast("Relance envoyée par email", "success");
+              const r = await fetchInvoiceReminders(company.id, id);
+              setReminders(r);
+            } catch (err) {
+              toast(err instanceof Error ? err.message : "Erreur", "danger");
+              throw err;
+            } finally {
+              setBusy(false);
+            }
+          }}
+        />
+      )}
 
       <ConfirmModal
         open={deleteOpen}
