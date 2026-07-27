@@ -38,6 +38,5 @@ export function useSetPageHeader(state: PageHeaderState) {
   useEffect(() => {
     setHeader(state);
     return () => setHeader({ title: "" });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state.title, state.subtitle]);
+  }, [state.title, state.subtitle, state.actions, setHeader]);
 }

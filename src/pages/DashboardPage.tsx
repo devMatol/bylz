@@ -126,30 +126,30 @@ export function DashboardPage() {
       actions={
         <div className="flex flex-wrap items-center gap-2">
           {/* Double View Toggle (Total vs Facturation électronique) */}
-          <div className="flex rounded-pill border border-border/80 p-1 bg-surface-hover/40 shadow-inner">
+          <div className="flex rounded-pill border border-border p-0.5 bg-surface">
             <button
               type="button"
               onClick={() => setDataView("total")}
               className={cn(
-                "px-3.5 h-8 rounded-pill text-xs font-extrabold transition-all flex items-center gap-1.5",
+                "px-3 h-8 rounded-pill text-xs font-semibold transition-colors",
                 dataView === "total"
-                  ? "bg-amber-500 text-slate-950 shadow-md scale-[1.02]"
+                  ? "bg-primary text-white"
                   : "text-muted hover:text-text"
               )}
             >
-              <span>Total</span>
+              Total
             </button>
             <button
               type="button"
               onClick={() => setDataView("electronic")}
               className={cn(
-                "px-3.5 h-8 rounded-pill text-xs font-extrabold transition-all flex items-center gap-1.5",
+                "px-3 h-8 rounded-pill text-xs font-semibold transition-colors",
                 dataView === "electronic"
-                  ? "bg-primary text-white shadow-md scale-[1.02]"
+                  ? "bg-primary text-white"
                   : "text-muted hover:text-text"
               )}
             >
-              <span>Facturation électronique</span>
+              Facturation électronique
             </button>
           </div>
 
