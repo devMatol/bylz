@@ -110,35 +110,40 @@ export function UrssafPage() {
     <PageContainer
       title="URSSAF"
       subtitle="Vos déclarations URSSAF"
-      actions={
-        <div className="flex rounded-pill border border-border p-0.5 bg-surface">
-          <button
-            type="button"
-            onClick={() => setDataView("total")}
-            className={cn(
-              "px-3 h-8 rounded-pill text-xs font-semibold transition-colors",
-              dataView === "total"
-                ? "bg-primary text-white"
-                : "text-muted hover:text-text"
-            )}
-          >
-            Total
-          </button>
-          <button
-            type="button"
-            onClick={() => setDataView("electronic")}
-            className={cn(
-              "px-3 h-8 rounded-pill text-xs font-semibold transition-colors",
-              dataView === "electronic"
-                ? "bg-primary text-white"
-                : "text-muted hover:text-text"
-            )}
-          >
-            Facturation électronique
-          </button>
-        </div>
-      }
     >
+      {/* Control Toolbar */}
+      <div className="flex items-center justify-between gap-3 p-3 bg-surface/60 border border-border rounded-card backdrop-blur-sm mb-6">
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-bold text-muted uppercase tracking-wider hidden md:inline">Périmètre :</span>
+          <div className="flex rounded-pill border border-border p-0.5 bg-bg/80">
+            <button
+              type="button"
+              onClick={() => setDataView("total")}
+              className={cn(
+                "px-3.5 h-8 rounded-pill text-xs font-semibold transition-all",
+                dataView === "total"
+                  ? "bg-primary text-white font-bold shadow-xs"
+                  : "text-muted hover:text-text"
+              )}
+            >
+              Total
+            </button>
+            <button
+              type="button"
+              onClick={() => setDataView("electronic")}
+              className={cn(
+                "px-3.5 h-8 rounded-pill text-xs font-semibold transition-all",
+                dataView === "electronic"
+                  ? "bg-primary text-white font-bold shadow-xs"
+                  : "text-muted hover:text-text"
+              )}
+            >
+              Facturation électronique
+            </button>
+          </div>
+        </div>
+      </div>
+
       {loading ? (
         <Skeleton height="12rem" />
       ) : periods.length === 0 ? (

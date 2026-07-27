@@ -124,16 +124,29 @@ export function DashboardPage() {
       title="Tableau de bord"
       subtitle="Vue d'ensemble de votre activité"
       actions={
-        <div className="flex flex-wrap items-center gap-2">
-          {/* Double View Toggle (Total vs Facturation électronique) */}
-          <div className="flex rounded-pill border border-border p-0.5 bg-surface">
+        <button
+          type="button"
+          onClick={() => navigate("/invoices/new")}
+          className="inline-flex items-center gap-1.5 h-9 px-3.5 rounded-pill bg-primary text-white text-xs font-bold hover:opacity-90 transition-opacity shadow-xs"
+        >
+          <Plus className="w-4 h-4" />
+          Facture
+        </button>
+      }
+    >
+      {/* Dashboard Control Toolbar */}
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 p-3 bg-surface/60 border border-border rounded-card backdrop-blur-sm mb-6">
+        {/* Scope Selector: Total vs Facturation électronique */}
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-bold text-muted uppercase tracking-wider hidden md:inline">Périmètre :</span>
+          <div className="flex rounded-pill border border-border p-0.5 bg-bg/80">
             <button
               type="button"
               onClick={() => setDataView("total")}
               className={cn(
-                "px-3 h-8 rounded-pill text-xs font-semibold transition-colors",
+                "px-3.5 h-8 rounded-pill text-xs font-semibold transition-all",
                 dataView === "total"
-                  ? "bg-primary text-white"
+                  ? "bg-primary text-white font-bold shadow-xs"
                   : "text-muted hover:text-text"
               )}
             >
@@ -143,27 +156,30 @@ export function DashboardPage() {
               type="button"
               onClick={() => setDataView("electronic")}
               className={cn(
-                "px-3 h-8 rounded-pill text-xs font-semibold transition-colors",
+                "px-3.5 h-8 rounded-pill text-xs font-semibold transition-all",
                 dataView === "electronic"
-                  ? "bg-primary text-white"
+                  ? "bg-primary text-white font-bold shadow-xs"
                   : "text-muted hover:text-text"
               )}
             >
               Facturation électronique
             </button>
           </div>
+        </div>
 
-          {/* Period Selector */}
-          <div className="flex rounded-pill border border-border p-0.5 bg-surface">
+        {/* Time Horizon Selector: Ce mois / Ce trimestre / Cette année */}
+        <div className="flex items-center gap-2 self-end sm:self-auto">
+          <span className="text-xs font-bold text-muted uppercase tracking-wider hidden md:inline">Période :</span>
+          <div className="flex rounded-pill border border-border p-0.5 bg-bg/80">
             {(["month", "quarter", "year"] as DashboardPeriod[]).map((p) => (
               <button
                 key={p}
                 type="button"
                 onClick={() => setPeriod(p)}
                 className={cn(
-                  "px-3 h-8 rounded-pill text-xs font-semibold transition-colors",
+                  "px-3.5 h-8 rounded-pill text-xs font-semibold transition-all",
                   period === p
-                    ? "bg-primary text-white"
+                    ? "bg-primary text-white font-bold shadow-xs"
                     : "text-muted hover:text-text"
                 )}
               >
@@ -171,17 +187,8 @@ export function DashboardPage() {
               </button>
             ))}
           </div>
-          <button
-            type="button"
-            onClick={() => navigate("/invoices/new")}
-            className="hidden sm:inline-flex items-center gap-1.5 h-9 px-3 rounded-pill bg-primary text-white text-sm font-semibold hover:opacity-90 transition-opacity"
-          >
-            <Plus className="w-4 h-4" />
-            Facture
-          </button>
         </div>
-      }
-    >
+      </div>
       {isProfileIncomplete && (
         <div className="mb-6 p-4 rounded-xl border border-amber-500/20 bg-amber-500/5 text-amber-800 dark:text-amber-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="flex items-center space-x-3">
