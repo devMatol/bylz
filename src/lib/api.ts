@@ -1129,7 +1129,8 @@ export async function fetchDashboardData(
   companyId: string,
   activityType: ActivityType,
   period: DashboardPeriod = "month",
-  tmi: number | null = null
+  tmi: number | null = null,
+  dataView: "total" | "electronic" = "total"
 ): Promise<DashboardData> {
   const { data: invoices, error } = await supabase
     .from("invoices")
@@ -1178,6 +1179,22 @@ export async function fetchDashboardData(
       .in("invoice_id", invoiceIds);
     if (pErr) throw pErr;
     payments = (pmt || []) as Payment[];
+  }
+
+  // Filter payments if electronic-only view is requested
+  if (dataView === "electronic") {
+    const electronicInvoiceIds = new Set(
+      invoiceRows
+        .filter(
+          (i) =>
+            i.ereporting_status === "submitted" ||
+            i.pa_status === "submitted" ||
+            !!i.facturx_pdf_url ||
+            (i.number && !i.number.startsWith("IMP-"))
+        )
+        .map((i) => i.id)
+    );
+    payments = payments.filter((p) => electronicInvoiceIds.has(p.invoice_id));
   }
 
   // fetch invoice lines for per-nature CA split

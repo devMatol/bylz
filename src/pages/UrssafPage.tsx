@@ -21,6 +21,7 @@ import type { Payment, UrssafDeclaration } from "../types/database";
 export function UrssafPage() {
   const { company } = useAuth();
   const { toast } = useToast();
+  const [dataView, setDataView] = useState<"total" | "electronic">("total");
   const [periods, setPeriods] = useState<UrssafPeriod[]>([]);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
@@ -31,10 +32,22 @@ export function UrssafPage() {
     try {
       const { data: invoices, error } = await supabase
         .from("invoices")
-        .select("id")
+        .select("id, number, ereporting_status, pa_status, facturx_pdf_url")
         .eq("company_id", company.id);
       if (error) throw error;
-      const invoiceIds = (invoices || []).map((i: any) => i.id);
+
+      let eligibleInvoices = invoices || [];
+      if (dataView === "electronic") {
+        eligibleInvoices = eligibleInvoices.filter(
+          (i: any) =>
+            i.ereporting_status === "submitted" ||
+            i.pa_status === "submitted" ||
+            !!i.facturx_pdf_url ||
+            (i.number && !i.number.startsWith("IMP-"))
+        );
+      }
+
+      const invoiceIds = eligibleInvoices.map((i: any) => i.id);
       let payments: Payment[] = [];
       if (invoiceIds.length > 0) {
         const { data: pmt, error: pErr } = await supabase
@@ -57,7 +70,7 @@ export function UrssafPage() {
     } finally {
       setLoading(false);
     }
-  }, [company, toast]);
+  }, [company, dataView, toast]);
 
   useEffect(() => {
     void load();
@@ -92,7 +105,38 @@ export function UrssafPage() {
   }
 
   return (
-    <PageContainer title="URSSAF" subtitle="Vos déclarations URSSAF">
+    <PageContainer
+      title="URSSAF"
+      subtitle="Vos déclarations URSSAF"
+      actions={
+        <div className="flex rounded-pill border border-border p-0.5 bg-surface shadow-inner">
+          <button
+            type="button"
+            onClick={() => setDataView("total")}
+            className={cn(
+              "px-3 h-8 rounded-pill text-xs font-bold transition-all flex items-center gap-1.5",
+              dataView === "total"
+                ? "bg-primary text-white shadow-sm"
+                : "text-muted hover:text-text"
+            )}
+          >
+            <span>🌐 Total</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setDataView("electronic")}
+            className={cn(
+              "px-3 h-8 rounded-pill text-xs font-bold transition-all flex items-center gap-1.5",
+              dataView === "electronic"
+                ? "bg-primary text-white shadow-sm"
+                : "text-muted hover:text-text"
+            )}
+          >
+            <span>⚡ Facturation électronique</span>
+          </button>
+        </div>
+      }
+    >
       {loading ? (
         <Skeleton height="12rem" />
       ) : periods.length === 0 ? (

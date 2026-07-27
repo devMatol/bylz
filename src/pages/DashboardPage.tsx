@@ -57,6 +57,7 @@ export function DashboardPage() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [period, setPeriod] = useState<DashboardPeriod>("month");
+  const [dataView, setDataView] = useState<"total" | "electronic">("total");
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -91,7 +92,8 @@ export function DashboardPage() {
         company.id,
         company.activity_type,
         period,
-        profile?.tmi ?? null
+        profile?.tmi ?? null,
+        dataView
       );
       setData(d);
     } catch (err) {
@@ -102,7 +104,7 @@ export function DashboardPage() {
     } finally {
       setLoading(false);
     }
-  }, [company, profile, period, toast]);
+  }, [company, profile, period, dataView, toast]);
 
   useEffect(() => {
     void load();
@@ -122,7 +124,36 @@ export function DashboardPage() {
       title="Tableau de bord"
       subtitle="Vue d'ensemble de votre activité"
       actions={
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Double View Toggle (Total vs Facturation électronique) */}
+          <div className="flex rounded-pill border border-border p-0.5 bg-surface shadow-inner">
+            <button
+              type="button"
+              onClick={() => setDataView("total")}
+              className={cn(
+                "px-3 h-8 rounded-pill text-xs font-bold transition-all flex items-center gap-1.5",
+                dataView === "total"
+                  ? "bg-primary text-white shadow-sm"
+                  : "text-muted hover:text-text"
+              )}
+            >
+              <span>🌐 Total</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setDataView("electronic")}
+              className={cn(
+                "px-3 h-8 rounded-pill text-xs font-bold transition-all flex items-center gap-1.5",
+                dataView === "electronic"
+                  ? "bg-primary text-white shadow-sm"
+                  : "text-muted hover:text-text"
+              )}
+            >
+              <span>⚡ Facturation électronique</span>
+            </button>
+          </div>
+
+          {/* Period Selector */}
           <div className="flex rounded-pill border border-border p-0.5 bg-surface">
             {(["month", "quarter", "year"] as DashboardPeriod[]).map((p) => (
               <button
