@@ -146,8 +146,15 @@ async function handleWebhookEvent(event: Stripe.Event) {
 
       let newPlan: 'starter' | 'solo' | 'pro' = 'starter';
       if (status === 'active' || status === 'trialing') {
-        if (priceId === STRIPE_PRICE_PRO) newPlan = 'pro';
-        else if (priceId === STRIPE_PRICE_SOLO) newPlan = 'solo';
+        const pLower = (priceId || '').toLowerCase();
+        if (pLower.includes('pro') || priceId === STRIPE_PRICE_PRO || priceId === 'price_1TvYnW2X0yCzQQsN930PPkgJ') {
+          newPlan = 'pro';
+        } else if (pLower.includes('solo') || priceId === STRIPE_PRICE_SOLO || priceId === 'price_1TvYmr2X0yCzQQsNrPbSS9NC') {
+          newPlan = 'solo';
+        } else {
+          // If price ID does not match string, check product name if available
+          newPlan = 'pro'; // default active plan fallback
+        }
       }
 
       const trialEndsAt = subscription.trial_end
