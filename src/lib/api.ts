@@ -630,7 +630,7 @@ export async function seedInboundFactpulseInvoice(companyId: string): Promise<st
       company_id: companyId,
       client_id: clientId,
       number: invNumber,
-      type: "standard",
+      type: "invoice",
       status: "pending",
       pa_status: "received",
       ereporting_status: "confirmed",

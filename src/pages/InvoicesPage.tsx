@@ -116,12 +116,14 @@ export function InvoicesPage() {
   useEffect(() => {
     if (!company || !rows) return;
     const hasReceived = rows.some((r) => r.pa_status === "received");
-    const seeded = localStorage.getItem("bylz_seeded_inbound_pdp");
-    if (!hasReceived && !seeded) {
-      localStorage.setItem("bylz_seeded_inbound_pdp", "true");
-      void seedInboundFactpulseInvoice(company.id).then(() => {
-        void load();
-      });
+    if (!hasReceived) {
+      void seedInboundFactpulseInvoice(company.id)
+        .then(() => {
+          void load();
+        })
+        .catch((err) => {
+          console.error("Auto-seed error:", err);
+        });
     }
   }, [company, rows, load]);
 
