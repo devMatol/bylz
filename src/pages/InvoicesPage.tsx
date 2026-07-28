@@ -49,6 +49,7 @@ export function InvoicesPage() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [params, setParams] = useSearchParams();
+  const [activeTab, setActiveTab] = useState<"sales" | "purchases">("sales");
   const [filter, setFilter] = useState<Filter>("all");
   const [search, setSearch] = useState("");
   const debounced = useDebounce(search);
@@ -146,6 +147,23 @@ export function InvoicesPage() {
   const isProfileIncomplete = !company.siret || !company.address;
   const showHistoryBanner = !dismissedHistory && company && company.previous_ca === 0;
 
+  // Filter Sales vs Purchases
+  const salesRows = (rows || []).filter((r) => r.pa_status !== "received");
+  const purchaseRows = (rows || []).filter((r) => r.pa_status === "received");
+  const activeRows = activeTab === "sales" ? salesRows : purchaseRows;
+
+  // Custom tab stats
+  const activeTotal = activeRows.reduce((acc, r) => acc + r.total_ttc, 0);
+  const activePending = activeRows
+    .filter((r) => r.status === "pending")
+    .reduce((acc, r) => acc + r.total_ttc, 0);
+  const activeLate = activeRows
+    .filter((r) => (r.status === "pending" || r.status === "late") && r.due_date < today)
+    .reduce((acc, r) => acc + r.total_ttc, 0);
+  const activePaidMonth = activeRows
+    .filter((r) => r.status === "paid")
+    .reduce((acc, r) => acc + r.total_ttc, 0);
+
   return (
     <PageContainer
       title="Factures"
@@ -169,6 +187,40 @@ export function InvoicesPage() {
         </div>
       }
     >
+      {/* Ventes vs Achats Segment Switch */}
+      <div className="flex rounded-pill border border-border/80 p-1 bg-surface-hover/40 shadow-inner w-fit mb-6">
+        <button
+          type="button"
+          onClick={() => setActiveTab("sales")}
+          className={cn(
+            "px-4 h-9 rounded-pill text-xs font-extrabold transition-all flex items-center gap-2",
+            activeTab === "sales"
+              ? "bg-primary text-white shadow-md scale-[1.02]"
+              : "text-muted hover:text-text"
+          )}
+        >
+          <span>Factures Client (Ventes)</span>
+          <span className="ml-1 text-[10px] px-1.5 py-0.5 rounded-full bg-white/20">
+            {salesRows.length}
+          </span>
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveTab("purchases")}
+          className={cn(
+            "px-4 h-9 rounded-pill text-xs font-extrabold transition-all flex items-center gap-2",
+            activeTab === "purchases"
+              ? "bg-primary text-white shadow-md scale-[1.02]"
+              : "text-muted hover:text-text"
+          )}
+        >
+          <span>Factures Fournisseur (Achats PDP)</span>
+          <span className="ml-1 text-[10px] px-1.5 py-0.5 rounded-full bg-white/20">
+            {purchaseRows.length}
+          </span>
+        </button>
+      </div>
+
       {isProfileIncomplete && (
         <div className="mb-6 p-4 rounded-xl border border-amber-500/20 bg-amber-500/5 text-amber-800 dark:text-amber-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="flex items-center space-x-3">
@@ -228,14 +280,29 @@ export function InvoicesPage() {
         </div>
       )}
 
-      {stats && (
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <StatCard variant="compact" label="Total facturé (année)" value={stats.totalFacture} />
-          <StatCard variant="compact" label="En attente" value={stats.enAttente} />
-          <StatCard variant="compact" label="En retard" value={stats.enRetard} />
-          <StatCard variant="compact" label="Encaissé ce mois" value={stats.encaisseMois} />
-        </div>
-      )}
+      {/* Stat Cards tailored to activeTab */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <StatCard
+          variant="compact"
+          label={activeTab === "sales" ? "Total facturé (année)" : "Total achats (année)"}
+          value={activeTotal}
+        />
+        <StatCard
+          variant="compact"
+          label={activeTab === "sales" ? "En attente" : "À régler (fournisseurs)"}
+          value={activePending}
+        />
+        <StatCard
+          variant="compact"
+          label="En retard"
+          value={activeLate}
+        />
+        <StatCard
+          variant="compact"
+          label={activeTab === "sales" ? "Encaissé ce mois" : "Réglé ce mois"}
+          value={activePaidMonth}
+        />
+      </div>
 
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 mt-6 mb-4">
         <div className="order-2 lg:order-1 overflow-x-auto lg:overflow-visible -mx-4 px-4 lg:mx-0 lg:px-0 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
@@ -252,13 +319,17 @@ export function InvoicesPage() {
             <Skeleton key={i} height="3rem" />
           ))}
         </div>
-      ) : rows.length === 0 ? (
+      ) : activeRows.length === 0 ? (
         <EmptyState
           icon={<Receipt className="w-8 h-8" />}
-          title="Aucune facture"
-          description="Créez votre première facture pour facturer vos clients."
-          ctaLabel="Créer une facture"
-          onCta={() => navigate("/invoices/new")}
+          title={activeTab === "sales" ? "Aucune facture client" : "Aucune facture fournisseur reçue"}
+          description={
+            activeTab === "sales"
+              ? "Créez votre première facture pour facturer vos clients."
+              : "Les factures d'achats reçues via le réseau électronique FactPulse PDP apparaîtront ici."
+          }
+          ctaLabel={activeTab === "sales" ? "Créer une facture" : undefined}
+          onCta={activeTab === "sales" ? () => navigate("/invoices/new") : undefined}
         />
       ) : (
         <>
@@ -271,14 +342,14 @@ export function InvoicesPage() {
                 <col className="w-[100px]" />
                 <col className="w-[100px]" />
                 <col className="w-[110px]" />
-                <col className="w-[100px]" />
+                <col className="w-[120px]" />
                 <col className="w-[90px]" />
               </colgroup>
               <thead className="bg-surface-hover text-muted text-xs uppercase">
                 <tr>
-                  <th className="text-left p-3 font-semibold">Client</th>
+                  <th className="text-left p-3 font-semibold">{activeTab === "sales" ? "Client" : "Fournisseur"}</th>
                   <th className="text-left p-3 font-semibold whitespace-nowrap">Numéro</th>
-                  <th className="text-left p-3 font-semibold whitespace-nowrap">Émise</th>
+                  <th className="text-left p-3 font-semibold whitespace-nowrap">{activeTab === "sales" ? "Émise" : "Reçue le"}</th>
                   <th className="text-left p-3 font-semibold whitespace-nowrap">Échéance</th>
                   <th className="text-right p-3 font-semibold whitespace-nowrap">Montant</th>
                   <th className="text-left p-3 font-semibold">Statut</th>
@@ -286,7 +357,7 @@ export function InvoicesPage() {
                 </tr>
               </thead>
               <tbody>
-                {rows.map((r) => {
+                {activeRows.map((r) => {
                   const isLate =
                     (r.status === "pending" || r.status === "late") &&
                     r.due_date < today;
@@ -318,43 +389,24 @@ export function InvoicesPage() {
                         {formatDateShort(r.due_date)}
                       </td>
                       <td className="p-3 text-right whitespace-nowrap">
-                        <Amount value={r.total_ttc} size="sm" className={r.type === "credit_note" ? "text-danger" : undefined} />
+                        {activeTab === "purchases" ? (
+                          <span className="font-bold text-violet-400">
+                            - {formatAmount(r.total_ttc)}
+                          </span>
+                        ) : (
+                          <Amount value={r.total_ttc} size="sm" className={r.type === "credit_note" ? "text-danger" : undefined} />
+                        )}
                       </td>
                       <td className="p-3">
                         <div className="inline-flex items-center gap-1.5 whitespace-nowrap flex-shrink-0">
+                          {r.pa_status === "received" && (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-pill text-[10px] font-extrabold bg-violet-500/15 text-violet-400 border border-violet-500/30">
+                              Achat PDP
+                            </span>
+                          )}
                           {r.type === "credit_note" && (
                             <span className="inline-flex items-center px-1.5 py-0.5 rounded-pill text-[10px] font-bold bg-violet-500/15 text-violet-600 dark:text-violet-400">
                               Avoir
-                            </span>
-                          )}
-                          {r.client_type === "b2b" && (
-                            <span
-                              title={`Transmission FactPulse PA : ${
-                                r.pa_status === "accepted"
-                                  ? "Acceptée"
-                                  : r.pa_status === "received" || r.pa_status === "delivered"
-                                  ? "Reçue"
-                                  : r.pa_status === "submitted"
-                                  ? "Transmise"
-                                  : r.pa_status === "rejected"
-                                  ? "Rejetée"
-                                  : "Non transmise"
-                              }`}
-                              className="p-1 rounded bg-surface-hover"
-                            >
-                              <Send
-                                className={`w-3.5 h-3.5 ${
-                                  r.pa_status === "accepted"
-                                    ? "text-emerald-500"
-                                    : r.pa_status === "received" || r.pa_status === "delivered"
-                                    ? "text-indigo-500"
-                                    : r.pa_status === "submitted"
-                                    ? "text-sky-500 font-bold animate-pulse"
-                                    : r.pa_status === "rejected"
-                                    ? "text-rose-500"
-                                    : "text-muted"
-                                }`}
-                              />
                             </span>
                           )}
                           <StatusBadge status={r.status} />
@@ -405,7 +457,7 @@ export function InvoicesPage() {
               </colgroup>
               <thead className="bg-surface-hover text-muted text-xs uppercase">
                 <tr>
-                  <th className="text-left p-3 font-semibold">Client</th>
+                  <th className="text-left p-3 font-semibold">{activeTab === "sales" ? "Client" : "Fournisseur"}</th>
                   <th className="text-left p-3 font-semibold whitespace-nowrap">Numéro</th>
                   <th className="text-left p-3 font-semibold whitespace-nowrap">Échéance</th>
                   <th className="text-right p-3 font-semibold whitespace-nowrap">Montant</th>
@@ -414,7 +466,7 @@ export function InvoicesPage() {
                 </tr>
               </thead>
               <tbody>
-                {rows.map((r) => {
+                {activeRows.map((r) => {
                   const isLate =
                     (r.status === "pending" || r.status === "late") &&
                     r.due_date < today;
@@ -445,10 +497,21 @@ export function InvoicesPage() {
                         {formatDateShort(r.due_date)}
                       </td>
                       <td className="p-3 text-right whitespace-nowrap">
-                        <Amount value={r.total_ttc} size="sm" className={r.type === "credit_note" ? "text-danger" : undefined} />
+                        {activeTab === "purchases" ? (
+                          <span className="font-bold text-violet-400">
+                            - {formatAmount(r.total_ttc)}
+                          </span>
+                        ) : (
+                          <Amount value={r.total_ttc} size="sm" className={r.type === "credit_note" ? "text-danger" : undefined} />
+                        )}
                       </td>
                       <td className="p-3">
                         <div className="inline-flex items-center gap-1.5 whitespace-nowrap flex-shrink-0">
+                          {r.pa_status === "received" && (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-pill text-[10px] font-extrabold bg-violet-500/15 text-violet-400 border border-violet-500/30">
+                              Achat PDP
+                            </span>
+                          )}
                           {r.type === "credit_note" && (
                             <span className="inline-flex items-center px-1.5 py-0.5 rounded-pill text-[10px] font-bold bg-violet-500/15 text-violet-600 dark:text-violet-400">
                               Avoir
@@ -491,7 +554,7 @@ export function InvoicesPage() {
 
           {/* Mobile <768px: stacked cards */}
           <div className="flex flex-col gap-3 md:hidden">
-            {rows.map((r) => {
+            {activeRows.map((r) => {
               const isLate =
                 (r.status === "pending" || r.status === "late") &&
                 r.due_date < today;
@@ -509,6 +572,11 @@ export function InvoicesPage() {
                       </p>
                     </div>
                     <div className="inline-flex items-center gap-1.5 whitespace-nowrap flex-shrink-0">
+                      {r.pa_status === "received" && (
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-pill text-[10px] font-extrabold bg-violet-500/15 text-violet-400 border border-violet-500/30">
+                          Achat PDP
+                        </span>
+                      )}
                       {r.type === "credit_note" && (
                         <span className="inline-flex items-center px-1.5 py-0.5 rounded-pill text-[10px] font-bold bg-violet-500/15 text-violet-600 dark:text-violet-400">
                           Avoir
@@ -537,7 +605,13 @@ export function InvoicesPage() {
                           <Trash2 className="w-4 h-4" />
                         </button>
                       )}
-                      <Amount value={r.total_ttc} size="sm" className={r.type === "credit_note" ? "text-danger" : undefined} />
+                      {activeTab === "purchases" ? (
+                        <span className="font-bold text-violet-400">
+                          - {formatAmount(r.total_ttc)}
+                        </span>
+                      ) : (
+                        <Amount value={r.total_ttc} size="sm" className={r.type === "credit_note" ? "text-danger" : undefined} />
+                      )}
                     </div>
                   </div>
                 </div>
