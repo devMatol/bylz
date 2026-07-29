@@ -199,7 +199,7 @@ export function InvoicesPage() {
               : "text-muted hover:text-text"
           )}
         >
-          <span>Factures Client (Ventes)</span>
+          <span>Factures émises</span>
           <span className="ml-1 text-[10px] px-1.5 py-0.5 rounded-full bg-white/20">
             {salesRows.length}
           </span>
@@ -214,7 +214,7 @@ export function InvoicesPage() {
               : "text-muted hover:text-text"
           )}
         >
-          <span>Factures Fournisseur (Achats PDP)</span>
+          <span>Factures reçues</span>
           <span className="ml-1 text-[10px] px-1.5 py-0.5 rounded-full bg-white/20">
             {purchaseRows.length}
           </span>
