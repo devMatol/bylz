@@ -247,7 +247,7 @@ export function InvoicesPage() {
           <div className="flex items-center space-x-3">
             <Receipt className="w-5 h-5 flex-shrink-0 text-indigo-500" />
             <div>
-              <p className="font-semibold text-sm">Rattraper votre historique fiscal {new Date().getFullYear()}</p>
+              <p className="font-semibold text-sm">Rattraper votre historique {new Date().getFullYear()}</p>
               <p className="text-xs opacity-90 text-muted">
                 Renseignez votre chiffre d'affaires antérieur ou importez vos anciennes factures de l'année pour suivre précisément vos plafonds de TVA et micro-entreprise.
               </p>

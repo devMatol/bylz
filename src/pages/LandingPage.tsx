@@ -114,7 +114,7 @@ export function LandingPage() {
                 <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-[1.1]">
                   Vos factures.{" "}
                   <span className="bg-gradient-to-r from-primary via-primary-hover to-accent bg-clip-text text-transparent">
-                    Votre fiscal.
+                    Votre fiscalité.
                   </span>{" "}
                   Tout en un.
                 </h1>
