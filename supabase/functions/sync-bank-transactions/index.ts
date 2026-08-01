@@ -22,9 +22,11 @@ Deno.serve(async (req: Request) => {
   }
 
   const supabaseUrl = Deno.env.get("SUPABASE_URL") || "";
-  const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
-  const bridgeClientId = Deno.env.get("BRIDGE_CLIENT_ID");
-  const bridgeClientSecret = Deno.env.get("BRIDGE_CLIENT_SECRET");
+  const DEFAULT_BRIDGE_CLIENT_ID = "sandbox_id_3db02adc3b13421bb61b8304ab35593d";
+  const DEFAULT_BRIDGE_CLIENT_SECRET = "sandbox_secret_m1DT8L3d9ERZh9f7kJUNp62hXZI8QJALUAR93A6c2aCnyQAFopEcYbE0tgSH1aAP";
+
+  const bridgeClientId = Deno.env.get("BRIDGE_CLIENT_ID") || DEFAULT_BRIDGE_CLIENT_ID;
+  const bridgeClientSecret = Deno.env.get("BRIDGE_CLIENT_SECRET") || DEFAULT_BRIDGE_CLIENT_SECRET;
 
   if (!supabaseUrl || !serviceKey) {
     return new Response(JSON.stringify({ error: "Configuration Supabase manquante" }), {

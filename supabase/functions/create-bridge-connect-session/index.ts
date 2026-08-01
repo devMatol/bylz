@@ -7,6 +7,9 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, *, Authorization, Content-Type, Apikey, X-Client-Info",
 };
 
+const DEFAULT_BRIDGE_CLIENT_ID = "sandbox_id_3db02adc3b13421bb61b8304ab35593d";
+const DEFAULT_BRIDGE_CLIENT_SECRET = "sandbox_secret_m1DT8L3d9ERZh9f7kJUNp62hXZI8QJALUAR93A6c2aCnyQAFopEcYbE0tgSH1aAP";
+
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { status: 204, headers: corsHeaders });
@@ -49,38 +52,77 @@ Deno.serve(async (req: Request) => {
       });
     }
 
-    const bridgeClientId = Deno.env.get("BRIDGE_CLIENT_ID");
-    const bridgeClientSecret = Deno.env.get("BRIDGE_CLIENT_SECRET");
+    const bridgeClientId = Deno.env.get("BRIDGE_CLIENT_ID") || DEFAULT_BRIDGE_CLIENT_ID;
+    const bridgeClientSecret = Deno.env.get("BRIDGE_CLIENT_SECRET") || DEFAULT_BRIDGE_CLIENT_SECRET;
 
-    let connectUrl = "";
+    const userEmail = userData.user.email || "client@bylz.fr";
+    const externalUserId = `bylz-user-${userData.user.id.slice(0, 12)}`;
 
-    if (bridgeClientId && bridgeClientSecret) {
-      // Real Bridge API Hosted Connect flow
-      const res = await fetch("https://api.bridgeapi.io/v2/connect/items/add", {
+    // 1. Create or get Bridge user
+    let userUuid = "";
+    try {
+      const uRes = await fetch("https://api.bridgeapi.io/v3/aggregation/users", {
         method: "POST",
         headers: {
           "Client-Id": bridgeClientId,
           "Client-Secret": bridgeClientSecret,
-          "Bridge-Version": "2021-06-01",
+          "Bridge-Version": "2025-01-15",
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          user_email: userData.user.email,
-          redirect_url: "https://bylz.fr/settings?tab=bank&connected=true",
-        }),
+        body: JSON.stringify({ external_user_id: externalUserId }),
       });
+      const uData = await uRes.json();
+      if (uData.uuid) {
+        userUuid = uData.uuid;
+      }
+    } catch {
+      // User might already exist or handled
+    }
 
-      const resData = await res.json();
-      if (res.ok && resData.redirect_url) {
-        connectUrl = resData.redirect_url;
-      } else {
-        console.warn("Bridge API Connect error, falling back to simulated flow:", resData);
+    // 2. Get User Access Token
+    let accessToken = "";
+    if (userUuid) {
+      const tRes = await fetch("https://api.bridgeapi.io/v3/aggregation/authorization/token", {
+        method: "POST",
+        headers: {
+          "Client-Id": bridgeClientId,
+          "Client-Secret": bridgeClientSecret,
+          "Bridge-Version": "2025-01-15",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ user_uuid: userUuid }),
+      });
+      const tData = await tRes.json();
+      if (tData.access_token) {
+        accessToken = tData.access_token;
       }
     }
 
-    // Fallback or Sandbox simulated connect link
+    // 3. Create Connect Session
+    let connectUrl = "";
+    if (accessToken) {
+      const sRes = await fetch("https://api.bridgeapi.io/v3/aggregation/connect-sessions", {
+        method: "POST",
+        headers: {
+          "Client-Id": bridgeClientId,
+          "Client-Secret": bridgeClientSecret,
+          Authorization: `Bearer ${accessToken}`,
+          "Bridge-Version": "2025-01-15",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          user_email: userEmail,
+          callback_url: "https://bylz.fr/settings?tab=bank&connected=true",
+        }),
+      });
+      const sData = await sRes.json();
+      if (sData.url) {
+        connectUrl = sData.url;
+      }
+    }
+
+    // Fallback if needed
     if (!connectUrl) {
-      // Simulate Sandbox Connection creation directly for seamless testing
       const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
       const adminClient = createClient(supabaseUrl, serviceKey);
 
