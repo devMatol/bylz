@@ -16,7 +16,7 @@ import { FloatingActionButton } from "../components/ui/FloatingActionButton";
 import { useAuth } from "../contexts/AuthContext";
 import { useToast } from "../components/ui/Toast";
 import { useDebounce } from "../hooks/useDebounce";
-import { fetchInvoices, fetchInvoiceStats, deleteInvoice, seedInboundFactpulseInvoice } from "../lib/api";
+import { fetchInvoices, fetchInvoiceStats, deleteInvoice } from "../lib/api";
 import { formatDateShort } from "../lib/date";
 import { cn, formatAmount } from "../lib/utils";
 import type { InvoiceStatus, InvoiceType, PaStatus } from "../types/database";
@@ -112,21 +112,6 @@ export function InvoicesPage() {
   useEffect(() => {
     void load();
   }, [load]);
-
-  // Auto-seed captured Factur-X PDP invoice once for testing
-  useEffect(() => {
-    if (!company || !rows) return;
-    const hasReceived = rows.some((r) => r.pa_status === "received");
-    if (!hasReceived) {
-      void seedInboundFactpulseInvoice(company.id)
-        .then(() => {
-          void load();
-        })
-        .catch((err) => {
-          console.error("Auto-seed error:", err);
-        });
-    }
-  }, [company, rows, load]);
 
   async function handleDelete() {
     if (!company || !deleteTarget) return;
