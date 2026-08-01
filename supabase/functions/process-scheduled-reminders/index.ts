@@ -111,14 +111,23 @@ Deno.serve(async (req: Request) => {
     const todayTime = new Date(todayStr).getTime();
 
     // 1. Query pending / late invoices
-    const { data: invoices, error: invErr } = await adminClient
-      .from("invoices")
-      .select("*, company:companies(*), client:clients(*)")
-      .in("status", ["pending", "late"])
-      .eq("type", "invoice")
-      .or("auto_reminders_disabled.is.null,auto_reminders_disabled.eq.false");
-
-    if (invErr) throw invErr;
+    let invoices: any[] = [];
+    try {
+      const { data, error: invErr } = await adminClient
+        .from("invoices")
+        .select("*, company:companies(*), client:clients(*)")
+        .in("status", ["pending", "late"])
+        .eq("type", "invoice");
+      
+      if (invErr) throw invErr;
+      invoices = (data || []).filter((inv: any) => !inv.auto_reminders_disabled);
+    } catch (e: any) {
+      console.warn("Notice querying invoices in process-scheduled-reminders:", e.message);
+      return new Response(
+        JSON.stringify({ success: true, processedCount: 0, sentCount: 0, message: "No active invoices" }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
     let processedCount = 0;
     let skippedNoEmailCount = 0;

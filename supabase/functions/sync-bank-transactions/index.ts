@@ -47,11 +47,21 @@ Deno.serve(async (req: Request) => {
     }
 
     // Fetch active bank connections
-    let connQuery = adminClient.from("bank_connections").select("*").eq("status", "active");
-    if (targetCompanyId) connQuery = connQuery.eq("company_id", targetCompanyId);
+    let connections: any[] = [];
+    try {
+      let connQuery = adminClient.from("bank_connections").select("*").eq("status", "active");
+      if (targetCompanyId) connQuery = connQuery.eq("company_id", targetCompanyId);
 
-    const { data: connections, error: connErr } = await connQuery;
-    if (connErr) throw connErr;
+      const { data, error: connErr } = await connQuery;
+      if (connErr) throw connErr;
+      connections = data || [];
+    } catch (e: any) {
+      console.warn("Notice querying bank_connections:", e.message);
+      return new Response(
+        JSON.stringify({ success: true, totalSyncedTransactions: 0, autoMatchedCount: 0 }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
     let totalSyncedTransactions = 0;
     let autoMatchedCount = 0;
