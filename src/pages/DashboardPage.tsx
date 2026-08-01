@@ -269,11 +269,11 @@ export function DashboardPage() {
           isBlurred && "overflow-hidden max-h-[calc(100vh-4rem)] -mx-4 md:-mx-10 -mb-20 md:-mb-10"
         )}>
           <div className={cn("space-y-6 transition-all duration-300", isBlurred && "blur-md pointer-events-none select-none opacity-60 px-4 md:px-10 pt-6")}>
-            {/* Row 1 */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            {/* KPI Cards Row with Unified Subtitles & Equal Heights */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
               {loading || !data ? (
                 Array.from({ length: 4 }).map((_, i) => (
-                  <Card key={i}>
+                  <Card key={i} className="p-5 h-36">
                     <Skeleton height="1rem" width="60%" className="mb-2" />
                     <Skeleton height="2rem" width="80%" />
                   </Card>
@@ -292,52 +292,46 @@ export function DashboardPage() {
                           }
                         : undefined
                     }
+                    subtitle={<span>{periodLabel}</span>}
                   />
                   <StatCard
                     label="Bénéfice fiscal"
                     value={safeNum(data.beneficeFiscal)}
                     icon={<Wallet className="w-4 h-4" />}
+                    subtitle={<span>Après abattement de {safeNum(data.abattementPct)}%</span>}
                   />
                   <StatCard
                     label="Cotisations URSSAF"
                     value={safeNum(data.cotisationsUrssaf)}
                     icon={<Landmark className="w-4 h-4" />}
+                    subtitle={
+                      <span>
+                        {data.nextUrssafDueDate
+                          ? `Prochaine déclaration: ${safeFormatDate(data.nextUrssafDueDate)}`
+                          : "Prochaine déclaration à venir"}
+                      </span>
+                    }
                   />
                   <StatCard
                     label="Net estimé"
                     value={safeNum(data.netEstime)}
                     icon={<Receipt className="w-4 h-4" />}
+                    subtitle={
+                      profile?.tmi != null ? (
+                        <span>{data.netSubtitle}</span>
+                      ) : (
+                        <button
+                          onClick={() => navigate("/settings")}
+                          className="text-primary font-bold hover:underline text-left"
+                        >
+                          Renseignez votre TMI
+                        </button>
+                      )
+                    }
                   />
                 </>
               )}
             </div>
-
-            {/* Subtitles row */}
-            {!loading && data && (
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6 -mt-2">
-                <p className="text-xs text-muted text-center">{periodLabel}</p>
-                <p className="text-xs text-muted text-center">
-                  Après abattement de {safeNum(data.abattementPct)}%
-                </p>
-                <p className="text-xs text-muted text-center">
-                  {data.nextUrssafDueDate
-                    ? `Prochaine déclaration: ${safeFormatDate(data.nextUrssafDueDate)}`
-                    : "Prochaine déclaration à venir"}
-                </p>
-                <p className="text-xs text-muted text-center">
-                  {profile?.tmi != null ? (
-                    data.netSubtitle
-                  ) : (
-                    <button
-                      onClick={() => navigate("/settings")}
-                      className="text-primary hover:underline"
-                    >
-                      Renseignez votre TMI
-                    </button>
-                  )}
-                </p>
-              </div>
-            )}
 
             {/* Row 2 */}
             <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 mb-6">
