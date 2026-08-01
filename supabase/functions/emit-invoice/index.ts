@@ -136,10 +136,10 @@ Deno.serve(async (req) => {
     if (
       company.stripe_connect_account_id &&
       invoice.type !== 'credit_note' &&
-      Number(invoice.total_amount) > 0
+      Number(invoice.total_ttc || 0) > 0
     ) {
       try {
-        const unitAmount = Math.round(Number(invoice.total_amount) * 100);
+        const unitAmount = Math.round(Number(invoice.total_ttc) * 100);
         const session = await stripe.checkout.sessions.create({
           payment_method_types: ['card'],
           line_items: [

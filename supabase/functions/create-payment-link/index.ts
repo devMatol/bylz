@@ -44,30 +44,22 @@ Deno.serve(async (req) => {
       return corsResponse({ error: 'Method not allowed' }, 405);
     }
 
-    const authHeader = req.headers.get('Authorization');
-    if (!authHeader) {
-      return corsResponse({ error: 'Authorization header required' }, 401);
-    }
-    const token = authHeader.replace('Bearer ', '');
-    const {
-      data: { user },
-      error: getUserError,
-    } = await supabase.auth.getUser(token);
-
-    if (getUserError || !user) {
-      return corsResponse({ error: 'Failed to authenticate user' }, 401);
+    const body = await req.json();
+    const { invoiceId, publicToken } = body || {};
+    
+    if (!invoiceId && !publicToken) {
+      return corsResponse({ error: 'invoiceId or publicToken is required' }, 400);
     }
 
-    const { invoiceId } = await req.json();
-    if (!invoiceId) {
-      return corsResponse({ error: 'invoiceId is required' }, 400);
+    let invoiceQuery = supabase.from('invoices').select('*, company:companies(*)');
+    if (publicToken) {
+      invoiceQuery = invoiceQuery.or(`public_token.eq.${publicToken},id.eq.${publicToken}`);
+    } else {
+      invoiceQuery = invoiceQuery.eq('id', invoiceId);
     }
 
-    const { data: invoice, error: invoiceError } = await supabase
-      .from('invoices')
-      .select('*, company:companies(*)')
-      .eq('id', invoiceId)
-      .single();
+    const { data: invoiceList, error: invoiceError } = await invoiceQuery.limit(1);
+    const invoice = invoiceList?.[0];
 
     if (invoiceError || !invoice) {
       return corsResponse({ error: 'Invoice not found' }, 404);
@@ -80,12 +72,13 @@ Deno.serve(async (req) => {
       return corsResponse({ error: 'Compte Stripe Connect non configuré' }, 400);
     }
 
-    const unitAmount = Math.round(Number(invoice.total_amount) * 100);
+    const unitAmount = Math.round(Number(invoice.total_ttc || 0) * 100);
     if (unitAmount <= 0) {
       return corsResponse({ error: 'Le montant de la facture doit être supérieur à 0' }, 400);
     }
 
-    const origin = req.headers.get('origin') || 'http://localhost:5173';
+    const origin = req.headers.get('origin') || 'https://bylz.fr';
+    const redirectToken = invoice.public_token || invoice.id;
 
     // Create a Checkout Session with Destination Charge for reliable payment handling
     const session = await stripe.checkout.sessions.create({
@@ -103,8 +96,8 @@ Deno.serve(async (req) => {
         },
       ],
       mode: 'payment',
-      success_url: `${origin}/invoices/${invoice.id}?payment=success`,
-      cancel_url: `${origin}/invoices/${invoice.id}`,
+      success_url: `${origin}/v/${redirectToken}?payment=success`,
+      cancel_url: `${origin}/v/${redirectToken}`,
       metadata: {
         invoice_id: invoice.id,
       },

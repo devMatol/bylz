@@ -71,6 +71,33 @@ export function PublicDocumentPage() {
   const [isSignModalOpen, setIsSignModalOpen] = useState(false);
   const [signedSuccess, setSignedSuccess] = useState(false);
   const [downloadingPdf, setDownloadingPdf] = useState(false);
+  const [payingOnline, setPayingOnline] = useState(false);
+
+  const handleOnlinePayment = async () => {
+    if (!doc) return;
+    if (doc.stripe_payment_link) {
+      window.location.href = doc.stripe_payment_link;
+      return;
+    }
+
+    setPayingOnline(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("create-payment-link", {
+        body: { publicToken: token || doc.id, invoiceId: doc.id },
+      });
+      if (error) throw error;
+      if (data?.url) {
+        window.location.href = data.url;
+      } else {
+        throw new Error(data?.error || "Impossible de générer le lien de paiement.");
+      }
+    } catch (err: any) {
+      console.error("Erreur paiement Stripe:", err);
+      alert(err.message || "Impossible d'accéder au paiement Stripe.");
+    } finally {
+      setPayingOnline(false);
+    }
+  };
 
   const fetchDocument = useCallback(async () => {
     if (!token) {
@@ -88,8 +115,8 @@ export function PublicDocumentPage() {
       const { data: qTokenData, error: qTokenErr } = await supabase
         .from("quotes")
         .select(`
-          id, number, status, issue_date, validity_date, total_ht, total_vat, total_ttc, note, public_token, signature_data,
-          company:companies ( legal_name, commercial_name, siret, address, logo_url, invoice_footer, accent_color, user_id ),
+          id, number, status, issue_date, validity_date, total_ht, total_vat, total_ttc, note,
+          company:companies ( legal_name, commercial_name, siret, address, logo_url, invoice_footer, accent_color, user_id, stripe_connect_account_id ),
           client:clients ( name, email, address, siret ),
           lines:quote_lines ( description, quantity, unit_price, nature )
         `)
@@ -104,7 +131,7 @@ export function PublicDocumentPage() {
           .from("quotes")
           .select(`
             id, number, status, issue_date, validity_date, total_ht, total_vat, total_ttc, note,
-            company:companies ( legal_name, commercial_name, siret, address, logo_url, invoice_footer, accent_color, user_id ),
+            company:companies ( legal_name, commercial_name, siret, address, logo_url, invoice_footer, accent_color, user_id, stripe_connect_account_id ),
             client:clients ( name, email, address, siret ),
             lines:quote_lines ( description, quantity, unit_price, nature )
           `)
@@ -153,7 +180,7 @@ export function PublicDocumentPage() {
         .from("invoices")
         .select(`
           id, number, status, issue_date, due_date, total_ht, total_vat, total_ttc, note, stripe_payment_link, public_token, signature_data,
-          company:companies ( legal_name, commercial_name, siret, address, logo_url, invoice_footer, accent_color, user_id ),
+          company:companies ( legal_name, commercial_name, siret, address, logo_url, invoice_footer, accent_color, user_id, stripe_connect_account_id ),
           client:clients ( name, email, address, siret ),
           lines:invoice_lines ( description, quantity, unit_price, nature )
         `)
@@ -168,7 +195,7 @@ export function PublicDocumentPage() {
           .from("invoices")
           .select(`
             id, number, status, issue_date, due_date, total_ht, total_vat, total_ttc, note, stripe_payment_link,
-            company:companies ( legal_name, commercial_name, siret, address, logo_url, invoice_footer, accent_color, user_id ),
+            company:companies ( legal_name, commercial_name, siret, address, logo_url, invoice_footer, accent_color, user_id, stripe_connect_account_id ),
             client:clients ( name, email, address, siret ),
             lines:invoice_lines ( description, quantity, unit_price, nature )
           `)
@@ -484,49 +511,57 @@ export function PublicDocumentPage() {
         </div>
 
         {/* Online Payment / RIB Section */}
-        <div className="bg-slate-950 p-5 rounded-xl border border-slate-800 space-y-3">
-          <div className="flex items-center justify-between">
-            <h4 className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
-              <CreditCard className="w-4 h-4 text-primary" />
-              <span>Modalités de Règlement</span>
-            </h4>
-            {isProPlan ? (
-              <span className="text-[11px] font-bold text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded-pill border border-emerald-500/20">
-                💳 Paiement 1-Clic Actif
-              </span>
-            ) : (
-              <span className="text-[11px] font-medium text-amber-400 bg-amber-500/10 px-2.5 py-0.5 rounded-pill border border-amber-500/20">
-                🔒 Virement Bancaire Direct
-              </span>
-            )}
-          </div>
+        {(() => {
+          const hasStripeConnect = !!((doc.company as any)?.stripe_connect_account_id || doc.stripe_payment_link);
+          const isPaid = doc.status === "paid";
 
-          {isProPlan && doc.stripe_payment_link ? (
-            <div className="pt-2 flex flex-col sm:flex-row items-center justify-between gap-4">
-              <p className="text-xs text-slate-300">
-                Réglez cette facture instantanément par carte bancaire de façon sécurisée via Stripe.
-              </p>
-              <a
-                href={doc.stripe_payment_link}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-full sm:w-auto inline-flex items-center justify-center space-x-2 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-extrabold px-5 py-2.5 rounded-xl shadow-lg transition-all"
-              >
-                <CreditCard className="w-4 h-4" />
-                <span>Payer {formatAmount(doc.total_ttc)} en ligne</span>
-                <ExternalLink className="w-3.5 h-3.5" />
-              </a>
-            </div>
-          ) : (
-            <div className="text-xs text-slate-300 space-y-2 pt-1">
-              <p>Veuillez effectuer votre virement bancaire sur le compte de l'entreprise :</p>
-              <div className="bg-slate-900 p-3 rounded-lg border border-slate-800 font-mono text-[11px] text-slate-200">
-                <p>Titulaire : {doc.company.legal_name}</p>
-                <p>Référence à rappeler : {doc.number}</p>
+          return (
+            <div className="bg-slate-950 p-5 rounded-xl border border-slate-800 space-y-3">
+              <div className="flex items-center justify-between">
+                <h4 className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
+                  <CreditCard className="w-4 h-4 text-primary" />
+                  <span>Modalités de Règlement</span>
+                </h4>
+                {hasStripeConnect ? (
+                  <span className="text-[11px] font-bold text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded-pill border border-emerald-500/20">
+                    💳 Paiement 1-Clic Actif
+                  </span>
+                ) : (
+                  <span className="text-[11px] font-medium text-amber-400 bg-amber-500/10 px-2.5 py-0.5 rounded-pill border border-amber-500/20">
+                    🔒 Virement Bancaire Direct
+                  </span>
+                )}
               </div>
+
+              {hasStripeConnect && !isPaid ? (
+                <div className="pt-2 flex flex-col sm:flex-row items-center justify-between gap-4">
+                  <p className="text-xs text-slate-300">
+                    Réglez cette facture instantanément par carte bancaire de façon sécurisée via Stripe.
+                  </p>
+                  <Button
+                    type="button"
+                    variant="primary"
+                    loading={payingOnline}
+                    onClick={handleOnlinePayment}
+                    className="w-full sm:w-auto inline-flex items-center justify-center space-x-2 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-extrabold px-5 py-2.5 rounded-xl shadow-lg transition-all"
+                  >
+                    <CreditCard className="w-4 h-4 mr-1.5" />
+                    <span>Payer {formatAmount(doc.total_ttc)} en ligne</span>
+                    <ExternalLink className="w-3.5 h-3.5 ml-1.5" />
+                  </Button>
+                </div>
+              ) : (
+                <div className="text-xs text-slate-300 space-y-2 pt-1">
+                  <p>Veuillez effectuer votre virement bancaire sur le compte de l'entreprise :</p>
+                  <div className="bg-slate-900 p-3 rounded-lg border border-slate-800 font-mono text-[11px] text-slate-200">
+                    <p>Titulaire : {doc.company.legal_name}</p>
+                    <p>Référence à rappeler : {doc.number}</p>
+                  </div>
+                </div>
+              )}
             </div>
-          )}
-        </div>
+          );
+        })()}
       </div>
 
       {/* Footer Acquisition Banner */}
