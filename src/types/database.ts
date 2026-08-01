@@ -56,6 +56,7 @@ export interface Company {
   default_payment_terms: PaymentTerms;
   stripe_connect_account_id: string | null;
   previous_ca: number;
+  auto_reminders_enabled?: boolean;
   created_at: string;
 }
 
@@ -147,6 +148,8 @@ export interface Invoice {
   note: string | null;
   public_token?: string | null;
   signature_data?: SignatureData | null;
+  auto_reminders_disabled?: boolean;
+  next_auto_reminder_at?: string | null;
   created_at: string;
 }
 
@@ -216,11 +219,29 @@ export interface TicketMessage {
   created_at: string;
 }
 
+export type ReminderTone = "friendly" | "firm" | "formal";
+export type ReminderSource = "manual" | "automatic" | "skipped_no_email";
+
+export interface ReminderRule {
+  id: string;
+  company_id: string;
+  enabled: boolean;
+  delay_days: number;
+  tone: ReminderTone;
+  custom_subject: string | null;
+  custom_body: string | null;
+  created_at: string;
+}
+
 export interface InvoiceReminder {
   id: string;
   invoice_id: string;
   sent_at: string;
   days_late: number;
+  source?: ReminderSource;
+  rule_id?: string | null;
+  tone?: ReminderTone | null;
+  recipient_email?: string | null;
 }
 
 export interface AuditLog {

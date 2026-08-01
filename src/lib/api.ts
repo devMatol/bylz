@@ -19,6 +19,7 @@ import type {
   ActivityType,
   UrssafFreq,
   InvoiceReminder,
+  ReminderRule,
   UrssafDeclaration,
 } from "../types/database";
 
@@ -1464,9 +1465,118 @@ export async function sendInvoiceReminder(
     invoice_id: invoiceId,
     sent_at: today.toISOString(),
     days_late: daysLate,
+    source: "manual",
   });
   if (insErr) throw insErr;
   void companyId;
+}
+
+export async function fetchReminderRules(companyId: string): Promise<ReminderRule[]> {
+  const { data, error } = await supabase
+    .from("reminder_rules")
+    .select("*")
+    .eq("company_id", companyId)
+    .order("delay_days", { ascending: true });
+
+  if (error && !error.message.includes("does not exist")) throw error;
+
+  if (!data || data.length === 0) {
+    const defaultRules = [
+      { company_id: companyId, enabled: true, delay_days: 7, tone: "friendly" },
+      { company_id: companyId, enabled: true, delay_days: 14, tone: "firm" },
+      { company_id: companyId, enabled: true, delay_days: 30, tone: "formal" },
+    ];
+    try {
+      const { data: seeded } = await supabase
+        .from("reminder_rules")
+        .insert(defaultRules)
+        .select("*");
+      if (seeded && seeded.length > 0) return seeded as ReminderRule[];
+    } catch {
+      // Fallback in-memory if table creation is pending
+    }
+    return defaultRules.map((r, idx) => ({
+      id: `def-${idx}`,
+      company_id: companyId,
+      enabled: r.enabled,
+      delay_days: r.delay_days,
+      tone: r.tone as any,
+      custom_subject: null,
+      custom_body: null,
+      created_at: new Date().toISOString(),
+    }));
+  }
+
+  return data as ReminderRule[];
+}
+
+export async function saveReminderRule(
+  companyId: string,
+  rule: Partial<ReminderRule> & { id?: string }
+): Promise<ReminderRule> {
+  if (rule.id && !rule.id.startsWith("def-")) {
+    const { data, error } = await supabase
+      .from("reminder_rules")
+      .update({
+        enabled: rule.enabled,
+        delay_days: rule.delay_days,
+        tone: rule.tone,
+        custom_subject: rule.custom_subject || null,
+        custom_body: rule.custom_body || null,
+      })
+      .eq("company_id", companyId)
+      .eq("id", rule.id)
+      .select("*")
+      .single();
+    if (error) throw error;
+    return data as ReminderRule;
+  } else {
+    const { data, error } = await supabase
+      .from("reminder_rules")
+      .insert({
+        company_id: companyId,
+        enabled: rule.enabled ?? true,
+        delay_days: rule.delay_days || 7,
+        tone: rule.tone || "friendly",
+        custom_subject: rule.custom_subject || null,
+        custom_body: rule.custom_body || null,
+      })
+      .select("*")
+      .single();
+    if (error) throw error;
+    return data as ReminderRule;
+  }
+}
+
+export async function deleteReminderRule(companyId: string, ruleId: string): Promise<void> {
+  if (ruleId.startsWith("def-")) return;
+  const { error } = await supabase
+    .from("reminder_rules")
+    .delete()
+    .eq("company_id", companyId)
+    .eq("id", ruleId);
+  if (error) throw error;
+}
+
+export async function toggleCompanyAutoReminders(companyId: string, enabled: boolean): Promise<void> {
+  const { error } = await supabase
+    .from("companies")
+    .update({ auto_reminders_enabled: enabled })
+    .eq("id", companyId);
+  if (error) throw error;
+}
+
+export async function toggleInvoiceAutoReminders(
+  companyId: string,
+  invoiceId: string,
+  disabled: boolean
+): Promise<void> {
+  const { error } = await supabase
+    .from("invoices")
+    .update({ auto_reminders_disabled: disabled })
+    .eq("company_id", companyId)
+    .eq("id", invoiceId);
+  if (error) throw error;
 }
 
 // ---------- Document email (send on emit) ----------

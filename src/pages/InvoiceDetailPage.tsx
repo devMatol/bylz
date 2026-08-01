@@ -8,6 +8,10 @@ import {
   Mail,
   Link2,
   Trash2,
+  Bot,
+  User,
+  Clock,
+  AlertTriangle,
 } from "lucide-react";
 import { PageContainer } from "../components/layout/PageContainer";
 import { Button } from "../components/ui/Button";
@@ -32,6 +36,7 @@ import {
   sendInvoiceReminder,
   sendDocumentByEmail,
   deleteInvoice,
+  toggleInvoiceAutoReminders,
 } from "../lib/api";
 import { formatDateLong, todayISO, isValidDate } from "../lib/date";
 import { formatAmount, cn } from "../lib/utils";
@@ -522,29 +527,87 @@ export function InvoiceDetailPage() {
             )}
           </div>
 
-          {/* Reminder history */}
+          {/* Reminder history & Auto-reminders control */}
           {isPendingOrLate && !isCreditNote && (
-            <div className="border border-border rounded-card p-4 card-shadow">
-              <span className="text-xs font-semibold text-muted uppercase tracking-wide mb-2 block">
-                Relances
-              </span>
+            <div className="border border-border rounded-card p-4 card-shadow space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-semibold text-muted uppercase tracking-wide">
+                  Relances
+                </span>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    if (!company || !invoice) return;
+                    const nextDisabled = !invoice.auto_reminders_disabled;
+                    try {
+                      await toggleInvoiceAutoReminders(company.id, invoice.id, nextDisabled);
+                      setData((prev) =>
+                        prev
+                          ? {
+                              ...prev,
+                              invoice: { ...prev.invoice, auto_reminders_disabled: nextDisabled },
+                            }
+                          : null
+                      );
+                      toast(
+                        nextDisabled
+                          ? "Relances automatiques désactivées pour cette facture."
+                          : "Relances automatiques réactivées pour cette facture.",
+                        "success"
+                      );
+                    } catch (err: any) {
+                      toast(err.message || "Erreur lors de la mise à jour", "danger");
+                    }
+                  }}
+                  className="text-[11px] font-semibold text-muted hover:text-primary transition-colors underline"
+                >
+                  {invoice.auto_reminders_disabled
+                    ? "Réactiver auto-relances"
+                    : "Désactiver auto-relances"}
+                </button>
+              </div>
+
+              {invoice.auto_reminders_disabled ? (
+                <div className="p-2 rounded bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 text-xs flex items-center gap-1.5">
+                  <Clock className="w-3.5 h-3.5 flex-shrink-0" />
+                  <span>Relances automatiques suspendues sur cette facture</span>
+                </div>
+              ) : (
+                <div className="p-2 rounded bg-primary/10 border border-primary/20 text-primary text-xs flex items-center gap-1.5 font-medium">
+                  <Bot className="w-3.5 h-3.5 flex-shrink-0" />
+                  <span>Relances automatiques actives</span>
+                </div>
+              )}
+
               {reminders.length === 0 ? (
-                <p className="text-sm text-muted">Aucune relance envoyée</p>
+                <p className="text-xs text-muted">Aucune relance envoyée pour le moment</p>
               ) : (
                 <div className="flex flex-col gap-2">
-                  {reminders.map((r, idx) => {
-                    const ordinal =
-                      idx === 0 ? "1ère relance" : `${idx + 1}ème relance`;
+                  {reminders.map((r) => {
+                    const isAuto = r.source === "automatic";
+                    const isSkipped = r.source === "skipped_no_email";
                     return (
                       <div
                         key={r.id}
-                        className="flex items-center gap-2 text-sm"
+                        className="flex items-center justify-between gap-2 text-xs p-2 rounded bg-surface-hover/30 border border-border"
                       >
-                        <Mail className="w-3.5 h-3.5 text-muted flex-shrink-0" />
-                        <span className="text-text">
-                          Relancé le {format(parseISO(r.sent_at), "d MMMM yyyy", { locale: fr })}
+                        <div className="flex items-center gap-2 min-w-0">
+                          {isSkipped ? (
+                            <AlertTriangle className="w-3.5 h-3.5 text-amber-500 flex-shrink-0" />
+                          ) : isAuto ? (
+                            <Bot className="w-3.5 h-3.5 text-primary flex-shrink-0" />
+                          ) : (
+                            <User className="w-3.5 h-3.5 text-muted flex-shrink-0" />
+                          )}
+                          <span className="text-text font-medium truncate">
+                            {isSkipped
+                              ? "Non envoyée (email manquant)"
+                              : format(parseISO(r.sent_at), "d MMM yyyy 'à' HH:mm", { locale: fr })}
+                          </span>
+                        </div>
+                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-surface text-muted border border-border">
+                          {isSkipped ? "Manquée" : isAuto ? "Auto" : "Manuel"}
                         </span>
-                        <span className="text-muted text-xs">({ordinal})</span>
                       </div>
                     );
                   })}

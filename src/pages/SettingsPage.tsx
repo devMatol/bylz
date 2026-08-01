@@ -44,6 +44,7 @@ function formatSiret(raw: string): string {
 }
 import { UpgradeModal } from "../components/shared/UpgradeModal";
 import { ComplianceSection } from "../components/settings/ComplianceSection";
+import { AutoRemindersSection } from "../components/settings/AutoRemindersSection";
 
 interface ConnectStatus {
   hasAccount: boolean;
@@ -804,6 +805,9 @@ export function SettingsPage() {
 
           {/* Compliance & E-invoicing Section */}
           <ComplianceSection />
+
+          {/* Automatic Payment Reminders Section */}
+          <AutoRemindersSection />
         </div>
 
       </div>
