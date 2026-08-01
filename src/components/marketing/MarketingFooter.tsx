@@ -93,6 +93,17 @@ export function MarketingFooter() {
                   Politique de Confidentialité
                 </Link>
               </li>
+              <li>
+                <a
+                  href="https://lumisweb.fr"
+                  target="_blank"
+                  rel="noopener"
+                  className="text-text/80 hover:text-brand-primary transition-colors flex items-center gap-1 font-semibold"
+                  title="Lumisweb - Agence Web & Création sur mesure"
+                >
+                  <span>Création par Lumisweb</span>
+                </a>
+              </li>
             </ul>
           </div>
         </div>
@@ -100,10 +111,19 @@ export function MarketingFooter() {
         {/* Bottom bar */}
         <div className="pt-8 flex flex-col md:flex-row items-center justify-between text-xs text-text/70 space-y-4 md:space-y-0 font-medium">
           <p>© {new Date().getFullYear()} Bylz Technologies. Tous droits réservés.</p>
-          <p className="flex items-center space-x-1">
+          <p className="flex items-center space-x-1.5">
             <span>Conçu avec</span>
             <Heart className="w-3.5 h-3.5 text-rose-500 fill-rose-500" />
-            <span>pour les entrepreneurs en France</span>
+            <span>par la technologie</span>
+            <a
+              href="https://lumisweb.fr"
+              target="_blank"
+              rel="noopener"
+              className="font-extrabold text-text hover:text-brand-primary transition-colors underline decoration-brand-primary/50 underline-offset-4"
+              title="Lumisweb - Création de site web & applications"
+            >
+              Lumisweb.fr
+            </a>
           </p>
         </div>
       </div>

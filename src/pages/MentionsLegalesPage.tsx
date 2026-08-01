@@ -25,7 +25,12 @@ export function MentionsLegalesPage() {
 
         <section className="space-y-2">
           <h2 className="text-lg font-bold text-text">3. Propriété intellectuelle</h2>
-          <p>L'ensemble des contenus, marques, logos, visuels et architectures logiciels présents sur le site Bylz sont la propriété exclusive de Bylz Technologies. Toute reproduction non autorisée est strictement interdite.</p>
+          <p>L'ensemble des contenus, marques, logos, visuels et architectures logiciels présents sur le site Bylz sont la propriété exclusive de Bylz Technologies. Toute reproduction non autorisée est strictly interdite.</p>
+        </section>
+
+        <section className="space-y-2">
+          <h2 className="text-lg font-bold text-text">4. Conception & Développement Web</h2>
+          <p>La conception UX/UI, la création graphique et le développement applicatif du site Bylz.fr ont été réalisés par l'agence web <a href="https://lumisweb.fr" target="_blank" rel="noopener" className="font-bold text-primary hover:underline">Lumisweb (lumisweb.fr)</a>.</p>
         </section>
       </main>
       <MarketingFooter />
