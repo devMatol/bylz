@@ -22,6 +22,7 @@ Deno.serve(async (req: Request) => {
   }
 
   const supabaseUrl = Deno.env.get("SUPABASE_URL") || "";
+  const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
   const DEFAULT_BRIDGE_CLIENT_ID = "sandbox_id_3db02adc3b13421bb61b8304ab35593d";
   const DEFAULT_BRIDGE_CLIENT_SECRET = "sandbox_secret_m1DT8L3d9ERZh9f7kJUNp62hXZI8QJALUAR93A6c2aCnyQAFopEcYbE0tgSH1aAP";
 
@@ -50,7 +51,17 @@ Deno.serve(async (req: Request) => {
     let connections: any[] = [];
     try {
       let connQuery = adminClient.from("bank_connections").select("*").eq("status", "active");
-      if (targetCompanyId) connQuery = connQuery.eq("company_id", targetCompanyId);
+      if (targetCompanyId) {
+        // Validate basic UUID format if provided
+        const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(targetCompanyId);
+        if (!isUuid) {
+          return new Response(
+            JSON.stringify({ success: true, totalSyncedTransactions: 0, autoMatchedCount: 0, note: "Invalid company ID format" }),
+            { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+        connQuery = connQuery.eq("company_id", targetCompanyId);
+      }
 
       const { data, error: connErr } = await connQuery;
       if (connErr) throw connErr;
