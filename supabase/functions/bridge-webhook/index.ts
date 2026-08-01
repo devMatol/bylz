@@ -28,10 +28,19 @@ Deno.serve(async (req) => {
       });
     }
 
-    console.log('Bridge Webhook event received:', payload.event_type || payload.type || 'unknown');
+    const eventType = String(payload.event_type || payload.type || payload.name || 'unknown');
+    console.log('Bridge Webhook event received:', eventType);
 
     const itemId = payload.item_id || payload.data?.item_id || payload.resource?.item_id;
     const userUuid = payload.user_uuid || payload.data?.user_uuid;
+
+    if (eventType.includes('deleted') && itemId) {
+      console.log(`Bridge connection deleted event received for item ${itemId}`);
+      await supabase
+        .from('bank_connections')
+        .update({ status: 'error' })
+        .eq('provider_item_id', String(itemId));
+    }
 
     if (!itemId && !userUuid) {
       console.warn('Bridge Webhook notice: missing item_id or user_uuid in payload', payload);
