@@ -347,4 +347,32 @@ export interface BlogPost {
 
 export type BlogPostInput = Omit<BlogPost, "id" | "created_at" | "updated_at" | "views">;
 
+export type BankConnectionStatus = "active" | "error" | "reauth_required";
+export type BankMatchStatus = "unmatched" | "auto_matched" | "manual_matched" | "ignored";
+
+export interface BankConnection {
+  id: string;
+  company_id: string;
+  provider_item_id: string;
+  bank_name: string;
+  status: BankConnectionStatus;
+  connected_at: string;
+  last_synced_at: string | null;
+}
+
+export interface BankTransaction {
+  id: string;
+  bank_connection_id: string;
+  external_id: string;
+  amount: number;
+  currency: string;
+  transaction_date: string;
+  label: string;
+  counterparty_name: string | null;
+  matched_invoice_id: string | null;
+  match_status: BankMatchStatus;
+  confidence_score?: number | null;
+  created_at: string;
+}
+
 

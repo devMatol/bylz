@@ -21,6 +21,8 @@ import type {
   InvoiceReminder,
   ReminderRule,
   UrssafDeclaration,
+  BankConnection,
+  BankTransaction,
 } from "../types/database";
 
 export interface ClientWithStats extends Client {
@@ -1871,5 +1873,192 @@ export async function incrementBlogPostViews(id: string): Promise<void> {
   } catch (err) {
     console.warn("Failed to increment views:", err);
   }
+}
+
+// ---------- Bank Synchronization & Matching ----------
+
+export async function fetchBankConnections(companyId: string): Promise<BankConnection[]> {
+  const { data, error } = await supabase
+    .from("bank_connections")
+    .select("*")
+    .eq("company_id", companyId)
+    .order("connected_at", { ascending: false });
+
+  if (error && !error.message.includes("does not exist")) {
+    console.warn("Could not fetch bank_connections:", error.message);
+    return [];
+  }
+
+  return (data || []) as BankConnection[];
+}
+
+export async function fetchBankTransactions(companyId: string): Promise<{
+  transactions: Array<BankTransaction & { matched_invoice_number?: string }>;
+  unmatchedCount: number;
+}> {
+  const connections = await fetchBankConnections(companyId);
+  if (connections.length === 0) {
+    return { transactions: [], unmatchedCount: 0 };
+  }
+
+  const connIds = connections.map((c) => c.id);
+  const { data, error } = await supabase
+    .from("bank_transactions")
+    .select("*, matched_invoice:invoices(number)")
+    .in("bank_connection_id", connIds)
+    .order("transaction_date", { ascending: false });
+
+  if (error && !error.message.includes("does not exist")) {
+    console.warn("Could not fetch bank_transactions:", error.message);
+    return { transactions: [], unmatchedCount: 0 };
+  }
+
+  const list = (data || []).map((t: any) => ({
+    ...t,
+    matched_invoice_number: t.matched_invoice?.number || null,
+  })) as Array<BankTransaction & { matched_invoice_number?: string }>;
+
+  const unmatchedCount = list.filter((t) => t.match_status === "unmatched").length;
+
+  return { transactions: list, unmatchedCount };
+}
+
+export async function createBridgeConnectSession(): Promise<string> {
+  const { data, error } = await supabase.functions.invoke<{ success?: boolean; connect_url?: string; error?: string }>(
+    "create-bridge-connect-session"
+  );
+  if (error || (data && !data.success)) {
+    throw new Error(data?.error || error?.message || "Impossible de générer le lien de connexion bancaire.");
+  }
+  return data?.connect_url || "https://bylz.fr/settings?tab=bank";
+}
+
+export async function triggerBankSync(companyId: string): Promise<{ totalSyncedTransactions: number; autoMatchedCount: number }> {
+  const { data, error } = await supabase.functions.invoke<{
+    success?: boolean;
+    totalSyncedTransactions?: number;
+    autoMatchedCount?: number;
+    error?: string;
+  }>("sync-bank-transactions", {
+    body: { company_id: companyId },
+  });
+
+  if (error || (data && !data.success)) {
+    throw new Error(data?.error || error?.message || "Échec de la synchronisation bancaire.");
+  }
+
+  return {
+    totalSyncedTransactions: data?.totalSyncedTransactions || 0,
+    autoMatchedCount: data?.autoMatchedCount || 0,
+  };
+}
+
+export async function manualMatchBankTransaction(
+  companyId: string,
+  transactionId: string,
+  invoiceId: string
+): Promise<void> {
+  const { data: inv } = await supabase
+    .from("invoices")
+    .select("total_ttc, number, issue_date")
+    .eq("company_id", companyId)
+    .eq("id", invoiceId)
+    .single();
+
+  if (!inv) throw new Error("Facture introuvable");
+
+  const { data: tx } = await supabase
+    .from("bank_transactions")
+    .select("*")
+    .eq("id", transactionId)
+    .single();
+
+  if (!tx) throw new Error("Transaction bancaire introuvable");
+
+  // Update bank transaction
+  await supabase
+    .from("bank_transactions")
+    .update({
+      match_status: "manual_matched",
+      matched_invoice_id: invoiceId,
+      confidence_score: 100,
+    })
+    .eq("id", transactionId);
+
+  // Mark invoice paid
+  await supabase
+    .from("invoices")
+    .update({
+      status: "paid",
+      paid_at: tx.transaction_date || new Date().toISOString().slice(0, 10),
+      paid_amount: inv.total_ttc,
+      payment_method: "transfer",
+    })
+    .eq("id", invoiceId);
+
+  // Insert payment
+  await supabase.from("payments").insert({
+    invoice_id: invoiceId,
+    amount: tx.amount,
+    method: "transfer",
+    paid_at: tx.transaction_date || new Date().toISOString().slice(0, 10),
+    source: "bank_sync",
+  });
+}
+
+export async function ignoreBankTransaction(transactionId: string): Promise<void> {
+  const { error } = await supabase
+    .from("bank_transactions")
+    .update({ match_status: "ignored" })
+    .eq("id", transactionId);
+  if (error) throw error;
+}
+
+export async function undoBankMatch(transactionId: string): Promise<void> {
+  const { data: tx } = await supabase
+    .from("bank_transactions")
+    .select("matched_invoice_id")
+    .eq("id", transactionId)
+    .single();
+
+  if (tx?.matched_invoice_id) {
+    // Revert invoice status to pending
+    await supabase
+      .from("invoices")
+      .update({
+        status: "pending",
+        paid_at: null,
+        paid_amount: null,
+      })
+      .eq("id", tx.matched_invoice_id);
+
+    // Delete payment row from bank sync
+    await supabase
+      .from("payments")
+      .delete()
+      .eq("invoice_id", tx.matched_invoice_id)
+      .eq("source", "bank_sync");
+  }
+
+  // Revert bank transaction
+  const { error } = await supabase
+    .from("bank_transactions")
+    .update({
+      match_status: "unmatched",
+      matched_invoice_id: null,
+      confidence_score: null,
+    })
+    .eq("id", transactionId);
+
+  if (error) throw error;
+}
+
+export async function disconnectBankConnection(companyId: string, connectionId: string): Promise<void> {
+  const { error } = await supabase
+    .from("bank_connections")
+    .delete()
+    .eq("company_id", companyId)
+    .eq("id", connectionId);
+  if (error) throw error;
 }
 

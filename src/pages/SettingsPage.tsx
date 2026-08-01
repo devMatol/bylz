@@ -45,6 +45,7 @@ function formatSiret(raw: string): string {
 import { UpgradeModal } from "../components/shared/UpgradeModal";
 import { ComplianceSection } from "../components/settings/ComplianceSection";
 import { AutoRemindersSection } from "../components/settings/AutoRemindersSection";
+import { BankSyncSection } from "../components/settings/BankSyncSection";
 
 interface ConnectStatus {
   hasAccount: boolean;
@@ -808,6 +809,9 @@ export function SettingsPage() {
 
           {/* Automatic Payment Reminders Section */}
           <AutoRemindersSection />
+
+          {/* Bank Synchronization & Matching Section */}
+          <BankSyncSection />
         </div>
 
       </div>
