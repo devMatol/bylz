@@ -47,22 +47,34 @@ Deno.serve(async (req) => {
     const body = await req.json();
     const { invoiceId, publicToken } = body || {};
     
-    if (!invoiceId && !publicToken) {
-      return corsResponse({ error: 'invoiceId or publicToken is required' }, 400);
+    const targetId = invoiceId || publicToken;
+    let invoice: any = null;
+
+    // 1. Try by id first
+    const { data: invById, error: errById } = await supabase
+      .from('invoices')
+      .select('*, company:companies(*)')
+      .eq('id', targetId)
+      .maybeSingle();
+
+    if (!errById && invById) {
+      invoice = invById;
+    } else if (publicToken) {
+      // 2. Try by public_token if column exists
+      try {
+        const { data: invByToken } = await supabase
+          .from('invoices')
+          .select('*, company:companies(*)')
+          .eq('public_token', publicToken)
+          .maybeSingle();
+        if (invByToken) invoice = invByToken;
+      } catch (e) {
+        // Ignore missing public_token column
+      }
     }
 
-    let invoiceQuery = supabase.from('invoices').select('*, company:companies(*)');
-    if (publicToken) {
-      invoiceQuery = invoiceQuery.or(`public_token.eq.${publicToken},id.eq.${publicToken}`);
-    } else {
-      invoiceQuery = invoiceQuery.eq('id', invoiceId);
-    }
-
-    const { data: invoiceList, error: invoiceError } = await invoiceQuery.limit(1);
-    const invoice = invoiceList?.[0];
-
-    if (invoiceError || !invoice) {
-      return corsResponse({ error: 'Invoice not found' }, 404);
+    if (!invoice) {
+      return corsResponse({ error: 'Facture introuvable pour ce lien.' }, 404);
     }
 
     const company = invoice.company;
@@ -80,8 +92,7 @@ Deno.serve(async (req) => {
     const origin = req.headers.get('origin') || 'https://bylz.fr';
     const redirectToken = invoice.public_token || invoice.id;
 
-    // Create a Checkout Session with Destination Charge for reliable payment handling
-    const session = await stripe.checkout.sessions.create({
+    const sessionPayload: any = {
       payment_method_types: ['card'],
       line_items: [
         {
@@ -101,12 +112,28 @@ Deno.serve(async (req) => {
       metadata: {
         invoice_id: invoice.id,
       },
-      payment_intent_data: {
-        transfer_data: {
-          destination: connectAccountId,
-        },
-      },
-    });
+    };
+
+    let session: Stripe.Checkout.Session;
+    try {
+      session = await stripe.checkout.sessions.create({
+        ...sessionPayload,
+        ...(connectAccountId ? {
+          payment_intent_data: {
+            transfer_data: {
+              destination: connectAccountId,
+            },
+          },
+        } : {}),
+      });
+    } catch (stripeErr: any) {
+      if (stripeErr.message?.includes('No such destination') || stripeErr.code === 'resource_missing') {
+        console.warn('Destination Connect account mismatch, creating direct checkout session:', stripeErr.message);
+        session = await stripe.checkout.sessions.create(sessionPayload);
+      } else {
+        throw stripeErr;
+      }
+    }
 
     // Save payment link URL on invoice
     await supabase
