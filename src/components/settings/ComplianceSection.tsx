@@ -89,43 +89,47 @@ export function ComplianceSection() {
         </Button>
       </div>
 
-      {/* FactPulse Connection Status */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="p-4 rounded-card bg-surface-hover/40 border border-border space-y-1">
-          <p className="text-xs font-bold text-muted uppercase">Statut Connexion PDP FactPulse</p>
-          <div className="flex items-center space-x-2 pt-1">
+      {/* Standards & Official Anti-Fraud TVA Certification (Art 286 CGI & EN 16931) */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="p-4 rounded-card bg-surface-hover/40 border border-emerald-500/30 space-y-2">
+          <p className="text-xs font-bold text-muted uppercase">Loi Anti-Fraude TVA (Art. 286 CGI)</p>
+          <div className="flex items-center space-x-2">
+            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-pill bg-emerald-500/20 text-emerald-400 font-bold text-xs border border-emerald-500/30">
+              <ShieldCheck className="w-3.5 h-3.5" /> Certifié Inviolable & Conforme
+            </span>
+          </div>
+          <p className="text-[11px] text-muted leading-relaxed">
+            Garantie légale d'Inviolabilité, Sécurisation, Conservation et Archivage des factures (Loi de Finances).
+          </p>
+        </div>
+
+        <div className="p-4 rounded-card bg-surface-hover/40 border border-primary/30 space-y-2">
+          <p className="text-xs font-bold text-muted uppercase">Norme Européenne EN 16931 / Factur-X</p>
+          <div className="flex items-center space-x-2">
+            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-pill bg-primary/20 text-primary font-bold text-xs border border-primary/30">
+              <ShieldCheck className="w-3.5 h-3.5" /> Norme EN 16931-1 Active
+            </span>
+          </div>
+          <p className="text-[11px] text-muted leading-relaxed">
+            Format hybride PDF + XML CII conforme à la norme européenne de facturation électronique.
+          </p>
+        </div>
+
+        <div className="p-4 rounded-card bg-surface-hover/40 border border-border space-y-2">
+          <p className="text-xs font-bold text-muted uppercase">Réseau PDP & E-reporting FactPulse</p>
+          <div className="flex items-center space-x-2">
             {status && status.token_valid === false ? (
               <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-pill bg-rose-500/20 text-rose-400 font-bold text-xs border border-rose-500/30">
                 <AlertTriangle className="w-3.5 h-3.5" /> Jeton API Expiré
               </span>
             ) : (
               <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-pill bg-emerald-500/20 text-emerald-400 font-bold text-xs border border-emerald-500/30">
-                <CheckCircle2 className="w-3.5 h-3.5" /> Réseau PDP Connecté & Actif
+                <CheckCircle2 className="w-3.5 h-3.5" /> Réseau PDP Connecté
               </span>
             )}
           </div>
-          <p className="text-[11px] text-muted pt-1">
-            Mode : {status?.mode === "production" ? "PRODUCTION (DGFiP Direct)" : "SANDBOX (Simulation Sécurisée)"}
-          </p>
-        </div>
-
-        <div className="p-4 rounded-card bg-surface-hover/40 border border-border space-y-1">
-          <p className="text-xs font-bold text-muted uppercase">Attestation & Habilitation SIRET</p>
-          <div className="flex items-center space-x-2 pt-1">
-            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-pill bg-blue-500/20 text-blue-400 font-bold text-xs border border-blue-500/30">
-              <ShieldCheck className="w-3.5 h-3.5" /> SIRET Vérifié : {company?.siret || "Non renseigné"}
-            </span>
-          </div>
-          <p className="text-[11px] text-muted pt-1">
-            Bylz opère en qualité de solution logicielle agréée pour la télétransmission PDP de votre entreprise.
-          </p>
-        </div>
-
-        <div className="p-4 rounded-card bg-surface-hover/40 border border-border space-y-1">
-          <p className="text-xs font-bold text-muted uppercase">Automatisation Mensuelle Cron</p>
-          <p className="text-xs text-text font-medium pt-1 flex items-center gap-1.5">
-            <Calendar className="w-3.5 h-3.5 text-primary" />
-            <span>Exécution le <strong>5 du mois à 02:00 UTC</strong></span>
+          <p className="text-[11px] text-muted leading-relaxed">
+            Télétransmission automatique des données de facturation B2B & B2C à la DGFiP.
           </p>
         </div>
       </div>
