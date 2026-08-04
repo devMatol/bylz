@@ -61,6 +61,9 @@ const CGUPage = lazy(() =>
 const ConfidentialitePage = lazy(() =>
   import("./pages/ConfidentialitePage").then((m) => ({ default: m.ConfidentialitePage }))
 );
+const SecurityCompliancePage = lazy(() =>
+  import("./pages/SecurityCompliancePage").then((m) => ({ default: m.SecurityCompliancePage }))
+);
 
 // Dedicated SEO Tools & Simulators
 const SimulateurUrssafPage = lazy(() =>
@@ -153,6 +156,14 @@ function App() {
                   element={
                     <MarketingSuspense>
                       <FeaturesPage />
+                    </MarketingSuspense>
+                  }
+                />
+                <Route
+                  path="/conformite"
+                  element={
+                    <MarketingSuspense>
+                      <SecurityCompliancePage />
                     </MarketingSuspense>
                   }
                 />

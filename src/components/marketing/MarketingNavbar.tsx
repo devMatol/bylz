@@ -37,6 +37,7 @@ export function MarketingNavbar() {
 
   const navLinks = [
     { label: "Fonctionnalités", path: "/fonctionnalites" },
+    { label: "Conformité & Sécurité", path: "/conformite" },
     { label: "Tarifs", path: "/tarifs" },
     { label: "Blog", path: "/blog" },
     { label: "Contact", path: "/contact" },
