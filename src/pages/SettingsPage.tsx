@@ -47,6 +47,7 @@ import { ComplianceSection } from "../components/settings/ComplianceSection";
 import { AutoRemindersSection } from "../components/settings/AutoRemindersSection";
 import { BankSyncSection } from "../components/settings/BankSyncSection";
 import { PushNotificationToggle } from "../components/pwa/PushNotificationToggle";
+import { WhatsAppCopilotSection } from "../components/settings/WhatsAppCopilotSection";
 
 interface ConnectStatus {
   hasAccount: boolean;
@@ -804,6 +805,9 @@ export function SettingsPage() {
               </div>
             </form>
           </Card>
+
+          {/* WhatsApp AI Copilot Remote Management Section */}
+          <WhatsAppCopilotSection />
 
           {/* Push Notification Card */}
           <PushNotificationToggle />
