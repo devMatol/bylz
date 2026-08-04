@@ -1,9 +1,11 @@
-import { type ReactNode } from "react";
+import { useEffect, type ReactNode } from "react";
 import { Outlet, useLocation } from "react-router-dom";
 import { Sidebar } from "./Sidebar";
 import { BottomNav } from "./BottomNav";
 import { Topbar } from "./Topbar";
 import { ErrorBoundary } from "../ErrorBoundary";
+import { PwaInstallBanner } from "../pwa/PwaInstallBanner";
+import { registerServiceWorker } from "../../lib/pushNotifications";
 import {
   PageHeaderProvider,
   usePageHeader,
@@ -24,6 +26,11 @@ const routeTitles: Record<string, string> = {
 function ShellContent() {
   const location = useLocation();
   const { header } = usePageHeader();
+
+  useEffect(() => {
+    void registerServiceWorker();
+  }, []);
+
   const fallback =
     routeTitles[location.pathname] ||
     (location.pathname.startsWith("/quotes/new")
@@ -49,6 +56,7 @@ function ShellContent() {
         </main>
       </div>
       <BottomNav />
+      <PwaInstallBanner />
     </div>
   );
 }

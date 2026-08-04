@@ -46,6 +46,7 @@ import { UpgradeModal } from "../components/shared/UpgradeModal";
 import { ComplianceSection } from "../components/settings/ComplianceSection";
 import { AutoRemindersSection } from "../components/settings/AutoRemindersSection";
 import { BankSyncSection } from "../components/settings/BankSyncSection";
+import { PushNotificationToggle } from "../components/pwa/PushNotificationToggle";
 
 interface ConnectStatus {
   hasAccount: boolean;
@@ -803,6 +804,9 @@ export function SettingsPage() {
               </div>
             </form>
           </Card>
+
+          {/* Push Notification Card */}
+          <PushNotificationToggle />
 
           {/* Compliance & E-invoicing Section */}
           <ComplianceSection />
