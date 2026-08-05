@@ -31,24 +31,47 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
-    const body = await req.json();
-    console.log("WhatsApp Webhook payload received:", JSON.stringify(body));
+    const contentType = req.headers.get("content-type") || "";
+    let fromPhone = "";
+    let textContent = "";
+    let messageType = "text";
+    let isTwilio = false;
 
-    // Extract message from Meta API format
-    const entry = body.entry?.[0];
-    const change = entry?.changes?.[0]?.value;
-    const message = change?.messages?.[0];
-    const fromPhone = message?.from; // e.g. "33612345678"
+    if (contentType.includes("application/x-www-form-urlencoded")) {
+      // 1. Twilio Webhook (form-urlencoded)
+      isTwilio = true;
+      const formData = await req.formData();
+      const rawFrom = formData.get("From")?.toString() || ""; // e.g. "whatsapp:+33612345678"
+      fromPhone = rawFrom.replace("whatsapp:", "").trim();
+      textContent = formData.get("Body")?.toString() || "";
+      const numMedia = parseInt(formData.get("NumMedia")?.toString() || "0", 10);
+      if (numMedia > 0) {
+        const mediaContentType = formData.get("MediaContentType0")?.toString() || "";
+        if (mediaContentType.startsWith("image/")) {
+          messageType = "image";
+        } else if (mediaContentType.startsWith("audio/")) {
+          messageType = "audio";
+        }
+      }
+    } else {
+      // 2. Meta Cloud API Webhook (JSON)
+      const body = await req.json();
+      console.log("WhatsApp Webhook JSON received:", JSON.stringify(body));
 
-    if (!message || !fromPhone) {
+      const entry = body.entry?.[0];
+      const change = entry?.changes?.[0]?.value;
+      const message = change?.messages?.[0];
+      fromPhone = message?.from || "";
+      messageType = message?.type || "text";
+      textContent = message?.text?.body || "";
+    }
+
+    if (!fromPhone && !textContent) {
       return new Response(JSON.stringify({ status: "ignored_no_message" }), {
         status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-
-    const messageType = message.type; // "text", "image", "audio"
-    const textContent = message.text?.body || "";
 
     // 2. Identify Company by phone number
     const normalizedPhone = fromPhone.replace(/\D/g, "");
@@ -114,6 +137,15 @@ Deno.serve(async (req: Request) => {
     }
 
     console.log("WhatsApp reply generated:", replyText);
+
+    if (isTwilio) {
+      // Return TwiML XML response for Twilio
+      const twiML = `<?xml version="1.0" encoding="UTF-8"?>\n<Response>\n  <Message>${replyText.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</Message>\n</Response>`;
+      return new Response(twiML, {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "text/xml" },
+      });
+    }
 
     return new Response(
       JSON.stringify({
