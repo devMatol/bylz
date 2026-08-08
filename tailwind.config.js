@@ -11,6 +11,10 @@ export default {
         border: "var(--border)",
         text: "var(--text)",
         muted: "var(--text-muted)",
+        "brand-navy": "#011142",
+        "brand-indigo": "#6E7CF0",
+        "brand-lavender": "#CED7FD",
+        "brand-tint": "#DFE7FF",
         primary: {
           DEFAULT: "var(--primary)",
           hover: "var(--primary-hover)",

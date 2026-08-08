@@ -4,6 +4,8 @@ import { Menu, X, ArrowRight, Sparkles, LayoutDashboard } from "lucide-react";
 import { Button } from "../ui/Button";
 import { useAuth } from "../../contexts/AuthContext";
 
+import { Logo } from "../shared/Logo";
+
 export function MarketingNavbar() {
   const { user } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -54,18 +56,7 @@ export function MarketingNavbar() {
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
           {/* Logo */}
-          <Link
-            to="/"
-            onClick={() => setMobileMenuOpen(false)}
-            className="flex items-center space-x-2.5 group focus:outline-none"
-          >
-            <div className="w-9 h-9 rounded-card bg-gradient-to-tr from-primary to-accent flex items-center justify-center text-white font-bold text-lg shadow-md group-hover:scale-105 transition-transform">
-              B
-            </div>
-            <span className="text-xl font-black tracking-tight text-text">
-              Bylz<span className="text-primary">.</span>
-            </span>
-          </Link>
+          <Logo variant="gradient" height={32} />
 
           {/* Desktop Nav Links */}
           <nav className="hidden md:flex items-center space-x-8">

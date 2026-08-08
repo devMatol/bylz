@@ -8,6 +8,8 @@ import { useNotifications } from "../../contexts/NotificationsContext";
 import { SupportModal } from "../support/SupportModal";
 import { cn } from "../../lib/utils";
 
+import { Logo } from "../shared/Logo";
+
 const PLAN_BADGE: Record<string, { label: string; icon: typeof Zap; className: string }> = {
   starter: { label: "STARTER", icon: Lock, className: "bg-surface-hover text-muted" },
   solo: { label: "SOLO", icon: Zap, className: "bg-primary/15 text-primary" },
@@ -48,8 +50,8 @@ export function Sidebar() {
   return (
     <>
       <aside className="hidden md:flex fixed left-0 top-0 bottom-0 w-[280px] bg-bg-sidebar border-r border-border flex-col z-30">
-        <div className="flex items-center gap-2 px-6 h-16 border-b border-border">
-          <Link to="/" className="text-2xl font-bold text-text">Bylz</Link>
+        <div className="flex items-center justify-between px-6 h-16 border-b border-border">
+          <Logo variant="gradient" height={28} />
           {(() => {
             const plan = profile?.plan || "starter";
             const badge = PLAN_BADGE[plan] ?? PLAN_BADGE.starter;
