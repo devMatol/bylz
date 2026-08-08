@@ -1,6 +1,4 @@
-import { type ReactNode } from "react";
-import { GlowContainer } from "../shared/GlowContainer";
-import { cn } from "../../lib/utils";
+import { Logo } from "../shared/Logo";
 
 interface AuthLayoutProps {
   title: string;
@@ -20,8 +18,8 @@ export function AuthLayout({ title, subtitle, children, footer, className }: Aut
       </div>
 
       <div className="relative z-10 w-full max-w-[440px]">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-text">Bylz</h1>
+        <div className="flex justify-center mb-8">
+          <Logo variant="gradient" height={36} />
         </div>
 
         <div

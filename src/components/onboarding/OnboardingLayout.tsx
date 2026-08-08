@@ -4,6 +4,8 @@ import { ChevronDown, LogOut } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
 import { cn } from "../../lib/utils";
 
+import { Logo } from "../shared/Logo";
+
 interface OnboardingLayoutProps {
   step: 1 | 2 | 3;
   onBack?: () => void;
@@ -67,7 +69,7 @@ export function OnboardingLayout({ step, onBack, wide = false, children }: Onboa
           )}
         >
           <div className="flex items-center justify-between mb-4">
-            <span className="text-xl font-bold text-text">Bylz</span>
+            <Logo variant="gradient" height={28} />
 
             <div className="relative" ref={menuRef}>
               <button

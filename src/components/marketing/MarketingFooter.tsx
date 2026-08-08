@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { ShieldCheck, Heart } from "lucide-react";
+import { Logo } from "../shared/Logo";
 
 export function MarketingFooter() {
   return (
@@ -8,14 +9,7 @@ export function MarketingFooter() {
         <div className="grid grid-cols-1 md:grid-cols-5 gap-10 pb-12 border-b border-border">
           {/* Col 1: Brand */}
           <div className="md:col-span-2 space-y-4">
-            <Link to="/" className="flex items-center space-x-2.5">
-              <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-brand-primary to-brand-accent flex items-center justify-center text-white font-bold text-base shadow-sm">
-                B
-              </div>
-              <span className="text-xl font-black tracking-tight text-text">
-                Bylz<span className="text-brand-primary">.</span>
-              </span>
-            </Link>
+            <Logo variant="gradient" height={32} />
             <p className="text-xs text-text/70 max-w-sm leading-relaxed font-normal">
               La solution intégrée de facturation conforme Factur-X et de pilotage fiscal automatisé pour les micro-entrepreneurs et indépendants en France.
             </p>
