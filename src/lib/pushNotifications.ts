@@ -66,7 +66,7 @@ export async function sendNativePushNotification(
         badge: icon,
         vibrate: [100, 50, 100],
         data: { url },
-      });
+      } as any);
       return true;
     } else {
       // Fallback

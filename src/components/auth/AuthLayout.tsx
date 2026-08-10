@@ -1,4 +1,7 @@
+import { ReactNode } from "react";
 import { Logo } from "../shared/Logo";
+import { GlowContainer } from "../shared/GlowContainer";
+import { cn } from "../../lib/utils";
 
 interface AuthLayoutProps {
   title: string;

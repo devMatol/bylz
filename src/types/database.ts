@@ -57,6 +57,7 @@ export interface Company {
   stripe_connect_account_id: string | null;
   previous_ca: number;
   auto_reminders_enabled?: boolean;
+  phone?: string | null;
   created_at: string;
 }
 
