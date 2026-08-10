@@ -73,12 +73,23 @@ Deno.serve(async (req: Request) => {
     // Use serviceKey to allow public document PDF generation for unauthenticated recipients
     const userClient = createClient(supabaseUrl, serviceKey);
 
-    const { document_type, document_id } = await req.json();
+    const { document_type, document_id, public_token } = await req.json();
     if (!document_type || !document_id) {
       return new Response(JSON.stringify({ error: "Paramètres manquants" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
+    }
+
+    // Resolve the caller: a signed-in owner may download their own document, an
+    // anonymous recipient must present the document's share token. A document id
+    // on its own is never sufficient.
+    const authHeader = req.headers.get("Authorization") || "";
+    const jwt = authHeader.replace(/^Bearer\s+/i, "").trim();
+    let authUserId: string | null = null;
+    if (jwt && jwt !== anonKey) {
+      const { data: userData } = await createClient(supabaseUrl, anonKey).auth.getUser(jwt);
+      authUserId = userData?.user?.id ?? null;
     }
 
     const table = document_type === "quote" ? "quotes" : "invoices";
@@ -92,6 +103,29 @@ Deno.serve(async (req: Request) => {
       .maybeSingle();
     if (docErr) throw docErr;
     if (!doc) {
+      return new Response(JSON.stringify({ error: "Document introuvable" }), {
+        status: 404,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    let authorized = false;
+
+    if (authUserId) {
+      const { data: ownerCompany } = await userClient
+        .from("companies")
+        .select("id")
+        .eq("id", doc.company_id)
+        .eq("user_id", authUserId)
+        .maybeSingle();
+      authorized = !!ownerCompany;
+    }
+
+    if (!authorized && typeof public_token === "string" && public_token.length >= 20) {
+      authorized = doc.public_token === public_token || doc.id === public_token;
+    }
+
+    if (!authorized) {
       return new Response(JSON.stringify({ error: "Document introuvable" }), {
         status: 404,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -340,8 +374,9 @@ Deno.serve(async (req: Request) => {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (err) {
+    console.error("generate-pdf error:", err);
     return new Response(
-      JSON.stringify({ error: err.message || "Erreur interne" }),
+      JSON.stringify({ error: "Erreur interne" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }

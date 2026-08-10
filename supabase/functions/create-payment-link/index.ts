@@ -46,30 +46,40 @@ Deno.serve(async (req) => {
 
     const body = await req.json();
     const { invoiceId, publicToken } = body || {};
-    
-    const targetId = invoiceId || publicToken;
+
+    const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+    // Resolve the caller. The anon key is public, so a request carrying it is
+    // treated as anonymous: such a caller must present the document's share token.
+    const anonKey = Deno.env.get('SUPABASE_ANON_KEY') ?? '';
+    const jwt = (req.headers.get('Authorization') ?? '').replace('Bearer ', '').trim();
+    let authUserId: string | null = null;
+    if (jwt && jwt !== anonKey) {
+      const { data: userData } = await supabase.auth.getUser(jwt);
+      authUserId = userData?.user?.id ?? null;
+    }
+
     let invoice: any = null;
 
-    // 1. Try by id first
-    const { data: invById, error: errById } = await supabase
-      .from('invoices')
-      .select('*, company:companies(*)')
-      .eq('id', targetId)
-      .maybeSingle();
+    if (publicToken && UUID_RE.test(String(publicToken))) {
+      // Anonymous share-link path: the token must match the row exactly.
+      const { data: invByToken } = await supabase
+        .from('invoices')
+        .select('*, company:companies(*)')
+        .eq('public_token', publicToken)
+        .maybeSingle();
+      if (invByToken) invoice = invByToken;
+    }
 
-    if (!errById && invById) {
-      invoice = invById;
-    } else if (publicToken) {
-      // 2. Try by public_token if column exists
-      try {
-        const { data: invByToken } = await supabase
-          .from('invoices')
-          .select('*, company:companies(*)')
-          .eq('public_token', publicToken)
-          .maybeSingle();
-        if (invByToken) invoice = invByToken;
-      } catch (e) {
-        // Ignore missing public_token column
+    if (!invoice && authUserId && invoiceId && UUID_RE.test(String(invoiceId))) {
+      // Signed-in path: the invoice must belong to one of the caller's companies.
+      const { data: invById } = await supabase
+        .from('invoices')
+        .select('*, company:companies(*)')
+        .eq('id', invoiceId)
+        .maybeSingle();
+      if (invById && invById.company?.user_id === authUserId) {
+        invoice = invById;
       }
     }
 

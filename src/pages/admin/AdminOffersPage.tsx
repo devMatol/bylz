@@ -80,12 +80,11 @@ export function AdminOffersPage() {
 
       if (error) throw error;
 
-      // Log in audit_logs
-      await supabase.from("audit_logs").insert({
-        admin_id: user.id,
-        action: "offer_updated",
-        target_user_id: null,
-        details: { plan_key: plan.key, name: plan.name, price_cents: plan.price_cents },
+      // Log in the admin audit trail (server-side, admin-only function)
+      await supabase.rpc("write_audit_log", {
+        p_action: "offer_updated",
+        p_target: null,
+        p_details: { plan_key: plan.key, name: plan.name, price_cents: plan.price_cents },
       });
 
       // Invalidate in-memory plan cache & reload

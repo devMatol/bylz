@@ -7,8 +7,8 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, *, Authorization, Content-Type, Apikey, X-Client-Info",
 };
 
-const DEFAULT_BRIDGE_CLIENT_ID = "sandbox_id_3db02adc3b13421bb61b8304ab35593d";
-const DEFAULT_BRIDGE_CLIENT_SECRET = "sandbox_secret_m1DT8L3d9ERZh9f7kJUNp62hXZI8QJALUAR93A6c2aCnyQAFopEcYbE0tgSH1aAP";
+// Credentials come from the environment only. A literal secret in source is
+// readable by anyone with the repository and cannot be rotated independently.
 
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
@@ -52,8 +52,15 @@ Deno.serve(async (req: Request) => {
       });
     }
 
-    const bridgeClientId = Deno.env.get("BRIDGE_CLIENT_ID") || DEFAULT_BRIDGE_CLIENT_ID;
-    const bridgeClientSecret = Deno.env.get("BRIDGE_CLIENT_SECRET") || DEFAULT_BRIDGE_CLIENT_SECRET;
+    const bridgeClientId = Deno.env.get("BRIDGE_CLIENT_ID") || "";
+    const bridgeClientSecret = Deno.env.get("BRIDGE_CLIENT_SECRET") || "";
+    if (!bridgeClientId || !bridgeClientSecret) {
+      console.error("BRIDGE_CLIENT_ID / BRIDGE_CLIENT_SECRET are not configured.");
+      return new Response(JSON.stringify({ error: "Service bancaire non configuré" }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     const userEmail = userData.user.email || "client@bylz.fr";
     const externalUserId = `bylz-user-${userData.user.id.slice(0, 12)}`;

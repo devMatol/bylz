@@ -1,5 +1,6 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "npm:@supabase/supabase-js@2.57.4";
+import { requireOperator, resolveCaller, unauthorized } from "../_shared/require-operator.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -23,11 +24,18 @@ Deno.serve(async (req: Request) => {
 
   const supabaseUrl = Deno.env.get("SUPABASE_URL") || "";
   const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
-  const DEFAULT_BRIDGE_CLIENT_ID = "sandbox_id_3db02adc3b13421bb61b8304ab35593d";
-  const DEFAULT_BRIDGE_CLIENT_SECRET = "sandbox_secret_m1DT8L3d9ERZh9f7kJUNp62hXZI8QJALUAR93A6c2aCnyQAFopEcYbE0tgSH1aAP";
 
-  const bridgeClientId = Deno.env.get("BRIDGE_CLIENT_ID") || DEFAULT_BRIDGE_CLIENT_ID;
-  const bridgeClientSecret = Deno.env.get("BRIDGE_CLIENT_SECRET") || DEFAULT_BRIDGE_CLIENT_SECRET;
+  // Credentials come from the environment only, never from source.
+  const bridgeClientId = Deno.env.get("BRIDGE_CLIENT_ID") || "";
+  const bridgeClientSecret = Deno.env.get("BRIDGE_CLIENT_SECRET") || "";
+
+  if (!bridgeClientId || !bridgeClientSecret) {
+    console.error("BRIDGE_CLIENT_ID / BRIDGE_CLIENT_SECRET are not configured.");
+    return new Response(JSON.stringify({ error: "Service bancaire non configuré" }), {
+      status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
 
   if (!supabaseUrl || !serviceKey) {
     return new Response(JSON.stringify({ error: "Configuration Supabase manquante" }), {
@@ -38,6 +46,15 @@ Deno.serve(async (req: Request) => {
 
   const adminClient = createClient(supabaseUrl, serviceKey);
 
+  // Authorization: either the scheduler/an operator (full sync), or a signed-in
+  // user, who may only sync a company they own.
+  const operator = await requireOperator(req);
+  let callerUserId: string | null = null;
+  if (!operator.allowed) {
+    callerUserId = await resolveCaller(req);
+    if (!callerUserId) return unauthorized(corsHeaders);
+  }
+
   try {
     let targetCompanyId: string | null = null;
     try {
@@ -45,6 +62,21 @@ Deno.serve(async (req: Request) => {
       if (body?.company_id) targetCompanyId = body.company_id;
     } catch {
       // Optional body
+    }
+
+    if (callerUserId) {
+      // A signed-in caller is confined to their own companies.
+      const { data: ownCompanies } = await adminClient
+        .from("companies")
+        .select("id")
+        .eq("user_id", callerUserId);
+      const ownIds = (ownCompanies || []).map((c: any) => c.id);
+      if (!targetCompanyId) {
+        if (ownIds.length === 0) return unauthorized(corsHeaders);
+        targetCompanyId = ownIds[0];
+      } else if (!ownIds.includes(targetCompanyId)) {
+        return unauthorized(corsHeaders);
+      }
     }
 
     // Fetch active bank connections

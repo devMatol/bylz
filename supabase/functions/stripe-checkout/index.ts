@@ -88,6 +88,16 @@ Deno.serve(async (req) => {
       return corsResponse({ error: 'priceId is required' }, 400);
     }
 
+    // Never let the client name an arbitrary Stripe price: a caller could
+    // otherwise subscribe itself to a cheap or test price of its choosing.
+    const ALLOWED_PRICE_IDS = new Set([
+      'price_1TvYmr2X0yCzQQsNrPbSS9NC', // solo
+      'price_1TvYnW2X0yCzQQsN930PPkgJ', // pro
+    ]);
+    if (!ALLOWED_PRICE_IDS.has(String(priceId))) {
+      return corsResponse({ error: 'Offre invalide' }, 400);
+    }
+
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .select('*')

@@ -30,25 +30,25 @@ Deno.serve(async (req) => {
     }
 
     const body = await req.text();
+    const signature = req.headers.get('stripe-signature');
     let event: Stripe.Event;
 
-    if (stripeWebhookSecret && signature) {
-      try {
-        event = await stripe.webhooks.constructEventAsync(body, signature, stripeWebhookSecret);
-      } catch (error: any) {
-        console.warn(`Webhook signature verification warning: ${error.message}. Parsing body directly.`);
-        try {
-          event = JSON.parse(body);
-        } catch {
-          return new Response(`Invalid JSON body`, { status: 400 });
-        }
-      }
-    } else {
-      try {
-        event = JSON.parse(body);
-      } catch {
-        return new Response(`Invalid JSON body`, { status: 400 });
-      }
+    // A payment notification is only trusted when Stripe signed it. Without a
+    // valid signature anyone could post a fake "subscription paid" event.
+    if (!stripeWebhookSecret) {
+      console.error('STRIPE_WEBHOOK_SECRET is not configured; refusing webhook.');
+      return new Response('Webhook not configured', { status: 500 });
+    }
+
+    if (!signature) {
+      return new Response('Missing signature', { status: 400 });
+    }
+
+    try {
+      event = await stripe.webhooks.constructEventAsync(body, signature, stripeWebhookSecret);
+    } catch (error: any) {
+      console.warn(`Webhook signature verification failed: ${error.message}`);
+      return new Response('Invalid signature', { status: 400 });
     }
 
     // Idempotency check via stripe_webhook_events table (graceful if table missing)

@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.0";
 import { callFactPulseApi } from "../_shared/factpulse-client.ts";
+import { requireOperator, unauthorized } from "../_shared/require-operator.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -15,6 +16,11 @@ serve(async (req) => {
   const supabaseUrl = Deno.env.get("SUPABASE_URL") || "";
   const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
   const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+  // This job reads and submits invoices for every company on the platform, so
+  // only the scheduler or a platform admin may run it.
+  const operator = await requireOperator(req);
+  if (!operator.allowed) return unauthorized(corsHeaders);
 
   try {
     const now = new Date();

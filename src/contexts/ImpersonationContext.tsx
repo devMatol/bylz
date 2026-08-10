@@ -37,22 +37,9 @@ export function ImpersonationProvider({ children }: { children: ReactNode }) {
   const stopImpersonation = useCallback(async () => {
     if (sessionId) {
       try {
-        const now = new Date().toISOString();
-        await supabase
-          .from("admin_impersonation_sessions")
-          .update({ ended_at: now })
-          .eq("id", sessionId);
-
-        // Fetch current user for audit log
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user && targetUser) {
-          await supabase.from("audit_logs").insert({
-            admin_id: user.id,
-            action: "impersonation_end",
-            target_user_id: targetUser.id,
-            details: { session_id: sessionId, ended_at: now },
-          });
-        }
+        // The server closes the session, verifies it belongs to the calling
+        // administrator, and records the action itself.
+        await supabase.rpc("admin_end_impersonation", { p_session: sessionId });
       } catch (err) {
         console.error("Error closing impersonation session:", err);
       }
@@ -64,7 +51,7 @@ export function ImpersonationProvider({ children }: { children: ReactNode }) {
     setTargetCompany(null);
     setExpiresAt(null);
     setRemainingSeconds(0);
-  }, [sessionId, targetUser]);
+  }, [sessionId]);
 
   const loadSessionDetails = useCallback(async (sessId: string, expAt: string, targetUid: string) => {
     try {
@@ -83,42 +70,31 @@ export function ImpersonationProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const startImpersonation = useCallback(
-    async (adminId: string, targetUserId: string): Promise<boolean> => {
+    async (_adminId: string, targetUserId: string): Promise<boolean> => {
       try {
-        const expires = new Date(Date.now() + 30 * 60 * 1000).toISOString();
+        // The server verifies the caller is an administrator, sets the expiry
+        // itself and records the action.
+        const { data, error: sessErr } = await supabase.rpc("admin_start_impersonation", {
+          p_target: targetUserId,
+        });
 
-        // 1. Create impersonation session DB record
-        const { data: sess, error: sessErr } = await supabase
-          .from("admin_impersonation_sessions")
-          .insert({
-            admin_id: adminId,
-            target_user_id: targetUserId,
-            expires_at: expires,
-          })
-          .select("*")
-          .single();
+        const sess = (Array.isArray(data) ? data[0] : data) as
+          | { session_id: string; expires_at: string }
+          | undefined;
 
-        if (sessErr || !sess) {
+        if (sessErr || !sess?.session_id) {
           console.error("Failed to create impersonation session:", sessErr);
           return false;
         }
 
-        // 2. Audit log impersonation start
-        await supabase.from("audit_logs").insert({
-          admin_id: adminId,
-          action: "impersonation_start",
-          target_user_id: targetUserId,
-          details: { session_id: sess.id, expires_at: expires },
-        });
+        const expires = new Date(sess.expires_at).toISOString();
 
-        // 3. Save to sessionStorage
         sessionStorage.setItem(
           SESSION_STORAGE_KEY,
-          JSON.stringify({ sessionId: sess.id, expiresAt: expires, targetUserId })
+          JSON.stringify({ sessionId: sess.session_id, expiresAt: expires, targetUserId })
         );
 
-        // 4. Load details into state
-        await loadSessionDetails(sess.id, expires, targetUserId);
+        await loadSessionDetails(sess.session_id, expires, targetUserId);
         return true;
       } catch (err) {
         console.error("Error starting impersonation:", err);

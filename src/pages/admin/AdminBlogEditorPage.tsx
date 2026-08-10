@@ -22,6 +22,7 @@ import { Select } from "../../components/ui/Select";
 import { Badge } from "../../components/ui/Badge";
 import { useToast } from "../../components/ui/Toast";
 import { supabase } from "../../lib/supabase";
+import { sanitizeHtml } from "../../lib/sanitizeHtml";
 import {
   SUGGESTED_KEYWORDS,
   analyzeArticleSeo,
@@ -601,7 +602,7 @@ export function AdminBlogEditorPage() {
           {/* Body Preview */}
           <div
             className="prose prose-invert max-w-none text-sm text-text leading-relaxed space-y-4"
-            dangerouslySetInnerHTML={{ __html: content || "<p class='text-muted'>Aucun contenu rédigé...</p>" }}
+            dangerouslySetInnerHTML={{ __html: sanitizeHtml(content) || "<p class='text-muted'>Aucun contenu rédigé...</p>" }}
           />
         </Card>
       )}

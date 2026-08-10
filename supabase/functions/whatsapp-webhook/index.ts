@@ -11,6 +11,29 @@ const supabaseUrl = Deno.env.get("SUPABASE_URL") || "";
 const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 const adminClient = createClient(supabaseUrl, serviceKey);
 
+// Verification token and app secret come from the environment; a literal in
+// source is published with the code and cannot be rotated.
+const VERIFY_TOKEN = Deno.env.get("WHATSAPP_VERIFY_TOKEN") || "";
+const APP_SECRET = Deno.env.get("WHATSAPP_APP_SECRET") || "";
+
+async function signatureIsValid(bodyText: string, header: string | null): Promise<boolean> {
+  if (!APP_SECRET) return true; // No app secret configured: nothing to verify against.
+  if (!header) return false;
+  const provided = header.replace(/^sha256=/i, "").trim().toLowerCase();
+  const key = await crypto.subtle.importKey(
+    "raw",
+    new TextEncoder().encode(APP_SECRET),
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"]
+  );
+  const mac = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(bodyText));
+  const expected = Array.from(new Uint8Array(mac))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+  return provided === expected;
+}
+
 Deno.serve(async (req: Request) => {
   // 1. Meta WhatsApp Webhook Verification (GET request)
   if (req.method === "GET") {
@@ -19,7 +42,7 @@ Deno.serve(async (req: Request) => {
     const token = url.searchParams.get("hub.verify_token");
     const challenge = url.searchParams.get("hub.challenge");
 
-    if (mode === "subscribe" && token === "bylz_whatsapp_copilot_token") {
+    if (mode === "subscribe" && VERIFY_TOKEN && token === VERIFY_TOKEN) {
       console.log("WhatsApp Webhook verified successfully");
       return new Response(challenge, { status: 200 });
     }
@@ -54,9 +77,24 @@ Deno.serve(async (req: Request) => {
         }
       }
     } else {
-      // 2. Meta Cloud API Webhook (JSON)
-      const body = await req.json();
-      console.log("WhatsApp Webhook JSON received:", JSON.stringify(body));
+      // 2. Meta Cloud API Webhook (JSON) — verify the payload signature when an
+      // app secret is configured, so forged messages are rejected.
+      const bodyText = await req.text();
+      const sigHeader =
+        req.headers.get("x-hub-signature-256") || req.headers.get("X-Hub-Signature-256");
+      if (!(await signatureIsValid(bodyText, sigHeader))) {
+        console.warn("WhatsApp webhook signature verification failed.");
+        return new Response(JSON.stringify({ error: "Invalid signature" }), {
+          status: 401,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      let body: any = {};
+      try {
+        body = JSON.parse(bodyText);
+      } catch {
+        body = {};
+      }
 
       const entry = body.entry?.[0];
       const change = entry?.changes?.[0]?.value;

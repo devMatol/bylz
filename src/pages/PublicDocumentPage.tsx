@@ -108,138 +108,46 @@ export function PublicDocumentPage() {
 
     setLoading(true);
     try {
-      // 1. Try Quote by id or public_token
-      let qData: any = null;
+      // The document is resolved server-side: the share link is compared to the
+      // stored token exactly, so no other document can be reached.
+      const { data, error: rpcErr } = await supabase.rpc("get_public_document", {
+        p_token: token,
+      });
 
-      // Try with public_token column first
-      const { data: qTokenData, error: qTokenErr } = await supabase
-        .from("quotes")
-        .select(`
-          id, number, status, issue_date, validity_date, total_ht, total_vat, total_ttc, note,
-          company:companies ( legal_name, commercial_name, siret, address, logo_url, invoice_footer, accent_color, user_id, stripe_connect_account_id ),
-          client:clients ( name, email, address, siret ),
-          lines:quote_lines ( description, quantity, unit_price, nature )
-        `)
-        .or(`public_token.eq.${token},id.eq.${token}`)
-        .maybeSingle();
-
-      if (!qTokenErr && qTokenData) {
-        qData = qTokenData;
-      } else {
-        // Fallback for standard query by id if public_token column is not migrated yet
-        const { data: qIdData } = await supabase
-          .from("quotes")
-          .select(`
-            id, number, status, issue_date, validity_date, total_ht, total_vat, total_ttc, note,
-            company:companies ( legal_name, commercial_name, siret, address, logo_url, invoice_footer, accent_color, user_id, stripe_connect_account_id ),
-            client:clients ( name, email, address, siret ),
-            lines:quote_lines ( description, quantity, unit_price, nature )
-          `)
-          .eq("id", token)
-          .maybeSingle();
-
-        qData = qIdData;
-      }
-
-      if (qData) {
-        const { data: prof } = await supabase
-          .from("profiles")
-          .select("plan")
-          .eq("id", (qData.company as any)?.user_id)
-          .maybeSingle();
-
-        setDoc({
-          type: "quote",
-          id: qData.id,
-          number: qData.number,
-          status: qData.status,
-          issue_date: qData.issue_date,
-          due_or_validity_date: qData.validity_date,
-          total_ht: qData.total_ht,
-          total_vat: qData.total_vat,
-          total_ttc: qData.total_ttc,
-          note: qData.note,
-          stripe_payment_link: null,
-          signature_data: (qData.signature_data as SignatureData | null) || null,
-          public_token: token,
-          company: {
-            ...(qData.company as any),
-            plan: prof?.plan || "starter",
-          },
-          client: qData.client as any,
-          lines: (qData.lines as any[]) || [],
-        });
-        setLoading(false);
+      if (rpcErr) {
+        console.error("Erreur de chargement du document:", rpcErr);
+        setError("Document introuvable ou lien expiré.");
         return;
       }
 
-      // 2. Try Invoice by id or public_token
-      let iData: any = null;
+      const d = data as any;
 
-      const { data: iTokenData, error: iTokenErr } = await supabase
-        .from("invoices")
-        .select(`
-          id, number, status, issue_date, due_date, total_ht, total_vat, total_ttc, note, stripe_payment_link, public_token, signature_data,
-          company:companies ( legal_name, commercial_name, siret, address, logo_url, invoice_footer, accent_color, user_id, stripe_connect_account_id ),
-          client:clients ( name, email, address, siret ),
-          lines:invoice_lines ( description, quantity, unit_price, nature )
-        `)
-        .or(`public_token.eq.${token},id.eq.${token}`)
-        .maybeSingle();
-
-      if (!iTokenErr && iTokenData) {
-        iData = iTokenData;
-      } else {
-        // Fallback for standard query by id if public_token column is not migrated yet
-        const { data: iIdData } = await supabase
-          .from("invoices")
-          .select(`
-            id, number, status, issue_date, due_date, total_ht, total_vat, total_ttc, note, stripe_payment_link,
-            company:companies ( legal_name, commercial_name, siret, address, logo_url, invoice_footer, accent_color, user_id, stripe_connect_account_id ),
-            client:clients ( name, email, address, siret ),
-            lines:invoice_lines ( description, quantity, unit_price, nature )
-          `)
-          .eq("id", token)
-          .maybeSingle();
-
-        iData = iIdData;
-      }
-
-      if (iData) {
-        const { data: prof } = await supabase
-          .from("profiles")
-          .select("plan")
-          .eq("id", (iData.company as any)?.user_id)
-          .maybeSingle();
-
+      if (d && d.id) {
         setDoc({
-          type: "invoice",
-          id: iData.id,
-          number: iData.number,
-          status: iData.status,
-          issue_date: iData.issue_date,
-          due_or_validity_date: iData.due_date,
-          total_ht: iData.total_ht,
-          total_vat: iData.total_vat,
-          total_ttc: iData.total_ttc,
-          note: iData.note,
-          stripe_payment_link: iData.stripe_payment_link,
-          signature_data: (iData.signature_data as SignatureData | null) || null,
+          type: d.type,
+          id: d.id,
+          number: d.number,
+          status: d.status,
+          issue_date: d.issue_date,
+          due_or_validity_date: d.due_or_validity_date,
+          total_ht: d.total_ht,
+          total_vat: d.total_vat,
+          total_ttc: d.total_ttc,
+          note: d.note,
+          stripe_payment_link: d.stripe_payment_link ?? null,
+          signature_data: (d.signature_data as SignatureData | null) || null,
           public_token: token,
-          company: {
-            ...(iData.company as any),
-            plan: prof?.plan || "starter",
-          },
-          client: iData.client as any,
-          lines: (iData.lines as any[]) || [],
+          company: d.company,
+          client: d.client || { name: "", email: null, address: null, siret: null },
+          lines: (d.lines as any[]) || [],
         });
-        setLoading(false);
         return;
       }
 
       setError("Document introuvable ou lien expiré.");
     } catch (e: any) {
-      setError(e.message || "Erreur de chargement du document.");
+      console.error("Erreur de chargement du document:", e);
+      setError("Erreur de chargement du document.");
     } finally {
       setLoading(false);
     }
@@ -256,46 +164,18 @@ export function PublicDocumentPage() {
   }) => {
     if (!doc) return;
 
-    const signaturePayload: SignatureData = {
-      signer_name: sig.signerName,
-      signer_email: sig.signerEmail,
-      signed_at: new Date().toISOString(),
-      ip_address: "127.0.0.1",
-      signature_image: sig.signatureImage,
-    };
+    // The server verifies the share link, refuses an already signed document
+    // and writes only the signature fields.
+    const { error: signErr } = await supabase.rpc("sign_public_document", {
+      p_token: token,
+      p_signer_name: sig.signerName,
+      p_signer_email: sig.signerEmail,
+      p_signature_image: sig.signatureImage,
+    });
 
-    if (doc.type === "quote") {
-      const { error: updateErr } = await supabase
-        .from("quotes")
-        .update({
-          status: "accepted",
-          signature_data: signaturePayload,
-        })
-        .eq("id", doc.id);
-
-      if (updateErr) {
-        const { error: statusErr } = await supabase
-          .from("quotes")
-          .update({ status: "accepted" })
-          .eq("id", doc.id);
-        if (statusErr) throw statusErr;
-      }
-    } else {
-      const { error: updateErr } = await supabase
-        .from("invoices")
-        .update({
-          status: "signed",
-          signature_data: signaturePayload,
-        })
-        .eq("id", doc.id);
-
-      if (updateErr) {
-        const { error: statusErr } = await supabase
-          .from("invoices")
-          .update({ status: "signed" })
-          .eq("id", doc.id);
-        if (statusErr) throw statusErr;
-      }
+    if (signErr) {
+      console.error("Erreur de signature:", signErr);
+      throw new Error("Ce document ne peut pas être signé (lien invalide ou déjà signé).");
     }
 
     // Trigger Email & Notification to entrepreneur via Edge Function
@@ -371,7 +251,7 @@ export function PublicDocumentPage() {
             onClick={async () => {
               setDownloadingPdf(true);
               try {
-                const url = await downloadPdf(doc.type, doc.id);
+                const url = await downloadPdf(doc.type, doc.id, token);
                 const a = document.createElement("a");
                 a.href = url;
                 a.target = "_blank";

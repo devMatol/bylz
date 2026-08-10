@@ -91,19 +91,14 @@ export function AdminUserDetailPage() {
     if (!adminUser || !id) return;
     setBusy(true);
     try {
-      const { error } = await supabase
-        .from("profiles")
-        .update({ plan: selectedPlan })
-        .eq("id", id);
+      // Privileged change: the database verifies the caller is an administrator
+      // and records the action in the audit log.
+      const { error } = await supabase.rpc("admin_set_user_plan", {
+        p_target: id,
+        p_plan: selectedPlan,
+      });
 
       if (error) throw error;
-
-      await supabase.from("audit_logs").insert({
-        admin_id: adminUser.id,
-        action: "plan_override",
-        target_user_id: id,
-        details: { new_plan: selectedPlan },
-      });
 
       toast(`Plan mis à jour : ${selectedPlan.toUpperCase()}`, "success");
       void loadData();
@@ -119,20 +114,12 @@ export function AdminUserDetailPage() {
     if (!adminUser || !id) return;
     setBusy(true);
     try {
-      const trialEnds = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString();
-      const { error } = await supabase
-        .from("profiles")
-        .update({ plan: "pro", trial_ends_at: trialEnds })
-        .eq("id", id);
+      const { error } = await supabase.rpc("admin_grant_trial", {
+        p_target: id,
+        p_days: 14,
+      });
 
       if (error) throw error;
-
-      await supabase.from("audit_logs").insert({
-        admin_id: adminUser.id,
-        action: "trial_gift",
-        target_user_id: id,
-        details: { trial_ends_at: trialEnds, plan: "pro" },
-      });
 
       toast("Essai Pro 14 jours offert !", "success");
       void loadData();
@@ -148,21 +135,13 @@ export function AdminUserDetailPage() {
     setBusy(true);
     try {
       const isSuspended = !!profileData.suspended_at;
-      const nextSuspended = isSuspended ? null : new Date().toISOString();
 
-      const { error } = await supabase
-        .from("profiles")
-        .update({ suspended_at: nextSuspended })
-        .eq("id", id);
+      const { error } = await supabase.rpc("admin_set_suspended", {
+        p_target: id,
+        p_suspend: !isSuspended,
+      });
 
       if (error) throw error;
-
-      await supabase.from("audit_logs").insert({
-        admin_id: adminUser.id,
-        action: isSuspended ? "account_unsuspended" : "account_suspended",
-        target_user_id: id,
-        details: { suspended_at: nextSuspended },
-      });
 
       toast(isSuspended ? "Compte réactivé" : "Compte suspendu", "warning");
       void loadData();
@@ -177,17 +156,10 @@ export function AdminUserDetailPage() {
     if (!adminUser || !id) return;
     setBusy(true);
     try {
-      if (companyData) {
-        await supabase.from("companies").delete().eq("id", companyData.id);
-      }
-      await supabase.from("profiles").delete().eq("id", id);
+      // Removal cascades from the account record and is audit-logged server-side.
+      const { error } = await supabase.rpc("admin_delete_user", { p_target: id });
 
-      await supabase.from("audit_logs").insert({
-        admin_id: adminUser.id,
-        action: "rgpd_delete",
-        target_user_id: id,
-        details: { email: profileData?.email },
-      });
+      if (error) throw error;
 
       toast("Utilisateur supprimé (RGPD)", "success");
       navigate("/admin/users");

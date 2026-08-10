@@ -76,19 +76,14 @@ export function AdminAdminsPage() {
     if (!currentUser) return;
     setBusy(true);
     try {
-      const { error } = await supabase
-        .from("profiles")
-        .update({ is_admin: true, admin_role: "admin" })
-        .eq("id", targetUser.id);
+      // Privileged change: the database verifies the caller is a super admin
+      // and records the action in the audit log.
+      const { error } = await supabase.rpc("admin_set_admin_role", {
+        p_target: targetUser.id,
+        p_make_admin: true,
+      });
 
       if (error) throw error;
-
-      await supabase.from("audit_logs").insert({
-        admin_id: currentUser.id,
-        action: "admin_promoted",
-        target_user_id: targetUser.id,
-        details: { new_role: "admin", target_email: targetUser.email },
-      });
 
       toast(`${targetUser.email} est désormais administrateur`, "success");
       setAddModalOpen(false);
@@ -106,19 +101,12 @@ export function AdminAdminsPage() {
     if (!currentUser || !demoteTarget) return;
     setBusy(true);
     try {
-      const { error } = await supabase
-        .from("profiles")
-        .update({ is_admin: false, admin_role: null })
-        .eq("id", demoteTarget.id);
+      const { error } = await supabase.rpc("admin_set_admin_role", {
+        p_target: demoteTarget.id,
+        p_make_admin: false,
+      });
 
       if (error) throw error;
-
-      await supabase.from("audit_logs").insert({
-        admin_id: currentUser.id,
-        action: "admin_demoted",
-        target_user_id: demoteTarget.id,
-        details: { previous_role: demoteTarget.admin_role, target_email: demoteTarget.email },
-      });
 
       toast(`Droits admin retirés pour ${demoteTarget.email}`, "warning");
       setDemoteTarget(null);

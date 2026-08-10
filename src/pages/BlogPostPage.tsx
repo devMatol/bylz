@@ -6,6 +6,7 @@ import { MarketingNavbar } from "../components/marketing/MarketingNavbar";
 import { MarketingFooter } from "../components/marketing/MarketingFooter";
 import { BLOG_ARTICLES } from "../data/blogArticles";
 import { fetchBlogPostBySlug, incrementBlogPostViews } from "../lib/api";
+import { sanitizeHtml } from "../lib/sanitizeHtml";
 
 export function BlogPostPage() {
   const { slug } = useParams<{ slug: string }>();
@@ -170,7 +171,7 @@ export function BlogPostPage() {
           {/* Body Content */}
           <div
             className="prose prose-slate dark:prose-invert max-w-none text-sm leading-relaxed space-y-4 font-normal"
-            dangerouslySetInnerHTML={{ __html: article.content }}
+            dangerouslySetInnerHTML={{ __html: sanitizeHtml(article.content) }}
           />
 
           {/* CTA Banner inside Article */}

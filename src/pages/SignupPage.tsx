@@ -13,7 +13,10 @@ import { cn } from "../lib/utils";
 
 function mapAuthError(code: string | undefined): string {
   if (!code) return "Une erreur est survenue. Réessayez.";
-  if (code === "user_already_exists") return "Un compte existe déjà avec cet email.";
+  // Deliberately neutral: telling the visitor that "an account already exists"
+  // lets anyone test which email addresses are registered.
+  if (code === "user_already_exists")
+    return "Inscription impossible avec ces informations. Si vous avez déjà un compte, connectez-vous ou réinitialisez votre mot de passe.";
   if (code === "weak_password") return "Le mot de passe est trop faible (min. 8 caractères).";
   if (code === "over_request_rate_limit" || code === "rate_limit_exceeded")
     return "Trop de tentatives, réessayez dans quelques minutes.";

@@ -21,30 +21,22 @@ export function ContactPage() {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    const fullBody = `Nom: ${name}\nEmail: ${email}\nObjet: ${subject || "Demande Support"}\n\nMessage:\n${message}`;
 
     try {
-      // 1. Try DB Insert (support_tickets & ticket_messages)
-      const { data: ticket } = await supabase
-        .from("support_tickets")
-        .insert({
-          subject: subject || `Demande de ${name}`,
-          category: "question",
-          priority: "normal",
-          status: "open",
-        })
-        .select("id")
-        .maybeSingle();
-
-      if (ticket?.id) {
-        await supabase.from("ticket_messages").insert({
-          ticket_id: ticket.id,
-          author_id: null,
-          body: fullBody,
-        });
-      }
+      // The server creates the support request; the browser cannot write to the
+      // support tables directly.
+      const { error: rpcError } = await supabase.rpc("submit_contact_message", {
+        p_name: name,
+        p_email: email,
+        p_subject: subject,
+        p_message: message,
+      });
+      if (rpcError) throw rpcError;
     } catch (err) {
-      console.warn("Notice: DB support_tickets RLS skipped, falling back to direct notification", err);
+      console.warn("Contact form submission failed", err);
+      setLoading(false);
+      toast("Votre message n'a pas pu être envoyé. Merci de réessayer.", "danger");
+      return;
     }
 
     setSubmitted(true);

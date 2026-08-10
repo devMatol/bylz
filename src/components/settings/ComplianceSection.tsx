@@ -6,13 +6,13 @@ import { useToast } from "../ui/Toast";
 import { Card } from "../ui/Card";
 import { Button } from "../ui/Button";
 import { formatAmount } from "../../lib/utils";
-import type { EreportingBatch, FactpulseStatus } from "../../types/database";
+import type { EreportingBatch } from "../../types/database";
 
 export function ComplianceSection() {
   const { company } = useAuth();
   const { toast } = useToast();
   const [batches, setBatches] = useState<EreportingBatch[]>([]);
-  const [status, setStatus] = useState<FactpulseStatus | null>(null);
+  const [tokenValid, setTokenValid] = useState<boolean>(true);
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
 
@@ -26,15 +26,13 @@ export function ComplianceSection() {
           .select("*")
           .eq("company_id", company.id)
           .order("created_at", { ascending: false }),
-        supabase
-          .from("factpulse_status")
-          .select("*")
-          .eq("id", "default")
-          .maybeSingle(),
+        // Only the availability flag is exposed; the integration row itself
+        // holds a secret token and stays private.
+        supabase.rpc("einvoicing_token_valid"),
       ]);
 
       setBatches((bData as EreportingBatch[]) || []);
-      setStatus((sData as FactpulseStatus) || null);
+      setTokenValid(sData !== false);
     } catch (e) {
       console.error("Error loading compliance data:", e);
     } finally {
@@ -118,7 +116,7 @@ export function ComplianceSection() {
         <div className="p-4 rounded-card bg-surface-hover/40 border border-border space-y-2">
           <p className="text-xs font-bold text-muted uppercase">Réseau PDP & E-reporting FactPulse</p>
           <div className="flex items-center space-x-2">
-            {status && status.token_valid === false ? (
+            {tokenValid === false ? (
               <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-pill bg-rose-500/20 text-rose-400 font-bold text-xs border border-rose-500/30">
                 <AlertTriangle className="w-3.5 h-3.5" /> Jeton API Expiré
               </span>

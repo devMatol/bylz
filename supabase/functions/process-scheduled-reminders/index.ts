@@ -1,5 +1,6 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "npm:@supabase/supabase-js@2.57.4";
+import { requireOperator, unauthorized } from "../_shared/require-operator.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -105,6 +106,11 @@ Deno.serve(async (req: Request) => {
   }
 
   const adminClient = createClient(supabaseUrl, serviceKey);
+
+  // Sends reminder emails for every company on the platform: scheduler or
+  // platform admin only, otherwise anyone could trigger a mass mailing.
+  const operator = await requireOperator(req);
+  if (!operator.allowed) return unauthorized(corsHeaders);
 
   try {
     const todayStr = new Date().toISOString().slice(0, 10);

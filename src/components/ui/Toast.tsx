@@ -32,6 +32,51 @@ const variantConfig: Record<
   info: { icon: Info, color: "text-accent" },
 };
 
+// Patterns that only ever appear in internal database / API errors. Messages
+// matching them are replaced by a neutral one so schema, constraint and policy
+// details are never shown to a visitor.
+const INTERNAL_ERROR_PATTERNS = [
+  /row[- ]level security/i,
+  /violates .*constraint/i,
+  /duplicate key value/i,
+  /permission denied/i,
+  /relation "/i,
+  /column "/i,
+  /function .*does not exist/i,
+  /PGRST\d+/i,
+  /^\s*\{/,
+  /\bJWT\b/,
+  /supabase\.co/i,
+  /^[0-9A-Z]{5}:/,
+];
+
+function looksInternal(msg: string): boolean {
+  if (!msg) return true;
+  if (msg.length > 300) return true;
+  return INTERNAL_ERROR_PATTERNS.some((re) => re.test(msg));
+}
+
+// Server-side rules raise short machine codes; translate the ones a user can
+// legitimately hit into plain French instead of a generic error.
+const KNOWN_SERVER_RULES: Array<[RegExp, string]> = [
+  [
+    /plan_invoice_limit_reached/,
+    "Vous avez atteint le nombre de factures inclus dans votre offre ce mois-ci. Passez à une offre supérieure pour continuer.",
+  ],
+  [
+    /plan_client_limit_reached/,
+    "Vous avez atteint le nombre de clients inclus dans votre offre. Passez à une offre supérieure pour en ajouter davantage.",
+  ],
+  [/not_authorized/, "Vous n'avez pas les droits nécessaires pour cette action."],
+];
+
+function knownRuleMessage(raw: string): string | null {
+  for (const [re, text] of KNOWN_SERVER_RULES) {
+    if (re.test(raw)) return text;
+  }
+  return null;
+}
+
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [toasts, setToasts] = useState<Toast[]>([]);
 
@@ -42,18 +87,23 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   const toast = useCallback(
     (message: any, variant: ToastVariant = "info") => {
       const id = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
-      let strMsg = "Une erreur est survenue.";
+      const GENERIC = "Une erreur est survenue. Veuillez réessayer.";
+      let strMsg = GENERIC;
       if (typeof message === "string") {
-        strMsg = message;
+        strMsg = knownRuleMessage(message) ?? (looksInternal(message) ? GENERIC : message);
+        if (strMsg === GENERIC && message) console.error("Toast (masked):", message);
       } else if (message && typeof message === "object") {
-        strMsg = message.message || message.error || message.details || message.description || "";
-        if (!strMsg || typeof strMsg !== "string" || strMsg === "[object Object]") {
-          try {
-            strMsg = JSON.stringify(message);
-          } catch {
-            strMsg = "Erreur inattendue.";
-          }
+        // Never render a raw database or network error object: its message,
+        // details, hint and code leak table names, constraints and policy
+        // structure. Log it for developers and show a neutral message instead.
+        console.error("Toast error payload:", message);
+        let raw = "";
+        try {
+          raw = JSON.stringify(message);
+        } catch {
+          raw = String((message as any)?.message ?? "");
         }
+        strMsg = knownRuleMessage(raw) ?? GENERIC;
       }
       setToasts((prev) => [...prev, { id, message: String(strMsg), variant }]);
       setTimeout(() => remove(id), 5000);

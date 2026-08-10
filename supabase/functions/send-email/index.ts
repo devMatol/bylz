@@ -366,6 +366,45 @@ Deno.serve(async (req: Request) => {
       });
     }
 
+    // The mail relay only accepts real, bounded messages: at most five valid
+    // recipients, a capped subject and body, and no caller supplied markup.
+    const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[A-Za-z]{2,}$/;
+    const recipients: string[] = (Array.isArray(to) ? to : [to])
+      .filter((r: unknown): r is string => typeof r === "string")
+      .map((r: string) => r.trim())
+      .filter((r: string) => r.length > 0);
+
+    if (
+      recipients.length === 0 ||
+      recipients.length > 5 ||
+      recipients.some((r: string) => !EMAIL_RE.test(r) || r.length > 254)
+    ) {
+      return new Response(JSON.stringify({ error: "Destinataire invalide" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    if (typeof subject !== "string" || typeof body !== "string") {
+      return new Response(JSON.stringify({ error: "Paramètres invalides" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const escapeHtml = (s: string) =>
+      s
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+
+    const safeSubject = subject.replace(/[\r\n]+/g, " ").slice(0, 200);
+    const safeBodyText = body.slice(0, 10000);
+    const safeSubjectHtml = escapeHtml(safeSubject);
+    const safeBodyHtml = escapeHtml(safeBodyText);
+
     const resendKey = Deno.env.get("RESEND_API_KEY");
     if (!resendKey) {
       return new Response(
@@ -374,10 +413,16 @@ Deno.serve(async (req: Request) => {
       );
     }
 
+    // The email record is written with the service role: clients cannot write it.
+    const serviceClient = createClient(
+      supabaseUrl,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+    );
+
     // Fetch custom logo from system_settings or default
     let customLogoUrl = "https://bylz.fr/logo.png";
     try {
-      const { data: logoSetting } = await userClient
+      const { data: logoSetting } = await serviceClient
         .from("system_settings")
         .select("value")
         .eq("key", "email_logo_url")
@@ -396,9 +441,9 @@ Deno.serve(async (req: Request) => {
       errorMsg?: string
     ) => {
       try {
-        const { error: insertErr } = await userClient.from("email_logs").insert({
-          recipient: Array.isArray(to) ? to.join(", ") : to,
-          subject,
+        const { error: insertErr } = await serviceClient.from("email_logs").insert({
+          recipient: recipients.join(", "),
+          subject: safeSubject,
           email_type: document_type || "general",
           status,
           resend_id: resendId || null,
@@ -449,9 +494,9 @@ Deno.serve(async (req: Request) => {
             </span>
           </div>
           
-          <h2 style="color: #ffffff; font-size: 18px; font-weight: 800; margin-bottom: 16px; letter-spacing: -0.02em;">${subject}</h2>
+          <h2 style="color: #ffffff; font-size: 18px; font-weight: 800; margin-bottom: 16px; letter-spacing: -0.02em;">${safeSubjectHtml}</h2>
           
-          <div style="background: #1e293b; border-radius: 12px; border: 1px solid #334155; padding: 20px; color: #e2e8f0; font-size: 14px; line-height: 1.6; white-space: pre-wrap; margin-bottom: 24px;">${body}</div>
+          <div style="background: #1e293b; border-radius: 12px; border: 1px solid #334155; padding: 20px; color: #e2e8f0; font-size: 14px; line-height: 1.6; white-space: pre-wrap; margin-bottom: 24px;">${safeBodyHtml}</div>
 
           <div style="border-top: 1px solid #1e293b; padding-top: 20px; font-size: 12px; color: #94a3b8; text-align: center;">
             Besoin d'aide supplémentaire ? Rendez-vous sur <a href="https://bylz.fr" style="color: #fb7185; text-decoration: none; font-weight: 700;">bylz.fr</a>.
@@ -471,9 +516,9 @@ Deno.serve(async (req: Request) => {
         },
         body: JSON.stringify({
           from: `Bylz <no-reply@bylz.fr>`,
-          to,
-          subject,
-          text: body,
+          to: recipients,
+          subject: safeSubject,
+          text: safeBodyText,
           html: htmlContent,
           reply_to: "support@bylz.fr",
         }),
@@ -482,9 +527,10 @@ Deno.serve(async (req: Request) => {
       if (!resendRes.ok) {
         const errText = await resendRes.text();
         const fullErr = `Erreur Resend (${resendRes.status}): ${errText.slice(0, 200)}`;
+        console.error(fullErr);
         await logEmailDispatch("failed", undefined, fullErr);
         return new Response(
-          JSON.stringify({ error: fullErr }),
+          JSON.stringify({ error: "L'envoi de l'email a échoué. Merci de réessayer." }),
           { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
@@ -519,7 +565,7 @@ Deno.serve(async (req: Request) => {
       clientName,
       totalTtc: Number(doc.total_ttc || 0),
       publicUrl,
-      customBody: body,
+      customBody: safeBodyText,
     });
 
     const resendRes = await fetch("https://api.resend.com/emails", {
@@ -530,9 +576,9 @@ Deno.serve(async (req: Request) => {
       },
       body: JSON.stringify({
         from: `${companyName} via Bylz <no-reply@bylz.fr>`,
-        to,
-        subject,
-        text: `${body}\n\nConsulter en ligne : ${publicUrl}`,
+        to: recipients,
+        subject: safeSubject,
+        text: `${safeBodyText}\n\nConsulter en ligne : ${publicUrl}`,
         html: htmlContent,
         attachments: [
           {
@@ -547,9 +593,10 @@ Deno.serve(async (req: Request) => {
     if (!resendRes.ok) {
       const errText = await resendRes.text();
       const fullErr = `Erreur Resend (${resendRes.status}): ${errText.slice(0, 200)}`;
+      console.error(fullErr);
       await logEmailDispatch("failed", undefined, fullErr);
       return new Response(
-        JSON.stringify({ error: fullErr }),
+        JSON.stringify({ error: "L'envoi de l'email a échoué. Merci de réessayer." }),
         { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -564,7 +611,7 @@ Deno.serve(async (req: Request) => {
   } catch (err: any) {
     console.error("send-email Edge Function error:", err);
     return new Response(
-      JSON.stringify({ error: err.message || "Erreur interne Edge Function" }),
+      JSON.stringify({ error: "Erreur interne" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }

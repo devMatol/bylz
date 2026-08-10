@@ -26,6 +26,23 @@ serve(async (req) => {
       );
     }
 
+    // The caller must be signed in: an invoice id on its own is not
+    // authorisation, and the published anon key satisfies JWT verification.
+    const authHeader = req.headers.get("Authorization") || "";
+    const jwt = authHeader.replace(/^Bearer\s+/i, "").trim();
+    const anonClient = createClient(supabaseUrl, Deno.env.get("SUPABASE_ANON_KEY") || "");
+    const { data: userData } = jwt
+      ? await anonClient.auth.getUser(jwt)
+      : { data: { user: null } };
+    const authUser = userData?.user;
+
+    if (!authUser) {
+      return new Response(
+        JSON.stringify({ success: false, error: "Authentification requise." }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     // 1. Fetch invoice, lines, company, and client
     const { data: invoice, error: invErr } = await supabase
       .from("invoices")
@@ -43,6 +60,14 @@ serve(async (req) => {
     const company = invoice.company;
     const client = invoice.client;
     const lines = invoice.lines || [];
+
+    // Ownership: the signed-in caller must own the company the invoice belongs to.
+    if (!company || company.user_id !== authUser.id) {
+      return new Response(
+        JSON.stringify({ success: false, error: "Facture introuvable." }),
+        { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
     // Verify client is B2B
     if (!client || client.type !== "b2b") {

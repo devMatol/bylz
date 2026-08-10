@@ -11,6 +11,41 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, bridge-version, bridge-signature',
 };
 
+const webhookSecret = Deno.env.get('BRIDGE_WEBHOOK_SECRET') ?? '';
+
+/**
+ * Bridge signs each webhook with an HMAC-SHA256 of the raw body, sent as
+ * "v1=<base64>" (possibly several values) in the signature header. Without this
+ * check anyone could post a forged bank event to this endpoint.
+ */
+async function verifyBridgeSignature(bodyText: string, header: string | null): Promise<boolean> {
+  if (!header) return false;
+
+  const key = await crypto.subtle.importKey(
+    'raw',
+    new TextEncoder().encode(webhookSecret),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign']
+  );
+  const mac = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(bodyText));
+  const bytes = new Uint8Array(mac);
+  const expectedB64 = btoa(String.fromCharCode(...bytes));
+  const expectedHex = Array.from(bytes)
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('');
+
+  const candidates = header
+    .split(',')
+    .map((part) => part.trim().replace(/^v\d+=/, ''))
+    .filter((part) => part.length > 0);
+
+  return candidates.some(
+    (candidate) =>
+      candidate === expectedB64 || candidate.toLowerCase() === expectedHex
+  );
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
@@ -18,6 +53,28 @@ Deno.serve(async (req) => {
 
   try {
     const bodyText = await req.text();
+
+    if (!webhookSecret) {
+      console.error('BRIDGE_WEBHOOK_SECRET is not configured; refusing webhook.');
+      return new Response(JSON.stringify({ error: 'Webhook not configured' }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    const signatureHeader =
+      req.headers.get('bridgeapi-signature') ??
+      req.headers.get('bridge-signature') ??
+      req.headers.get('x-bridge-signature');
+
+    if (!(await verifyBridgeSignature(bodyText, signatureHeader))) {
+      console.warn('Bridge webhook signature verification failed.');
+      return new Response(JSON.stringify({ error: 'Invalid signature' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     let payload: any = {};
     try {
       payload = JSON.parse(bodyText);

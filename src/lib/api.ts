@@ -25,6 +25,19 @@ import type {
   BankTransaction,
 } from "../types/database";
 
+/**
+ * PostgREST `or()` filters are a string mini-language: commas, parentheses and
+ * dots separate operands. A raw search term could therefore extend the filter
+ * with operands of its own, so only harmless characters are kept.
+ */
+function sanitizeFilterTerm(term: string): string {
+  return term
+    .replace(/[,()\\%*"'\[\]{}:;]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 80);
+}
+
 export interface ClientWithStats extends Client {
   total_ca: number;
   invoice_count: number;
@@ -299,9 +312,10 @@ export async function fetchQuotes(
     .order("created_at", { ascending: false });
   if (status && status !== "all") query = query.eq("status", status);
   if (search) {
-    query = query.or(
-      `number.ilike.%${search}%,clients.name.ilike.%${search}%`
-    );
+    const safe = sanitizeFilterTerm(search);
+    if (safe) {
+      query = query.or(`number.ilike.%${safe}%,clients.name.ilike.%${safe}%`);
+    }
   }
   const { data, error } = await query;
   if (error) throw error;
@@ -531,9 +545,10 @@ export async function fetchInvoices(
 
   if (status && status !== "all") query = query.eq("status", status);
   if (search) {
-    query = query.or(
-      `number.ilike.%${search}%,clients.name.ilike.%${search}%`
-    );
+    const safe = sanitizeFilterTerm(search);
+    if (safe) {
+      query = query.or(`number.ilike.%${safe}%,clients.name.ilike.%${safe}%`);
+    }
   }
 
   let { data, error } = await query;
@@ -549,7 +564,8 @@ export async function fetchInvoices(
 
     if (status && status !== "all") fallbackQuery = fallbackQuery.eq("status", status);
     if (search) {
-      fallbackQuery = fallbackQuery.or(`number.ilike.%${search}%`);
+      const safe = sanitizeFilterTerm(search);
+      if (safe) fallbackQuery = fallbackQuery.or(`number.ilike.%${safe}%`);
     }
 
     const fallbackResult = await fallbackQuery;
@@ -1724,13 +1740,18 @@ export async function fetchLateInvoicesCount(companyId: string): Promise<number>
 
 export async function downloadPdf(
   documentType: "quote" | "invoice",
-  documentId: string
+  documentId: string,
+  publicToken?: string
 ): Promise<string> {
   const { data, error } = await supabase.functions.invoke<{
     url?: string;
     error?: string;
   }>("generate-pdf", {
-    body: { document_type: documentType, document_id: documentId },
+    body: {
+      document_type: documentType,
+      document_id: documentId,
+      public_token: publicToken,
+    },
   });
   if (error) throw error;
   if (!data || !data.url) throw new Error(data?.error || "URL PDF manquante");
