@@ -124,18 +124,7 @@ export function MarketingNavbar() {
         <div className="md:hidden fixed inset-0 z-[999] bg-bg/98 backdrop-blur-2xl flex flex-col justify-between p-6 overflow-y-auto animate-in fade-in duration-200">
           {/* Top Bar inside Overlay */}
           <div className="flex items-center justify-between pb-6 border-b border-border">
-            <Link
-              to="/"
-              onClick={() => setMobileMenuOpen(false)}
-              className="flex items-center space-x-2.5"
-            >
-              <div className="w-9 h-9 rounded-card bg-gradient-to-tr from-primary to-accent flex items-center justify-center text-white font-bold text-lg shadow-md">
-                B
-              </div>
-              <span className="text-xl font-black tracking-tight text-text">
-                Bylz<span className="text-primary">.</span>
-              </span>
-            </Link>
+            <Logo variant="gradient" height={32} onClick={() => setMobileMenuOpen(false)} />
 
             <button
               type="button"
