@@ -67,7 +67,7 @@ Retournez STRICTEMENT un tableau JSON de 6 objets respectant cette structure exa
 
     // 5. Call Gemini API
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiApiKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${geminiApiKey}`,
       {
         method: "POST",
         headers: {
@@ -90,8 +90,22 @@ Retournez STRICTEMENT un tableau JSON de 6 objets respectant cette structure exa
       }
     );
 
+    console.log("Gemini API HTTP Status:", response.status);
     const result = await response.json();
+    console.log("Gemini API raw result:", JSON.stringify(result));
+
+    if (!result.candidates || result.candidates.length === 0) {
+      return new Response(
+        JSON.stringify({ error: "Gemini API error (no candidates)", details: result }),
+        {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
+
     const responseText = result.candidates?.[0]?.content?.parts?.[0]?.text || "[]";
+    console.log("Gemini response text:", responseText);
     
     // Clean potential markdown wrap just in case
     const cleanedText = responseText.replace(/^\s*```json/i, "").replace(/```\s*$/, "").trim();

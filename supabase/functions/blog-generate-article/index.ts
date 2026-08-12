@@ -93,7 +93,7 @@ Remplissez les champs de retour structuré demandés par le schéma de réponse.
 
     // 5. Call Gemini API with strict response schema
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiApiKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${geminiApiKey}`,
       {
         method: "POST",
         headers: {
