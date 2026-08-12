@@ -58,6 +58,9 @@ export function AdminBlogEditorPage() {
 
   // AI Generator state
   const [aiTopic, setAiTopic] = useState("");
+  const [topicGuidance, setTopicGuidance] = useState("");
+  const [suggesting, setSuggesting] = useState(false);
+  const [dynamicKeywords, setDynamicKeywords] = useState<KeywordIdea[]>(SUGGESTED_KEYWORDS);
   const [aiSelectedKw, setAiSelectedKw] = useState<KeywordIdea | null>(SUGGESTED_KEYWORDS[0]);
 
   // Real Google Search Console Live Keywords
@@ -137,32 +140,67 @@ export function AdminBlogEditorPage() {
     }
   };
 
-  const handleGenerateAi = () => {
-    const targetTopic = aiTopic || aiSelectedKw?.keyword || "facturation électronique";
+  const handleSuggestKeywords = async () => {
+    setSuggesting(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("blog-suggest-topics", {
+        body: { guidance: topicGuidance.trim() },
+      });
+
+      if (error) throw error;
+      if (Array.isArray(data) && data.length > 0) {
+        setDynamicKeywords(data);
+        setAiSelectedKw(data[0]);
+        setCategory(data[0].category);
+        toast("Idées de mots-clés générées par l'IA !", "success");
+      } else {
+        toast("Aucune idée renvoyée par l'IA.", "warning");
+      }
+    } catch (err: any) {
+      console.error(err);
+      toast(err.message || "Erreur de suggestion de mots-clés", "danger");
+    } finally {
+      setSuggesting(false);
+    }
+  };
+
+  const handleGenerateAi = async () => {
+    const targetTopic = aiTopic.trim() || aiSelectedKw?.keyword || "facturation électronique";
     const targetKw = aiSelectedKw?.keyword || "facturation";
     const targetCat = aiSelectedKw?.category || category;
 
     setGenerating(true);
-    setTimeout(() => {
-      const generated = generateAiArticle({
-        topic: targetTopic,
-        keyword: targetKw,
-        category: targetCat,
+    try {
+      const { data, error } = await supabase.functions.invoke("blog-generate-article", {
+        body: {
+          topic: targetTopic,
+          keyword: targetKw,
+          category: targetCat,
+        },
       });
 
-      setTitle(generated.title);
-      setSlug(generated.slug);
-      setExcerpt(generated.excerpt);
-      setMetaDescription(generated.metaDescription);
-      setCategory(generated.category);
-      setReadTime(generated.readTime);
-      setKeywords(generated.keywords);
-      setContent(generated.content);
+      if (error) throw error;
+      if (data && data.title) {
+        setTitle(data.title);
+        setSlug(handleSlugify(data.title));
+        setExcerpt(data.excerpt || "");
+        setMetaDescription(data.metaDescription || data.excerpt || "");
+        setCategory(data.category || targetCat);
+        setReadTime(data.readTime || "5 min de lecture");
+        setKeywords(data.keywords || [targetKw]);
+        setContent(data.content || "");
 
+        setActiveTab("edit");
+        toast("Article SEO généré avec succès par l'IA !", "success");
+      } else {
+        toast("Le format de réponse de l'IA est invalide.", "danger");
+      }
+    } catch (err: any) {
+      console.error(err);
+      toast(err.message || "Erreur de génération de l'article", "danger");
+    } finally {
       setGenerating(false);
-      setActiveTab("edit");
-      toast("Article SEO généré avec succès par l'IA !", "success");
-    }, 600);
+    }
   };
 
   const handleSave = async (targetStatus?: BlogPostStatus) => {
@@ -254,7 +292,7 @@ export function AdminBlogEditorPage() {
             onClick={() => setActiveTab("ai")}
             className={`px-4 py-2.5 text-xs font-bold border-b-2 transition-colors flex items-center gap-1.5 ${
               activeTab === "ai"
-                ? "border-brand-primary text-brand-primary"
+                ? "border-primary text-primary"
                 : "border-transparent text-muted hover:text-text"
             }`}
           >
@@ -267,7 +305,7 @@ export function AdminBlogEditorPage() {
             onClick={() => setActiveTab("edit")}
             className={`px-4 py-2.5 text-xs font-bold border-b-2 transition-colors flex items-center gap-1.5 ${
               activeTab === "edit"
-                ? "border-brand-primary text-brand-primary"
+                ? "border-primary text-primary"
                 : "border-transparent text-muted hover:text-text"
             }`}
           >
@@ -280,7 +318,7 @@ export function AdminBlogEditorPage() {
             onClick={() => setActiveTab("preview")}
             className={`px-4 py-2.5 text-xs font-bold border-b-2 transition-colors flex items-center gap-1.5 ${
               activeTab === "preview"
-                ? "border-brand-primary text-brand-primary"
+                ? "border-primary text-primary"
                 : "border-transparent text-muted hover:text-text"
             }`}
           >
@@ -317,8 +355,33 @@ export function AdminBlogEditorPage() {
                 Sélectionnez un mot-clé ci-dessous pour pré-configurer le sujet et générer un article ciblé.
               </p>
 
+              {/* Guidance text input for keywords */}
+              <div className="flex flex-col sm:flex-row gap-3 items-end bg-surface-hover/20 p-3.5 rounded-xl border border-border/50 my-2">
+                <div className="flex-1 w-full">
+                  <label className="block text-xs font-semibold text-text mb-1">
+                    Orienter la recherche d'opportunités (consigne, secteur, thématique...) :
+                  </label>
+                  <Input
+                    type="text"
+                    placeholder="Ex: Immobilier, e-commerce, TVA, artisans..."
+                    value={topicGuidance}
+                    onChange={(e) => setTopicGuidance(e.target.value)}
+                    className="text-xs"
+                  />
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleSuggestKeywords}
+                  loading={suggesting}
+                  className="h-10 text-xs font-bold border-primary text-primary hover:bg-primary/10 w-full sm:w-auto"
+                >
+                  Suggérer par IA 🚀
+                </Button>
+              </div>
+
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {SUGGESTED_KEYWORDS.map((kwItem) => {
+                {dynamicKeywords.map((kwItem) => {
                   const isSelected = aiSelectedKw?.keyword === kwItem.keyword;
                   return (
                     <div
@@ -329,8 +392,8 @@ export function AdminBlogEditorPage() {
                       }}
                       className={`p-4 rounded-xl border cursor-pointer transition-all ${
                         isSelected
-                          ? "border-brand-primary bg-brand-primary/10 shadow-sm"
-                          : "border-border hover:border-brand-primary/50 bg-surface"
+                          ? "border-primary bg-primary/10 shadow-sm"
+                          : "border-border hover:border-primary/50 bg-surface"
                       }`}
                     >
                       <div className="flex items-center justify-between mb-1.5">
@@ -385,7 +448,7 @@ export function AdminBlogEditorPage() {
             {/* Custom Prompt Box */}
             <Card className="p-6 space-y-4">
               <h3 className="text-sm font-extrabold text-text flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-brand-primary" />
+                <Sparkles className="w-4 h-4 text-primary" />
                 <span>Personnaliser le Sujet de l'Article par IA</span>
               </h3>
 
@@ -495,7 +558,7 @@ export function AdminBlogEditorPage() {
                     value={excerpt}
                     onChange={(e) => setExcerpt(e.target.value)}
                     placeholder="Bref résumé accrocheur affiché sur la liste du blog..."
-                    className="w-full px-3 py-2 text-xs bg-surface border border-border rounded-lg text-text focus:outline-none focus:ring-1 focus:ring-brand-primary"
+                    className="w-full px-3 py-2 text-xs bg-surface border border-border rounded-lg text-text focus:outline-none focus:ring-1 focus:ring-primary"
                   />
                 </div>
 
@@ -508,7 +571,7 @@ export function AdminBlogEditorPage() {
                     value={metaDescription}
                     onChange={(e) => setMetaDescription(e.target.value)}
                     placeholder="Description optimisée pour les résultats de recherche Google..."
-                    className="w-full px-3 py-2 text-xs bg-surface border border-border rounded-lg text-text focus:outline-none focus:ring-1 focus:ring-brand-primary font-mono"
+                    className="w-full px-3 py-2 text-xs bg-surface border border-border rounded-lg text-text focus:outline-none focus:ring-1 focus:ring-primary font-mono"
                   />
                   <p className="text-[10px] text-muted mt-1">Recommandé : entre 120 et 165 caractères.</p>
                 </div>
@@ -527,7 +590,7 @@ export function AdminBlogEditorPage() {
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
                 placeholder="Rédigez ou éditez le contenu HTML de l'article (titres <h2>, balises <p>, <ul>, etc.)..."
-                className="w-full p-4 text-xs font-mono bg-surface border border-border rounded-xl text-text focus:outline-none focus:ring-1 focus:ring-brand-primary leading-relaxed"
+                className="w-full p-4 text-xs font-mono bg-surface border border-border rounded-xl text-text focus:outline-none focus:ring-1 focus:ring-primary leading-relaxed"
               />
             </Card>
           </div>
@@ -587,7 +650,7 @@ export function AdminBlogEditorPage() {
           {/* Header Preview */}
           <div className="space-y-4 border-b border-border pb-6">
             <div className="flex items-center space-x-3 text-xs">
-              <span className="px-3 py-1 rounded-full bg-brand-primary/10 text-brand-primary font-bold">
+              <span className="px-3 py-1 rounded-full bg-primary/10 text-primary font-bold">
                 {category}
               </span>
               <span className="text-muted">{readTime}</span>
