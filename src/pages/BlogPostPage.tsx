@@ -22,6 +22,9 @@ export function BlogPostPage() {
     content: string;
     metaDescription?: string;
     views?: number;
+    coverImageUrl?: string;
+    publishedAt?: string;
+    createdAt?: string;
   } | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -46,6 +49,9 @@ export function BlogPostPage() {
             content: dbPost.content,
             metaDescription: dbPost.meta_description || dbPost.excerpt,
             views: dbPost.views || 0,
+            coverImageUrl: dbPost.cover_image_url || "",
+            publishedAt: dbPost.published_at || "",
+            createdAt: dbPost.created_at || "",
           });
           if (dbPost.id) {
             void incrementBlogPostViews(dbPost.id);
@@ -63,6 +69,9 @@ export function BlogPostPage() {
               readTime: staticMatch.readTime,
               content: staticMatch.content,
               metaDescription: staticMatch.excerpt,
+              coverImageUrl: "",
+              publishedAt: "",
+              createdAt: "",
             });
           }
         }
@@ -79,6 +88,9 @@ export function BlogPostPage() {
             readTime: staticMatch.readTime,
             content: staticMatch.content,
             metaDescription: staticMatch.excerpt,
+            coverImageUrl: "",
+            publishedAt: "",
+            createdAt: "",
           });
         }
       } finally {
@@ -100,15 +112,56 @@ export function BlogPostPage() {
     return <Navigate to="/blog" replace />;
   }
 
+  // Helper to extract FAQ questions and answers from article content HTML
+  const extractFaqsFromHtml = (html: string) => {
+    const faqs: { question: string; answer: string }[] = [];
+    try {
+      // Find h2 or h3 headings that contain a question mark
+      const headingRegex = /<(h[23])>([^<]*\?[^<]*)<\/\1>/gi;
+      const matches = Array.from(html.matchAll(headingRegex));
+
+      for (const match of matches) {
+        const headingHtml = match[0];
+        const headingText = match[2].replace(/<[^>]*>/g, "").trim();
+
+        const headingIndex = html.indexOf(headingHtml);
+        if (headingIndex === -1) continue;
+
+        const restHtml = html.substring(headingIndex + headingHtml.length);
+        const nextParagraphMatch = restHtml.match(/<p>([\s\S]*?)<\/p>/i);
+        if (nextParagraphMatch) {
+          const answerText = nextParagraphMatch[1].replace(/<[^>]*>/g, "").trim();
+          if (headingText && answerText) {
+            faqs.push({
+              question: headingText,
+              answer: answerText,
+            });
+          }
+        }
+      }
+    } catch (e) {
+      console.warn("Failed to extract FAQs from HTML", e);
+    }
+    return faqs;
+  };
+
+  const faqs = extractFaqsFromHtml(article.content);
+
   const blogPostingSchema = {
     "@context": "https://schema.org",
     "@type": "BlogPosting",
     headline: article.title,
-    description: article.excerpt,
-    datePublished: article.date,
+    description: article.metaDescription || article.excerpt,
+    datePublished: article.publishedAt || article.createdAt || new Date().toISOString(),
+    dateModified: article.publishedAt || article.createdAt || new Date().toISOString(),
+    mainEntityOfPage: {
+      "@type": "WebPage",
+      "@id": `https://bylz.fr/blog/${article.slug}`,
+    },
+    image: article.coverImageUrl || "https://bylz.fr/og-image.png",
     author: {
-      "@type": "Organization",
-      name: "Bylz",
+      "@type": "Person",
+      name: article.author || "Équipe Bylz",
     },
     publisher: {
       "@type": "Organization",
@@ -120,6 +173,21 @@ export function BlogPostPage() {
     },
   };
 
+  const faqSchema = faqs.length > 0 ? {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: faqs.map((f) => ({
+      "@type": "Question",
+      name: f.question,
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: f.answer,
+      },
+    })),
+  } : null;
+
+  const schemas = faqSchema ? [blogPostingSchema, faqSchema] : [blogPostingSchema];
+
   return (
     <div className="min-h-screen bg-bg text-text selection:bg-brand-primary/20 selection:text-brand-primary">
       <SEO
@@ -127,7 +195,7 @@ export function BlogPostPage() {
         description={article.metaDescription || article.excerpt}
         canonical={`/blog/${article.slug}`}
         ogType="article"
-        jsonLd={blogPostingSchema}
+        jsonLd={schemas}
       />
 
       <MarketingNavbar />
