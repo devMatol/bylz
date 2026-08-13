@@ -685,7 +685,8 @@ function parseFacturXXml(xmlStr: string): {
       open={open}
       onClose={handleClose}
       title="Importer des factures historiques"
-      className={pdfUrl ? "max-w-6xl w-full h-[90vh] flex flex-col p-6 overflow-hidden" : "max-w-md p-6"}
+      className={pdfUrl ? "w-full h-[90vh] flex flex-col p-6 overflow-hidden" : "p-6"}
+      style={pdfUrl ? { maxWidth: "1152px", width: "100%" } : { maxWidth: "448px", width: "100%" }}
     >
       {!pdfUrl ? (
         /* Drag & Drop Step */

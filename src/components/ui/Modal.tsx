@@ -8,9 +8,10 @@ interface ModalProps {
   title?: string;
   children: ReactNode;
   className?: string;
+  style?: React.CSSProperties;
 }
 
-export function Modal({ open, onClose, title, children, className }: ModalProps) {
+export function Modal({ open, onClose, title, children, className, style }: ModalProps) {
   useEffect(() => {
     if (!open) return;
     const handler = (e: KeyboardEvent) => {
@@ -36,6 +37,7 @@ export function Modal({ open, onClose, title, children, className }: ModalProps)
           !hasMaxWidth && "max-w-lg",
           className
         )}
+        style={style}
         onClick={(e) => e.stopPropagation()}
       >
         {title && (
