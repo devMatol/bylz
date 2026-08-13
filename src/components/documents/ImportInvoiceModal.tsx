@@ -880,7 +880,7 @@ function parseFacturXXml(xmlStr: string): {
             </form>
 
             {/* Actions panel */}
-            <div className="pt-4 border-t border-border flex items-center justify-end gap-2 mt-4 bg-bg">
+            <div className="pt-4 border-t border-border flex items-center justify-end gap-2 mt-4">
               <Button variant="outline" size="md" onClick={handleClose}>
                 Annuler
               </Button>
