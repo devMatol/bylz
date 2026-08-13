@@ -21,6 +21,16 @@ export async function signIn(email: string, password: string) {
   return supabase.auth.signInWithPassword({ email, password });
 }
 
+export async function sendPasswordResetEmail(email: string) {
+  return supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${window.location.origin}/reset-password`,
+  });
+}
+
+export async function updatePassword(password: string) {
+  return supabase.auth.updateUser({ password });
+}
+
 export async function signInWithGoogle(redirectTo?: string) {
   return supabase.auth.signInWithOAuth({
     provider: "google",

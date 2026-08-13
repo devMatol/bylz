@@ -86,25 +86,37 @@ export function LoginPage() {
           autoFocus
         />
 
-        <div className="relative">
-          <Input
-            label="Mot de passe"
-            type={showPassword ? "text" : "password"}
-            placeholder="••••••••"
-            leftIcon={<Lock className="w-4 h-4" />}
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            autoComplete="current-password"
-          />
-          <button
-            type="button"
-            onClick={() => setShowPassword((s) => !s)}
-            className="absolute right-3 top-[34px] text-muted hover:text-text transition-colors"
-            aria-label={showPassword ? "Masquer le mot de passe" : "Afficher le mot de passe"}
-          >
-            {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-          </button>
+        <div className="flex flex-col gap-1.5">
+          <div className="flex items-center justify-between">
+            <label className="text-sm font-semibold text-text">
+              Mot de passe
+            </label>
+            <Link
+              to={isGuest ? "/forgot-password?guest=true" : "/forgot-password"}
+              className="text-xs text-primary hover:underline font-semibold"
+            >
+              Mot de passe oublié ?
+            </Link>
+          </div>
+          <div className="relative">
+            <Input
+              type={showPassword ? "text" : "password"}
+              placeholder="••••••••"
+              leftIcon={<Lock className="w-4 h-4" />}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              autoComplete="current-password"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword((s) => !s)}
+              className="absolute right-3 top-3 text-muted hover:text-text transition-colors"
+              aria-label={showPassword ? "Masquer le mot de passe" : "Afficher le mot de passe"}
+            >
+              {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+            </button>
+          </div>
         </div>
 
         {error && (

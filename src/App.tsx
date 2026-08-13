@@ -15,6 +15,8 @@ import { ImpersonationBanner } from "./components/admin/ImpersonationBanner";
 // Auth & Onboarding pages
 import { LoginPage } from "./pages/LoginPage";
 import { SignupPage } from "./pages/SignupPage";
+import { ForgotPasswordPage } from "./pages/ForgotPasswordPage";
+import { ResetPasswordPage } from "./pages/ResetPasswordPage";
 import { OnboardingPage } from "./pages/OnboardingPage";
 import { GuestEditorPage } from "./pages/GuestEditorPage";
 
@@ -240,7 +242,10 @@ function App() {
                 <Route element={<PublicOnlyRoute />}>
                   <Route path="/login" element={<LoginPage />} />
                   <Route path="/signup" element={<SignupPage />} />
+                  <Route path="/forgot-password" element={<ForgotPasswordPage />} />
                 </Route>
+
+                <Route path="/reset-password" element={<ResetPasswordPage />} />
 
                 {/* onboarding — authenticated, standalone layout */}
                 <Route path="/onboarding" element={<OnboardingRoute />}>
