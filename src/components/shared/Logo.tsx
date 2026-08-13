@@ -15,8 +15,23 @@ export function Logo({
   showText = true,
   onClick,
 }: LogoProps) {
-  let iconSrc = "/bylz-icon-gradient.svg";
-  if (variant === "white") iconSrc = "/bylz-icon-white.svg";
+  let logoSrc = "/bylz-logo-gradient.svg";
+
+  if (showText && variant !== "icon") {
+    if (variant === "white") {
+      logoSrc = "/bylz-logo-white.svg";
+    } else if (variant === "navy") {
+      logoSrc = "/bylz-logo-navy.svg";
+    } else {
+      logoSrc = "/bylz-logo-gradient.svg";
+    }
+  } else {
+    if (variant === "white") {
+      logoSrc = "/bylz-icon-white.svg";
+    } else {
+      logoSrc = "/bylz-icon-gradient.svg";
+    }
+  }
 
   return (
     <Link
@@ -25,10 +40,10 @@ export function Logo({
       className={`inline-flex items-center gap-2.5 group focus:outline-none select-none ${className}`}
     >
       <img
-        src={iconSrc}
-        alt="Bylz Icon"
+        src={logoSrc}
+        alt="Bylz Logo"
         style={{ height: `${height}px` }}
-        className="w-auto object-contain drop-shadow-md group-hover:scale-105 transition-transform duration-200"
+        className="w-auto object-contain drop-shadow-sm group-hover:scale-[1.02] transition-transform duration-200"
       />
     </Link>
   );
