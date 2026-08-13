@@ -731,7 +731,7 @@ function parseFacturXXml(xmlStr: string): {
         /* Split Screen Editor Step */
         <div className="flex-1 flex flex-col md:flex-row gap-6 min-h-0 overflow-hidden mt-2">
           {/* Left panel: Large PDF viewer */}
-          <div className="flex-[3] border border-border rounded-card bg-slate-900 overflow-hidden flex flex-col h-full min-w-0">
+          <div className="flex-[3] border border-border rounded-card bg-slate-900 overflow-hidden flex flex-col h-full min-w-0 md:min-w-[500px]">
             <div className="flex items-center justify-between p-2.5 border-b border-border bg-surface text-xs text-muted">
               <span className="flex items-center gap-1.5 font-bold text-text">
                 <FileText className="w-4 h-4 text-primary" /> Aperçu du document PDF
@@ -752,7 +752,16 @@ function parseFacturXXml(xmlStr: string): {
           </div>
 
           {/* Right panel: Validation Form */}
-          <div className="flex-[2] min-w-[340px] max-w-[440px] flex flex-col h-full justify-between min-h-0">
+          <div className="flex-[2] min-w-[340px] max-w-[440px] flex flex-col h-full justify-between min-h-0 relative">
+            {analyzing && (
+              <div className="absolute inset-0 bg-bg/90 backdrop-blur-xs flex flex-col items-center justify-center rounded-card z-10 space-y-4 p-6">
+                <Loader2 className="w-8 h-8 text-primary animate-spin" />
+                <div className="text-center space-y-1">
+                  <p className="text-sm font-bold text-text">Lecture intelligente en cours...</p>
+                  <p className="text-xs text-muted max-w-[250px]">Le robot extrait le numéro, les dates et montants de la facture.</p>
+                </div>
+              </div>
+            )}
             <form onSubmit={handleSaveImport} className="flex-1 overflow-y-auto pr-1 space-y-4">
               {/* Client Selection / Creation Section */}
               <div className="border border-border bg-surface-hover/20 rounded-card p-4 space-y-3">
@@ -878,7 +887,7 @@ function parseFacturXXml(xmlStr: string): {
                 variant="primary"
                 size="md"
                 onClick={(e) => void handleSaveImport(e)}
-                disabled={saving}
+                disabled={saving || analyzing}
                 className="bylz-glow-cta font-bold"
               >
                 {saving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}

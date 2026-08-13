@@ -22,6 +22,8 @@ export function Modal({ open, onClose, title, children, className }: ModalProps)
 
   if (!open) return null;
 
+  const hasMaxWidth = className && /\bmax-w-/.test(className);
+
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center p-4"
@@ -30,7 +32,8 @@ export function Modal({ open, onClose, title, children, className }: ModalProps)
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
       <div
         className={cn(
-          "relative bg-surface border border-border rounded-card p-6 w-full max-w-lg shadow-2xl",
+          "relative bg-surface border border-border rounded-card p-6 w-full shadow-2xl",
+          !hasMaxWidth && "max-w-lg",
           className
         )}
         onClick={(e) => e.stopPropagation()}
