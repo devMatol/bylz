@@ -866,7 +866,7 @@ export function SettingsPage() {
 
           {/* WhatsApp AI Copilot Remote Management Section */}
           <FeatureLockWrapper
-            feature="fiscalDashboard"
+            feature="paymentLinks"
             title="Pilote IA WhatsApp"
             description="Pilotez votre entreprise à la voix ou par texte via WhatsApp : calcul de CA, relance client, et saisie de dépenses par photo."
           >
