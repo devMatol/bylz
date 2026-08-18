@@ -115,7 +115,7 @@ function FeatureLockWrapper({ children, feature, title, description }: FeatureLo
 }
 
 export function SettingsPage() {
-  const { profile, company, refreshProfile } = useAuth();
+  const { user, profile, company, refreshProfile } = useAuth();
   const { toast } = useToast();
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -865,13 +865,15 @@ export function SettingsPage() {
           </Card>
 
           {/* WhatsApp AI Copilot Remote Management Section */}
-          <FeatureLockWrapper
-            feature="paymentLinks"
-            title="Pilote IA WhatsApp"
-            description="Pilotez votre entreprise à la voix ou par texte via WhatsApp : calcul de CA, relance client, et saisie de dépenses par photo."
-          >
-            <WhatsAppCopilotSection />
-          </FeatureLockWrapper>
+          {user?.email?.toLowerCase() === "matthiasollivier123@gmail.com" && (
+            <FeatureLockWrapper
+              feature="paymentLinks"
+              title="Pilote IA WhatsApp"
+              description="Pilotez votre entreprise à la voix ou par texte via WhatsApp : calcul de CA, relance client, et saisie de dépenses par photo."
+            >
+              <WhatsAppCopilotSection />
+            </FeatureLockWrapper>
+          )}
 
           {/* Push Notification Card */}
           <PushNotificationToggle />
