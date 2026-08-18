@@ -48,12 +48,70 @@ import { AutoRemindersSection } from "../components/settings/AutoRemindersSectio
 import { BankSyncSection } from "../components/settings/BankSyncSection";
 import { PushNotificationToggle } from "../components/pwa/PushNotificationToggle";
 import { WhatsAppCopilotSection } from "../components/settings/WhatsAppCopilotSection";
+import { canUseFeature, type FeatureKey } from "../lib/planLimits";
 
 interface ConnectStatus {
   hasAccount: boolean;
   chargesEnabled: boolean;
   detailsSubmitted?: boolean;
   payoutsEnabled?: boolean;
+}
+
+interface FeatureLockWrapperProps {
+  children: React.ReactNode;
+  feature: FeatureKey;
+  title: string;
+  description: string;
+}
+
+function FeatureLockWrapper({ children, feature, title, description }: FeatureLockWrapperProps) {
+  const { profile } = useAuth();
+  const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
+  const isLocked = !canUseFeature(profile?.plan, feature);
+
+  if (!isLocked) {
+    return <>{children}</>;
+  }
+
+  const modalFeature =
+    feature === "invoicesPerMonth"
+      ? "invoices"
+      : feature === "maxClients"
+      ? "clients"
+      : feature;
+
+  return (
+    <div className="relative group overflow-hidden rounded-card border border-border bg-surface/50">
+      <div className="blur-[3px] pointer-events-none select-none opacity-40">
+        {children}
+      </div>
+
+      <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center bg-bg/40 backdrop-blur-[1px]">
+        <div className="w-12 h-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center mb-3 border border-primary/20 shadow-sm">
+          <Zap className="w-6 h-6 animate-pulse" />
+        </div>
+        <h4 className="text-base font-black text-text tracking-tight">{title}</h4>
+        <p className="text-xs text-muted max-w-sm mt-1 mb-4 leading-relaxed">
+          {description}
+        </p>
+        <Button
+          type="button"
+          variant="primary"
+          size="sm"
+          onClick={() => setUpgradeModalOpen(true)}
+          className="bylz-glow-cta text-xs font-bold font-mono"
+        >
+          Débloquer cette fonctionnalité
+        </Button>
+
+        <UpgradeModal
+          open={upgradeModalOpen}
+          onClose={() => setUpgradeModalOpen(false)}
+          feature={modalFeature}
+        />
+      </div>
+    </div>
+  );
 }
 
 export function SettingsPage() {
@@ -807,19 +865,43 @@ export function SettingsPage() {
           </Card>
 
           {/* WhatsApp AI Copilot Remote Management Section */}
-          <WhatsAppCopilotSection />
+          <FeatureLockWrapper
+            feature="fiscalDashboard"
+            title="Pilote IA WhatsApp"
+            description="Pilotez votre entreprise à la voix ou par texte via WhatsApp : calcul de CA, relance client, et saisie de dépenses par photo."
+          >
+            <WhatsAppCopilotSection />
+          </FeatureLockWrapper>
 
           {/* Push Notification Card */}
           <PushNotificationToggle />
 
           {/* Compliance & E-invoicing Section */}
-          <ComplianceSection />
+          <FeatureLockWrapper
+            feature="exports"
+            title="Conformité E-invoicing & FactPulse"
+            description="Transmettez vos e-reportings réglementaires B2C et connectez la plateforme PDP FactPulse."
+          >
+            <ComplianceSection />
+          </FeatureLockWrapper>
 
           {/* Automatic Payment Reminders Section */}
-          <AutoRemindersSection />
+          <FeatureLockWrapper
+            feature="reminders"
+            title="Relances de Paiement Automatiques"
+            description="Automatisez vos relances de factures en retard et configurez votre échéancier personnalisé."
+          >
+            <AutoRemindersSection />
+          </FeatureLockWrapper>
 
           {/* Bank Synchronization & Matching Section */}
-          <BankSyncSection />
+          <FeatureLockWrapper
+            feature="paymentLinks"
+            title="Synchronisation Bancaire & Rapprochement"
+            description="Connectez vos comptes bancaires de manière sécurisée et rapprochez automatiquement vos factures avec vos virements."
+          >
+            <BankSyncSection />
+          </FeatureLockWrapper>
         </div>
 
       </div>
