@@ -42,7 +42,7 @@ export function PricingPage() {
       description: "Plan premium avec paiement en ligne Stripe Connect et télétransmission DGFiP.",
       offers: {
         "@type": "Offer",
-        price: billingCycle === "annual" ? "75.00" : "12.90",
+        price: billingCycle === "annual" ? "80.00" : "12.90",
         priceCurrency: "EUR",
       },
     },
@@ -52,7 +52,7 @@ export function PricingPage() {
     {
       category: "Facturation & Devis",
       features: [
-        { name: "Factures & Devis mensuels", starter: "10 / mois", solo: "Illimités", pro: "Illimités" },
+        { name: "Factures & Devis mensuels", starter: "3 / mois", solo: "Illimités", pro: "Illimités" },
         { name: "Nombre de clients actifs", starter: "3 max", solo: "Illimités", pro: "Illimités" },
         { name: "Format hybride Factur-X conforme 2026", starter: true, solo: true, pro: true },
         { name: "Recherche SIRET automatique client", starter: true, solo: true, pro: true },
@@ -86,7 +86,7 @@ export function PricingPage() {
     <div className="min-h-screen bg-bg text-text selection:bg-primary/20 selection:text-primary">
       <SEO
         title="Tarifs Bylz : Logiciel de Facturation et Pilotage Fiscal pour Micro-Entrepreneurs"
-        description="Découvrez nos tarifs simples et sans engagement : Solo 50€/an (ou 8,90€/mois) et Pro 75€/an (ou 12,90€/mois). 14 jours d'essai offerts."
+        description="Découvrez nos tarifs simples et sans engagement : Solo 50€/an (ou 8,90€/mois) et Pro 80€/an (ou 12,90€/mois). 14 jours d'essai offerts."
         canonical="/tarifs"
         jsonLd={productSchemas}
       />
@@ -153,11 +153,11 @@ export function PricingPage() {
                     <span className="text-4xl font-black text-primary font-mono">
                       {billingCycle === "annual" ? "4,17 €" : "8,90 €"}
                     </span>
-                    <span className="text-xs text-muted">/ mois HT</span>
+                    <span className="text-xs text-muted">/ mois TTC</span>
                   </div>
                   {billingCycle === "annual" ? (
                     <p className="text-[11px] font-bold text-emerald-500 mt-1">
-                      soit 50 € / an HT (proratisé au mois)
+                      soit 50 € / an TTC (proratisé au mois)
                     </p>
                   ) : (
                     <p className="text-[11px] font-medium text-muted mt-1">
@@ -186,13 +186,13 @@ export function PricingPage() {
                   <p className="text-xs text-muted mt-1 font-medium">Pour une automatisation complète</p>
                   <div className="mt-4 flex items-baseline space-x-1">
                     <span className="text-4xl font-black text-text font-mono">
-                      {billingCycle === "annual" ? "6,25 €" : "12,90 €"}
+                      {billingCycle === "annual" ? "6,67 €" : "12,90 €"}
                     </span>
-                    <span className="text-xs text-muted">/ mois HT</span>
+                    <span className="text-xs text-muted">/ mois TTC</span>
                   </div>
                   {billingCycle === "annual" ? (
                     <p className="text-[11px] font-bold text-emerald-500 mt-1">
-                      soit 75 € / an HT (proratisé au mois)
+                      soit 80 € / an TTC (proratisé au mois)
                     </p>
                   ) : (
                     <p className="text-[11px] font-medium text-muted mt-1">

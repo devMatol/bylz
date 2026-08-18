@@ -83,7 +83,7 @@ export function UpgradeModal({
   const priceLabel =
     billingCycle === "annual"
       ? targetPlan === "pro"
-        ? "75 € / an (6,25 €/mois)"
+        ? "80 € / an (6,67 €/mois)"
         : "50 € / an (4,17 €/mois)"
       : targetPlan === "pro"
       ? "12,90 € / mois"

@@ -47,7 +47,7 @@ BEGIN
 
   IF NOT FOUND THEN
     IF v_plan = 'starter' THEN
-      RETURN QUERY SELECT 10::integer, 3::integer;
+      RETURN QUERY SELECT 3::integer, 3::integer;
     ELSE
       RETURN QUERY SELECT NULL::integer, NULL::integer;
     END IF;

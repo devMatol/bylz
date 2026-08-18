@@ -447,11 +447,11 @@ export function SettingsPage() {
                 <div>
                   <div className="text-3xl font-extrabold text-text font-mono">
                     {billingCycle === "annual" ? "4,17 €" : "8,90 €"}{" "}
-                    <span className="text-xs font-normal text-muted font-sans">/ mois HT</span>
+                    <span className="text-xs font-normal text-muted font-sans">/ mois TTC</span>
                   </div>
                   {billingCycle === "annual" ? (
                     <p className="text-[11px] font-bold text-emerald-500 mt-1">
-                      soit 50 € / an HT (proratisé au mois)
+                      soit 50 € / an TTC (proratisé au mois)
                     </p>
                   ) : (
                     <p className="text-[11px] font-medium text-muted mt-1">
@@ -523,12 +523,12 @@ export function SettingsPage() {
 
                 <div>
                   <div className="text-3xl font-extrabold text-text font-mono">
-                    {billingCycle === "annual" ? "6,25 €" : "12,90 €"}{" "}
-                    <span className="text-xs font-normal text-muted font-sans">/ mois HT</span>
+                    {billingCycle === "annual" ? "6,67 €" : "12,90 €"}{" "}
+                    <span className="text-xs font-normal text-muted font-sans">/ mois TTC</span>
                   </div>
                   {billingCycle === "annual" ? (
                     <p className="text-[11px] font-bold text-emerald-500 mt-1">
-                      soit 75 € / an HT (proratisé au mois)
+                      soit 80 € / an TTC (proratisé au mois)
                     </p>
                   ) : (
                     <p className="text-[11px] font-medium text-muted mt-1">
@@ -572,7 +572,7 @@ export function SettingsPage() {
                     {loadingCheckout ? (
                       <Loader2 className="w-4 h-4 animate-spin" />
                     ) : (
-                      `Passer au plan Pro (${billingCycle === "annual" ? "75€/an" : "12,90€/mois"})`
+                      `Passer au plan Pro (${billingCycle === "annual" ? "80€/an" : "12,90€/mois"})`
                     )}
                   </Button>
                 )}

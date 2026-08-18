@@ -54,7 +54,7 @@ export const PRICE_TO_PLAN: Record<string, "solo" | "pro"> = {
 export const PLAN_PRICES = {
   starter: { annual: 0, monthly: 0, annualMonthlyEquiv: "0 €" },
   solo: { annual: 50, monthly: 8.9, annualMonthlyEquiv: "4,17 €" },
-  pro: { annual: 75, monthly: 12.9, annualMonthlyEquiv: "6,25 €" },
+  pro: { annual: 80, monthly: 12.9, annualMonthlyEquiv: "6,67 €" },
 };
 
 export const STATUS_LABELS: Record<string, string> = {

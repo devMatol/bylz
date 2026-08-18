@@ -335,11 +335,11 @@ export function LandingPage() {
                     <span className="text-4xl font-black text-primary font-mono">
                       {billingCycle === "annual" ? "4,17 €" : "8,90 €"}
                     </span>
-                    <span className="text-xs text-muted">/ mois HT</span>
+                    <span className="text-xs text-muted">/ mois TTC</span>
                   </div>
                   {billingCycle === "annual" ? (
                     <p className="text-[11px] font-bold text-emerald-500 mt-1">
-                      soit 50 € / an HT (proratisé au mois)
+                      soit 50 € / an TTC (proratisé au mois)
                     </p>
                   ) : (
                     <p className="text-[11px] font-medium text-muted mt-1">
@@ -379,13 +379,13 @@ export function LandingPage() {
                   <p className="text-xs text-muted mt-1 font-medium">Pour maximiser votre activité</p>
                   <div className="mt-4 flex items-baseline space-x-1">
                     <span className="text-4xl font-black text-text font-mono">
-                      {billingCycle === "annual" ? "6,25 €" : "12,90 €"}
+                      {billingCycle === "annual" ? "6,67 €" : "12,90 €"}
                     </span>
-                    <span className="text-xs text-muted">/ mois HT</span>
+                    <span className="text-xs text-muted">/ mois TTC</span>
                   </div>
                   {billingCycle === "annual" ? (
                     <p className="text-[11px] font-bold text-emerald-500 mt-1">
-                      soit 75 € / an HT (proratisé au mois)
+                      soit 80 € / an TTC (proratisé au mois)
                     </p>
                   ) : (
                     <p className="text-[11px] font-medium text-muted mt-1">
