@@ -111,7 +111,49 @@ export function ClientsPage() {
           onCta={handleOpenNewClient}
         />
       ) : (
-        <ClientsTable rows={rows} onRowClick={(id) => navigate(`/clients/${id}`)} />
+        <>
+          <ClientsTable rows={rows} onRowClick={(id) => navigate(`/clients/${id}`)} />
+
+          {/* Mobile view <768px: stacked cards */}
+          <div className="flex flex-col gap-3 md:hidden">
+            {rows.map((r) => (
+              <div
+                key={r.id}
+                onClick={() => navigate(`/clients/${r.id}`)}
+                className="p-4 rounded-card border border-border bg-surface card-shadow space-y-3 cursor-pointer active:scale-[0.99] transition-all"
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex items-center space-x-3 min-w-0">
+                    <Avatar name={r.name} size="sm" />
+                    <div className="min-w-0">
+                      <p className="font-bold text-sm text-text truncate">
+                        {r.name}
+                      </p>
+                      {r.email && (
+                        <p className="text-xs text-muted truncate mt-0.5">
+                          {r.email}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                  <Badge variant={r.type === "b2b" ? "primary" : "default"} className="flex-shrink-0">
+                    {r.type === "b2b" ? "Pro" : "Particulier"}
+                  </Badge>
+                </div>
+
+                <div className="flex items-center justify-between pt-2 border-t border-border/60 text-xs">
+                  <span className="text-muted">
+                    {r.invoice_count} facture{r.invoice_count > 1 ? "s" : ""}
+                  </span>
+                  <div className="flex items-center gap-1 font-bold text-text">
+                    <span className="text-muted font-normal">CA :</span>
+                    <Amount value={r.total_ca} size="sm" className="inline-block" />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </>
       )}
 
       <ClientModal

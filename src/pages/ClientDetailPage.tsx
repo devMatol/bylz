@@ -86,33 +86,33 @@ export function ClientDetailPage() {
 
   return (
     <PageContainer title={client.name} subtitle="Fiche client">
-      <div className="flex items-start justify-between gap-4 flex-wrap">
-        <div className="flex items-center gap-4">
-          <Avatar name={client.name} size="lg" />
-          <div>
-            <h2 className="text-xl font-bold text-text">{client.name}</h2>
-            <div className="flex items-center gap-2 mt-1">
-              <Badge variant={client.type === "b2b" ? "primary" : "default"}>
-                {client.type === "b2b" ? "Professionnel" : "Particulier"}
-              </Badge>
-              {client.email && (
-                <span className="text-sm text-muted">{client.email}</span>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+        <div className="flex items-center gap-3 min-w-0">
+          <Avatar name={client.name} size="md" />
+          <div className="min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <h2 className="text-xl font-bold text-text truncate">{client.name}</h2>
+              {client.type && (
+                <Badge variant={client.type === "b2b" ? "primary" : "default"}>
+                  {client.type === "b2b" ? "Professionnel" : "Particulier"}
+                </Badge>
               )}
             </div>
             {client.address && (
-              <p className="text-sm text-muted mt-1">{client.address}</p>
+              <p className="text-sm text-muted mt-1 truncate">{client.address}</p>
             )}
             {client.siret && (
               <p className="text-xs text-muted mt-1">SIRET {client.siret}</p>
             )}
           </div>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 w-full sm:w-auto">
           <Button
             variant="outline"
             size="sm"
             leftIcon={<Pencil className="w-4 h-4" />}
             onClick={() => setEditOpen(true)}
+            className="flex-1 sm:flex-none justify-center"
           >
             Modifier
           </Button>
@@ -121,6 +121,7 @@ export function ClientDetailPage() {
             size="sm"
             leftIcon={<Archive className="w-4 h-4" />}
             onClick={() => setArchiveOpen(true)}
+            className="flex-1 sm:flex-none justify-center"
           >
             Archiver
           </Button>
@@ -220,8 +221,8 @@ function DocsTable({
   if (rows.length === 0)
     return <p className="text-sm text-muted py-4">{empty}</p>;
   return (
-    <div className="border border-border rounded-card overflow-hidden">
-      <table className="w-full text-sm">
+    <div className="border border-border rounded-card overflow-x-auto">
+      <table className="w-full text-sm min-w-[500px]">
         <thead className="bg-surface-hover text-muted text-xs uppercase">
           <tr>
             <th className="text-left p-3 font-semibold">Numéro</th>

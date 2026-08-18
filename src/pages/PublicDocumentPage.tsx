@@ -227,7 +227,7 @@ export function PublicDocumentPage() {
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col items-center justify-between p-4 sm:p-8">
       {/* Top Banner Branding */}
-      <div className="w-full max-w-4xl flex items-center justify-between border-b border-slate-800 pb-4 mb-6">
+      <div className="w-full max-w-4xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-800 pb-4 mb-6">
         <div className="flex items-center space-x-3">
           {doc.company.logo_url ? (
             <img src={doc.company.logo_url} alt="Logo" className="h-9 object-contain rounded" />
@@ -242,7 +242,7 @@ export function PublicDocumentPage() {
           </div>
         </div>
 
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
           <Button
             type="button"
             variant="outline"

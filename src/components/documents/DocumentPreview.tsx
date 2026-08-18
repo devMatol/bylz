@@ -69,8 +69,8 @@ export function DocumentPreview({
       className="bg-white rounded-card shadow-[0_0_0_1px_rgba(0,0,0,0.06),0_12px_40px_rgba(0,0,0,0.22)] w-full text-gray-900"
       style={{ minHeight: "600px" }}
     >
-      {/* Header (60/40 grid) */}
-      <div className="grid grid-cols-[60fr_40fr] gap-4 p-6 pb-5">
+      {/* Header (60/40 grid, responsive) */}
+      <div className="grid grid-cols-1 sm:grid-cols-[60fr_40fr] gap-4 p-6 pb-5">
         {/* Left: logo + company */}
         <div className="flex items-start gap-3 min-w-0">
           {company.logo_url ? (
@@ -97,7 +97,7 @@ export function DocumentPreview({
           </div>
         </div>
         {/* Right: title + number + dates */}
-        <div className="text-right flex flex-col items-end min-w-0">
+        <div className="text-left sm:text-right flex flex-col items-start sm:items-end min-w-0">
           <p
             className="text-xl font-bold tracking-tight leading-none"
             style={{ color: company.accent_color }}
@@ -152,8 +152,8 @@ export function DocumentPreview({
       </div>
 
       {/* Lines table */}
-      <div className="px-6">
-        <table className="w-full text-sm">
+      <div className="px-6 overflow-x-auto">
+        <table className="w-full text-sm min-w-[480px]">
           <thead>
             <tr className="border-b border-gray-200 text-left text-xs text-gray-500">
               <th className="py-2 font-semibold">Description</th>

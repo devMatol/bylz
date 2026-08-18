@@ -114,6 +114,14 @@ export function ImportInvoiceModal({ open, onClose, onSuccess }: ImportInvoiceMo
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [clients, setClients] = useState<Client[]>([]);
 
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
   // Form states
   const [invoiceNumber, setInvoiceNumber] = useState("");
   const [issueDate, setIssueDate] = useState("");
@@ -685,8 +693,8 @@ function parseFacturXXml(xmlStr: string): {
       open={open}
       onClose={handleClose}
       title="Importer des factures historiques"
-      className={pdfUrl ? "w-full h-[90vh] flex flex-col p-6 overflow-hidden" : "p-6"}
-      style={pdfUrl ? { maxWidth: "1152px", width: "100%" } : { maxWidth: "448px", width: "100%" }}
+      className={pdfUrl && !isMobile ? "w-full h-[90vh] flex flex-col p-6 overflow-hidden" : "p-6"}
+      style={{ maxWidth: pdfUrl && !isMobile ? "1152px" : "448px", width: "100%" }}
     >
       {!pdfUrl ? (
         /* Drag & Drop Step */
@@ -730,9 +738,9 @@ function parseFacturXXml(xmlStr: string): {
         </div>
       ) : (
         /* Split Screen Editor Step */
-        <div className="flex-1 flex flex-col md:flex-row gap-6 min-h-0 overflow-hidden mt-2">
+        <div className={`flex-1 flex gap-6 min-h-0 mt-2 ${isMobile ? "flex-col" : "flex-row overflow-hidden"}`}>
           {/* Left panel: Large PDF viewer */}
-          <div className="flex-[3] border border-border rounded-card bg-slate-900 overflow-hidden flex flex-col h-full min-w-0 md:min-w-[500px]">
+          <div className="hidden md:flex flex-[3] border border-border rounded-card bg-slate-900 overflow-hidden flex flex-col h-full min-w-0 md:min-w-[500px]">
             <div className="flex items-center justify-between p-2.5 border-b border-border bg-surface text-xs text-muted">
               <span className="flex items-center gap-1.5 font-bold text-text">
                 <FileText className="w-4 h-4 text-primary" /> Aperçu du document PDF
@@ -753,7 +761,7 @@ function parseFacturXXml(xmlStr: string): {
           </div>
 
           {/* Right panel: Validation Form */}
-          <div className="flex-[2] min-w-[340px] max-w-[440px] flex flex-col h-full justify-between min-h-0 relative">
+          <div className={`flex-[2] max-w-[440px] flex flex-col justify-between relative ${isMobile ? "" : "h-full min-h-0 min-w-[340px]"}`}>
             {analyzing && (
               <div className="absolute inset-0 bg-bg/90 backdrop-blur-xs flex flex-col items-center justify-center rounded-card z-10 space-y-4 p-6">
                 <Loader2 className="w-8 h-8 text-primary animate-spin" />
@@ -763,7 +771,19 @@ function parseFacturXXml(xmlStr: string): {
                 </div>
               </div>
             )}
-            <form onSubmit={handleSaveImport} className="flex-1 overflow-y-auto pr-1 space-y-4">
+            <form onSubmit={handleSaveImport} className={`space-y-4 ${isMobile ? "" : "flex-1 overflow-y-auto pr-1"}`}>
+              {isMobile && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="w-full flex items-center justify-center gap-1.5 mb-4 text-primary border-primary/20 bg-primary/5 hover:bg-primary/10"
+                  onClick={() => window.open(pdfUrl, "_blank")}
+                >
+                  <FileText className="w-4 h-4" />
+                  Voir le document PDF
+                </Button>
+              )}
               {/* Client Selection / Creation Section */}
               <div className="border border-border bg-surface-hover/20 rounded-card p-4 space-y-3">
                 <div className="flex items-center justify-between">

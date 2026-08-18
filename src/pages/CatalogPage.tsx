@@ -125,7 +125,7 @@ export function CatalogPage() {
                 </Badge>
               </div>
               <Amount value={Number(item.unit_price)} size="lg" />
-              <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity absolute top-2 right-2">
+              <div className="flex gap-1 md:opacity-0 group-hover:opacity-100 transition-opacity absolute top-2 right-2">
                 <button
                   type="button"
                   onClick={() => openEdit(item)}
