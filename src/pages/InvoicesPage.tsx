@@ -177,54 +177,56 @@ export function InvoicesPage() {
       }
     >
       {/* Ventes vs Achats vs Rapprochement Bancaire Segment Switch */}
-      <div className="flex flex-wrap rounded-pill border border-border/80 p-1 bg-surface-hover/40 shadow-inner w-fit mb-6">
-        <button
-          type="button"
-          onClick={() => setActiveTab("sales")}
-          className={cn(
-            "px-4 h-9 rounded-pill text-xs font-extrabold transition-all flex items-center gap-2",
-            activeTab === "sales"
-              ? "bg-primary text-white shadow-md scale-[1.02]"
-              : "text-muted hover:text-text"
-          )}
-        >
-          <span>Factures émises</span>
-          <span className="ml-1 text-[10px] px-1.5 py-0.5 rounded-full bg-white/20">
-            {salesRows.length}
-          </span>
-        </button>
-        <button
-          type="button"
-          onClick={() => setActiveTab("purchases")}
-          className={cn(
-            "px-4 h-9 rounded-pill text-xs font-extrabold transition-all flex items-center gap-2",
-            activeTab === "purchases"
-              ? "bg-primary text-white shadow-md scale-[1.02]"
-              : "text-muted hover:text-text"
-          )}
-        >
-          <span>Factures reçues</span>
-          <span className="ml-1 text-[10px] px-1.5 py-0.5 rounded-full bg-white/20">
-            {purchaseRows.length}
-          </span>
-        </button>
-        <button
-          type="button"
-          onClick={() => setActiveTab("reconciliation")}
-          className={cn(
-            "px-4 h-9 rounded-pill text-xs font-extrabold transition-all flex items-center gap-2",
-            activeTab === "reconciliation"
-              ? "bg-primary text-white shadow-md scale-[1.02]"
-              : "text-muted hover:text-text"
-          )}
-        >
-          <span>💳 Rapprochement Bancaire</span>
-          {unmatchedCount > 0 && (
-            <span className="ml-1 text-[10px] px-1.5 py-0.5 rounded-full bg-amber-500 text-white font-black animate-pulse">
-              {unmatchedCount}
+      <div className="overflow-x-auto max-w-full -mx-4 px-4 lg:mx-0 lg:px-0 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden mb-6">
+        <div className="flex flex-nowrap rounded-pill border border-border/80 p-1 bg-surface-hover/40 shadow-inner w-fit">
+          <button
+            type="button"
+            onClick={() => setActiveTab("sales")}
+            className={cn(
+              "px-4 h-9 rounded-pill text-xs font-extrabold transition-all flex items-center gap-2 flex-shrink-0",
+              activeTab === "sales"
+                ? "bg-primary text-white shadow-md scale-[1.02]"
+                : "text-muted hover:text-text"
+            )}
+          >
+            <span>Factures émises</span>
+            <span className="ml-1 text-[10px] px-1.5 py-0.5 rounded-full bg-white/20">
+              {salesRows.length}
             </span>
-          )}
-        </button>
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab("purchases")}
+            className={cn(
+              "px-4 h-9 rounded-pill text-xs font-extrabold transition-all flex items-center gap-2 flex-shrink-0",
+              activeTab === "purchases"
+                ? "bg-primary text-white shadow-md scale-[1.02]"
+                : "text-muted hover:text-text"
+            )}
+          >
+            <span>Factures reçues</span>
+            <span className="ml-1 text-[10px] px-1.5 py-0.5 rounded-full bg-white/20">
+              {purchaseRows.length}
+            </span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab("reconciliation")}
+            className={cn(
+              "px-4 h-9 rounded-pill text-xs font-extrabold transition-all flex items-center gap-2 flex-shrink-0",
+              activeTab === "reconciliation"
+                ? "bg-primary text-white shadow-md scale-[1.02]"
+                : "text-muted hover:text-text"
+            )}
+          >
+            <span>💳 Rapprochement Bancaire</span>
+            {unmatchedCount > 0 && (
+              <span className="ml-1 text-[10px] px-1.5 py-0.5 rounded-full bg-amber-500 text-white font-black animate-pulse">
+                {unmatchedCount}
+              </span>
+            )}
+          </button>
+        </div>
       </div>
 
       {isProfileIncomplete && (

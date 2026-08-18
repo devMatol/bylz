@@ -21,7 +21,7 @@ export function FilterPills<T extends string>({
           type="button"
           onClick={() => onChange(o.id)}
           className={cn(
-            "px-3 py-1.5 rounded-pill text-sm font-semibold border transition-all duration-200",
+            "px-3 py-1.5 rounded-pill text-sm font-semibold border flex-shrink-0 transition-all duration-200",
             value === o.id
               ? "border-primary bg-primary/10 text-primary"
               : "border-border text-muted hover:text-text"
