@@ -177,15 +177,15 @@ export function InvoicesPage() {
       }
     >
       {/* Ventes vs Achats vs Rapprochement Bancaire Segment Switch */}
-      <div className="overflow-x-auto max-w-full -mx-4 px-4 lg:mx-0 lg:px-0 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden mb-6">
-        <div className="flex flex-nowrap rounded-pill border border-border/80 p-1 bg-surface-hover/40 shadow-inner w-fit">
+      <div className="flex flex-wrap gap-2 mb-6 w-full">
+        <div className="flex flex-wrap rounded-xl border border-border p-1 bg-surface-hover/30 w-full sm:w-auto">
           <button
             type="button"
             onClick={() => setActiveTab("sales")}
             className={cn(
-              "px-4 h-9 rounded-pill text-xs font-extrabold transition-all flex items-center gap-2 flex-shrink-0",
+              "flex-1 sm:flex-initial px-4 h-9 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-2",
               activeTab === "sales"
-                ? "bg-primary text-white shadow-md scale-[1.02]"
+                ? "bg-primary text-white shadow-sm"
                 : "text-muted hover:text-text"
             )}
           >
@@ -198,9 +198,9 @@ export function InvoicesPage() {
             type="button"
             onClick={() => setActiveTab("purchases")}
             className={cn(
-              "px-4 h-9 rounded-pill text-xs font-extrabold transition-all flex items-center gap-2 flex-shrink-0",
+              "flex-1 sm:flex-initial px-4 h-9 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-2",
               activeTab === "purchases"
-                ? "bg-primary text-white shadow-md scale-[1.02]"
+                ? "bg-primary text-white shadow-sm"
                 : "text-muted hover:text-text"
             )}
           >
@@ -213,9 +213,9 @@ export function InvoicesPage() {
             type="button"
             onClick={() => setActiveTab("reconciliation")}
             className={cn(
-              "px-4 h-9 rounded-pill text-xs font-extrabold transition-all flex items-center gap-2 flex-shrink-0",
+              "w-full sm:w-auto px-4 h-9 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-2 mt-1 sm:mt-0",
               activeTab === "reconciliation"
-                ? "bg-primary text-white shadow-md scale-[1.02]"
+                ? "bg-primary text-white shadow-sm"
                 : "text-muted hover:text-text"
             )}
           >
