@@ -104,13 +104,17 @@ function LineRow({
 }: LineRowProps) {
   const [showCombo, setShowCombo] = useState(false);
   const [query, setQuery] = useState("");
-  const comboRef = useRef<HTMLDivElement>(null);
+  const comboDesktopRef = useRef<HTMLDivElement>(null);
+  const comboMobileRef = useRef<HTMLDivElement>(null);
   const total = line.quantity * line.unit_price;
 
   useEffect(() => {
     if (!showCombo) return;
     function onClick(e: MouseEvent) {
-      if (comboRef.current && !comboRef.current.contains(e.target as Node)) {
+      const isInside =
+        (comboDesktopRef.current && comboDesktopRef.current.contains(e.target as Node)) ||
+        (comboMobileRef.current && comboMobileRef.current.contains(e.target as Node));
+      if (!isInside) {
         setShowCombo(false);
       }
     }
@@ -169,7 +173,7 @@ function LineRow({
         </div>
 
         {/* Description combobox */}
-        <div ref={comboRef} className="relative">
+        <div ref={comboDesktopRef} className="relative">
           <div className="relative">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted pointer-events-none" />
             <input
@@ -265,7 +269,7 @@ function LineRow({
 
       {/* Mobile: card layout (<1024px) */}
       <div className="lg:hidden border-t border-border py-4 flex flex-col gap-3">
-        <div ref={comboRef} className="relative">
+        <div ref={comboMobileRef} className="relative">
           <div className="relative">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted pointer-events-none" />
             <input

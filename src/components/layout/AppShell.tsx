@@ -16,9 +16,10 @@ const routeTitles: Record<string, string> = {
   "/dashboard": "Tableau de bord",
   "/quotes": "Devis",
   "/invoices": "Factures",
+  "/livre-recettes": "Livre des recettes",
   "/clients": "Clients",
   "/catalog": "Catalogue",
-  "/urssaf": "URSSAF",
+  "/urssaf": "Déclarations",
   "/settings": "Paramètres",
   "/onboarding": "Bienvenue",
 };

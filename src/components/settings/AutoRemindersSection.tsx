@@ -233,7 +233,7 @@ export function AutoRemindersSection() {
             onClick={() => handleOpenEdit()}
             className="text-xs"
           >
-            Ajouter un point de relance
+            Ajouter une échéance de relance
           </Button>
         </div>
 
@@ -338,10 +338,10 @@ export function AutoRemindersSection() {
       <Modal
         open={editModalOpen}
         onClose={() => setEditModalOpen(false)}
-        className="max-w-md p-6 space-y-4"
+        className="max-w-xl p-6 space-y-4"
       >
         <h3 className="text-lg font-extrabold text-text">
-          {editingRule?.id ? "Modifier la règle de relance" : "Nouvelle règle de relance"}
+          {editingRule?.id ? "Modifier l'échéance de relance" : "Ajouter une échéance de relance"}
         </h3>
 
         <form onSubmit={handleSaveRuleForm} className="space-y-4">
@@ -400,9 +400,6 @@ export function AutoRemindersSection() {
                 }))
               }
             />
-            <p className="text-[11px] text-muted mt-1">
-              Variables : <code className="text-primary font-mono">&#123;&#123;client_name&#125;&#125;</code>, <code className="text-primary font-mono">&#123;&#123;invoice_number&#125;&#125;</code>, <code className="text-primary font-mono">&#123;&#123;amount_ttc&#125;&#125;</code>, <code className="text-primary font-mono">&#123;&#123;due_date&#125;&#125;</code>.
-            </p>
           </div>
 
           <div>
@@ -410,7 +407,7 @@ export function AutoRemindersSection() {
               Corps du message (Optionnel)
             </label>
             <textarea
-              rows={4}
+              rows={5}
               placeholder="Laissez vide pour utiliser le modèle automatique conforme Bylz..."
               value={editingRule?.custom_body || ""}
               onChange={(e) =>
@@ -421,6 +418,39 @@ export function AutoRemindersSection() {
               }
               className="w-full bg-surface border border-border rounded-xl p-3 text-xs text-text focus:outline-none focus:border-primary transition-colors"
             />
+          </div>
+
+          {/* Interactive Variables Section */}
+          <div className="bg-slate-900 border border-slate-800 rounded-xl p-3 space-y-2">
+            <span className="block text-[10px] font-bold text-muted uppercase tracking-wider">
+              Variables de personnalisation
+            </span>
+            <p className="text-[11px] text-muted leading-relaxed">
+              Cliquez sur une variable ci-dessous pour l'insérer à la fin du corps du message :
+            </p>
+            <div className="flex flex-wrap gap-1.5 pt-1">
+              {[
+                { tag: "{{client_name}}", label: "Nom du client" },
+                { tag: "{{invoice_number}}", label: "N° de facture" },
+                { tag: "{{amount_ttc}}", label: "Montant TTC" },
+                { tag: "{{due_date}}", label: "Date d'échéance" },
+              ].map((v) => (
+                <button
+                  key={v.tag}
+                  type="button"
+                  onClick={() => {
+                    setEditingRule((prev) => ({
+                      ...prev,
+                      custom_body: (prev?.custom_body || "") + " " + v.tag,
+                    }));
+                  }}
+                  className="px-2 py-1 bg-surface border border-border rounded text-[10px] font-bold text-primary hover:bg-surface-hover hover:border-primary/30 transition-all flex items-center gap-1"
+                >
+                  <code className="text-primary font-mono">{v.tag}</code>
+                  <span className="text-muted font-normal">({v.label})</span>
+                </button>
+              ))}
+            </div>
           </div>
 
           <div className="flex justify-end gap-2 pt-2">

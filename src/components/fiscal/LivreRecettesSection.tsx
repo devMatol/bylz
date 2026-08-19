@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Download, FileSpreadsheet, ShieldCheck, HelpCircle, CheckCircle } from "lucide-react";
+import { Download, FileSpreadsheet, ShieldCheck, HelpCircle, CheckCircle, Zap } from "lucide-react";
 import { Button } from "../ui/Button";
 import { Card } from "../ui/Card";
 import { useToast } from "../ui/Toast";
@@ -23,9 +23,18 @@ interface LivreRecettesSectionProps {
   payments: any[];
   purchases: any[];
   year: number;
+  isPro?: boolean;
+  onUpgradeClick?: () => void;
 }
 
-export function LivreRecettesSection({ activityType, payments, purchases, year }: LivreRecettesSectionProps) {
+export function LivreRecettesSection({
+  activityType,
+  payments,
+  purchases,
+  year,
+  isPro = false,
+  onUpgradeClick,
+}: LivreRecettesSectionProps) {
   const { toast } = useToast();
   const [tab, setTab] = useState<"recettes" | "achats" | "impots">("recettes");
 
@@ -207,8 +216,29 @@ export function LivreRecettesSection({ activityType, payments, purchases, year }
 
       {/* TAB 3: ASSISTANT DÉCLARATION IMPÔT 2042-C-PRO */}
       {tab === "impots" && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <Card className="p-6 border border-emerald-500/30 bg-surface/90 space-y-4">
+        !isPro ? (
+          <div className="flex flex-col items-center justify-center p-8 text-center border border-dashed border-border rounded-2xl bg-surface/90 min-h-[300px] w-full">
+            <div className="w-12 h-12 rounded-2xl bg-amber-500/10 text-amber-500 border border-amber-500/20 flex items-center justify-center mb-4">
+              <Zap className="w-6 h-6" />
+            </div>
+            <h3 className="text-base font-bold text-text mb-2">Assistant Impôts 2042-C-PRO</h3>
+            <p className="text-xs text-muted max-w-sm mb-6 leading-relaxed">
+              L'assistant de déclaration fiscale annuelle calcule automatiquement les cases et montants de votre formulaire 2042-C-PRO.
+              Cette fonctionnalité est réservée aux abonnés du plan <strong>Pro</strong>.
+            </p>
+            <Button
+              type="button"
+              variant="primary"
+              size="sm"
+              onClick={onUpgradeClick}
+              className="bylz-glow-cta font-bold"
+            >
+              Passer au plan Pro
+            </Button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Card className="p-6 border border-emerald-500/30 bg-surface/90 space-y-4">
             <div className="flex items-start justify-between">
               <div>
                 <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider bg-emerald-500/10 px-2 py-0.5 rounded-pill border border-emerald-500/20">
@@ -279,6 +309,7 @@ export function LivreRecettesSection({ activityType, payments, purchases, year }
             </div>
           </Card>
         </div>
+      )
       )}
     </div>
   );

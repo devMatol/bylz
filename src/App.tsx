@@ -32,6 +32,7 @@ import { ClientsPage } from "./pages/ClientsPage";
 import { ClientDetailPage } from "./pages/ClientDetailPage";
 import { CatalogPage } from "./pages/CatalogPage";
 import { UrssafPage } from "./pages/UrssafPage";
+import { LivreRecettesPage } from "./pages/LivreRecettesPage";
 import { SettingsPage } from "./pages/SettingsPage";
 import { PublicDocumentPage } from "./pages/PublicDocumentPage";
 
@@ -293,6 +294,7 @@ function App() {
                     <Route path="/clients" element={<ClientsPage />} />
                     <Route path="/clients/:id" element={<ClientDetailPage />} />
                     <Route path="/catalog" element={<CatalogPage />} />
+                    <Route path="/livre-recettes" element={<LivreRecettesPage />} />
                     <Route path="/urssaf" element={<UrssafPage />} />
                     <Route path="/settings" element={<SettingsPage />} />
                     {import.meta.env.DEV && (

@@ -11,10 +11,9 @@ interface MonthlyDataPoint {
 interface FiscalChartsProps {
   monthlyData: MonthlyDataPoint[];
   caThreshold: number;
-  tvaThreshold: number;
 }
 
-export function FiscalCharts({ monthlyData, caThreshold, tvaThreshold }: FiscalChartsProps) {
+export function FiscalCharts({ monthlyData, caThreshold }: FiscalChartsProps) {
   const [hoveredPoint, setHoveredPoint] = useState<MonthlyDataPoint | null>(null);
 
   const maxDataVal = Math.max(
@@ -49,9 +48,7 @@ export function FiscalCharts({ monthlyData, caThreshold, tvaThreshold }: FiscalC
     ? monthlyData.map((d, i) => `${i === 0 ? "M" : "L"} ${getX(i)} ${getY(d.ca)}`).join(" ")
     : "";
 
-  // Monthly average threshold line (CA ceiling / 12)
-  const monthlyCaCeilingY = getY(caThreshold / 12);
-  const monthlyTvaBaseY = getY(tvaThreshold / 12);
+
 
   return (
     <div className="rounded-2xl border border-border bg-surface/90 p-6 backdrop-blur-md space-y-4">
@@ -59,17 +56,13 @@ export function FiscalCharts({ monthlyData, caThreshold, tvaThreshold }: FiscalC
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <h3 className="text-base font-bold text-text">Évolution du Chiffre d'Affaires Mensuel</h3>
-          <p className="text-xs text-muted">Comparaison avec les seuils de tolérance fiscale et de TVA</p>
+          <p className="text-xs text-muted">Suivi de vos encaissements mensuels</p>
         </div>
 
         <div className="flex items-center gap-4 text-xs font-semibold">
           <div className="flex items-center gap-1.5">
             <span className="w-3 h-3 rounded-full bg-primary" />
             <span className="text-text">CA Encaissement</span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <span className="w-3 h-0.5 bg-amber-400 border border-amber-400" />
-            <span className="text-muted">Moyenne TVA ({formatAmount(tvaThreshold / 12)}/mois)</span>
           </div>
         </div>
       </div>
@@ -115,31 +108,6 @@ export function FiscalCharts({ monthlyData, caThreshold, tvaThreshold }: FiscalC
               </g>
             );
           })}
-
-          {/* Monthly TVA Threshold Reference Line */}
-          {monthlyTvaBaseY >= paddingY && monthlyTvaBaseY <= chartHeight - paddingY && (
-            <g>
-              <line
-                x1={paddingX}
-                y1={monthlyTvaBaseY}
-                x2={chartWidth - paddingX}
-                y2={monthlyTvaBaseY}
-                stroke="#f59e0b"
-                strokeWidth="1.5"
-                strokeDasharray="6 3"
-              />
-              <text
-                x={chartWidth - paddingX}
-                y={monthlyTvaBaseY - 4}
-                fill="#f59e0b"
-                fontSize="9"
-                fontWeight="bold"
-                textAnchor="end"
-              >
-                Seuil TVA Mensuel ({formatAmount(tvaThreshold / 12)})
-              </text>
-            </g>
-          )}
 
           {/* Area Fill */}
           {areaPath && <path d={areaPath} fill="url(#caAreaGradient)" />}
@@ -195,14 +163,11 @@ export function FiscalCharts({ monthlyData, caThreshold, tvaThreshold }: FiscalC
 
       {/* Hover Tooltip Overlay */}
       {hoveredPoint && (
-        <div className="flex items-center justify-between p-3 rounded-xl bg-slate-900 border border-slate-700/80 shadow-lg text-xs animate-fadeIn">
+        <div className="flex items-center justify-center p-3 rounded-xl bg-slate-900 border border-slate-700/80 shadow-lg text-xs animate-fadeIn">
           <div>
             <span className="font-bold text-white">{hoveredPoint.month} : </span>
             <span className="text-emerald-400 font-extrabold">{formatAmount(hoveredPoint.ca)} encaissés</span>
           </div>
-          <span className="text-slate-400 font-mono text-[11px]">
-            {((hoveredPoint.ca / (tvaThreshold / 12)) * 100).toFixed(0)} % du seuil mensuel TVA
-          </span>
         </div>
       )}
     </div>

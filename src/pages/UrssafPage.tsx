@@ -18,7 +18,6 @@ import { computeFiscalMetrics, type FiscalLanding } from "../lib/fiscal";
 import { ThresholdGaugeCard } from "../components/fiscal/ThresholdGaugeCard";
 import { FiscalCharts } from "../components/fiscal/FiscalCharts";
 import { TvaBreakdownCard } from "../components/fiscal/TvaBreakdownCard";
-import { LivreRecettesSection } from "../components/fiscal/LivreRecettesSection";
 import { formatAmount, cn } from "../lib/utils";
 import { formatDateLong, todayISO } from "../lib/date";
 import type { Payment, UrssafDeclaration } from "../types/database";
@@ -26,7 +25,7 @@ import type { Payment, UrssafDeclaration } from "../types/database";
 export function UrssafPage() {
   const { company } = useAuth();
   const { toast } = useToast();
-  const [activeTab, setActiveTab] = useState<"gauges" | "tva" | "livre" | "urssaf">("gauges");
+  const [activeTab, setActiveTab] = useState<"gauges" | "tva" | "urssaf">("gauges");
   const [dataView, setDataView] = useState<"total" | "electronic">("total");
   const [periods, setPeriods] = useState<UrssafPeriod[]>([]);
   const [fiscalMetrics, setFiscalMetrics] = useState<FiscalLanding | null>(null);
@@ -153,7 +152,7 @@ export function UrssafPage() {
 
   return (
     <PageContainer
-      title="Pilotage Fiscal & URSSAF"
+      title="Pilotage Fiscal & Déclarations"
       subtitle="Suivi des plafonds, prévisionnel de TVA et déclarations"
     >
       {/* Primary Navigation Tabs */}
@@ -187,19 +186,7 @@ export function UrssafPage() {
             <span>💶 TVA & Déclarations</span>
           </button>
 
-          <button
-            type="button"
-            onClick={() => setActiveTab("livre")}
-            className={cn(
-              "flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all",
-              activeTab === "livre"
-                ? "bg-primary text-white shadow-md shadow-primary/20"
-                : "bg-surface-hover text-muted hover:text-text"
-            )}
-          >
-            <BookOpen className="w-4 h-4" />
-            <span>📖 Livre des Recettes & Impôts</span>
-          </button>
+
 
           <button
             type="button"
@@ -279,7 +266,6 @@ export function UrssafPage() {
               <FiscalCharts
                 monthlyData={monthlyData}
                 caThreshold={fiscalMetrics.caConfig.caCeiling}
-                tvaThreshold={fiscalMetrics.caConfig.tvaBase}
               />
             </div>
           )}
@@ -296,15 +282,7 @@ export function UrssafPage() {
             </div>
           )}
 
-          {/* TAB 3: LIVRE DES RECETTES & IMPÔTS */}
-          {activeTab === "livre" && (
-            <LivreRecettesSection
-              activityType={company.activity_type}
-              payments={allPayments}
-              purchases={purchases}
-              year={new Date().getFullYear()}
-            />
-          )}
+
 
           {/* TAB 4: COTISATIONS URSSAF */}
           {activeTab === "urssaf" && (

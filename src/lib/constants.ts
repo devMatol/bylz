@@ -6,6 +6,7 @@ import {
   BookOpen,
   Landmark,
   Settings,
+  BookMarked,
   type LucideIcon,
 } from "lucide-react";
 
@@ -20,9 +21,10 @@ export const NAV_ITEMS: NavItem[] = [
   { label: "Tableau de bord", path: "/dashboard", icon: LayoutDashboard },
   { label: "Devis", path: "/quotes", icon: FileText },
   { label: "Factures", path: "/invoices", icon: Receipt },
+  { label: "Livre des recettes", path: "/livre-recettes", icon: BookMarked },
   { label: "Clients", path: "/clients", icon: Users },
   { label: "Catalogue", path: "/catalog", icon: BookOpen },
-  { label: "URSSAF", path: "/urssaf", icon: Landmark },
+  { label: "Déclarations", path: "/urssaf", icon: Landmark },
   { label: "Paramètres", path: "/settings", icon: Settings },
 ];
 

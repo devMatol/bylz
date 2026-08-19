@@ -345,7 +345,6 @@ export function DashboardPage() {
                     <CaBarChart
                       data={sanitizeMonthlyCa(data?.monthlyCa)}
                       accent={company.accent_color}
-                      vatThreshold={VAT_THRESHOLDS.service}
                     />
                     <div className="flex justify-around mt-4 pt-4 border-t border-border">
                       <div className="text-center">
@@ -732,15 +731,12 @@ function FiscalHealthGauge({
 function CaBarChart({
   data,
   accent,
-  vatThreshold,
 }: {
   data: { month: string; ca: number }[];
   accent: string;
-  vatThreshold: number;
 }) {
   const [hoverIdx, setHoverIdx] = useState<number | null>(null);
   const safeData = Array.isArray(data) && data.length > 0 ? data : [];
-  const safeVat = safeNum(vatThreshold, VAT_THRESHOLDS.service);
   const width = 520;
   const height = 240;
   const padTop = 10;
@@ -750,13 +746,12 @@ function CaBarChart({
   const chartW = width - padLeft - padRight;
   const chartH = height - padTop - padBottom;
   const maxCa = safeData.length > 0 ? Math.max(...safeData.map((d) => safeNum(d.ca))) : 0;
-  const maxVal = Math.max(safeVat, maxCa, 1);
+  const maxVal = Math.max(maxCa, 1);
   const barW = safeData.length > 0 ? chartW / safeData.length : chartW;
   const accentColor = accent || "var(--primary)";
 
   const yTicks = 4;
   const tickVals = Array.from({ length: yTicks + 1 }, (_, i) => (maxVal / yTicks) * i);
-  const vatY = padTop + chartH - (safeVat / maxVal) * chartH;
 
   if (safeData.length === 0) {
     return (
@@ -795,20 +790,6 @@ function CaBarChart({
             </g>
           );
         })}
-
-        {/* VAT threshold line */}
-        <line
-          x1={padLeft}
-          y1={vatY}
-          x2={width - padRight}
-          y2={vatY}
-          stroke="var(--warning)"
-          strokeWidth={1}
-          strokeDasharray="4 4"
-        />
-        <text x={width - padRight - 4} y={vatY - 4} textAnchor="end" fontSize={9} fill="var(--warning)">
-          Seuil TVA
-        </text>
 
         {/* Bars */}
         {safeData.map((d, i) => {

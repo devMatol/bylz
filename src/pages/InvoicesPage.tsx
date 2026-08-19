@@ -176,21 +176,26 @@ export function InvoicesPage() {
         </div>
       }
     >
-      {/* Ventes vs Achats vs Rapprochement Bancaire Segment Switch */}
-      <div className="flex flex-wrap gap-2 mb-6 w-full">
-        <div className="flex flex-wrap rounded-xl border border-border p-1 bg-surface-hover/30 w-full sm:w-auto">
+      {/* Ventes vs Achats vs Rapprochement Bancaire Tabs */}
+      <div className="border-b border-border mb-6 -mx-4 px-4 lg:mx-0 lg:px-0">
+        <div className="flex gap-2 overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
           <button
             type="button"
             onClick={() => setActiveTab("sales")}
             className={cn(
-              "flex-1 sm:flex-initial px-4 h-9 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-2",
+              "px-4 py-3 text-xs font-bold transition-all border-b-2 -mb-px flex items-center gap-1.5 flex-shrink-0",
               activeTab === "sales"
-                ? "bg-primary text-white shadow-sm"
-                : "text-muted hover:text-text"
+                ? "border-primary text-primary"
+                : "border-transparent text-muted hover:text-text hover:border-border/30"
             )}
           >
             <span>Factures émises</span>
-            <span className="ml-1 text-[10px] px-1.5 py-0.5 rounded-full bg-white/20">
+            <span className={cn(
+              "text-[10px] px-1.5 py-0.5 rounded-full font-bold",
+              activeTab === "sales"
+                ? "bg-primary/10 text-primary"
+                : "bg-surface-hover/80 text-muted"
+            )}>
               {salesRows.length}
             </span>
           </button>
@@ -198,14 +203,19 @@ export function InvoicesPage() {
             type="button"
             onClick={() => setActiveTab("purchases")}
             className={cn(
-              "flex-1 sm:flex-initial px-4 h-9 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-2",
+              "px-4 py-3 text-xs font-bold transition-all border-b-2 -mb-px flex items-center gap-1.5 flex-shrink-0",
               activeTab === "purchases"
-                ? "bg-primary text-white shadow-sm"
-                : "text-muted hover:text-text"
+                ? "border-primary text-primary"
+                : "border-transparent text-muted hover:text-text hover:border-border/30"
             )}
           >
             <span>Factures reçues</span>
-            <span className="ml-1 text-[10px] px-1.5 py-0.5 rounded-full bg-white/20">
+            <span className={cn(
+              "text-[10px] px-1.5 py-0.5 rounded-full font-bold",
+              activeTab === "purchases"
+                ? "bg-primary/10 text-primary"
+                : "bg-surface-hover/80 text-muted"
+            )}>
               {purchaseRows.length}
             </span>
           </button>
@@ -213,15 +223,15 @@ export function InvoicesPage() {
             type="button"
             onClick={() => setActiveTab("reconciliation")}
             className={cn(
-              "w-full sm:w-auto px-4 h-9 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-2 mt-1 sm:mt-0",
+              "px-4 py-3 text-xs font-bold transition-all border-b-2 -mb-px flex items-center gap-1.5 flex-shrink-0",
               activeTab === "reconciliation"
-                ? "bg-primary text-white shadow-sm"
-                : "text-muted hover:text-text"
+                ? "border-primary text-primary"
+                : "border-transparent text-muted hover:text-text hover:border-border/30"
             )}
           >
-            <span>💳 Rapprochement Bancaire</span>
+            <span>💳 Rapprochement</span>
             {unmatchedCount > 0 && (
-              <span className="ml-1 text-[10px] px-1.5 py-0.5 rounded-full bg-amber-500 text-white font-black animate-pulse">
+              <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-amber-500 text-white font-black animate-pulse">
                 {unmatchedCount}
               </span>
             )}
