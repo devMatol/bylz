@@ -1111,14 +1111,16 @@ export function SettingsPage() {
             <AutoRemindersSection />
           </FeatureLockWrapper>
 
-          {/* Bank Synchronization & Matching Section */}
-          <FeatureLockWrapper
-            feature="paymentLinks"
-            title="Synchronisation Bancaire & Rapprochement"
-            description="Connectez vos comptes bancaires de manière sécurisée et rapprochez automatiquement vos factures avec vos virements."
-          >
-            <BankSyncSection />
-          </FeatureLockWrapper>
+          {/* Hide bank connection card for now */}
+          {false && (
+            <FeatureLockWrapper
+              feature="paymentLinks"
+              title="Synchronisation Bancaire & Rapprochement"
+              description="Connectez vos comptes bancaires de manière sécurisée et rapprochez automatiquement vos factures avec vos virements."
+            >
+              <BankSyncSection />
+            </FeatureLockWrapper>
+          )}
         </div>
 
       </div>

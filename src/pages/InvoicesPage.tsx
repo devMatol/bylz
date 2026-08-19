@@ -219,23 +219,26 @@ export function InvoicesPage() {
               {purchaseRows.length}
             </span>
           </button>
-          <button
-            type="button"
-            onClick={() => setActiveTab("reconciliation")}
-            className={cn(
-              "px-4 py-3 text-xs font-bold transition-all border-b-2 -mb-px flex items-center gap-1.5 flex-shrink-0",
-              activeTab === "reconciliation"
-                ? "border-primary text-primary"
-                : "border-transparent text-muted hover:text-text hover:border-border/30"
-            )}
-          >
-            <span>💳 Rapprochement</span>
-            {unmatchedCount > 0 && (
-              <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-amber-500 text-white font-black animate-pulse">
-                {unmatchedCount}
-              </span>
-            )}
-          </button>
+          {/* Hide bank connection tab for now */}
+          {false && (
+            <button
+              type="button"
+              onClick={() => setActiveTab("reconciliation")}
+              className={cn(
+                "px-4 py-3 text-xs font-bold transition-all border-b-2 -mb-px flex items-center gap-1.5 flex-shrink-0",
+                activeTab === "reconciliation"
+                  ? "border-primary text-primary"
+                  : "border-transparent text-muted hover:text-text hover:border-border/30"
+              )}
+            >
+              <span>💳 Rapprochement</span>
+              {unmatchedCount > 0 && (
+                <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-amber-500 text-white font-black animate-pulse">
+                  {unmatchedCount}
+                </span>
+              )}
+            </button>
+          )}
         </div>
       </div>
 
