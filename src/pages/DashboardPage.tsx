@@ -10,6 +10,7 @@ import {
   BarChart3,
   Info,
   AlertTriangle,
+  ShieldCheck,
 } from "lucide-react";
 import { parseISO, isValid } from "date-fns";
 import { PageContainer } from "../components/layout/PageContainer";
@@ -24,6 +25,7 @@ import { useToast } from "../components/ui/Toast";
 import {
   fetchDashboardData,
   MICRO_THRESHOLDS,
+  VAT_THRESHOLDS,
   type DashboardData,
   type DashboardPeriod,
 } from "../lib/api";
@@ -369,7 +371,13 @@ export function DashboardPage() {
               <Card className="lg:col-span-2">
                 <div className="flex items-center gap-1.5 mb-4">
                   <h3 className="text-sm font-bold text-text">Santé fiscale</h3>
-                  <Tooltip content="Suivi des plafonds de chiffre d'affaires autorisés pour conserver le statut de micro-entreprise (URSSAF)">
+                  <Tooltip
+                    content={
+                      company.structure === "micro"
+                        ? "Suivi des plafonds de chiffre d'affaires autorisés pour conserver le statut de micro-entreprise (URSSAF)"
+                        : "Suivi des seuils de franchise en base de TVA"
+                    }
+                  >
                     <span className="inline-flex text-muted hover:text-text transition-colors cursor-help">
                       <Info className="w-3.5 h-3.5" />
                     </span>
@@ -377,18 +385,28 @@ export function DashboardPage() {
                 </div>
                 {loading ? (
                   <Skeleton height="10rem" />
+                ) : company.structure !== "micro" && company.vat_regime === "vat" ? (
+                  <div className="flex flex-col items-center justify-center p-6 text-center h-full min-h-[160px] space-y-3">
+                    <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary border border-primary/20 flex items-center justify-center">
+                      <ShieldCheck className="w-5 h-5" />
+                    </div>
+                    <h4 className="text-xs font-bold text-text">Régime Réel de TVA</h4>
+                    <p className="text-[11px] text-muted max-w-xs leading-relaxed">
+                      Votre société est assujettie à la TVA. Vos factures incluent la TVA par défaut et aucun plafond de chiffre d'affaires ne s'applique.
+                    </p>
+                  </div>
                 ) : isMixed ? (
                   <div className="flex flex-col gap-4">
                     <NatureBar
                       label="Prestations de Services"
                       value={safeNum(data?.caByNature.service)}
-                      threshold={MICRO_THRESHOLDS.service}
+                      threshold={company.structure === "micro" ? MICRO_THRESHOLDS.service : VAT_THRESHOLDS.service}
                       accent={company.accent_color}
                     />
                     <NatureBar
                       label="Ventes de Marchandises"
                       value={safeNum(data?.caByNature.goods)}
-                      threshold={MICRO_THRESHOLDS.goods}
+                      threshold={company.structure === "micro" ? MICRO_THRESHOLDS.goods : VAT_THRESHOLDS.goods}
                       accent={company.accent_color}
                     />
                     <div className="pt-2 border-t border-border text-xs text-muted space-y-1">
@@ -397,16 +415,24 @@ export function DashboardPage() {
                         <span className="font-semibold text-text">{formatAmount(safeNum(data?.caByNature.service))}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span>Plafond micro services</span>
-                        <span className="font-semibold text-text">{formatAmount(MICRO_THRESHOLDS.service)}</span>
+                        <span>
+                          {company.structure === "micro" ? "Plafond micro services" : "Seuil TVA services"}
+                        </span>
+                        <span className="font-semibold text-text">
+                          {formatAmount(company.structure === "micro" ? MICRO_THRESHOLDS.service : VAT_THRESHOLDS.service)}
+                        </span>
                       </div>
                       <div className="flex justify-between">
                         <span>CA annuel marchandises/biens</span>
                         <span className="font-semibold text-text">{formatAmount(safeNum(data?.caByNature.goods))}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span>Plafond micro marchandises/biens</span>
-                        <span className="font-semibold text-text">{formatAmount(MICRO_THRESHOLDS.goods)}</span>
+                        <span>
+                          {company.structure === "micro" ? "Plafond micro marchandises/biens" : "Seuil TVA marchandises/biens"}
+                        </span>
+                        <span className="font-semibold text-text">
+                          {formatAmount(company.structure === "micro" ? MICRO_THRESHOLDS.goods : VAT_THRESHOLDS.goods)}
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -414,10 +440,11 @@ export function DashboardPage() {
                   <FiscalHealthGauge
                     ca={safeNum(data?.yearlyCa)}
                     threshold={
-                      company.activity_type === "commerce"
-                        ? MICRO_THRESHOLDS.goods
-                        : MICRO_THRESHOLDS.service
+                      company.structure === "micro"
+                        ? (company.activity_type === "commerce" ? MICRO_THRESHOLDS.goods : MICRO_THRESHOLDS.service)
+                        : (company.activity_type === "commerce" ? VAT_THRESHOLDS.goods : VAT_THRESHOLDS.service)
                     }
+                    isVatOnly={company.structure !== "micro"}
                     accent={company.accent_color}
                   />
                 )}
@@ -667,9 +694,11 @@ function NatureBar({
 function FiscalHealthGauge({
   ca,
   threshold,
+  isVatOnly = false,
 }: {
   ca: number;
   threshold: number;
+  isVatOnly?: boolean;
   accent: string;
 }) {
   const safeThreshold = threshold > 0 ? threshold : 1;
@@ -718,7 +747,9 @@ function FiscalHealthGauge({
           <span className="text-2xl font-bold text-text tabular-nums">
             {Math.round(pct * 100)}%
           </span>
-          <span className="text-xs text-muted">du plafond micro</span>
+          <span className="text-xs text-muted">
+            {isVatOnly ? "du seuil TVA" : "du plafond micro"}
+          </span>
         </div>
       </div>
       <span className={cn("mt-4 text-xs font-bold px-3 py-1 rounded-pill", pillClass)}>

@@ -82,6 +82,7 @@ export function GuestEditorPageContent() {
     naf_code: null,
     activity_type: "freelance_bnc",
     vat_regime: "franchise",
+    structure: "micro",
     urssaf_frequency: "monthly",
     logo_url: null,
     accent_color: "var(--primary)",

@@ -19,6 +19,7 @@ export type TicketPriority = "high" | "normal" | "low";
 export type TicketStatus = "open" | "in_progress" | "resolved";
 
 export type AdminRole = "super_admin" | "admin" | null;
+export type CompanyStructure = "micro" | "sasu" | "sas" | "eurl" | "sarl";
 
 // Table row interfaces
 
@@ -49,6 +50,7 @@ export interface Company {
   naf_code: string | null;
   activity_type: ActivityType;
   vat_regime: VatRegime;
+  structure: CompanyStructure;
   urssaf_frequency: UrssafFreq;
   logo_url: string | null;
   accent_color: string;

@@ -47,6 +47,7 @@ export function OnboardingPage() {
       accent_color: data.accentColor,
       invoice_footer: buildInvoiceFooter(data),
       vat_regime: data.vatRegime,
+      structure: data.structure,
       default_payment_terms: "30d" as const,
     };
     // Update if company already exists for user, otherwise insert

@@ -282,111 +282,124 @@ export function UrssafPage() {
             </div>
           )}
 
-
-
           {/* TAB 4: COTISATIONS URSSAF */}
           {activeTab === "urssaf" && (
-            <div className="space-y-6">
-              {currentPeriod && (
+            company.structure !== "micro" ? (
+              <Card className="p-8 text-center border border-dashed border-border rounded-2xl bg-surface/90 min-h-[300px] flex flex-col items-center justify-center space-y-4">
+                <div className="w-12 h-12 rounded-2xl bg-primary/10 text-primary border border-primary/20 flex items-center justify-center">
+                  <Landmark className="w-6 h-6" />
+                </div>
+                <h3 className="text-base font-bold text-text">Déclarations de Cotisations Sociales</h3>
+                <p className="text-xs text-muted max-w-md leading-relaxed">
+                  Pour les sociétés au régime réel (<strong>{company.structure.toUpperCase()}</strong>), les charges sociales ne sont pas calculées de manière forfaitaire sur le chiffre d'affaires brut.
+                </p>
+                <p className="text-xs text-muted max-w-md leading-relaxed">
+                  Elles doivent être déclarées et payées en fonction de la rémunération réelle versée au dirigeant (via la DSN pour le régime assimilé-salarié de la SASU/SAS, ou via les acomptes provisionnels de l'URSSAF Indépendants pour l'EURL/SARL).
+                </p>
+              </Card>
+            ) : (
+              <div className="space-y-6">
+                {currentPeriod && (
+                  <Card className="p-6 border border-border bg-surface/90">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+                      <div>
+                        <p className="text-xs font-semibold text-muted uppercase tracking-wide mb-1">
+                          Période courante de déclaration URSSAF
+                        </p>
+                        <h2 className="text-xl font-bold text-text">{currentPeriod.label}</h2>
+                      </div>
+                      <CountdownPill
+                        dueDate={currentPeriod.dueDate}
+                        declared={false}
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+                      <div className="p-4 rounded-xl bg-slate-900 border border-slate-800">
+                        <p className="text-xs text-muted mb-1 font-medium">CA encaissé sur la période</p>
+                        <p className="text-xl font-black text-text">
+                          {formatAmount(currentPeriod.revenue)}
+                        </p>
+                      </div>
+                      <div className="p-4 rounded-xl bg-slate-900 border border-slate-800">
+                        <p className="text-xs text-muted mb-1 font-medium">Cotisations estimées</p>
+                        <p className="text-xl font-black text-emerald-400">
+                          {formatAmount(currentPeriod.estimatedAmount)}
+                        </p>
+                      </div>
+                      <div className="p-4 rounded-xl bg-slate-900 border border-slate-800">
+                        <p className="text-xs text-muted mb-1 font-medium">Date limite de déclaration</p>
+                        <p className="text-xl font-bold text-text">
+                          {formatDateLong(currentPeriod.dueDate)}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-wrap gap-2">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        leftIcon={<Copy className="w-4 h-4" />}
+                        onClick={() => handleCopyAmount(currentPeriod.estimatedAmount)}
+                      >
+                        Copier le montant
+                      </Button>
+                      <a
+                        href="https://www.autoentrepreneur.urssaf.fr"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 h-9 px-4 rounded-card text-sm font-semibold border border-border text-text hover:bg-surface-hover transition-colors"
+                      >
+                        <ExternalLink className="w-4 h-4" />
+                        Déclarer sur autoentrepreneur.urssaf.fr
+                      </a>
+                      <Button
+                        type="button"
+                        variant="primary"
+                        size="sm"
+                        leftIcon={<Check className="w-4 h-4" />}
+                        onClick={() => handleDeclare(currentPeriod)}
+                        loading={busy}
+                      >
+                        Marquer comme déclaré
+                      </Button>
+                    </div>
+                  </Card>
+                )}
+
+                {/* History */}
                 <Card className="p-6 border border-border bg-surface/90">
-                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-                    <div>
-                      <p className="text-xs font-semibold text-muted uppercase tracking-wide mb-1">
-                        Période courante de déclaration URSSAF
-                      </p>
-                      <h2 className="text-xl font-bold text-text">{currentPeriod.label}</h2>
-                    </div>
-                    <CountdownPill
-                      dueDate={currentPeriod.dueDate}
-                      declared={false}
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-                    <div className="p-4 rounded-xl bg-slate-900 border border-slate-800">
-                      <p className="text-xs text-muted mb-1 font-medium">CA encaissé sur la période</p>
-                      <p className="text-xl font-black text-text">
-                        {formatAmount(currentPeriod.revenue)}
-                      </p>
-                    </div>
-                    <div className="p-4 rounded-xl bg-slate-900 border border-slate-800">
-                      <p className="text-xs text-muted mb-1 font-medium">Cotisations estimées</p>
-                      <p className="text-xl font-black text-emerald-400">
-                        {formatAmount(currentPeriod.estimatedAmount)}
-                      </p>
-                    </div>
-                    <div className="p-4 rounded-xl bg-slate-900 border border-slate-800">
-                      <p className="text-xs text-muted mb-1 font-medium">Date limite de déclaration</p>
-                      <p className="text-xl font-bold text-text">
-                        {formatDateLong(currentPeriod.dueDate)}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex flex-wrap gap-2">
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      leftIcon={<Copy className="w-4 h-4" />}
-                      onClick={() => handleCopyAmount(currentPeriod.estimatedAmount)}
-                    >
-                      Copier le montant
-                    </Button>
-                    <a
-                      href="https://www.autoentrepreneur.urssaf.fr"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2 h-9 px-4 rounded-card text-sm font-semibold border border-border text-text hover:bg-surface-hover transition-colors"
-                    >
-                      <ExternalLink className="w-4 h-4" />
-                      Déclarer sur autoentrepreneur.urssaf.fr
-                    </a>
-                    <Button
-                      type="button"
-                      variant="primary"
-                      size="sm"
-                      leftIcon={<Check className="w-4 h-4" />}
-                      onClick={() => handleDeclare(currentPeriod)}
-                      loading={busy}
-                    >
-                      Marquer comme déclaré
-                    </Button>
+                  <h3 className="text-sm font-bold text-text mb-4">Historique des déclarations</h3>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left text-xs border-collapse">
+                      <thead>
+                        <tr className="border-b border-border/80 text-muted uppercase font-bold">
+                          <th className="py-2.5">Période</th>
+                          <th className="py-2.5">CA déclaré</th>
+                          <th className="py-2.5">Cotisations</th>
+                          <th className="py-2.5">Date de paiement</th>
+                          <th className="py-2.5">Statut</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-border/40 font-medium">
+                        {periods.map((p) => (
+                          <tr key={p.id} className="text-text hover:bg-surface-hover/30 transition-colors">
+                            <td className="py-3 font-bold">{p.label}</td>
+                            <td className="py-3">{formatAmount(p.revenue)}</td>
+                            <td className="py-3 text-emerald-400">{formatAmount(p.estimatedAmount)}</td>
+                            <td className="py-3 text-muted">{p.declaredAt ? formatDateLong(p.declaredAt) : "-"}</td>
+                            <td className="py-3">
+                              <PeriodStatus period={p} />
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
                   </div>
                 </Card>
-              )}
-
-              {/* History Table */}
-              <Card className="p-6 border border-border">
-                <h3 className="text-sm font-bold text-text mb-4">Historique des déclarations URSSAF</h3>
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="text-left text-xs text-muted uppercase tracking-wide border-b border-border">
-                        <th className="pb-2 pr-4 font-semibold">Période</th>
-                        <th className="pb-2 pr-4 font-semibold">CA encaissé</th>
-                        <th className="pb-2 pr-4 font-semibold">Montant</th>
-                        <th className="pb-2 pr-4 font-semibold">Échéance</th>
-                        <th className="pb-2 font-semibold">Statut</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {pastPeriods.map((p) => (
-                        <tr key={p.periodStart} className="border-b border-border last:border-0">
-                          <td className="py-3 pr-4 font-semibold text-text">{p.label}</td>
-                          <td className="py-3 pr-4 text-text">{formatAmount(p.revenue)}</td>
-                          <td className="py-3 pr-4 text-text">{formatAmount(p.estimatedAmount)}</td>
-                          <td className="py-3 pr-4 text-muted">{formatDateLong(p.dueDate)}</td>
-                          <td className="py-3">
-                            <PeriodStatus period={p} />
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </Card>
-            </div>
+              </div>
+            )
           )}
         </>
       )}

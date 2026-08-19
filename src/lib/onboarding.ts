@@ -1,4 +1,4 @@
-import type { ActivityType, UrssafFreq } from "../types/database";
+import type { ActivityType, UrssafFreq, CompanyStructure } from "../types/database";
 
 export interface OnboardingData {
   siret: string;
@@ -10,6 +10,7 @@ export interface OnboardingData {
   activityType: ActivityType | null;
   urssafFrequency: UrssafFreq;
   vatRegime: "franchise" | "vat";
+  structure: CompanyStructure;
   logoUrl: string | null;
   commercialName: string;
   accentColor: string;
@@ -60,6 +61,7 @@ export const INITIAL_ONBOARDING_DATA: OnboardingData = {
   activityType: "freelance_bnc",
   urssafFrequency: "monthly",
   vatRegime: "franchise",
+  structure: "micro",
   logoUrl: null,
   commercialName: "",
   accentColor: "#7C6FE0",
@@ -100,4 +102,13 @@ export function deduceActivityFromNaf(nafCode: string): ActivityType {
 
 export function nafToActivityType(nafCode: string): ActivityType | null {
   return deduceActivityFromNaf(nafCode);
+}
+
+export function deduceStructureFromJuridique(code: string): CompanyStructure {
+  if (!code) return "micro";
+  const clean = code.trim();
+  if (clean.startsWith("1")) return "micro"; // Entrepreneur individuel
+  if (clean === "5499") return "sasu";       // SASU / SAS
+  if (clean === "5710" || clean === "5720") return "eurl"; // EURL / SARL
+  return "micro";
 }

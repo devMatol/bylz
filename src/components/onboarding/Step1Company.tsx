@@ -8,7 +8,7 @@ import { Skeleton } from "../ui/Skeleton";
 import { Badge } from "../ui/Badge";
 import { cn } from "../../lib/utils";
 import { supabase } from "../../lib/supabase";
-import { deduceActivityFromNaf, type OnboardingData } from "../../lib/onboarding";
+import { deduceActivityFromNaf, deduceStructureFromJuridique, type OnboardingData } from "../../lib/onboarding";
 
 interface SiretResult {
   legal_name: string;
@@ -16,6 +16,7 @@ interface SiretResult {
   naf_code: string;
   naf_label: string;
   active: boolean;
+  categorie_juridique?: string;
 }
 
 interface Step1CompanyProps {
@@ -96,6 +97,7 @@ export function Step1Company({ data, update, onNext }: Step1CompanyProps) {
             const address = etab.adresse || etab.adresse_complete || `${etab.code_postal || ""} ${etab.libelle_commune || ""}`.trim();
             const nafCode = etab.activite_principale || firstResult.activite_principale || "";
             const active = etab.etat_administratif === "A" || firstResult.etat_administratif === "A";
+            const categorieJuridique = firstResult.nature_juridique || "";
 
             json = {
               legal_name: legalName,
@@ -103,6 +105,7 @@ export function Step1Company({ data, update, onNext }: Step1CompanyProps) {
               naf_code: nafCode,
               naf_label: "",
               active: active,
+              categorie_juridique: categorieJuridique,
             };
           }
         }
@@ -121,6 +124,7 @@ export function Step1Company({ data, update, onNext }: Step1CompanyProps) {
         nafLabel: json.naf_label,
         active: json.active,
         activityType: autoActivity,
+        structure: deduceStructureFromJuridique(json.categorie_juridique || ""),
       });
       setStatus(json.active ? "found" : "inactive");
     } catch (err) {
@@ -254,6 +258,18 @@ export function Step1Company({ data, update, onNext }: Step1CompanyProps) {
           <p className="text-xs font-bold text-muted uppercase tracking-wider mb-2">
             Configuration de votre activité
           </p>
+
+          <Select
+            label="Forme juridique de l'entreprise"
+            value={data.structure}
+            onChange={(e) => update({ structure: e.target.value as any })}
+          >
+            <option value="micro">Micro-entreprise (Auto-entrepreneur)</option>
+            <option value="sasu">SASU (Société par Actions Simplifiée Unipersonnelle)</option>
+            <option value="sas">SAS (Société par Actions Simplifiée)</option>
+            <option value="eurl">EURL (Entreprise Unipersonnelle à Responsabilité Limitée)</option>
+            <option value="sarl">SARL (Société à Responsabilité Limitée)</option>
+          </Select>
 
           <Select
             label="Nature de l'activité"

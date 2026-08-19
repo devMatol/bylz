@@ -33,6 +33,7 @@ import {
 } from "../lib/constants";
 import { Input } from "../components/ui/Input";
 import { Select } from "../components/ui/Select";
+import type { CompanyStructure } from "../types/database";
 
 function formatSiret(raw: string): string {
   const digits = raw.replace(/\D/g, "");
@@ -139,6 +140,7 @@ export function SettingsPage() {
   const [urssafFrequency, setUrssafFrequency] = useState(company?.urssaf_frequency || "monthly");
   const [previousCa, setPreviousCa] = useState(company?.previous_ca?.toString() || "0");
   const [vatRegime, setVatRegime] = useState<"franchise" | "vat">(company?.vat_regime || "franchise");
+  const [structure, setStructure] = useState<CompanyStructure>(company?.structure || "micro");
   const [logoUrl, setLogoUrl] = useState(company?.logo_url || "");
   const [accentColor, setAccentColor] = useState(company?.accent_color || "#7C6FE0");
   const [invoiceFooter, setInvoiceFooter] = useState(company?.invoice_footer || "");
@@ -157,6 +159,7 @@ export function SettingsPage() {
       setUrssafFrequency(company.urssaf_frequency || "monthly");
       setPreviousCa(company.previous_ca?.toString() || "0");
       setVatRegime(company.vat_regime || "franchise");
+      setStructure(company.structure || "micro");
       setLogoUrl(company.logo_url || "");
       setAccentColor(company.accent_color || "#7C6FE0");
       setInvoiceFooter(company.invoice_footer || "");
@@ -228,6 +231,7 @@ export function SettingsPage() {
           urssaf_frequency: urssafFrequency,
           previous_ca: parseFloat(previousCa) || 0,
           vat_regime: vatRegime,
+          structure: structure,
         })
         .eq("id", company.id);
 
@@ -894,6 +898,18 @@ export function SettingsPage() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <Select
+                  label="Forme juridique"
+                  value={structure}
+                  onChange={(e) => setStructure(e.target.value as any)}
+                >
+                  <option value="micro">Micro-entreprise (Auto-entrepreneur)</option>
+                  <option value="sasu">SASU (SAS Unipersonnelle)</option>
+                  <option value="sas">SAS (Société par Actions Simplifiée)</option>
+                  <option value="eurl">EURL (SARL Unipersonnelle)</option>
+                  <option value="sarl">SARL (Société à Responsabilité Limitée)</option>
+                </Select>
+
+                <Select
                   label="Nature de l'activité"
                   value={activityType}
                   onChange={(e) => setActivityType(e.target.value as any)}
@@ -903,7 +919,9 @@ export function SettingsPage() {
                   <option value="commerce">Achat / Vente de marchandises (BIC)</option>
                   <option value="liberal">Autre profession libérale réglementée</option>
                 </Select>
+              </div>
 
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <Select
                   label="Déclaration URSSAF"
                   value={urssafFrequency}
@@ -911,6 +929,16 @@ export function SettingsPage() {
                 >
                   <option value="monthly">Mensuelle</option>
                   <option value="quarterly">Trimestrielle</option>
+                </Select>
+
+                <Select
+                  label="Régime de TVA"
+                  value={vatRegime}
+                  onChange={(e) => setVatRegime(e.target.value as any)}
+                  helperText="Permet de voir l'impact de l'assujettissement à la TVA sur vos factures, seuils de TVA et votre tableau de bord."
+                >
+                  <option value="franchise">Franchise en base (TVA non applicable)</option>
+                  <option value="vat">Réel simplifié / normal (TVA applicable)</option>
                 </Select>
               </div>
 
@@ -924,16 +952,6 @@ export function SettingsPage() {
                   onChange={(e) => setPreviousCa(e.target.value)}
                   helperText="Indiquez le CA déjà encaissé cette année avant d'utiliser Bylz pour le calcul correct des seuils de TVA et plafonds micro-entreprise."
                 />
-
-                <Select
-                  label="Régime de TVA"
-                  value={vatRegime}
-                  onChange={(e) => setVatRegime(e.target.value as any)}
-                  helperText="Permet de voir l'impact de l'assujettissement à la TVA sur vos factures, seuils de TVA et votre tableau de bord."
-                >
-                  <option value="franchise">Franchise en base (TVA non applicable)</option>
-                  <option value="vat">Réel simplifié / normal (TVA applicable)</option>
-                </Select>
               </div>
 
               <div className="flex justify-end pt-2">
