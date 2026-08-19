@@ -1111,8 +1111,8 @@ export function SettingsPage() {
             <AutoRemindersSection />
           </FeatureLockWrapper>
 
-          {/* Hide bank connection card for now */}
-          {false && (
+          {/* Hide bank connection card for now except for matthiasollivier123 */}
+          {user?.email?.toLowerCase() === "matthiasollivier123@gmail.com" && (
             <FeatureLockWrapper
               feature="paymentLinks"
               title="Synchronisation Bancaire & Rapprochement"

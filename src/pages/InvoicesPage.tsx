@@ -46,10 +46,11 @@ interface Row {
 }
 
 export function InvoicesPage() {
-  const { company } = useAuth();
+  const { profile, company } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [params, setParams] = useSearchParams();
+  const isMatthias = profile?.email?.toLowerCase() === "matthiasollivier123@gmail.com";
   const [activeTab, setActiveTab] = useState<"sales" | "purchases" | "reconciliation">("sales");
   const [unmatchedCount, setUnmatchedCount] = useState(0);
   const [filter, setFilter] = useState<Filter>("all");
@@ -219,8 +220,8 @@ export function InvoicesPage() {
               {purchaseRows.length}
             </span>
           </button>
-          {/* Hide bank connection tab for now */}
-          {false && (
+          {/* Hide bank connection tab for now except for matthiasollivier123 */}
+          {isMatthias && (
             <button
               type="button"
               onClick={() => setActiveTab("reconciliation")}
