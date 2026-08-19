@@ -91,7 +91,7 @@ export function CatalogPage() {
         </Button>
       }
     >
-      <div className="max-w-md">
+      <div className="max-w-md mb-6">
         <SearchInput value={search} onChange={setSearch} placeholder="Rechercher une prestation…" />
       </div>
 
