@@ -137,6 +137,7 @@ export function SettingsPage() {
   const [activityType, setActivityType] = useState(company?.activity_type || "freelance_bnc");
   const [urssafFrequency, setUrssafFrequency] = useState(company?.urssaf_frequency || "monthly");
   const [previousCa, setPreviousCa] = useState(company?.previous_ca?.toString() || "0");
+  const [vatRegime, setVatRegime] = useState<"franchise" | "vat">(company?.vat_regime || "franchise");
   const [savingCompany, setSavingCompany] = useState(false);
   const [searchingSiret, setSearchingSiret] = useState(false);
 
@@ -149,6 +150,7 @@ export function SettingsPage() {
       setActivityType(company.activity_type || "freelance_bnc");
       setUrssafFrequency(company.urssaf_frequency || "monthly");
       setPreviousCa(company.previous_ca?.toString() || "0");
+      setVatRegime(company.vat_regime || "franchise");
     }
   }, [company]);
 
@@ -216,6 +218,7 @@ export function SettingsPage() {
           activity_type: activityType,
           urssaf_frequency: urssafFrequency,
           previous_ca: parseFloat(previousCa) || 0,
+          vat_regime: vatRegime,
         })
         .eq("id", company.id);
 
@@ -851,6 +854,16 @@ export function SettingsPage() {
                   onChange={(e) => setPreviousCa(e.target.value)}
                   helperText="Indiquez le CA déjà encaissé cette année avant d'utiliser Bylz pour le calcul correct des seuils de TVA et plafonds micro-entreprise."
                 />
+
+                <Select
+                  label="Régime de TVA"
+                  value={vatRegime}
+                  onChange={(e) => setVatRegime(e.target.value as any)}
+                  helperText="Permet de voir l'impact de l'assujettissement à la TVA sur vos factures, seuils de TVA et votre tableau de bord."
+                >
+                  <option value="franchise">Franchise en base (TVA non applicable)</option>
+                  <option value="vat">Réel simplifié / normal (TVA applicable)</option>
+                </Select>
               </div>
 
               <div className="flex justify-end pt-2">
