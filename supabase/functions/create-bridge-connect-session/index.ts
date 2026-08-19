@@ -130,23 +130,30 @@ Deno.serve(async (req: Request) => {
 
     // Fallback if needed
     if (!connectUrl) {
-      const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-      const adminClient = createClient(supabaseUrl, serviceKey);
+      if (Deno.env.get("MOCK_BANK_SYNC") === "true") {
+        const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+        const adminClient = createClient(supabaseUrl, serviceKey);
 
-      const bankNames = ["BoursoBank (Pro)", "Crédit Agricole", "Revolut Business", "Qonto", "BNP Paribas"];
-      const randomBank = bankNames[Math.floor(Math.random() * bankNames.length)];
-      const providerItemId = `item-${Math.floor(Math.random() * 899999 + 100000)}`;
+        const bankNames = ["BoursoBank (Pro)", "Crédit Agricole", "Revolut Business", "Qonto", "BNP Paribas"];
+        const randomBank = bankNames[Math.floor(Math.random() * bankNames.length)];
+        const providerItemId = `item-${Math.floor(Math.random() * 899999 + 100000)}`;
 
-      await adminClient.from("bank_connections").upsert({
-        company_id: company.id,
-        provider_item_id: providerItemId,
-        bank_name: randomBank,
-        status: "active",
-        connected_at: new Date().toISOString(),
-        last_synced_at: new Date().toISOString(),
-      });
+        await adminClient.from("bank_connections").upsert({
+          company_id: company.id,
+          provider_item_id: providerItemId,
+          bank_name: randomBank,
+          status: "active",
+          connected_at: new Date().toISOString(),
+          last_synced_at: new Date().toISOString(),
+        });
 
-      connectUrl = `https://bylz.fr/settings?tab=bank&connected=true&mock_bank=${encodeURIComponent(randomBank)}`;
+        connectUrl = `https://bylz.fr/settings?tab=bank&connected=true&mock_bank=${encodeURIComponent(randomBank)}`;
+      } else {
+        return new Response(JSON.stringify({ error: "Impossible de créer la session de connexion bancaire (Bridge API)" }), {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
     }
 
     return new Response(JSON.stringify({ success: true, connect_url: connectUrl }), {

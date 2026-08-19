@@ -159,7 +159,7 @@ Deno.serve(async (req: Request) => {
       }
 
       // If no transactions from Bridge API, generate mock income matching pending invoices if any
-      if (fetchedTransactions.length === 0 && invoices && invoices.length > 0) {
+      if (fetchedTransactions.length === 0 && invoices && invoices.length > 0 && Deno.env.get("MOCK_BANK_SYNC") === "true") {
         for (const inv of invoices.slice(0, 2)) {
           const extId = `mock-tx-${inv.id.slice(0, 8)}-${Date.now()}`;
           fetchedTransactions.push({
