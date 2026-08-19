@@ -23,7 +23,6 @@ import { useAuth } from "../contexts/AuthContext";
 import { useToast } from "../components/ui/Toast";
 import {
   fetchDashboardData,
-  VAT_THRESHOLDS,
   MICRO_THRESHOLDS,
   type DashboardData,
   type DashboardPeriod,
@@ -370,7 +369,7 @@ export function DashboardPage() {
               <Card className="lg:col-span-2">
                 <div className="flex items-center gap-1.5 mb-4">
                   <h3 className="text-sm font-bold text-text">Santé fiscale</h3>
-                  <Tooltip content="Seuil de franchise de TVA : au-delà, vous devrez facturer la TVA">
+                  <Tooltip content="Suivi des plafonds de chiffre d'affaires autorisés pour conserver le statut de micro-entreprise (URSSAF)">
                     <span className="inline-flex text-muted hover:text-text transition-colors cursor-help">
                       <Info className="w-3.5 h-3.5" />
                     </span>
@@ -381,15 +380,15 @@ export function DashboardPage() {
                 ) : isMixed ? (
                   <div className="flex flex-col gap-4">
                     <NatureBar
-                      label="Services"
+                      label="Prestations de Services"
                       value={safeNum(data?.caByNature.service)}
-                      threshold={VAT_THRESHOLDS.service}
+                      threshold={MICRO_THRESHOLDS.service}
                       accent={company.accent_color}
                     />
                     <NatureBar
-                      label="Vente de biens"
+                      label="Ventes de Marchandises"
                       value={safeNum(data?.caByNature.goods)}
-                      threshold={VAT_THRESHOLDS.goods}
+                      threshold={MICRO_THRESHOLDS.goods}
                       accent={company.accent_color}
                     />
                     <div className="pt-2 border-t border-border text-xs text-muted space-y-1">
@@ -398,15 +397,15 @@ export function DashboardPage() {
                         <span className="font-semibold text-text">{formatAmount(safeNum(data?.caByNature.service))}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span>Seuil micro services</span>
+                        <span>Plafond micro services</span>
                         <span className="font-semibold text-text">{formatAmount(MICRO_THRESHOLDS.service)}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span>CA annuel biens</span>
+                        <span>CA annuel marchandises/biens</span>
                         <span className="font-semibold text-text">{formatAmount(safeNum(data?.caByNature.goods))}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span>Seuil micro biens</span>
+                        <span>Plafond micro marchandises/biens</span>
                         <span className="font-semibold text-text">{formatAmount(MICRO_THRESHOLDS.goods)}</span>
                       </div>
                     </div>
@@ -414,7 +413,11 @@ export function DashboardPage() {
                 ) : (
                   <FiscalHealthGauge
                     ca={safeNum(data?.yearlyCa)}
-                    threshold={VAT_THRESHOLDS.service}
+                    threshold={
+                      company.activity_type === "commerce"
+                        ? MICRO_THRESHOLDS.goods
+                        : MICRO_THRESHOLDS.service
+                    }
                     accent={company.accent_color}
                   />
                 )}
@@ -655,7 +658,7 @@ function NatureBar({
         />
       </div>
       {pct >= 90 && (
-        <p className="text-xs text-danger mt-1">Vous approchez du seuil de TVA</p>
+        <p className="text-xs text-danger mt-1">Vous approchez du plafond micro-entrepreneur</p>
       )}
     </div>
   );
@@ -715,7 +718,7 @@ function FiscalHealthGauge({
           <span className="text-2xl font-bold text-text tabular-nums">
             {Math.round(pct * 100)}%
           </span>
-          <span className="text-xs text-muted">du seuil TVA</span>
+          <span className="text-xs text-muted">du plafond micro</span>
         </div>
       </div>
       <span className={cn("mt-4 text-xs font-bold px-3 py-1 rounded-pill", pillClass)}>
