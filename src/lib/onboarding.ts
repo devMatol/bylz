@@ -9,6 +9,7 @@ export interface OnboardingData {
   active: boolean;
   activityType: ActivityType | null;
   urssafFrequency: UrssafFreq;
+  vatRegime: "franchise" | "vat";
   logoUrl: string | null;
   commercialName: string;
   accentColor: string;
@@ -56,8 +57,9 @@ export const INITIAL_ONBOARDING_DATA: OnboardingData = {
   nafCode: "",
   nafLabel: "",
   active: true,
-  activityType: null,
-  urssafFrequency: "quarterly",
+  activityType: "freelance_bnc",
+  urssafFrequency: "monthly",
+  vatRegime: "franchise",
   logoUrl: null,
   commercialName: "",
   accentColor: "#7C6FE0",

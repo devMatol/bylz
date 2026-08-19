@@ -3,6 +3,7 @@ import { Building2, CheckCircle2, AlertTriangle, Loader2 } from "lucide-react";
 import { OnboardingLayout } from "./OnboardingLayout";
 import { Button } from "../ui/Button";
 import { Input } from "../ui/Input";
+import { Select } from "../ui/Select";
 import { Skeleton } from "../ui/Skeleton";
 import { Badge } from "../ui/Badge";
 import { cn } from "../../lib/utils";
@@ -249,13 +250,50 @@ export function Step1Company({ data, update, onNext }: Step1CompanyProps) {
           </div>
         )}
 
+        <div className="border-t border-border/60 my-4 pt-4 space-y-4">
+          <p className="text-xs font-bold text-muted uppercase tracking-wider mb-2">
+            Configuration de votre activité
+          </p>
+
+          <Select
+            label="Nature de l'activité"
+            value={data.activityType || "freelance_bnc"}
+            onChange={(e) => update({ activityType: e.target.value as any })}
+          >
+            <option value="freelance_bnc">Profession libérale / Freelance (BNC)</option>
+            <option value="artisan_bic">Artisan / Prestation de services (BIC)</option>
+            <option value="commerce">Achat / Vente de marchandises (BIC)</option>
+            <option value="liberal">Autre profession libérale réglementée</option>
+          </Select>
+
+          <div className="grid grid-cols-2 gap-3">
+            <Select
+              label="Régime de TVA"
+              value={data.vatRegime}
+              onChange={(e) => update({ vatRegime: e.target.value as any })}
+            >
+              <option value="franchise">Non assujetti (Franchise)</option>
+              <option value="vat">Assujetti (TVA applicable)</option>
+            </Select>
+
+            <Select
+              label="Déclaration URSSAF"
+              value={data.urssafFrequency}
+              onChange={(e) => update({ urssafFrequency: e.target.value as any })}
+            >
+              <option value="monthly">Mensuelle</option>
+              <option value="quarterly">Trimestrielle</option>
+            </Select>
+          </div>
+        </div>
+
         <Button
           type="submit"
           variant="primary"
-          className="w-full"
+          className="w-full animate-pulse-glow"
           disabled={!canContinue}
         >
-          Confirmer et continuer
+          Confirmer et terminer
         </Button>
       </form>
     </OnboardingLayout>

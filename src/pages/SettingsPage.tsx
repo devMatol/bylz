@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, type FormEvent } from "react";
 import { useSearchParams } from "react-router-dom";
 import {
   CreditCard,
@@ -12,6 +12,7 @@ import {
   Lock,
   Loader2,
   Building,
+  Upload,
 } from "lucide-react";
 import { PageContainer } from "../components/layout/PageContainer";
 import { Card } from "../components/ui/Card";
@@ -138,6 +139,11 @@ export function SettingsPage() {
   const [urssafFrequency, setUrssafFrequency] = useState(company?.urssaf_frequency || "monthly");
   const [previousCa, setPreviousCa] = useState(company?.previous_ca?.toString() || "0");
   const [vatRegime, setVatRegime] = useState<"franchise" | "vat">(company?.vat_regime || "franchise");
+  const [logoUrl, setLogoUrl] = useState(company?.logo_url || "");
+  const [accentColor, setAccentColor] = useState(company?.accent_color || "#7C6FE0");
+  const [invoiceFooter, setInvoiceFooter] = useState(company?.invoice_footer || "");
+  const [logoUploading, setLogoUploading] = useState(false);
+  const [logoError, setLogoError] = useState<string | null>(null);
   const [savingCompany, setSavingCompany] = useState(false);
   const [searchingSiret, setSearchingSiret] = useState(false);
 
@@ -151,6 +157,9 @@ export function SettingsPage() {
       setUrssafFrequency(company.urssaf_frequency || "monthly");
       setPreviousCa(company.previous_ca?.toString() || "0");
       setVatRegime(company.vat_regime || "franchise");
+      setLogoUrl(company.logo_url || "");
+      setAccentColor(company.accent_color || "#7C6FE0");
+      setInvoiceFooter(company.invoice_footer || "");
     }
   }, [company]);
 
@@ -229,6 +238,67 @@ export function SettingsPage() {
       toast(err.message || "Erreur lors de la sauvegarde", "danger");
     } finally {
       setSavingCompany(false);
+    }
+  };
+
+  const [savingDesign, setSavingDesign] = useState(false);
+
+  const handleLogoUpload = async (file: File) => {
+    if (!file.type.match(/^image\/(png|jpe?g)$/)) {
+      setLogoError("Format non supporté (PNG/JPG uniquement)");
+      return;
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      setLogoError("Fichier trop lourd (max 2 Mo)");
+      return;
+    }
+    if (!user || !company) return;
+    setLogoUploading(true);
+    setLogoError(null);
+    try {
+      const ext = file.type === "image/png" ? "png" : "jpg";
+      const path = `${user.id}/logo-${Date.now()}.${ext}`;
+      const { error: upErr } = await supabase.storage
+        .from("logos")
+        .upload(path, file, { contentType: file.type });
+      if (upErr) throw upErr;
+      const { data: urlData } = supabase.storage.from("logos").getPublicUrl(path);
+      
+      setLogoUrl(urlData.publicUrl);
+      const { error: dbErr } = await supabase
+        .from("companies")
+        .update({ logo_url: urlData.publicUrl })
+        .eq("id", company.id);
+      if (dbErr) throw dbErr;
+      await refreshProfile();
+      toast("Logo mis à jour !", "success");
+    } catch {
+      setLogoError("Échec de l'envoi du logo");
+    } finally {
+      setLogoUploading(false);
+    }
+  };
+
+  const handleSaveDesign = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!company) return;
+    setSavingDesign(true);
+    try {
+      const { error } = await supabase
+        .from("companies")
+        .update({
+          accent_color: accentColor,
+          invoice_footer: invoiceFooter || null,
+        })
+        .eq("id", company.id);
+
+      if (error) throw error;
+      await refreshProfile();
+      toast("Style des documents sauvegardé !", "success");
+    } catch (err: any) {
+      toast(err.message || "Erreur lors de la sauvegarde du style", "danger");
+    } finally {
+      setSavingDesign(false);
     }
   };
 
@@ -872,6 +942,120 @@ export function SettingsPage() {
                     <Loader2 className="w-4 h-4 animate-spin mr-2" />
                   ) : null}
                   Sauvegarder les modifications
+                </Button>
+              </div>
+            </form>
+          </Card>
+
+          {/* Document Design/Style Card */}
+          <Card className="p-6 space-y-6">
+            <div>
+              <h3 className="text-base font-bold text-text flex items-center gap-2">
+                🎨 Personnalisation des factures & devis
+              </h3>
+              <p className="text-xs text-muted mt-1">
+                Configurez l'identité visuelle et les mentions par défaut de vos documents légaux.
+              </p>
+            </div>
+
+            <form onSubmit={handleSaveDesign} className="space-y-6">
+              {/* Logo upload */}
+              <div className="space-y-2">
+                <label className="block text-xs font-bold text-muted uppercase">Logo de l'entreprise</label>
+                <div className="flex items-center gap-4">
+                  {logoUrl ? (
+                    <div className="relative group w-16 h-16 rounded-xl border border-border overflow-hidden bg-white">
+                      <img src={logoUrl} alt="Logo" className="w-full h-full object-cover" />
+                      <button
+                        type="button"
+                        onClick={() => setLogoUrl("")}
+                        className="absolute inset-0 bg-black/50 text-white text-xs font-bold opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center animate-fade-in"
+                      >
+                        Retirer
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="w-16 h-16 rounded-xl bg-surface-hover border border-dashed border-border flex flex-col items-center justify-center text-muted">
+                      <Building className="w-6 h-6 opacity-40" />
+                    </div>
+                  )}
+
+                  <div className="flex-1">
+                    <input
+                      type="file"
+                      id="logo-settings-upload"
+                      accept="image/png, image/jpeg"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) void handleLogoUpload(file);
+                      }}
+                      className="hidden"
+                    />
+                    <label
+                      htmlFor="logo-settings-upload"
+                      className="inline-flex items-center justify-center h-9 px-4 rounded-xl border border-border bg-surface hover:bg-surface-hover text-xs font-bold text-text cursor-pointer transition-colors"
+                    >
+                      {logoUploading ? (
+                        <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                      ) : (
+                        <Upload className="w-3.5 h-3.5 mr-2" />
+                      )}
+                      Télécharger un logo
+                    </label>
+                    <p className="text-[10px] text-muted mt-1.5">PNG ou JPG (max 2 Mo).</p>
+                    {logoError && <p className="text-xs text-danger mt-1">{logoError}</p>}
+                  </div>
+                </div>
+              </div>
+
+              {/* Accent Color picker */}
+              <div className="space-y-2">
+                <label className="block text-xs font-bold text-muted uppercase">Couleur d'accentuation</label>
+                <div className="flex flex-wrap gap-2">
+                  {["#7C6FE0", "#6CB8F5", "#10B981", "#F59E0B", "#F43F5E", "#64748B"].map((c) => (
+                    <button
+                      key={c}
+                      type="button"
+                      onClick={() => setAccentColor(c)}
+                      className="w-8 h-8 rounded-full border border-black/10 flex items-center justify-center transition-transform hover:scale-105"
+                      style={{ backgroundColor: c }}
+                    >
+                      {accentColor === c && <Check className="w-4 h-4 text-white stroke-[3px]" />}
+                    </button>
+                  ))}
+                  <div className="flex items-center gap-2 ml-2">
+                    <input
+                      type="color"
+                      value={accentColor}
+                      onChange={(e) => setAccentColor(e.target.value)}
+                      className="w-8 h-8 rounded-full border border-border cursor-pointer p-0 overflow-hidden"
+                    />
+                    <span className="text-xs font-mono text-muted uppercase">{accentColor}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Invoice Footer */}
+              <div>
+                <label className="block text-xs font-bold text-muted uppercase mb-1">
+                  Pied de page personnalisé & Mentions légales
+                </label>
+                <textarea
+                  rows={3}
+                  value={invoiceFooter}
+                  onChange={(e) => setInvoiceFooter(e.target.value)}
+                  placeholder="Ex: IBAN, Pénalités de retard, Assurances professionnelles..."
+                  className="w-full bg-surface border border-border rounded-xl p-3 text-xs text-text focus:outline-none focus:border-primary transition-colors"
+                />
+                <p className="text-[10px] text-muted mt-1">
+                  Ce texte s'affichera tout en bas de vos devis et factures.
+                </p>
+              </div>
+
+              <div className="flex justify-end pt-2">
+                <Button type="submit" variant="primary" disabled={savingDesign}>
+                  {savingDesign && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
+                  Sauvegarder le style
                 </Button>
               </div>
             </form>

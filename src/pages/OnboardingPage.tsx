@@ -46,7 +46,7 @@ export function OnboardingPage() {
       logo_url: data.logoUrl,
       accent_color: data.accentColor,
       invoice_footer: buildInvoiceFooter(data),
-      vat_regime: "franchise" as const,
+      vat_regime: data.vatRegime,
       default_payment_terms: "30d" as const,
     };
     // Update if company already exists for user, otherwise insert
@@ -112,23 +112,7 @@ export function OnboardingPage() {
   return (
     <>
       {step === 1 && (
-        <Step1Company data={data} update={update} onNext={goToStep2} />
-      )}
-      {step === 2 && (
-        <Step2Activity
-          data={data}
-          update={update}
-          onNext={goToStep3}
-          onBack={backToStep1}
-        />
-      )}
-      {step === 3 && (
-        <Step3Customize
-          data={data}
-          update={update}
-          onSubmit={handleSubmit}
-          onBack={backToStep2}
-        />
+        <Step1Company data={data} update={update} onNext={handleSubmit} />
       )}
     </>
   );
