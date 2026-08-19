@@ -65,10 +65,10 @@ Deno.serve(async (req: Request) => {
     const userEmail = userData.user.email || "client@bylz.fr";
     const externalUserId = `bylz-user-${userData.user.id.slice(0, 12)}`;
 
-    // 1. Create or get Bridge user
-    let userUuid = "";
+    // 1. Get User Access Token directly using external_user_id
+    let accessToken = "";
     try {
-      const uRes = await fetch("https://api.bridgeapi.io/v3/aggregation/users", {
+      const tRes = await fetch("https://api.bridgeapi.io/v3/aggregation/authorization/token", {
         method: "POST",
         headers: {
           "Client-Id": bridgeClientId,
@@ -78,36 +78,54 @@ Deno.serve(async (req: Request) => {
         },
         body: JSON.stringify({ external_user_id: externalUserId }),
       });
-      const uData = await uRes.json();
-      if (uData.uuid) {
-        userUuid = uData.uuid;
-      }
-    } catch {
-      // User might already exist or handled
-    }
-
-    // 2. Get User Access Token
-    let accessToken = "";
-    if (userUuid) {
-      const tRes = await fetch("https://api.bridgeapi.io/v3/aggregation/authorization/token", {
-        method: "POST",
-        headers: {
-          "Client-Id": bridgeClientId,
-          "Client-Secret": bridgeClientSecret,
-          "Bridge-Version": "2025-01-15",
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ user_uuid: userUuid }),
-      });
       const tData = await tRes.json();
       if (tData.access_token) {
         accessToken = tData.access_token;
+      }
+    } catch (e) {
+      console.warn("Direct token fetch failed:", e);
+    }
+
+    // 2. If token fetch failed, create the user first, then try token fetch again
+    if (!accessToken) {
+      try {
+        await fetch("https://api.bridgeapi.io/v3/aggregation/users", {
+          method: "POST",
+          headers: {
+            "Client-Id": bridgeClientId,
+            "Client-Secret": bridgeClientSecret,
+            "Bridge-Version": "2025-01-15",
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ external_user_id: externalUserId }),
+        });
+        
+        // Try getting token again since user is now created
+        const tRes = await fetch("https://api.bridgeapi.io/v3/aggregation/authorization/token", {
+          method: "POST",
+          headers: {
+            "Client-Id": bridgeClientId,
+            "Client-Secret": bridgeClientSecret,
+            "Bridge-Version": "2025-01-15",
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ external_user_id: externalUserId }),
+        });
+        const tData = await tRes.json();
+        if (tData.access_token) {
+          accessToken = tData.access_token;
+        }
+      } catch (err) {
+        console.error("User creation or token retry failed:", err);
       }
     }
 
     // 3. Create Connect Session
     let connectUrl = "";
     if (accessToken) {
+      const origin = req.headers.get("Origin") || "https://bylz.fr";
+      const callbackUrl = `${origin}/settings?tab=bank&connected=true`;
+
       const sRes = await fetch("https://api.bridgeapi.io/v3/aggregation/connect-sessions", {
         method: "POST",
         headers: {
@@ -119,7 +137,7 @@ Deno.serve(async (req: Request) => {
         },
         body: JSON.stringify({
           user_email: userEmail,
-          callback_url: "https://bylz.fr/settings?tab=bank&connected=true",
+          callback_url: callbackUrl,
         }),
       });
       const sData = await sRes.json();
@@ -147,7 +165,8 @@ Deno.serve(async (req: Request) => {
           last_synced_at: new Date().toISOString(),
         });
 
-        connectUrl = `https://bylz.fr/settings?tab=bank&connected=true&mock_bank=${encodeURIComponent(randomBank)}`;
+        const origin = req.headers.get("Origin") || "https://bylz.fr";
+        connectUrl = `${origin}/settings?tab=bank&connected=true&mock_bank=${encodeURIComponent(randomBank)}`;
       } else {
         return new Response(JSON.stringify({ error: "Impossible de créer la session de connexion bancaire (Bridge API)" }), {
           status: 500,

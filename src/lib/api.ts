@@ -1957,9 +1957,10 @@ export async function createBridgeConnectSession(): Promise<string> {
   }
 
   // Fallback connect URL if Edge Function returns non-2xx status code
+  const origin = typeof window !== "undefined" ? window.location.origin : "https://bylz.fr";
   const bankNames = ["BoursoBank (Pro)", "Crédit Agricole", "Revolut Business", "Qonto", "BNP Paribas"];
   const randomBank = bankNames[Math.floor(Math.random() * bankNames.length)];
-  return `https://bylz.fr/settings?tab=bank&connected=true&mock_bank=${encodeURIComponent(randomBank)}`;
+  return `${origin}/settings?tab=bank&connected=true&mock_bank=${encodeURIComponent(randomBank)}`;
 }
 
 export async function triggerBankSync(companyId: string): Promise<{ totalSyncedTransactions: number; autoMatchedCount: number }> {
