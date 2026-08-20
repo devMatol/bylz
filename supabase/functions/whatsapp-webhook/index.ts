@@ -11,13 +11,12 @@ const supabaseUrl = Deno.env.get("SUPABASE_URL") || "";
 const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 const adminClient = createClient(supabaseUrl, serviceKey);
 
-// Verification token and app secret come from the environment; a literal in
-// source is published with the code and cannot be rotated.
 const VERIFY_TOKEN = Deno.env.get("WHATSAPP_VERIFY_TOKEN") || "";
 const APP_SECRET = Deno.env.get("WHATSAPP_APP_SECRET") || "";
+const geminiApiKey = Deno.env.get("GEMINI_API_KEY") || "";
 
 async function signatureIsValid(bodyText: string, header: string | null): Promise<boolean> {
-  if (!APP_SECRET) return true; // No app secret configured: nothing to verify against.
+  if (!APP_SECRET) return true;
   if (!header) return false;
   const provided = header.replace(/^sha256=/i, "").trim().toLowerCase();
   const key = await crypto.subtle.importKey(
@@ -61,7 +60,7 @@ Deno.serve(async (req: Request) => {
     let isTwilio = false;
 
     if (contentType.includes("application/x-www-form-urlencoded")) {
-      // 1. Twilio Webhook (form-urlencoded)
+      // Twilio Webhook (form-urlencoded)
       isTwilio = true;
       const formData = await req.formData();
       const rawFrom = formData.get("From")?.toString() || ""; // e.g. "whatsapp:+33612345678"
@@ -77,8 +76,7 @@ Deno.serve(async (req: Request) => {
         }
       }
     } else {
-      // 2. Meta Cloud API Webhook (JSON) — verify the payload signature when an
-      // app secret is configured, so forged messages are rejected.
+      // Meta Cloud API Webhook (JSON)
       const bodyText = await req.text();
       const sigHeader =
         req.headers.get("x-hub-signature-256") || req.headers.get("X-Hub-Signature-256");
@@ -113,71 +111,152 @@ Deno.serve(async (req: Request) => {
 
     // 2. Identify Company by phone number
     const normalizedPhone = fromPhone.replace(/\D/g, "");
-    const { data: company } = await adminClient
+    const { data: companies } = await adminClient
       .from("companies")
       .select("id, legal_name, user_id, activity_type")
       .or(`phone.ilike.%${normalizedPhone.slice(-9)}%,siret.ilike.%${normalizedPhone.slice(-9)}%`)
-      .maybeSingle();
+      .order("created_at", { ascending: false })
+      .limit(1);
 
+    const company = companies?.[0];
     let replyText = "";
 
     if (!company) {
-      replyText = `👋 Bonjour ! Votre numéro (${fromPhone}) n'est pas encore relié à un compte Bylz.\n\nConnectez-vous sur https://bylz.fr/settings et ajoutez votre numéro dans la section "Pilote IA WhatsApp" pour activer la gestion à distance !`;
+      replyText = `👋 Bonjour ! Votre numéro (${fromPhone}) n'est pas encore relié à un compte Bylz.\n\nConnectez-vous sur https://bylz.fr/settings et renseignez votre numéro de téléphone dans les paramètres de votre entreprise pour activer la gestion IA à distance !`;
     } else {
-      // 3. Process Intent with AI Assistant
-      const lowerText = textContent.toLowerCase();
+      // 3. Query real data for AI context
+      const { data: invoices } = await adminClient
+        .from("invoices")
+        .select("id, number, issue_date, total_ttc, status, paid_amount, client:clients(name)")
+        .eq("company_id", company.id)
+        .order("created_at", { ascending: false })
+        .limit(10);
 
-      if (lowerText.includes("ca") || lowerText.includes("chiffre") || lowerText.includes("solde") || lowerText.includes("urssaf") || lowerText.includes("tva")) {
-        // Query financial summary
-        const { data: invoices } = await adminClient
-          .from("invoices")
-          .select("total_ttc, status, paid_amount")
-          .eq("company_id", company.id);
+      const { data: quotes } = await adminClient
+        .from("quotes")
+        .select("id, number, issue_date, total_ttc, status, client:clients(name)")
+        .eq("company_id", company.id)
+        .order("created_at", { ascending: false })
+        .limit(5);
 
-        const totalCa = (invoices || [])
-          .filter((i) => i.status === "paid")
-          .reduce((s, i) => s + (Number(i.paid_amount) || Number(i.total_ttc)), 0);
+      const totalCa = (invoices || [])
+        .filter((i) => i.status === "paid")
+        .reduce((s, i) => s + (Number(i.paid_amount) || Number(i.total_ttc)), 0);
 
-        const pendingCa = (invoices || [])
-          .filter((i) => i.status === "pending" || i.status === "late")
-          .reduce((s, i) => s + Number(i.total_ttc), 0);
+      const pendingCa = (invoices || [])
+        .filter((i) => i.status === "pending" || i.status === "late")
+        .reduce((s, i) => s + Number(i.total_ttc), 0);
 
-        const estUrssaf = Math.round(totalCa * 0.212);
+      // 4. Try Gemini AI generation
+      if (geminiApiKey && textContent) {
+        try {
+          const invoicesSummary = (invoices || []).map((i) => {
+            const clientName = (i as any).client?.name || "Client non renseigné";
+            const st = i.status === "paid" ? "Payée" : i.status === "pending" ? "En attente" : i.status;
+            return `- Facture ${i.number || 'Brouillon'} (${clientName}): ${i.total_ttc}€ [Statut: ${st}]`;
+          }).join("\n") || "Aucune facture enregistrée.";
 
-        replyText = `📊 *Bilan Bylz - ${company.legal_name}*\n\n` +
-          `💰 *CA Encaissé* : ${totalCa.toFixed(2)} €\n` +
-          `⏳ *En attente de paiement* : ${pendingCa.toFixed(2)} €\n` +
-          `🏛️ *Cotisations URSSAF estimées* : ~${estUrssaf} €\n` +
-          `📈 *Statut TVA* : Franchise Active (<36 800 €)\n\n` +
-          `_Envoyez "Crée une facture de 500€ pour Client X" pour émettre directement._`;
+          const quotesSummary = (quotes || []).map((q) => {
+            const clientName = (q as any).client?.name || "Client non renseigné";
+            return `- Devis ${q.number || 'Brouillon'} (${clientName}): ${q.total_ttc}€ [Statut: ${q.status}]`;
+          }).join("\n") || "Aucun devis enregistré.";
 
-      } else if (lowerText.includes("facture") || lowerText.includes("devis")) {
-        replyText = `📄 *Création de document rapide*\n\n` +
-          `Votre commande a été reçue ! Vous pouvez consulter et envoyer votre facture générée ici :\n` +
-          `https://bylz.fr/invoices\n\n` +
-          `💳 *Lien de paiement Stripe inclus* : Prêt à envoyer à votre client !`;
+          const systemPrompt = `Tu es Bylz Copilot, l'assistant IA intelligent de l'application de facturation et gestion fiscale Bylz (https://bylz.fr).
+Tu réponds par message WhatsApp au dirigeant de l'entreprise "${company.legal_name}".
 
-      } else if (messageType === "image") {
-        replyText = `📸 *Dépense scannée par l'IA Bylz*\n\n` +
-          `- *Fournisseur* : Restaurant Le Progrès\n` +
-          `- *Montant TTC* : 48.50 €\n` +
-          `- *TVA (20%)* : 8.08 €\n\n` +
-          `✅ *Ajouté automatiquement à votre Registre des Achats !*`;
+Voici le contexte financier réel de l'entreprise :
+- Chiffre d'affaires encaissé : ${totalCa.toFixed(2)} €
+- Factures en attente de paiement : ${pendingCa.toFixed(2)} €
+- Estimation des cotisations URSSAF (~21.2%) : ${Math.round(totalCa * 0.212)} €
 
-      } else {
-        replyText = `🤖 *Bylz Copilot IA (WhatsApp)*\n\n` +
-          `Comment puis-je vous aider aujourd'hui ?\n\n` +
-          `1️⃣ *"Quel est mon CA ce mois-ci ?"*\n` +
-          `2️⃣ *"Crée une facture de 800€ pour Client XYZ"*\n` +
-          `3️⃣ Envoyez une 📸 *photo de ticket* pour l'enregistrer dans vos dépenses\n` +
-          `4️⃣ Envoyez une 🎙️ *note vocale* avec vos consignes !`;
+Factures récentes :
+${invoicesSummary}
+
+Devis récents :
+${quotesSummary}
+
+Règles de réponse :
+1. Réponds de manière concise, naturelle et amicale en français sur WhatsApp.
+2. Utilise le formatage WhatsApp (ex: *texte en gras*) et des émojis pertinents.
+3. Si l'utilisateur demande la liste de ses factures (ex: "liste moi mes factures"), énumère clairement les factures ci-dessus avec leurs numéros, clients, montants et statuts !
+4. Si l'utilisateur demande son CA ou son URSSAF, donne les chiffres exacts indiqués ci-dessus.
+5. Si l'utilisateur pose une question générale, réponds de façon utile et conseille-lui d'aller sur https://bylz.fr au besoin.
+6. Ne dépasse jamais 1500 caractères.`;
+
+          const geminiRes = await fetch(
+            `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiApiKey}`,
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                contents: [
+                  {
+                    role: "user",
+                    parts: [
+                      { text: systemPrompt },
+                      { text: `Message utilisateur : "${textContent}"` }
+                    ]
+                  }
+                ]
+              })
+            }
+          );
+
+          if (geminiRes.ok) {
+            const geminiData = await geminiRes.json();
+            const aiReply = geminiData.candidates?.[0]?.content?.parts?.[0]?.text;
+            if (aiReply && aiReply.trim()) {
+              replyText = aiReply.trim();
+            }
+          } else {
+            console.warn("Gemini API HTTP Error:", geminiRes.status, await geminiRes.text());
+          }
+        } catch (gemErr) {
+          console.warn("Gemini AI call error:", gemErr);
+        }
+      }
+
+      // 5. Smart Fallback if Gemini AI didn't return text
+      if (!replyText) {
+        const lowerText = textContent.toLowerCase();
+
+        if (lowerText.includes("liste") || lowerText.includes("mes factures") || lowerText.includes("vos factures") || (lowerText.includes("facture") && !lowerText.includes("crée"))) {
+          const invList = (invoices || []).map((i) => {
+            const clientName = (i as any).client?.name || "Client";
+            const statusLabel = i.status === "paid" ? "✅ Payée" : i.status === "pending" ? "⏳ En attente" : i.status;
+            return `• *${i.number || 'Facture'}* - ${clientName} : *${i.total_ttc} €* (${statusLabel})`;
+          }).join("\n");
+
+          replyText = `📄 *Vos factures récentes (${company.legal_name})*\n\n` +
+            (invList || "Aucune facture trouvée pour le moment.") +
+            `\n\n_Retrouvez toutes vos factures sur https://bylz.fr/invoices_`;
+
+        } else if (lowerText.includes("ca") || lowerText.includes("chiffre") || lowerText.includes("solde") || lowerText.includes("urssaf") || lowerText.includes("tva")) {
+          replyText = `📊 *Bilan Bylz - ${company.legal_name}*\n\n` +
+            `💰 *CA Encaissé* : ${totalCa.toFixed(2)} €\n` +
+            `⏳ *En attente de paiement* : ${pendingCa.toFixed(2)} €\n` +
+            `🏛️ *Cotisations URSSAF estimées* : ~${Math.round(totalCa * 0.212)} €\n` +
+            `📈 *Statut TVA* : Franchise Active (<36 800 €)\n\n` +
+            `_Consultez vos tableaux de bord sur https://bylz.fr_`;
+
+        } else if (messageType === "image") {
+          replyText = `📸 *Justificatif reçu*\n\n` +
+            `Votre reçu/ticket a été transmis. Retrouvez vos justificatifs enregistrés sur https://bylz.fr/invoices !`;
+
+        } else {
+          replyText = `🤖 *Bylz Copilot IA (WhatsApp)*\n\n` +
+            `Bonjour ! Comment puis-je vous aider aujourd'hui ?\n\n` +
+            `1️⃣ *"Liste moi mes factures"*\n` +
+            `2️⃣ *"Quel est mon CA ce mois-ci ?"*\n` +
+            `3️⃣ *"Quel est le montant de mon URSSAF ?"*\n\n` +
+            `_Gérez votre activité sur https://bylz.fr_`;
+        }
       }
     }
 
     console.log("WhatsApp reply generated:", replyText);
 
     if (isTwilio) {
-      // Return TwiML XML response for Twilio
       const twiML = `<?xml version="1.0" encoding="UTF-8"?>\n<Response>\n  <Message>${replyText.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</Message>\n</Response>`;
       return new Response(twiML, {
         status: 200,
