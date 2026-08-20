@@ -34,9 +34,15 @@ const staticPages = [
         "@type": "Organization",
         "name": "Bylz",
         "url": "https://bylz.fr",
-        "logo": "https://bylz.fr/logo.png"
+        "logo": "https://bylz.fr/og-image.png"
       }
     ]
+  },
+  {
+    path: "invoices",
+    title: "Mes Factures & Gestion | Bylz",
+    description: "Gérez et éditez vos factures conformes Factur-X 2026 sur Bylz.",
+    ogType: "website"
   },
   {
     path: "tarifs",

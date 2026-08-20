@@ -229,7 +229,7 @@ Règles de réponse :
 
           replyText = `📄 *Vos factures récentes (${company.legal_name})*\n\n` +
             (invList || "Aucune facture trouvée pour le moment.") +
-            `\n\n_Retrouvez toutes vos factures sur https://bylz.fr/invoices_`;
+            `\n\n_Retrouvez toutes vos factures sur https://bylz.fr/invoices?v=2_`;
 
         } else if (lowerText.includes("ca") || lowerText.includes("chiffre") || lowerText.includes("solde") || lowerText.includes("urssaf") || lowerText.includes("tva")) {
           replyText = `📊 *Bilan Bylz - ${company.legal_name}*\n\n` +
