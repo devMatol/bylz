@@ -390,8 +390,8 @@ export function SettingsPage() {
     setLoadingConnect(true);
     try {
       const { data, error } = await supabase.functions.invoke("create-connect-account");
-      if (error || !data?.url) {
-        const errorMsg = data?.error || error?.message || "Impossible de démarrer l'onboarding Stripe Connect.";
+      if (error || data?.error || !data?.url) {
+        const errorMsg = data?.error || (error?.message && error.message !== "Edge Function returned a non-2xx status code" ? error.message : null) || "Impossible de démarrer la configuration de l'encaissement Stripe Connect.";
         throw new Error(errorMsg);
       }
       window.location.href = data.url;

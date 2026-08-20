@@ -62,10 +62,10 @@ Deno.serve(async (req) => {
       .from('companies')
       .select('*')
       .eq('user_id', user.id)
-      .order('created_at', { ascending: true });
+      .order('created_at', { ascending: false });
 
     if (companyError || !companies || companies.length === 0) {
-      return corsResponse({ error: 'Company not found' }, 404);
+      return corsResponse({ error: 'Entreprise introuvable' }, 200);
     }
 
     const company = companies.find((c: any) => c.legal_name && c.legal_name !== 'Mon Entreprise') || companies[0];
@@ -140,16 +140,10 @@ Deno.serve(async (req) => {
     return corsResponse({ url: accountLink.url, accountId: connectAccountId });
   } catch (error: any) {
     console.error(`Create connect account error: ${error.message}`);
-    const msg = error?.message || "Erreur lors de la création du compte Stripe Connect";
+    let msg = error?.message || "Erreur lors de la création du compte Stripe Connect";
     if (msg.includes("signed up for Connect")) {
-      return corsResponse(
-        {
-          error:
-            "Stripe Connect n'est pas encore activé sur votre compte Stripe. Rendez-vous sur https://dashboard.stripe.com/connect et cliquez sur 'Activer Connect' pour débloquer les comptes connectés.",
-        },
-        400
-      );
+      msg = "Stripe Connect n'est pas encore activé sur votre compte Stripe. Rendez-vous sur https://dashboard.stripe.com/connect et cliquez sur 'Activer Connect' pour débloquer les comptes connectés.";
     }
-    return corsResponse({ error: msg }, 500);
+    return corsResponse({ error: msg }, 200);
   }
 });
