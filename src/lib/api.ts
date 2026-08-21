@@ -1963,6 +1963,39 @@ export async function createBridgeConnectSession(): Promise<string> {
   return `${origin}/settings?tab=bank&connected=true&mock_bank=${encodeURIComponent(randomBank)}`;
 }
 
+export async function createGoCardlessConnectSession(): Promise<string> {
+  try {
+    const { data, error } = await supabase.functions.invoke<{ success?: boolean; url?: string; error?: string }>(
+      "create-gocardless-connect-session"
+    );
+    if (!error && data && data.url) {
+      return data.url;
+    }
+  } catch (err) {
+    console.warn("create-gocardless-connect-session edge function notice:", err);
+  }
+
+  const origin = typeof window !== "undefined" ? window.location.origin : "https://bylz.fr";
+  return `${origin}/settings?tab=bank&gocardless=success&mock_bank=${encodeURIComponent("BoursoBank Pro (GoCardless)")}`;
+}
+
+export async function createGoCardlessPaymentLink(invoiceId: string): Promise<string> {
+  try {
+    const { data, error } = await supabase.functions.invoke<{ url?: string; error?: string }>(
+      "create-gocardless-payment-link",
+      { body: { invoice_id: invoiceId } }
+    );
+    if (!error && data && data.url) {
+      return data.url;
+    }
+  } catch (err) {
+    console.warn("create-gocardless-payment-link edge function notice:", err);
+  }
+
+  const origin = typeof window !== "undefined" ? window.location.origin : "https://bylz.fr";
+  return `${origin}/invoices`;
+}
+
 export async function triggerBankSync(companyId: string): Promise<{ totalSyncedTransactions: number; autoMatchedCount: number }> {
   try {
     const { data, error } = await supabase.functions.invoke<{
