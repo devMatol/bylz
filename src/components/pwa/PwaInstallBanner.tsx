@@ -61,7 +61,7 @@ export function PwaInstallBanner() {
   if (!showBanner || installed) return null;
 
   return (
-    <div className="fixed bottom-4 left-4 right-4 sm:left-auto sm:right-6 sm:max-w-md z-50 animate-bounce-subtle">
+    <div className="fixed bottom-20 left-4 right-4 sm:bottom-4 sm:left-auto sm:right-6 sm:max-w-md z-50 animate-bounce-subtle">
       <div className="relative overflow-hidden rounded-2xl border border-primary/30 bg-slate-900/95 p-4 shadow-2xl backdrop-blur-xl space-y-3">
         {/* Glow Accent */}
         <div className="absolute -left-10 -top-10 h-24 w-24 rounded-full bg-primary/20 blur-2xl pointer-events-none" />

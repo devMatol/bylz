@@ -287,11 +287,11 @@ export function QuoteNewPage() {
         </section>
 
         {/* Spacer for sticky bar */}
-        <div className="h-24" />
+        <div className="h-36 md:h-24" />
       </form>
 
       {/* Sticky summary bar */}
-      <div className="fixed bottom-0 left-0 right-0 md:left-[280px] z-20 border-t border-border px-4 md:px-10 py-3 flex items-center justify-between gap-4" style={{ backgroundColor: "var(--bg)", backdropFilter: "blur(8px)" }}>
+      <div className="fixed bottom-16 md:bottom-0 left-0 right-0 md:left-[280px] z-20 border-t border-border px-4 md:px-10 py-3 flex items-center justify-between gap-4" style={{ backgroundColor: "var(--bg)", backdropFilter: "blur(8px)" }}>
         <div className="flex items-center gap-3 min-w-0">
           {isEdit && (
             <Button

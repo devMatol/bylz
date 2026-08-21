@@ -631,7 +631,7 @@ export function GuestEditorPageContent() {
 
               {/* Sticky Bottom Bar for invoice tab */}
               <div
-                className="fixed bottom-0 left-0 right-0 md:left-[280px] z-20 border-t border-border px-4 md:px-10 py-4 flex items-center justify-between gap-4"
+                className="fixed bottom-16 md:bottom-0 left-0 right-0 md:left-[280px] z-20 border-t border-border px-4 md:px-10 py-4 flex items-center justify-between gap-4"
                 style={{ backgroundColor: "var(--bg)", backdropFilter: "blur(8px)" }}
               >
                 <div className="flex items-center gap-3">

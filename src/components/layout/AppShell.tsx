@@ -52,7 +52,7 @@ function ShellContent() {
       <Sidebar />
       <div className="min-h-screen flex flex-col md:ml-[280px]">
         <Topbar title={title} subtitle={header.subtitle} actions={header.actions} />
-        <main className="flex-1 p-4 md:p-10 pb-20 md:pb-10">
+        <main className="flex-1 p-4 md:p-10 pb-36 md:pb-10">
           <Outlet />
         </main>
       </div>
