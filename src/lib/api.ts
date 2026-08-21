@@ -1979,6 +1979,22 @@ export async function createGoCardlessConnectSession(): Promise<string> {
   return `${origin}/settings?tab=bank&gocardless=success&mock_bank=${encodeURIComponent("BoursoBank Pro (GoCardless)")}`;
 }
 
+export async function createEnableBankingConnectSession(): Promise<string> {
+  try {
+    const { data, error } = await supabase.functions.invoke<{ success?: boolean; url?: string; error?: string }>(
+      "create-enablebanking-connect-session"
+    );
+    if (!error && data && data.url) {
+      return data.url;
+    }
+  } catch (err) {
+    console.warn("create-enablebanking-connect-session edge function notice:", err);
+  }
+
+  const origin = typeof window !== "undefined" ? window.location.origin : "https://bylz.fr";
+  return `${origin}/settings?tab=bank&enablebanking=success&mock_bank=${encodeURIComponent("BoursoBank Pro (Enable Banking)")}`;
+}
+
 export async function createGoCardlessPaymentLink(invoiceId: string): Promise<string> {
   try {
     const { data, error } = await supabase.functions.invoke<{ url?: string; error?: string }>(
