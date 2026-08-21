@@ -34,6 +34,9 @@ import { CatalogPage } from "./pages/CatalogPage";
 import { UrssafPage } from "./pages/UrssafPage";
 import { LivreRecettesPage } from "./pages/LivreRecettesPage";
 import { SettingsPage } from "./pages/SettingsPage";
+import { AssistantPage } from "./pages/AssistantPage";
+import { BankPage } from "./pages/BankPage";
+import { RemindersPage } from "./pages/RemindersPage";
 import { PublicDocumentPage } from "./pages/PublicDocumentPage";
 
 // Code-split marketing & tools bundle from main app
@@ -291,6 +294,9 @@ function App() {
                     <Route path="/invoices" element={<InvoicesPage />} />
                     <Route path="/invoices/new" element={<InvoiceNewPage />} />
                     <Route path="/invoices/:id" element={<InvoiceDetailPage />} />
+                    <Route path="/assistant" element={<AssistantPage />} />
+                    <Route path="/bank" element={<BankPage />} />
+                    <Route path="/reminders" element={<RemindersPage />} />
                     <Route path="/clients" element={<ClientsPage />} />
                     <Route path="/clients/:id" element={<ClientDetailPage />} />
                     <Route path="/catalog" element={<CatalogPage />} />

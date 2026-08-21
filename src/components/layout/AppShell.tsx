@@ -11,11 +11,16 @@ import {
   usePageHeader,
 } from "./PageHeaderContext";
 
+import { GlobalAiCopilotWidget } from "../shared/GlobalAiCopilotWidget";
+
 const routeTitles: Record<string, string> = {
   "/": "Tableau de bord",
   "/dashboard": "Tableau de bord",
   "/quotes": "Devis",
   "/invoices": "Factures",
+  "/assistant": "Assistant IA (Bylz Copilot)",
+  "/bank": "Banque & Rapprochement",
+  "/reminders": "Relances Automatiques",
   "/livre-recettes": "Livre des recettes",
   "/clients": "Clients",
   "/catalog": "Catalogue",
@@ -58,6 +63,7 @@ function ShellContent() {
       </div>
       <BottomNav />
       <PwaInstallBanner />
+      <GlobalAiCopilotWidget />
     </div>
   );
 }

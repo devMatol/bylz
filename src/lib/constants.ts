@@ -7,6 +7,8 @@ import {
   Landmark,
   Settings,
   BookMarked,
+  Bot,
+  BellRing,
   type LucideIcon,
 } from "lucide-react";
 
@@ -15,12 +17,16 @@ export type NavItem = {
   path: string;
   icon: LucideIcon;
   requiredPlan?: "solo" | "pro";
+  badge?: string;
 };
 
 export const NAV_ITEMS: NavItem[] = [
   { label: "Tableau de bord", path: "/dashboard", icon: LayoutDashboard },
   { label: "Devis", path: "/quotes", icon: FileText },
   { label: "Factures", path: "/invoices", icon: Receipt },
+  { label: "Assistant IA", path: "/assistant", icon: Bot, requiredPlan: "pro", badge: "PRO" },
+  { label: "Banque", path: "/bank", icon: Landmark, requiredPlan: "pro", badge: "PRO" },
+  { label: "Relances", path: "/reminders", icon: BellRing, requiredPlan: "solo", badge: "SOLO" },
   { label: "Livre des recettes", path: "/livre-recettes", icon: BookMarked },
   { label: "Clients", path: "/clients", icon: Users },
   { label: "Catalogue", path: "/catalog", icon: BookOpen },

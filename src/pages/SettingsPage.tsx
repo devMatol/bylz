@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback, type FormEvent } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, Link } from "react-router-dom";
 import {
   CreditCard,
   Sparkles,
@@ -1102,25 +1102,32 @@ export function SettingsPage() {
             <ComplianceSection />
           </FeatureLockWrapper>
 
-          {/* Automatic Payment Reminders Section */}
-          <FeatureLockWrapper
-            feature="reminders"
-            title="Relances de Paiement Automatiques"
-            description="Automatisez vos relances de factures en retard et configurez votre échéancier personnalisé."
-          >
-            <AutoRemindersSection />
-          </FeatureLockWrapper>
+          {/* Shortcuts to Premium Dedicated Workspaces */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 border-t border-border">
+            <Link to="/assistant" className="p-4 rounded-xl bg-card border border-border hover:border-accent/50 transition-all space-y-2 group shadow-xs">
+              <div className="flex items-center justify-between text-text font-bold text-sm">
+                <span className="flex items-center gap-2">🤖 Assistant IA</span>
+                <span className="px-2 py-0.5 text-[10px] bg-accent text-accent-foreground font-extrabold rounded-full">PRO ⚡</span>
+              </div>
+              <p className="text-xs text-muted">Accédez au Copilot IA in-app et gérez vos intégrations WhatsApp.</p>
+            </Link>
 
-          {/* Hide bank connection card for now except for matthiasollivier123 */}
-          {user?.email?.toLowerCase() === "matthiasollivier123@gmail.com" && (
-            <FeatureLockWrapper
-              feature="paymentLinks"
-              title="Synchronisation Bancaire & Rapprochement"
-              description="Connectez vos comptes bancaires de manière sécurisée et rapprochez automatiquement vos factures avec vos virements."
-            >
-              <BankSyncSection />
-            </FeatureLockWrapper>
-          )}
+            <Link to="/bank" className="p-4 rounded-xl bg-card border border-border hover:border-accent/50 transition-all space-y-2 group shadow-xs">
+              <div className="flex items-center justify-between text-text font-bold text-sm">
+                <span className="flex items-center gap-2">🏛️ Banque & Synchro</span>
+                <span className="px-2 py-0.5 text-[10px] bg-amber-500/15 text-amber-500 font-extrabold rounded-full">PRO ⚡</span>
+              </div>
+              <p className="text-xs text-muted">Connectez vos comptes bancaires et effectuez le rapprochement 1-clic.</p>
+            </Link>
+
+            <Link to="/reminders" className="p-4 rounded-xl bg-card border border-border hover:border-accent/50 transition-all space-y-2 group shadow-xs">
+              <div className="flex items-center justify-between text-text font-bold text-sm">
+                <span className="flex items-center gap-2">🔔 Relances Automatiques</span>
+                <span className="px-2 py-0.5 text-[10px] bg-primary/15 text-primary font-extrabold rounded-full">SOLO ⚡</span>
+              </div>
+              <p className="text-xs text-muted">Configurez vos règles de relance automatique et échéanciers de paiement.</p>
+            </Link>
+          </div>
         </div>
 
       </div>
