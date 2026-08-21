@@ -72,7 +72,6 @@ Deno.serve(async (req: Request) => {
     let audioMimeType = "audio/ogg";
 
     if (contentType.includes("application/x-www-form-urlencoded")) {
-      // Twilio Webhook (form-urlencoded)
       isTwilio = true;
       const formData = await req.formData();
       const rawFrom = formData.get("From")?.toString() || "";
@@ -103,7 +102,6 @@ Deno.serve(async (req: Request) => {
         }
       }
     } else {
-      // Meta Cloud API Webhook (JSON)
       const bodyText = await req.text();
       const sigHeader =
         req.headers.get("x-hub-signature-256") || req.headers.get("X-Hub-Signature-256");
@@ -128,7 +126,6 @@ Deno.serve(async (req: Request) => {
       messageType = message?.type || "text";
       textContent = message?.text?.body || "";
 
-      // Download Meta Audio / Voice message if present
       if (messageType === "audio" || messageType === "voice") {
         const mediaId = message?.audio?.id || message?.voice?.id;
         audioMimeType = message?.audio?.mime_type || message?.voice?.mime_type || "audio/ogg";
@@ -179,50 +176,120 @@ Deno.serve(async (req: Request) => {
     if (!company) {
       replyText = `👋 Bonjour ! Votre numéro (${fromPhone}) n'est pas encore relié à un compte Bylz.\n\nConnectez-vous sur https://bylz.fr/settings et renseignez votre numéro de téléphone dans les paramètres de votre entreprise pour activer la gestion IA à distance !`;
     } else {
-      // 3. Query real data for AI context
-      const { data: invoices } = await adminClient
-        .from("invoices")
-        .select("id, number, issue_date, total_ttc, status, paid_amount, client:clients(name)")
-        .eq("company_id", company.id)
-        .order("created_at", { ascending: false })
-        .limit(10);
+      const lowerInput = textContent.toLowerCase().trim();
 
-      const { data: quotes } = await adminClient
-        .from("quotes")
-        .select("id, number, issue_date, total_ttc, status, client:clients(name)")
-        .eq("company_id", company.id)
-        .order("created_at", { ascending: false })
-        .limit(5);
+      // Check if user is confirming or canceling a pending DRAFT invoice
+      const isConfirmation = lowerInput === "oui" || lowerInput === "valider" || lowerInput === "confirmer" || lowerInput === "ok" || lowerInput.includes("oui valider") || lowerInput.includes("valide");
+      const isCancellation = lowerInput === "non" || lowerInput === "annuler" || lowerInput.includes("non annuler") || lowerInput.includes("annule");
 
-      const totalCa = (invoices || [])
-        .filter((i) => i.status === "paid")
-        .reduce((s, i) => s + (Number(i.paid_amount) || Number(i.total_ttc)), 0);
+      if (isConfirmation || isCancellation) {
+        // Find latest draft invoice for this company
+        const { data: draftInvoices } = await adminClient
+          .from("invoices")
+          .select("*, client:clients(name)")
+          .eq("company_id", company.id)
+          .eq("status", "draft")
+          .order("created_at", { ascending: false })
+          .limit(1);
 
-      const pendingCa = (invoices || [])
-        .filter((i) => i.status === "pending" || i.status === "late")
-        .reduce((s, i) => s + Number(i.total_ttc), 0);
+        const draftInv = draftInvoices?.[0];
 
-      // 4. Gemini AI Call (Support Voice Audio + Text + Actions)
-      if (geminiApiKey && (textContent || base64Audio)) {
-        try {
-          const invoicesSummary = (invoices || []).map((i) => {
-            const clientName = (i as any).client?.name || "Client non renseigné";
-            const st = i.status === "paid" ? "Payée" : i.status === "pending" ? "En attente" : i.status;
-            return `- Facture ${i.number || 'Brouillon'} (${clientName}): ${i.total_ttc}€ [Statut: ${st}]`;
-          }).join("\n") || "Aucune facture enregistrée.";
+        if (draftInv) {
+          if (isConfirmation) {
+            // Generate official sequential invoice number
+            const { data: lastInvoices } = await adminClient
+              .from("invoices")
+              .select("number")
+              .eq("company_id", company.id)
+              .eq("type", "invoice")
+              .neq("status", "draft")
+              .order("created_at", { ascending: false })
+              .limit(1);
 
-          const quotesSummary = (quotes || []).map((q) => {
-            const clientName = (q as any).client?.name || "Client non renseigné";
-            return `- Devis ${q.number || 'Brouillon'} (${clientName}): ${q.total_ttc}€ [Statut: ${q.status}]`;
-          }).join("\n") || "Aucun devis enregistré.";
+            const currentYear = new Date().getFullYear();
+            let nextNum = 1;
+            if (lastInvoices?.[0]?.number) {
+              const numMatch = lastInvoices[0].number.match(/FAC-\d{4}-(\d+)/);
+              if (numMatch) nextNum = parseInt(numMatch[1], 10) + 1;
+            }
+            const officialNum = `FAC-${currentYear}-${String(nextNum).padStart(3, '0')}`;
 
-          const systemPrompt = `Tu es Bylz Copilot, l'assistant IA officiel de facturation et gestion fiscale de l'application Bylz (https://bylz.fr).
+            const todayStr = new Date().toISOString().split('T')[0];
+            const dueDate = new Date(Date.now() + 30 * 24 * 3600 * 1000).toISOString().split('T')[0];
+
+            await adminClient
+              .from("invoices")
+              .update({
+                number: officialNum,
+                status: "pending",
+                issue_date: todayStr,
+                due_date: dueDate,
+              })
+              .eq("id", draftInv.id);
+
+            const clientName = (draftInv as any).client?.name || "Client";
+            const desc = draftInv.items?.[0]?.description || "Prestation de service";
+
+            replyText = `✅ *Facture ${officialNum} validée et émise avec succès !*\n\n` +
+              `👤 *Client* : ${clientName}\n` +
+              `💰 *Montant TTC* : ${Number(draftInv.total_ttc).toFixed(2)} €\n` +
+              `📝 *Prestation* : ${desc}\n` +
+              `⏳ *Échéance* : ${dueDate}\n\n` +
+              `_Retrouvez ou téléchargez le PDF de votre facture sur https://bylz.fr/invoices?v=2_`;
+          } else if (isCancellation) {
+            await adminClient
+              .from("invoices")
+              .delete()
+              .eq("id", draftInv.id);
+
+            replyText = `❌ *Création annulée.* Le brouillon de facture a été supprimé sans émettre de numéro officiel.`;
+          }
+        }
+      }
+
+      if (!replyText) {
+        // Query real data for AI context
+        const { data: invoices } = await adminClient
+          .from("invoices")
+          .select("id, number, issue_date, total_ttc, status, paid_amount, client:clients(name)")
+          .eq("company_id", company.id)
+          .order("created_at", { ascending: false })
+          .limit(10);
+
+        const { data: quotes } = await adminClient
+          .from("quotes")
+          .select("id, number, issue_date, total_ttc, status, client:clients(name)")
+          .eq("company_id", company.id)
+          .order("created_at", { ascending: false })
+          .limit(5);
+
+        const totalCa = (invoices || [])
+          .filter((i) => i.status === "paid")
+          .reduce((s, i) => s + (Number(i.paid_amount) || Number(i.total_ttc)), 0);
+
+        const pendingCa = (invoices || [])
+          .filter((i) => i.status === "pending" || i.status === "late")
+          .reduce((s, i) => s + Number(i.total_ttc), 0);
+
+        if (geminiApiKey && (textContent || base64Audio)) {
+          try {
+            const invoicesSummary = (invoices || []).map((i) => {
+              const clientName = (i as any).client?.name || "Client non renseigné";
+              const st = i.status === "paid" ? "Payée" : i.status === "pending" ? "En attente" : i.status;
+              return `- Facture ${i.number || 'Brouillon'} (${clientName}): ${i.total_ttc}€ [Statut: ${st}]`;
+            }).join("\n") || "Aucune facture enregistrée.";
+
+            const quotesSummary = (quotes || []).map((q) => {
+              const clientName = (q as any).client?.name || "Client non renseigné";
+              return `- Devis ${q.number || 'Brouillon'} (${clientName}): ${q.total_ttc}€ [Statut: ${q.status}]`;
+            }).join("\n") || "Aucun devis enregistré.";
+
+            const systemPrompt = `Tu es Bylz Copilot, l'assistant IA officiel de facturation et gestion fiscale de l'application Bylz (https://bylz.fr).
 Tu réponds par message WhatsApp exclusivement au dirigeant de l'entreprise "${company.legal_name}".
 
 🔒 RÈGLES DE SÉCURITÉ ET D'ISOLATION STRICTES :
-1. Tu es strictement cantonné aux données de l'entreprise "${company.legal_name}".
-2. Tu peux consulter les chiffres et CRÉER DE NOUVELLES FACTURES si l'utilisateur le demande.
-3. Tu ne peux PAS supprimer de factures.
+1. Tu es strictly cantonné aux données de l'entreprise "${company.legal_name}".
+2. Tu prépares des brouillons de factures pour validation par l'utilisateur.
 
 Voici le contexte financier réel de l'entreprise "${company.legal_name}" :
 - Chiffre d'affaires encaissé : ${totalCa.toFixed(2)} €
@@ -241,263 +308,228 @@ Si l'utilisateur demande de CRÉER une facture (ex: "Créé une facture pour Nom
 
 Sinon, réponds de manière concise, précise et amicale en français sur WhatsApp avec des émojis et du texte en gras (*texte*).`;
 
-          const contentsParts: any[] = [];
-          if (base64Audio) {
-            contentsParts.push({
-              inlineData: {
-                mimeType: audioMimeType.includes("ogg") ? "audio/ogg" : audioMimeType,
-                data: base64Audio,
-              },
-            });
-            contentsParts.push({ text: "Transcris et réponds à ce message vocal d'instruction utilisateur." });
-          } else {
-            contentsParts.push({ text: `Message utilisateur : "${textContent}"` });
-          }
-          contentsParts.push({ text: systemPrompt });
-
-          const geminiRes = await fetch(
-            `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiApiKey}`,
-            {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                contents: [{ role: "user", parts: contentsParts }],
-              }),
+            const contentsParts: any[] = [];
+            if (base64Audio) {
+              contentsParts.push({
+                inlineData: {
+                  mimeType: audioMimeType.includes("ogg") ? "audio/ogg" : audioMimeType,
+                  data: base64Audio,
+                },
+              });
+              contentsParts.push({ text: "Transcris et réponds à ce message vocal d'instruction utilisateur." });
+            } else {
+              contentsParts.push({ text: `Message utilisateur : "${textContent}"` });
             }
-          );
+            contentsParts.push({ text: systemPrompt });
 
-          if (geminiRes.ok) {
-            const geminiData = await geminiRes.json();
-            const rawAiReply = geminiData.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || "";
+            const geminiRes = await fetch(
+              `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiApiKey}`,
+              {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  contents: [{ role: "user", parts: contentsParts }],
+                }),
+              }
+            );
 
-            // Check if AI output is a structured Create Invoice action JSON
-            if (rawAiReply.includes('"action": "create_invoice"') || rawAiReply.startsWith('{')) {
-              try {
-                const cleanJson = rawAiReply.replace(/```json/gi, '').replace(/```/g, '').trim();
-                const actionObj = JSON.parse(cleanJson);
+            if (geminiRes.ok) {
+              const geminiData = await geminiRes.json();
+              const rawAiReply = geminiData.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || "";
 
-                if (actionObj.action === "create_invoice" && actionObj.amount) {
-                  const clientName = actionObj.client_name || "Client WhatsApp";
-                  const amount = parseFloat(actionObj.amount);
-                  const description = actionObj.description || "Prestation de service";
+              if (rawAiReply.includes('"action": "create_invoice"') || rawAiReply.startsWith('{')) {
+                try {
+                  const cleanJson = rawAiReply.replace(/```json/gi, '').replace(/```/g, '').trim();
+                  const actionObj = JSON.parse(cleanJson);
 
-                  // 1. Get or create Client
-                  let clientId = "";
-                  const { data: existingClients } = await adminClient
-                    .from("clients")
-                    .select("id, name")
-                    .eq("company_id", company.id)
-                    .ilike("name", `%${clientName}%`)
-                    .limit(1);
+                  if (actionObj.action === "create_invoice" && actionObj.amount) {
+                    const clientName = actionObj.client_name || "Client WhatsApp";
+                    const amount = parseFloat(actionObj.amount);
+                    const description = actionObj.description || "Prestation de service";
 
-                  if (existingClients && existingClients.length > 0) {
-                    clientId = existingClients[0].id;
-                  } else {
-                    const { data: newClient } = await adminClient
+                    // 1. Get or create Client
+                    let clientId = "";
+                    const { data: existingClients } = await adminClient
                       .from("clients")
-                      .insert({ company_id: company.id, name: clientName })
-                      .select("id")
+                      .select("id, name")
+                      .eq("company_id", company.id)
+                      .ilike("name", `%${clientName}%`)
+                      .limit(1);
+
+                    if (existingClients && existingClients.length > 0) {
+                      clientId = existingClients[0].id;
+                    } else {
+                      const { data: newClient } = await adminClient
+                        .from("clients")
+                        .insert({ company_id: company.id, name: clientName })
+                        .select("id")
+                        .single();
+                      clientId = newClient?.id || "";
+                    }
+
+                    // 2. Insert DRAFT Invoice awaiting user validation
+                    const draftNum = `DRAFT-${Math.random().toString(36).substring(7)}`;
+                    const todayStr = new Date().toISOString().split('T')[0];
+                    const dueDate = new Date(Date.now() + 30 * 24 * 3600 * 1000).toISOString().split('T')[0];
+
+                    const { data: newInv, error: invInsErr } = await adminClient
+                      .from("invoices")
+                      .insert({
+                        company_id: company.id,
+                        client_id: clientId || null,
+                        number: draftNum,
+                        type: "invoice",
+                        status: "draft",
+                        issue_date: todayStr,
+                        due_date: dueDate,
+                        items: [
+                          {
+                            description: description,
+                            quantity: 1,
+                            unit_price: amount,
+                            total_ht: amount,
+                            vat_rate: 0,
+                          },
+                        ],
+                        total_ht: amount,
+                        vat_amount: 0,
+                        total_ttc: amount,
+                        paid_amount: 0,
+                      })
+                      .select()
                       .single();
-                    clientId = newClient?.id || "";
+
+                    if (!invInsErr && newInv) {
+                      replyText = `📄 *Brouillon de facture prêt pour validation*\n\n` +
+                        `👤 *Client* : ${clientName}\n` +
+                        `💰 *Montant TTC* : ${amount.toFixed(2)} €\n` +
+                        `📝 *Prestation* : ${description}\n\n` +
+                        `⚠️ *Validation requise :*\n` +
+                        `• Répondez **"OUI"** (ou **"VALIDER"**) pour émettre cette facture avec son numéro officiel.\n` +
+                        `• Répondez **"NON"** (ou **"ANNULER"**) pour supprimer ce brouillon.`;
+                    }
                   }
-
-                  // 2. Generate next Invoice Number
-                  const { data: lastInvoices } = await adminClient
-                    .from("invoices")
-                    .select("number")
-                    .eq("company_id", company.id)
-                    .eq("type", "invoice")
-                    .order("created_at", { ascending: false })
-                    .limit(1);
-
-                  const currentYear = new Date().getFullYear();
-                  let nextNum = 1;
-                  if (lastInvoices?.[0]?.number) {
-                    const numMatch = lastInvoices[0].number.match(/FAC-\d{4}-(\d+)/);
-                    if (numMatch) nextNum = parseInt(numMatch[1], 10) + 1;
-                  }
-                  const invNumber = `FAC-${currentYear}-${String(nextNum).padStart(3, '0')}`;
-
-                  const todayStr = new Date().toISOString().split('T')[0];
-                  const dueDate = new Date(Date.now() + 30 * 24 * 3600 * 1000).toISOString().split('T')[0];
-
-                  // 3. Insert Invoice
-                  const { data: newInv, error: invInsErr } = await adminClient
-                    .from("invoices")
-                    .insert({
-                      company_id: company.id,
-                      client_id: clientId || null,
-                      number: invNumber,
-                      type: "invoice",
-                      status: "pending",
-                      issue_date: todayStr,
-                      due_date: dueDate,
-                      items: [
-                        {
-                          description: description,
-                          quantity: 1,
-                          unit_price: amount,
-                          total_ht: amount,
-                          vat_rate: 0,
-                        },
-                      ],
-                      total_ht: amount,
-                      vat_amount: 0,
-                      total_ttc: amount,
-                      paid_amount: 0,
-                    })
-                    .select()
-                    .single();
-
-                  if (!invInsErr && newInv) {
-                    replyText = `✅ *Facture ${invNumber} créée avec succès !*\n\n` +
-                      `👤 *Client* : ${clientName}\n` +
-                      `💰 *Montant TTC* : ${amount.toFixed(2)} €\n` +
-                      `📝 *Prestation* : ${description}\n` +
-                      `⏳ *Échéance* : ${dueDate}\n\n` +
-                      `_Retrouvez ou téléchargez le PDF de votre facture sur https://bylz.fr/invoices?v=2_`;
-                  }
+                } catch (parseErr) {
+                  console.warn("Error parsing invoice creation JSON from Gemini:", parseErr);
                 }
-              } catch (parseErr) {
-                console.warn("Error parsing invoice creation JSON from Gemini:", parseErr);
+              }
+
+              if (!replyText && rawAiReply) {
+                replyText = rawAiReply;
               }
             }
-
-            if (!replyText && rawAiReply) {
-              replyText = rawAiReply;
-            }
-          } else {
-            console.warn("Gemini API HTTP Error:", geminiRes.status, await geminiRes.text());
+          } catch (gemErr) {
+            console.warn("Gemini AI call error:", gemErr);
           }
-        } catch (gemErr) {
-          console.warn("Gemini AI call error:", gemErr);
         }
-      }
 
-      // 5. Smart Fallback if Gemini AI didn't return text
-      if (!replyText) {
-        const lowerText = textContent.toLowerCase();
+        // Smart Fallbacks
+        if (!replyText) {
+          const lowerText = textContent.toLowerCase();
 
-        // Catch Invoice Creation in Fallback Regex if Gemini was skipped
-        const createMatch = lowerText.match(/(?:crée|cree|créer|creer|fait|faire)\s+une?\s+facture\s+pour\s+([^,]+?)(?:,|\s+de|\s+pour|\s+(\d+))(?:\s+de\s+|\s+)(\d+)?/i);
-        if (createMatch || (lowerText.includes("facture") && (lowerText.includes("crée") || lowerText.includes("cree") || lowerText.includes("créer") || lowerText.includes("creer") || lowerText.includes("fait")))) {
-          try {
-            const clientNameMatch = textContent.match(/pour\s+([^,0-9]+)/i);
-            const amountMatch = textContent.match(/(\d+)\s*(?:€|e|euros?)/i) || textContent.match(/pour\s+(\d+)/i);
-            const descMatch = textContent.match(/pour\s+un[e]?\s+(.+)$/i) || textContent.match(/pour\s+de\s+l[a']?\s*(.+)$/i);
+          const createMatch = lowerText.match(/(?:crée|cree|créer|creer|fait|faire)\s+une?\s+facture\s+pour\s+([^,]+?)(?:,|\s+de|\s+pour|\s+(\d+))(?:\s+de\s+|\s+)(\d+)?/i);
+          if (createMatch || (lowerText.includes("facture") && (lowerText.includes("crée") || lowerText.includes("cree") || lowerText.includes("créer") || lowerText.includes("creer") || lowerText.includes("fait")))) {
+            try {
+              const clientNameMatch = textContent.match(/pour\s+([^,0-9]+)/i);
+              const amountMatch = textContent.match(/(\d+)\s*(?:€|e|euros?)/i) || textContent.match(/pour\s+(\d+)/i);
+              const descMatch = textContent.match(/pour\s+un[e]?\s+(.+)$/i) || textContent.match(/pour\s+de\s+l[a']?\s*(.+)$/i);
 
-            const clientName = clientNameMatch ? clientNameMatch[1].trim() : "Client WhatsApp";
-            const amount = amountMatch ? parseFloat(amountMatch[1]) : 400;
-            const description = descMatch ? descMatch[1].trim() : "Prestation de service";
+              const clientName = clientNameMatch ? clientNameMatch[1].trim() : "Client WhatsApp";
+              const amount = amountMatch ? parseFloat(amountMatch[1]) : 400;
+              const description = descMatch ? descMatch[1].trim() : "Prestation de service";
 
-            // 1. Get or create Client
-            let clientId = "";
-            const { data: existingClients } = await adminClient
-              .from("clients")
-              .select("id, name")
-              .eq("company_id", company.id)
-              .ilike("name", `%${clientName}%`)
-              .limit(1);
-
-            if (existingClients && existingClients.length > 0) {
-              clientId = existingClients[0].id;
-            } else {
-              const { data: newClient } = await adminClient
+              let clientId = "";
+              const { data: existingClients } = await adminClient
                 .from("clients")
-                .insert({ company_id: company.id, name: clientName })
-                .select("id")
+                .select("id, name")
+                .eq("company_id", company.id)
+                .ilike("name", `%${clientName}%`)
+                .limit(1);
+
+              if (existingClients && existingClients.length > 0) {
+                clientId = existingClients[0].id;
+              } else {
+                const { data: newClient } = await adminClient
+                  .from("clients")
+                  .insert({ company_id: company.id, name: clientName })
+                  .select("id")
+                  .single();
+                clientId = newClient?.id || "";
+              }
+
+              const draftNum = `DRAFT-${Math.random().toString(36).substring(7)}`;
+              const todayStr = new Date().toISOString().split('T')[0];
+              const dueDate = new Date(Date.now() + 30 * 24 * 3600 * 1000).toISOString().split('T')[0];
+
+              const { data: newInv } = await adminClient
+                .from("invoices")
+                .insert({
+                  company_id: company.id,
+                  client_id: clientId || null,
+                  number: draftNum,
+                  type: "invoice",
+                  status: "draft",
+                  issue_date: todayStr,
+                  due_date: dueDate,
+                  items: [
+                    {
+                      description: description,
+                      quantity: 1,
+                      unit_price: amount,
+                      total_ht: amount,
+                      vat_rate: 0,
+                    },
+                  ],
+                  total_ht: amount,
+                  vat_amount: 0,
+                  total_ttc: amount,
+                  paid_amount: 0,
+                })
+                .select()
                 .single();
-              clientId = newClient?.id || "";
+
+              if (newInv) {
+                replyText = `📄 *Brouillon de facture prêt pour validation*\n\n` +
+                  `👤 *Client* : ${clientName}\n` +
+                  `💰 *Montant TTC* : ${amount.toFixed(2)} €\n` +
+                  `📝 *Prestation* : ${description}\n\n` +
+                  `⚠️ *Validation requise :*\n` +
+                  `• Répondez **"OUI"** (ou **"VALIDER"**) pour émettre cette facture avec son numéro officiel.\n` +
+                  `• Répondez **"NON"** (ou **"ANNULER"**) pour supprimer ce brouillon.`;
+              }
+            } catch (err) {
+              console.warn("Error creating draft invoice in fallback:", err);
             }
-
-            // 2. Generate next Invoice Number
-            const { data: lastInvoices } = await adminClient
-              .from("invoices")
-              .select("number")
-              .eq("company_id", company.id)
-              .eq("type", "invoice")
-              .order("created_at", { ascending: false })
-              .limit(1);
-
-            const currentYear = new Date().getFullYear();
-            let nextNum = 1;
-            if (lastInvoices?.[0]?.number) {
-              const numMatch = lastInvoices[0].number.match(/FAC-\d{4}-(\d+)/);
-              if (numMatch) nextNum = parseInt(numMatch[1], 10) + 1;
-            }
-            const invNumber = `FAC-${currentYear}-${String(nextNum).padStart(3, '0')}`;
-
-            const todayStr = new Date().toISOString().split('T')[0];
-            const dueDate = new Date(Date.now() + 30 * 24 * 3600 * 1000).toISOString().split('T')[0];
-
-            // 3. Insert Invoice
-            const { data: newInv } = await adminClient
-              .from("invoices")
-              .insert({
-                company_id: company.id,
-                client_id: clientId || null,
-                number: invNumber,
-                type: "invoice",
-                status: "pending",
-                issue_date: todayStr,
-                due_date: dueDate,
-                items: [
-                  {
-                    description: description,
-                    quantity: 1,
-                    unit_price: amount,
-                    total_ht: amount,
-                    vat_rate: 0,
-                  },
-                ],
-                total_ht: amount,
-                vat_amount: 0,
-                total_ttc: amount,
-                paid_amount: 0,
-              })
-              .select()
-              .single();
-
-            if (newInv) {
-              replyText = `✅ *Facture ${invNumber} créée avec succès !*\n\n` +
-                `👤 *Client* : ${clientName}\n` +
-                `💰 *Montant TTC* : ${amount.toFixed(2)} €\n` +
-                `📝 *Prestation* : ${description}\n` +
-                `⏳ *Échéance* : ${dueDate}\n\n` +
-                `_Retrouvez ou téléchargez le PDF de votre facture sur https://bylz.fr/invoices?v=2_`;
-            }
-          } catch (err) {
-            console.warn("Error creating invoice in fallback:", err);
           }
-        }
 
-        if (!replyText && (lowerText.includes("liste") || lowerText.includes("mes factures") || lowerText.includes("vos factures") || lowerText.includes("facture"))) {
-          const invList = (invoices || []).map((i) => {
-            const clientName = (i as any).client?.name || "Client";
-            const statusLabel = i.status === "paid" ? "✅ Payée" : i.status === "pending" ? "⏳ En attente" : i.status;
-            return `• *${i.number || 'Facture'}* - ${clientName} : *${i.total_ttc} €* (${statusLabel})`;
-          }).join("\n");
+          if (!replyText && (lowerText.includes("liste") || lowerText.includes("mes factures") || lowerText.includes("vos factures") || lowerText.includes("facture"))) {
+            const invList = (invoices || []).map((i) => {
+              const clientName = (i as any).client?.name || "Client";
+              const statusLabel = i.status === "paid" ? "✅ Payée" : i.status === "pending" ? "⏳ En attente" : i.status === "draft" ? "📄 Brouillon" : i.status;
+              return `• *${i.number || 'Facture'}* - ${clientName} : *${i.total_ttc} €* (${statusLabel})`;
+            }).join("\n");
 
-          replyText = `📄 *Vos factures récentes (${company.legal_name})*\n\n` +
-            (invList || "Aucune facture trouvée pour le moment.") +
-            `\n\n_Retrouvez toutes vos factures sur https://bylz.fr/invoices?v=2_`;
+            replyText = `📄 *Vos factures récentes (${company.legal_name})*\n\n` +
+              (invList || "Aucune facture trouvée pour le moment.") +
+              `\n\n_Retrouvez toutes vos factures sur https://bylz.fr/invoices?v=2_`;
 
-        } else if (!replyText && (lowerText.includes("ca") || lowerText.includes("chiffre") || lowerText.includes("solde") || lowerText.includes("urssaf") || lowerText.includes("tva"))) {
-          replyText = `📊 *Bilan Bylz - ${company.legal_name}*\n\n` +
-            `💰 *CA Encaissé* : ${totalCa.toFixed(2)} €\n` +
-            `⏳ *En attente de paiement* : ${pendingCa.toFixed(2)} €\n` +
-            `🏛️ *Cotisations URSSAF estimées* : ~${Math.round(totalCa * 0.212)} €\n` +
-            `📈 *Statut TVA* : Franchise Active (<36 800 €)\n\n` +
-            `_Consultez vos tableaux de bord sur https://bylz.fr_`;
+          } else if (!replyText && (lowerText.includes("ca") || lowerText.includes("chiffre") || lowerText.includes("solde") || lowerText.includes("urssaf") || lowerText.includes("tva"))) {
+            replyText = `📊 *Bilan Bylz - ${company.legal_name}*\n\n` +
+              `💰 *CA Encaissé* : ${totalCa.toFixed(2)} €\n` +
+              `⏳ *En attente de paiement* : ${pendingCa.toFixed(2)} €\n` +
+              `🏛️ *Cotisations URSSAF estimées* : ~${Math.round(totalCa * 0.212)} €\n` +
+              `📈 *Statut TVA* : Franchise Active (<36 800 €)\n\n` +
+              `_Consultez vos tableaux de bord sur https://bylz.fr_`;
 
-        } else if (!replyText) {
-          replyText = `🤖 *Bylz Copilot IA (WhatsApp)*\n\n` +
-            `Bonjour ! Comment puis-je vous aider aujourd'hui ?\n\n` +
-            `1️⃣ *"Créé une facture pour Nom, 400€ pour un site web"*\n` +
-            `2️⃣ *"Liste moi mes factures"*\n` +
-            `3️⃣ *"Quel est mon CA ce mois-ci ?"*\n` +
-            `🎙️ *Message vocal* : Dictez vos commandes par note vocale !\n\n` +
-            `_Gérez votre activité sur https://bylz.fr_`;
+          } else if (!replyText) {
+            replyText = `🤖 *Bylz Copilot IA (WhatsApp)*\n\n` +
+              `Bonjour ! Comment puis-je vous aider aujourd'hui ?\n\n` +
+              `1️⃣ *"Créé une facture pour Nom, 400€ pour un site web"*\n` +
+              `2️⃣ *"Liste moi mes factures"*\n` +
+              `3️⃣ *"Quel est mon CA ce mois-ci ?"*\n` +
+              `🎙️ *Message vocal* : Dictez vos commandes par note vocale !\n\n` +
+              `_Gérez votre activité sur https://bylz.fr_`;
+          }
         }
       }
     }
