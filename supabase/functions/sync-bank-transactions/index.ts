@@ -255,20 +255,7 @@ Deno.serve(async (req: Request) => {
         }
       }
 
-      // C. Smart Auto-Reconciliation for pending invoices if no real bank webhook has hit yet
-      if (fetchedTransactions.length === 0 && invoices && invoices.length > 0) {
-        for (const inv of invoices) {
-          const extId = `eb-sync-${inv.id.slice(0, 8)}-${Date.now()}`;
-          fetchedTransactions.push({
-            external_id: extId,
-            amount: Number(inv.total_ttc),
-            currency: "EUR",
-            transaction_date: new Date().toISOString().slice(0, 10),
-            label: `VIR SEPA ${inv.number} ${inv.client?.name || "CLIENT"}`,
-            counterparty_name: inv.client?.name || "Client SEPA",
-          });
-        }
-      }
+      // Only process transactions actually fetched from real bank API (Enable Banking or Bridge)
 
       // 3. Process & Insert Transactions into bank_transactions
       for (const tx of fetchedTransactions) {
