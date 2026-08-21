@@ -19,7 +19,7 @@ const WHATSAPP_TOKEN =
   Deno.env.get("WHATSAPP_SYSTEM_USER_TOKEN") ||
   Deno.env.get("WHATSAPP_BEARER_TOKEN") ||
   Deno.env.get("META_ACCESS_TOKEN") ||
-  "";
+  "EAANpHbOHsisBSZAcVQzSmgmBid5hI5rOMNM2W0nmGah9MMWiA6GbcH1PHZCp13hJNgvJvkGQLSPsgebnEPyot3P7ZC77mwrc2eeApBCfgRIZC0vvSVuerQhT5bQvLLQI6EVSlhyazZBS1hZAzpykfZB2F7Nk5yX8ZBJM2bHfFxAX7pXLrq0hIvRPknA9tyTlNgZDZD";
 const geminiApiKey = Deno.env.get("GEMINI_API_KEY") || "";
 
 async function signatureIsValid(bodyText: string, header: string | null): Promise<boolean> {
