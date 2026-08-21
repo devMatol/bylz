@@ -134,7 +134,8 @@ Deno.serve(async (req: Request) => {
 
       if (messageType === "audio" || messageType === "voice") {
         const mediaId = message?.audio?.id || message?.voice?.id;
-        audioMimeType = message?.audio?.mime_type || message?.voice?.mime_type || "audio/ogg";
+        const rawMime = message?.audio?.mime_type || message?.voice?.mime_type || "audio/ogg";
+        audioMimeType = rawMime.split(";")[0].trim() || "audio/ogg";
         console.log(`Processing WhatsApp audio message. Media ID: ${mediaId}, Mime: ${audioMimeType}`);
 
         if (mediaId && WHATSAPP_TOKEN) {
