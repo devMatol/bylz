@@ -85,9 +85,9 @@ export function BankSyncSection() {
     }
     setConnecting(true);
     try {
-      const url = await createGoCardlessConnectSession();
-      if (url.includes("gocardless=success") || url.includes("mock_bank=")) {
-        toast("Compte bancaire pro connecté avec succès (GoCardless Open Banking) !", "success");
+      const url = await createBridgeConnectSession();
+      if (url.includes("mock_bank=")) {
+        toast("Compte bancaire pro connecté avec succès (Bridge API Open Banking) !", "success");
         void loadData();
       } else {
         window.location.href = url;
@@ -208,10 +208,10 @@ export function BankSyncSection() {
         <div>
           <h3 className="text-lg font-black text-text tracking-tight flex items-center gap-2">
             <Building2 className="w-5 h-5 text-primary" />
-            <span>Rapprochement Bancaire Automatique (GoCardless DSP2)</span>
+            <span>Rapprochement Bancaire Automatique (Open Banking DSP2)</span>
           </h3>
           <p className="text-xs text-muted mt-1">
-            Connectez votre compte professionnel pour que vos factures soient automatiquement marquées payées dès la réception du virement (technologie certifiée GoCardless Open Banking).
+            Connectez votre compte professionnel pour que vos factures soient automatiquement marquées payées dès la réception du virement (technologie certifiée Bridge API).
           </p>
         </div>
 
@@ -250,7 +250,7 @@ export function BankSyncSection() {
           </div>
           <div className="p-3 rounded-xl bg-surface border border-border flex flex-col items-center">
             <span className="text-xs font-bold text-muted uppercase">2. Virement bancaire</span>
-            <p className="text-xs font-bold text-text mt-1">Détection auto via GoCardless</p>
+            <p className="text-xs font-bold text-text mt-1">Détection auto via Bridge API</p>
           </div>
           <div className="p-3 rounded-xl bg-surface border border-border flex flex-col items-center">
             <span className="text-xs font-bold text-emerald-500 uppercase">3. Payée</span>
@@ -261,7 +261,7 @@ export function BankSyncSection() {
         <div className="flex items-center space-x-2 text-[11px] text-muted">
           <ShieldCheck className="w-4 h-4 text-emerald-500 flex-shrink-0" />
           <span>
-            <strong>Sécurité 100% garantie :</strong> Vos identifiants bancaires ne transitent jamais par Bylz. La connexion est chiffrée via la technologie certifiée Open Banking DSP2 (GoCardless / Régulation ACPR & FCA).
+            <strong>Sécurité 100% garantie :</strong> Vos identifiants bancaires ne transitent jamais par Bylz. La connexion est chiffrée via la technologie certifiée Bridge API (Bankin' / Régulation ACPR & Banque de France).
           </span>
         </div>
       </div>

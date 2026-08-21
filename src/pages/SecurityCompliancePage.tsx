@@ -97,9 +97,9 @@ export function SecurityCompliancePage() {
             </div>
             <div>
               <span className="text-[10px] font-bold text-amber-400 uppercase tracking-wider">Agrément Banque de France</span>
-              <h3 className="text-lg font-bold text-text mt-0.5">Open Banking DSP2 (GoCardless)</h3>
+              <h3 className="text-lg font-bold text-text mt-0.5">Open Banking DSP2 (Bridge)</h3>
               <p className="text-xs text-muted mt-2 leading-relaxed">
-                La synchronisation bancaire et les prélèvements sont opérées via notre partenaire agréé <strong>GoCardless</strong>, établissement régulé par l'<strong>ACPR / Banque de France et la FCA européenne</strong>.
+                La synchronisation bancaire est opérée via notre partenaire agréé <strong>Bridge API</strong>, établissement de paiement régulé par l'<strong>ACPR / Banque de France</strong>.
               </p>
             </div>
             <ul className="text-xs text-muted space-y-1.5 pt-2 border-t border-border/50">
