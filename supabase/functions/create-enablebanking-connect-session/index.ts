@@ -147,6 +147,8 @@ Deno.serve(async (req: Request) => {
       },
       body: JSON.stringify({
         access: {
+          balances: true,
+          transactions: true,
           valid_until: new Date(Date.now() + 90 * 24 * 3600 * 1000).toISOString(),
         },
         aspsp: {
