@@ -13,7 +13,13 @@ const adminClient = createClient(supabaseUrl, serviceKey);
 
 const VERIFY_TOKEN = Deno.env.get("WHATSAPP_VERIFY_TOKEN") || "";
 const APP_SECRET = Deno.env.get("WHATSAPP_APP_SECRET") || "";
-const WHATSAPP_TOKEN = Deno.env.get("WHATSAPP_TOKEN") || Deno.env.get("WHATSAPP_ACCESS_TOKEN") || "";
+const WHATSAPP_TOKEN =
+  Deno.env.get("WHATSAPP_TOKEN") ||
+  Deno.env.get("WHATSAPP_ACCESS_TOKEN") ||
+  Deno.env.get("WHATSAPP_SYSTEM_USER_TOKEN") ||
+  Deno.env.get("WHATSAPP_BEARER_TOKEN") ||
+  Deno.env.get("META_ACCESS_TOKEN") ||
+  "";
 const geminiApiKey = Deno.env.get("GEMINI_API_KEY") || "";
 
 async function signatureIsValid(bodyText: string, header: string | null): Promise<boolean> {
@@ -548,6 +554,8 @@ Sinon, réponds de manière concise, précise et amicale en français sur WhatsA
               `📈 *Statut TVA* : Franchise Active (<36 800 €)\n\n` +
               `_Consultez vos tableaux de bord sur https://bylz.fr_`;
 
+          } else if (!replyText && (messageType === "audio" || messageType === "voice")) {
+            replyText = `🎙️ *Note vocale reçue !*\n\nPour permettre à l'IA d'analyser vos notes vocales, veuillez vérifier la clé \`WHATSAPP_TOKEN\` dans vos secrets Supabase.\n\nVous pouvez également envoyer votre commande par texte (ex: *"Créé une facture de 400€ pour Client X"*).`;
           } else if (!replyText) {
             replyText = `🤖 *Bylz Copilot IA (WhatsApp)*\n\n` +
               `Bonjour ! Comment puis-je vous aider aujourd'hui ?\n\n` +
