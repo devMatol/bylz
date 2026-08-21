@@ -143,6 +143,8 @@ Deno.serve(async (req) => {
     let msg = error?.message || "Erreur lors de la création du compte Stripe Connect";
     if (msg.includes("signed up for Connect")) {
       msg = "Stripe Connect n'est pas encore activé sur votre compte Stripe. Rendez-vous sur https://dashboard.stripe.com/connect et cliquez sur 'Activer Connect' pour débloquer les comptes connectés.";
+    } else if (msg.includes("managing losses") || msg.includes("platform-profile")) {
+      msg = "Configuration Stripe requise : Rendez-vous sur https://dashboard.stripe.com/settings/connect/platform-profile et choisissez qui gère le risque (sélectionnez 'Stripe gère le risque').";
     }
     return corsResponse({ error: msg }, 200);
   }
