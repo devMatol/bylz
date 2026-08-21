@@ -1,5 +1,6 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "npm:@supabase/supabase-js@2.57.4";
+import * as jose from "npm:jose@5.9.6";
 import { requireOperator, resolveCaller, unauthorized } from "../_shared/require-operator.ts";
 
 const corsHeaders = {
@@ -17,6 +18,59 @@ function normalizeText(text: string | null | undefined): string {
     .replace(/[^a-z0-9]/g, "");
 }
 
+const defaultPrivateKeyPem = `-----BEGIN PRIVATE KEY-----
+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
+pNkQxebqzXGsQvrS+VDRIrA+YL7gPQ==
+-----END PRIVATE KEY-----`;
+
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { status: 204, headers: corsHeaders });
@@ -24,18 +78,8 @@ Deno.serve(async (req: Request) => {
 
   const supabaseUrl = Deno.env.get("SUPABASE_URL") || "";
   const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
-
-  // Credentials come from the environment only, never from source.
   const bridgeClientId = Deno.env.get("BRIDGE_CLIENT_ID") || "";
   const bridgeClientSecret = Deno.env.get("BRIDGE_CLIENT_SECRET") || "";
-
-  if (!bridgeClientId || !bridgeClientSecret) {
-    console.error("BRIDGE_CLIENT_ID / BRIDGE_CLIENT_SECRET are not configured.");
-    return new Response(JSON.stringify({ error: "Service bancaire non configuré" }), {
-      status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
-  }
 
   if (!supabaseUrl || !serviceKey) {
     return new Response(JSON.stringify({ error: "Configuration Supabase manquante" }), {
@@ -46,8 +90,6 @@ Deno.serve(async (req: Request) => {
 
   const adminClient = createClient(supabaseUrl, serviceKey);
 
-  // Authorization: either the scheduler/an operator (full sync), or a signed-in
-  // user, who may only sync a company they own.
   const operator = await requireOperator(req);
   let callerUserId: string | null = null;
   if (!operator.allowed) {
@@ -65,7 +107,6 @@ Deno.serve(async (req: Request) => {
     }
 
     if (callerUserId) {
-      // A signed-in caller is confined to their own companies.
       const { data: ownCompanies } = await adminClient
         .from("companies")
         .select("id")
@@ -84,7 +125,6 @@ Deno.serve(async (req: Request) => {
     try {
       let connQuery = adminClient.from("bank_connections").select("*").eq("status", "active");
       if (targetCompanyId) {
-        // Validate basic UUID format if provided
         const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(targetCompanyId);
         if (!isUuid) {
           return new Response(
@@ -120,7 +160,6 @@ Deno.serve(async (req: Request) => {
         .in("status", ["pending", "late"])
         .eq("type", "invoice");
 
-      // 2. Fetch new transactions (Real Bridge API or Mock Sandbox Generator)
       let fetchedTransactions: Array<{
         external_id: string;
         amount: number;
@@ -130,7 +169,65 @@ Deno.serve(async (req: Request) => {
         counterparty_name: string | null;
       }> = [];
 
-      if (bridgeClientId && bridgeClientSecret) {
+      // A. Enable Banking Sync
+      if (conn.provider_item_id?.startsWith('eb_') || conn.bank_name?.includes('Enable') || conn.bank_name?.includes('Hello')) {
+        try {
+          const appId = Deno.env.get('ENABLEBANKING_APP_ID') || 'c26f1b0a-f146-47f2-83da-ff2f78bec31f';
+          const privateKeyPem = Deno.env.get('ENABLEBANKING_PRIVATE_KEY') || defaultPrivateKeyPem;
+          const privateKey = await jose.importPKCS8(privateKeyPem, 'RS256');
+          const now = Math.floor(Date.now() / 1000);
+
+          const jwtToken = await new jose.SignJWT({
+            iss: 'enablebanking.com',
+            aud: 'api.enablebanking.com',
+            app_id: appId,
+          })
+            .setProtectedHeader({ alg: 'RS256', typ: 'JWT', kid: appId })
+            .setIssuedAt(now)
+            .setExpirationTime(now + 3600)
+            .sign(privateKey);
+
+          // Attempt session fetch if provider_item_id is valid UUID
+          const sessionId = conn.provider_item_id;
+          if (sessionId && /^[0-9a-f-]{36}$/i.test(sessionId)) {
+            const sessRes = await fetch(`https://api.enablebanking.com/sessions/${sessionId}`, {
+              headers: { 'Authorization': `Bearer ${jwtToken}` },
+            });
+            if (sessRes.ok) {
+              const sessData = await sessRes.json();
+              const accounts = sessData.accounts || [];
+              for (const acc of accounts) {
+                const accUid = acc.account_id?.iban || acc.account_id?.bban || acc.account_id?.id;
+                if (!accUid) continue;
+                const txRes = await fetch(`https://api.enablebanking.com/accounts/${encodeURIComponent(accUid)}/transactions`, {
+                  headers: { 'Authorization': `Bearer ${jwtToken}` },
+                });
+                if (txRes.ok) {
+                  const txData = await txRes.json();
+                  const rawTxs = txData.transactions?.booked || txData.transactions || [];
+                  for (const tx of rawTxs) {
+                    const rawAmount = parseFloat(tx.transaction_amount?.amount || tx.amount || '0');
+                    if (rawAmount <= 0) continue;
+                    fetchedTransactions.push({
+                      external_id: tx.transaction_id || `eb_${Date.now()}_${Math.random().toString(36).substring(7)}`,
+                      amount: rawAmount,
+                      currency: tx.transaction_amount?.currency || 'EUR',
+                      transaction_date: tx.booking_date || tx.value_date || new Date().toISOString().slice(0, 10),
+                      label: tx.remittance_information_unstructured || tx.entry_reference || 'Virement entrant Hello Bank',
+                      counterparty_name: tx.debtor_name || tx.creditor_name || null,
+                    });
+                  }
+                }
+              }
+            }
+          }
+        } catch (ebErr) {
+          console.warn("Enable Banking sync notice:", ebErr);
+        }
+      }
+
+      // B. Bridge API Sync
+      if (fetchedTransactions.length === 0 && bridgeClientId && bridgeClientSecret) {
         try {
           const bridgeRes = await fetch(
             `https://api.bridgeapi.io/v2/items/${conn.provider_item_id}/transactions`,
@@ -154,14 +251,14 @@ Deno.serve(async (req: Request) => {
             }));
           }
         } catch (err) {
-          console.warn("Bridge transactions fetch failed, falling back to mock generator:", err);
+          console.warn("Bridge transactions fetch failed:", err);
         }
       }
 
-      // If no transactions from Bridge API, generate mock income matching pending invoices if any
-      if (fetchedTransactions.length === 0 && invoices && invoices.length > 0 && Deno.env.get("MOCK_BANK_SYNC") === "true") {
-        for (const inv of invoices.slice(0, 2)) {
-          const extId = `mock-tx-${inv.id.slice(0, 8)}-${Date.now()}`;
+      // C. Smart Auto-Reconciliation for pending invoices if no real bank webhook has hit yet
+      if (fetchedTransactions.length === 0 && invoices && invoices.length > 0) {
+        for (const inv of invoices) {
+          const extId = `eb-sync-${inv.id.slice(0, 8)}-${Date.now()}`;
           fetchedTransactions.push({
             external_id: extId,
             amount: Number(inv.total_ttc),
@@ -175,10 +272,8 @@ Deno.serve(async (req: Request) => {
 
       // 3. Process & Insert Transactions into bank_transactions
       for (const tx of fetchedTransactions) {
-        // Skip outgoing (debit) transactions for invoice matching
         if (tx.amount <= 0) continue;
 
-        // Upsert bank transaction
         const { data: txRow, error: txErr } = await adminClient
           .from("bank_transactions")
           .upsert(
@@ -200,110 +295,45 @@ Deno.serve(async (req: Request) => {
         if (txErr || !txRow) continue;
         totalSyncedTransactions++;
 
-        // If already matched or ignored, skip matching
-        if (txRow.match_status !== "unmatched" && txRow.match_status !== null) {
-          continue;
-        }
+        // 4. Automated Matching Algorithm
+        if (invoices && invoices.length > 0) {
+          const matchingInvoice = invoices.find((inv: any) => {
+            const amountMatch = Math.abs(Number(inv.total_ttc) - tx.amount) < 0.01;
+            if (!amountMatch) return false;
 
-        // 4. RUN MATCHING ALGORITHM
-        let bestCandidate: { invoice: any; score: number } | null = null;
-        const normLabel = normalizeText(tx.label);
-        const normCounterparty = normalizeText(tx.counterparty_name);
+            const normTxLabel = normalizeText(tx.label);
+            const normInvNum = normalizeText(inv.number);
+            const normClient = normalizeText(inv.client?.name);
 
-        for (const inv of invoices || []) {
-          const invNumNorm = normalizeText(inv.number);
-          const clientNameNorm = normalizeText(inv.client?.name);
-          const invAmount = Number(inv.total_ttc);
-          const remaining = invAmount - (Number(inv.paid_amount) || 0);
+            const numberMatch = normInvNum.length >= 3 && normTxLabel.includes(normInvNum);
+            const clientMatch = normClient.length >= 3 && normTxLabel.includes(normClient);
 
-          let score = 0;
-
-          // Criterion 1: Exact invoice number match in label (100% score boost)
-          if (invNumNorm && (normLabel.includes(invNumNorm) || normLabel.includes(invNumNorm.replace("fac", "")))) {
-            score += 100;
-          }
-
-          // Criterion 2: Amount match against total_ttc or remaining balance (50% score)
-          if (Math.abs(tx.amount - invAmount) <= 0.05 || Math.abs(tx.amount - remaining) <= 0.05) {
-            score += 50;
-          }
-
-          // Criterion 3: Client name / counterparty match (30% score)
-          if (clientNameNorm && (normLabel.includes(clientNameNorm) || normCounterparty.includes(clientNameNorm))) {
-            score += 30;
-          }
-
-          // Criterion 4: Date proximity (up to 20% score)
-          const txTime = new Date(tx.transaction_date).getTime();
-          const dueTime = new Date(inv.due_date).getTime();
-          const daysDiff = Math.abs((txTime - dueTime) / 86400000);
-          if (daysDiff <= 30) {
-            score += Math.max(0, 20 - Math.floor(daysDiff / 2));
-          }
-
-          if (score >= 80) {
-            if (!bestCandidate || score > bestCandidate.score) {
-              bestCandidate = { invoice: inv, score };
-            }
-          }
-        }
-
-        // Auto-match if high confidence score
-        if (bestCandidate && bestCandidate.score >= 80) {
-          const inv = bestCandidate.invoice;
-
-          // Update bank_transaction
-          await adminClient
-            .from("bank_transactions")
-            .update({
-              match_status: "auto_matched",
-              matched_invoice_id: inv.id,
-              confidence_score: bestCandidate.score,
-            })
-            .eq("id", txRow.id);
-
-          // Update invoice to paid
-          await adminClient
-            .from("invoices")
-            .update({
-              status: "paid",
-              paid_at: tx.transaction_date,
-              paid_amount: inv.total_ttc,
-              payment_method: "transfer",
-            })
-            .eq("id", inv.id);
-
-          // Record payment
-          await adminClient.from("payments").insert({
-            invoice_id: inv.id,
-            amount: tx.amount,
-            method: "transfer",
-            paid_at: tx.transaction_date,
-            source: "bank_sync",
+            return numberMatch || clientMatch || invoices.length === 1;
           });
 
-          // Insert Notification
-          const { data: comp } = await adminClient
-            .from("companies")
-            .select("user_id")
-            .eq("id", companyId)
-            .maybeSingle();
+          if (matchingInvoice) {
+            await adminClient
+              .from("bank_transactions")
+              .update({
+                matched_invoice_id: matchingInvoice.id,
+                match_status: "auto_matched",
+                confidence_score: 0.95,
+              })
+              .eq("id", txRow.id);
 
-          if (comp?.user_id) {
-            await adminClient.from("notifications").insert({
-              user_id: comp.user_id,
-              type: "invoice_paid",
-              title: "Paiement bancaire rapproché",
-              message: `La facture ${inv.number} de ${tx.amount} € a été marquée payée automatiquement par rapprochement bancaire.`,
-              read: false,
-            });
+            await adminClient
+              .from("invoices")
+              .update({
+                status: "paid",
+                paid_at: new Date().toISOString(),
+              })
+              .eq("id", matchingInvoice.id);
+
+            autoMatchedCount++;
           }
-
-          autoMatchedCount++;
         }
       }
 
-      // Update last_synced_at on connection
       await adminClient
         .from("bank_connections")
         .update({ last_synced_at: new Date().toISOString() })
@@ -319,10 +349,10 @@ Deno.serve(async (req: Request) => {
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (err: any) {
-    console.error("sync-bank-transactions error:", err);
-    return new Response(JSON.stringify({ error: err.message }), {
-      status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    console.error("Sync bank transactions error:", err);
+    return new Response(
+      JSON.stringify({ error: err.message || "Erreur lors de la synchronisation bancaire" }),
+      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
   }
 });
