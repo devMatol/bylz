@@ -106,8 +106,17 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    const appId = Deno.env.get('ENABLEBANKING_APP_ID') || 'c6c20e35-cb95-4577-8ee2-813202a771c4';
+    let reqBody: any = {};
+    try {
+      reqBody = await req.json();
+    } catch (_) {
+      reqBody = {};
+    }
+
+    const appId = Deno.env.get('ENABLEBANKING_APP_ID') || 'c26f1b0a-f146-47f2-83da-ff2f78bec31f';
     const privateKeyPem = Deno.env.get('ENABLEBANKING_PRIVATE_KEY') || defaultPrivateKeyPem;
+    const requestedBank = reqBody.bank_name || 'BoursoBank';
+    const requestedPsu = reqBody.psu_type || 'personal';
 
     if (!appId) {
       const origin = req.headers.get('origin') || 'https://bylz.fr';
@@ -152,11 +161,11 @@ Deno.serve(async (req: Request) => {
           valid_until: new Date(Date.now() + 90 * 24 * 3600 * 1000).toISOString(),
         },
         aspsp: {
-          name: 'Mock ASPSP',
+          name: requestedBank,
           country: 'FR',
         },
         redirect_url: redirectUrl,
-        psu_type: 'business',
+        psu_type: requestedPsu,
         state: `bylz_comp_${company.id}_${Date.now()}`,
       }),
     });
