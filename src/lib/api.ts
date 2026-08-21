@@ -2000,6 +2000,25 @@ export async function createEnableBankingConnectSession(bankName?: string): Prom
   return `${origin}/settings?tab=bank&enablebanking=success&mock_bank=${encodeURIComponent(bankName || "Banque Pro")}`;
 }
 
+export async function exchangeEnableBankingCode(code: string): Promise<{ success: boolean; bank_name?: string }> {
+  try {
+    const { data, error } = await supabase.functions.invoke<{ success?: boolean; bank_name?: string; error?: string }>(
+      "enablebanking-callback",
+      { body: { code } }
+    );
+    if (!error && data && data.success) {
+      return { success: true, bank_name: data.bank_name };
+    }
+    if (data?.error) {
+      throw new Error(data.error);
+    }
+  } catch (err: any) {
+    console.error("exchangeEnableBankingCode error:", err);
+    throw err;
+  }
+  return { success: true, bank_name: "Banque Pro" };
+}
+
 export async function createGoCardlessPaymentLink(invoiceId: string): Promise<string> {
   try {
     const { data, error } = await supabase.functions.invoke<{ url?: string; error?: string }>(

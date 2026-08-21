@@ -30,6 +30,7 @@ import {
   createBridgeConnectSession,
   createGoCardlessConnectSession,
   createEnableBankingConnectSession,
+  exchangeEnableBankingCode,
   triggerBankSync,
   manualMatchBankTransaction,
   ignoreBankTransaction,
@@ -108,7 +109,31 @@ export function BankSyncSection() {
 
   useEffect(() => {
     void loadData();
-  }, [loadData]);
+
+    // Handle Enable Banking OAuth callback code
+    const params = new URLSearchParams(window.location.search);
+    const authCode = params.get("code");
+    const enablebankingSuccess = params.get("enablebanking");
+    const mockBankName = params.get("mock_bank");
+
+    if (authCode) {
+      void (async () => {
+        try {
+          toast("Finalisation de la connexion bancaire...", "info");
+          const res = await exchangeEnableBankingCode(authCode);
+          toast(`Compte bancaire (${res.bank_name || "Hello Bank"}) connecté et synchronisé avec succès !`, "success");
+          window.history.replaceState({}, document.title, window.location.pathname);
+          void loadData();
+        } catch (err: any) {
+          toast(err.message || "Erreur lors de la synchronisation bancaire.", "danger");
+        }
+      })();
+    } else if (enablebankingSuccess || mockBankName) {
+      toast(`Compte bancaire (${mockBankName || "Hello Bank"}) connecté avec succès !`, "success");
+      window.history.replaceState({}, document.title, window.location.pathname);
+      void loadData();
+    }
+  }, [loadData, toast]);
 
   const handleOpenBankSelector = () => {
     if (!canUseBankSync) {
