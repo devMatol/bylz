@@ -130,7 +130,7 @@ Deno.serve(async (req: Request) => {
       aud: 'api.enablebanking.com',
       app_id: appId,
     })
-      .setProtectedHeader({ alg: 'RS256', typ: 'JWT' })
+      .setProtectedHeader({ alg: 'RS256', typ: 'JWT', kid: appId })
       .setIssuedAt(now)
       .setExpirationTime(now + 3600)
       .sign(privateKey);
@@ -150,7 +150,7 @@ Deno.serve(async (req: Request) => {
           valid_until: new Date(Date.now() + 90 * 24 * 3600 * 1000).toISOString(),
         },
         aspsp: {
-          name: 'BoursoBank',
+          name: 'Mock ASPSP',
           country: 'FR',
         },
         redirect_url: redirectUrl,

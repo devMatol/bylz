@@ -1987,8 +1987,12 @@ export async function createEnableBankingConnectSession(): Promise<string> {
     if (!error && data && data.url) {
       return data.url;
     }
-  } catch (err) {
+    if (data?.error) {
+      throw new Error(data.error);
+    }
+  } catch (err: any) {
     console.warn("create-enablebanking-connect-session edge function notice:", err);
+    throw err;
   }
 
   const origin = typeof window !== "undefined" ? window.location.origin : "https://bylz.fr";
