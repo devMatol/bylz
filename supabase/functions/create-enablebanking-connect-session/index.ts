@@ -137,7 +137,7 @@ Deno.serve(async (req: Request) => {
 
     // Call Enable Banking API /auth endpoint to initiate session
     const origin = req.headers.get('origin') || 'https://bylz.fr';
-    const redirectUrl = `${origin}/settings?enablebanking=success`;
+    const redirectUrl = `${origin}/settings`;
 
     const authRes = await fetch('https://api.enablebanking.com/auth', {
       method: 'POST',
