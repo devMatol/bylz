@@ -115,7 +115,9 @@ Deno.serve(async (req: Request) => {
 
     const appId = Deno.env.get('ENABLEBANKING_APP_ID') || 'c26f1b0a-f146-47f2-83da-ff2f78bec31f';
     const privateKeyPem = Deno.env.get('ENABLEBANKING_PRIVATE_KEY') || defaultPrivateKeyPem;
-    const requestedBank = reqBody.bank_name || 'BoursoBank';
+    let rawBank = reqBody.bank_name || 'Boursorama Banque';
+    if (rawBank === 'BoursoBank') rawBank = 'Boursorama Banque';
+    const requestedBank = rawBank;
     const requestedPsu = reqBody.psu_type || 'personal';
 
     if (!appId) {
