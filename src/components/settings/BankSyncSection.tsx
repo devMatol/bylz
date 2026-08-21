@@ -17,6 +17,7 @@ import { Card } from "../ui/Card";
 import { Button } from "../ui/Button";
 import { Modal } from "../ui/Modal";
 import { Badge } from "../ui/Badge";
+import { Input } from "../ui/Input";
 import { useAuth } from "../../contexts/AuthContext";
 import { useToast } from "../ui/Toast";
 import { formatAmount } from "../../lib/utils";
@@ -38,6 +39,31 @@ import {
 } from "../../lib/api";
 import type { BankConnection, BankTransaction, Invoice } from "../../types/database";
 
+const POPULAR_FRENCH_BANKS = [
+  { name: "Boursorama Banque", label: "BoursoBank / Boursorama", badge: "Populaire" },
+  { name: "Revolut", label: "Revolut Business", badge: "Populaire" },
+  { name: "Qonto", label: "Qonto", badge: "Pro" },
+  { name: "Shine", label: "Shine", badge: "Pro" },
+  { name: "Crédit Agricole de Paris et d'Ile de France", label: "Crédit Agricole (IDF / Paris)", badge: "" },
+  { name: "Crédit Agricole d'Aquitaine", label: "Crédit Agricole (Aquitaine / Sud-Ouest)", badge: "" },
+  { name: "BNP Paribas", label: "BNP Paribas", badge: "" },
+  { name: "Société Générale", label: "Société Générale", badge: "" },
+  { name: "LCL", label: "LCL", badge: "" },
+  { name: "CIC", label: "CIC", badge: "" },
+  { name: "Crédit Mutuel", label: "Crédit Mutuel", badge: "" },
+  { name: "La Banque Postale", label: "La Banque Postale", badge: "" },
+  { name: "N26", label: "N26", badge: "" },
+  { name: "Wise", label: "Wise", badge: "" },
+  { name: "Fortuneo", label: "Fortuneo", badge: "" },
+  { name: "Banque Populaire Rives de Paris", label: "Banque Populaire", badge: "" },
+  { name: "Caisse d'Epargne Ile De France", label: "Caisse d'Épargne", badge: "" },
+  { name: "Trade Republic", label: "Trade Republic", badge: "" },
+  { name: "Hello Bank", label: "Hello Bank!", badge: "" },
+  { name: "SumUp", label: "SumUp", badge: "" },
+  { name: "Finom", label: "Finom", badge: "" },
+  { name: "Swan", label: "Swan", badge: "" },
+];
+
 export function BankSyncSection() {
   const { profile, company } = useAuth();
   const { toast } = useToast();
@@ -47,6 +73,11 @@ export function BankSyncSection() {
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
   const [connecting, setConnecting] = useState(false);
+  const [connectingBankName, setConnectingBankName] = useState<string | null>(null);
+
+  // Bank Selection Modal State
+  const [bankSelectorOpen, setBankSelectorOpen] = useState(false);
+  const [bankSearch, setBankSearch] = useState("");
 
   // Manual Match Modal State
   const [matchModalOpen, setMatchModalOpen] = useState(false);
@@ -79,16 +110,22 @@ export function BankSyncSection() {
     void loadData();
   }, [loadData]);
 
-  const handleConnectBank = async () => {
+  const handleOpenBankSelector = () => {
     if (!canUseBankSync) {
       setUpgradeModalOpen(true);
       return;
     }
+    setBankSelectorOpen(true);
+  };
+
+  const handleSelectBankToConnect = async (bankName: string) => {
     setConnecting(true);
+    setConnectingBankName(bankName);
     try {
-      const url = await createEnableBankingConnectSession();
+      const url = await createEnableBankingConnectSession(bankName);
       if (url.includes("enablebanking=success") || url.includes("mock_bank=")) {
         toast("Compte bancaire pro connecté avec succès (Enable Banking Open Banking) !", "success");
+        setBankSelectorOpen(false);
         void loadData();
       } else {
         window.location.href = url;
@@ -97,6 +134,7 @@ export function BankSyncSection() {
       toast(err.message || "Erreur lors de la connexion à la banque.", "danger");
     } finally {
       setConnecting(false);
+      setConnectingBankName(null);
     }
   };
 
@@ -233,8 +271,8 @@ export function BankSyncSection() {
             type="button"
             variant="primary"
             size="sm"
-            onClick={handleConnectBank}
-            loading={connecting}
+            onClick={handleOpenBankSelector}
+            loading={connecting && !connectingBankName}
             className="bylz-glow-cta text-xs font-bold whitespace-nowrap"
           >
             Connecter ma banque
@@ -484,6 +522,58 @@ export function BankSyncSection() {
               ))}
             </div>
           )}
+        </div>
+      </Modal>
+
+      {/* Bank Selector Modal */}
+      <Modal
+        open={bankSelectorOpen}
+        onClose={() => setBankSelectorOpen(false)}
+        title="Choisissez votre banque professionnelle"
+      >
+        <div className="space-y-4">
+          <p className="text-xs text-muted">
+            Sélectionnez votre banque dans la liste ci-dessous pour être redirigé vers l'interface d'authentification sécurisée (DSP2).
+          </p>
+
+          <Input
+            placeholder="Rechercher une banque (ex: BoursoBank, Qonto, Revolut, Crédit Agricole...)"
+            value={bankSearch}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setBankSearch(e.target.value)}
+            className="text-xs"
+          />
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-72 overflow-y-auto pr-1">
+            {POPULAR_FRENCH_BANKS.filter(
+              (b) =>
+                b.label.toLowerCase().includes(bankSearch.toLowerCase()) ||
+                b.name.toLowerCase().includes(bankSearch.toLowerCase())
+            ).map((bank) => (
+              <button
+                key={bank.name}
+                type="button"
+                disabled={connecting}
+                onClick={() => handleSelectBankToConnect(bank.name)}
+                className="p-3 rounded-card border border-border hover:border-primary bg-surface hover:bg-primary/5 text-left cursor-pointer transition-all flex items-center justify-between group disabled:opacity-50"
+              >
+                <div>
+                  <p className="text-xs font-bold text-text group-hover:text-primary transition-colors">
+                    {bank.label}
+                  </p>
+                  <p className="text-[10px] text-muted">Connexion directe Open Banking</p>
+                </div>
+                {connecting && connectingBankName === bank.name ? (
+                  <RefreshCw className="w-3.5 h-3.5 text-primary animate-spin" />
+                ) : bank.badge ? (
+                  <span className="text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded bg-primary/10 text-primary">
+                    {bank.badge}
+                  </span>
+                ) : (
+                  <span className="text-xs text-muted group-hover:text-primary transition-colors">➔</span>
+                )}
+              </button>
+            ))}
+          </div>
         </div>
       </Modal>
 

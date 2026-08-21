@@ -1979,10 +1979,11 @@ export async function createGoCardlessConnectSession(): Promise<string> {
   return `${origin}/settings?tab=bank&gocardless=success&mock_bank=${encodeURIComponent("BoursoBank Pro (GoCardless)")}`;
 }
 
-export async function createEnableBankingConnectSession(): Promise<string> {
+export async function createEnableBankingConnectSession(bankName?: string): Promise<string> {
   try {
     const { data, error } = await supabase.functions.invoke<{ success?: boolean; url?: string; error?: string }>(
-      "create-enablebanking-connect-session"
+      "create-enablebanking-connect-session",
+      { body: { bank_name: bankName } }
     );
     if (!error && data && data.url) {
       return data.url;
@@ -1996,7 +1997,7 @@ export async function createEnableBankingConnectSession(): Promise<string> {
   }
 
   const origin = typeof window !== "undefined" ? window.location.origin : "https://bylz.fr";
-  return `${origin}/settings?tab=bank&enablebanking=success&mock_bank=${encodeURIComponent("BoursoBank Pro (Enable Banking)")}`;
+  return `${origin}/settings?tab=bank&enablebanking=success&mock_bank=${encodeURIComponent(bankName || "Banque Pro")}`;
 }
 
 export async function createGoCardlessPaymentLink(invoiceId: string): Promise<string> {
