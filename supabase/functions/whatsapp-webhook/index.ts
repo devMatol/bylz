@@ -135,27 +135,45 @@ Deno.serve(async (req: Request) => {
       if (messageType === "audio" || messageType === "voice") {
         const mediaId = message?.audio?.id || message?.voice?.id;
         audioMimeType = message?.audio?.mime_type || message?.voice?.mime_type || "audio/ogg";
+        console.log(`Processing WhatsApp audio message. Media ID: ${mediaId}, Mime: ${audioMimeType}`);
 
         if (mediaId && WHATSAPP_TOKEN) {
           try {
-            const metaMediaRes = await fetch(`https://graph.facebook.com/v18.0/${mediaId}`, {
-              headers: { Authorization: `Bearer ${WHATSAPP_TOKEN}` },
+            const metaMediaRes = await fetch(`https://graph.facebook.com/v21.0/${mediaId}`, {
+              headers: {
+                "Authorization": `Bearer ${WHATSAPP_TOKEN}`,
+                "User-Agent": "curl/7.64.1",
+              },
             });
+
             if (metaMediaRes.ok) {
               const mediaMeta = await metaMediaRes.json();
+              console.log(`Meta media metadata fetched successfully. URL: ${mediaMeta.url}`);
               if (mediaMeta.url) {
                 const fileRes = await fetch(mediaMeta.url, {
-                  headers: { Authorization: `Bearer ${WHATSAPP_TOKEN}` },
+                  headers: {
+                    "Authorization": `Bearer ${WHATSAPP_TOKEN}`,
+                    "User-Agent": "curl/7.64.1",
+                  },
                 });
                 if (fileRes.ok) {
                   const audBuf = await fileRes.arrayBuffer();
                   base64Audio = bufferToBase64(audBuf);
+                  console.log(`Audio file downloaded successfully. Byte size: ${audBuf.byteLength}, Base64 length: ${base64Audio.length}`);
+                } else {
+                  const fileErrText = await fileRes.text();
+                  console.error(`Meta media download failed. Status: ${fileRes.status}, Error: ${fileErrText}`);
                 }
               }
+            } else {
+              const metaErrText = await metaMediaRes.text();
+              console.error(`Meta media metadata fetch failed. Status: ${metaMediaRes.status}, Error: ${metaErrText}`);
             }
           } catch (err) {
-            console.warn("Error fetching Meta WhatsApp audio media:", err);
+            console.error("Error fetching Meta WhatsApp audio media:", err);
           }
+        } else {
+          console.warn("Missing mediaId or WHATSAPP_TOKEN for audio download.");
         }
       }
     }
