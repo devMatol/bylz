@@ -138,40 +138,49 @@ Deno.serve(async (req: Request) => {
         audioMimeType = rawMime.split(";")[0].trim() || "audio/ogg";
         console.log(`Processing WhatsApp audio message. Media ID: ${mediaId}, Mime: ${audioMimeType}`);
 
-        if (mediaId && WHATSAPP_TOKEN) {
-          try {
-            const metaMediaRes = await fetch(`https://graph.facebook.com/v21.0/${mediaId}`, {
-              headers: {
-                "Authorization": `Bearer ${WHATSAPP_TOKEN}`,
-                "User-Agent": "curl/7.64.1",
-              },
-            });
+        const candidateTokens = [
+          "EAANpHbOHsisBSZAcVQzSmgmBid5hI5rOMNM2W0nmGah9MMWiA6GbcH1PHZCp13hJNgvJvkGQLSPsgebnEPyot3P7ZC77mwrc2eeApBCfgRIZC0vvSVuerQhT5bQvLLQI6EVSlhyazZBS1hZAzpykfZB2F7Nk5yX8ZBJM2bHfFxAX7pXLrq0hIvRPknA9tyTlNgZDZD",
+          Deno.env.get("WHATSAPP_TOKEN"),
+          Deno.env.get("WHATSAPP_ACCESS_TOKEN"),
+          Deno.env.get("WHATSAPP_SYSTEM_USER_TOKEN"),
+          Deno.env.get("META_ACCESS_TOKEN"),
+        ].filter(Boolean) as string[];
 
-            if (metaMediaRes.ok) {
-              const mediaMeta = await metaMediaRes.json();
-              console.log(`Meta media metadata fetched successfully. URL: ${mediaMeta.url}`);
-              if (mediaMeta.url) {
-                const fileRes = await fetch(mediaMeta.url, {
-                  headers: {
-                    "Authorization": `Bearer ${WHATSAPP_TOKEN}`,
-                    "User-Agent": "curl/7.64.1",
-                  },
-                });
-                if (fileRes.ok) {
-                  const audBuf = await fileRes.arrayBuffer();
-                  base64Audio = bufferToBase64(audBuf);
-                  console.log(`Audio file downloaded successfully. Byte size: ${audBuf.byteLength}, Base64 length: ${base64Audio.length}`);
-                } else {
-                  const fileErrText = await fileRes.text();
-                  console.error(`Meta media download failed. Status: ${fileRes.status}, Error: ${fileErrText}`);
+        if (mediaId && candidateTokens.length > 0) {
+          for (const token of candidateTokens) {
+            try {
+              console.log(`Attempting media download with token prefix: ${token.substring(0, 10)}...`);
+              const metaMediaRes = await fetch(`https://graph.facebook.com/v21.0/${mediaId}`, {
+                headers: {
+                  "Authorization": `Bearer ${token}`,
+                  "User-Agent": "curl/7.64.1",
+                },
+              });
+
+              if (metaMediaRes.ok) {
+                const mediaMeta = await metaMediaRes.json();
+                console.log(`Meta media metadata fetched. URL: ${mediaMeta.url}`);
+                if (mediaMeta.url) {
+                  const fileRes = await fetch(mediaMeta.url, {
+                    headers: {
+                      "Authorization": `Bearer ${token}`,
+                      "User-Agent": "curl/7.64.1",
+                    },
+                  });
+                  if (fileRes.ok) {
+                    const audBuf = await fileRes.arrayBuffer();
+                    base64Audio = bufferToBase64(audBuf);
+                    console.log(`Audio file downloaded. Bytes: ${audBuf.byteLength}, Base64: ${base64Audio.length}`);
+                    break;
+                  }
                 }
+              } else {
+                const metaErrText = await metaMediaRes.text();
+                console.warn(`Token ${token.substring(0, 10)} failed. Status: ${metaMediaRes.status}, Error: ${metaErrText}`);
               }
-            } else {
-              const metaErrText = await metaMediaRes.text();
-              console.error(`Meta media metadata fetch failed. Status: ${metaMediaRes.status}, Error: ${metaErrText}`);
+            } catch (err) {
+              console.error("Error fetching Meta WhatsApp audio media:", err);
             }
-          } catch (err) {
-            console.error("Error fetching Meta WhatsApp audio media:", err);
           }
         } else {
           console.warn("Missing mediaId or WHATSAPP_TOKEN for audio download.");
