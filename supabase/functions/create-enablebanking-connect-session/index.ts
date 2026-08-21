@@ -106,7 +106,7 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    const appId = Deno.env.get('ENABLEBANKING_APP_ID') || '';
+    const appId = Deno.env.get('ENABLEBANKING_APP_ID') || 'c6c20e35-cb95-4577-8ee2-813202a771c4';
     const privateKeyPem = Deno.env.get('ENABLEBANKING_PRIVATE_KEY') || defaultPrivateKeyPem;
 
     if (!appId) {
