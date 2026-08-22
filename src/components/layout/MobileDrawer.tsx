@@ -59,7 +59,7 @@ export function MobileDrawer({ isOpen, onClose }: MobileDrawerProps) {
   const drawerLinks = [
     {
       label: "🌐 Voir l'Accueil (Site Public)",
-      path: "/",
+      path: "/?public=true",
       icon: ChevronRight,
       desc: "Retourner sur la page d'accueil de Bylz",
     },

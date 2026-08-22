@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, Navigate, useLocation } from "react-router-dom";
 import {
   Sparkles,
   ArrowRight,
@@ -24,9 +24,17 @@ import { type BillingCycle } from "../lib/constants";
 import { useAuth } from "../contexts/AuthContext";
 
 export function LandingPage() {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
+  const location = useLocation();
+  const searchParams = new URLSearchParams(location.search);
+  const forcePublic = searchParams.get("public") === "true";
+
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(0);
   const [billingCycle, setBillingCycle] = useState<BillingCycle>("annual");
+
+  if (!loading && user && !forcePublic) {
+    return <Navigate to="/dashboard" replace />;
+  }
 
   const faqs = [
     {
