@@ -158,24 +158,35 @@ Deno.serve(async (req: Request) => {
                 const mediaMeta = await metaMediaRes.json();
                 console.log(`Meta media metadata fetched successfully. URL: ${mediaMeta.url}`);
                 if (mediaMeta.url) {
-                  const authenticatedMediaUrl = mediaMeta.url.includes("?")
-                    ? `${mediaMeta.url}&access_token=${token}`
-                    : `${mediaMeta.url}?access_token=${token}`;
-
-                  const fileRes = await fetch(authenticatedMediaUrl, {
+                  // Step 1: Initial request to lookaside.fbsbx.com with Bearer token & manual redirect
+                  const fileRes = await fetch(mediaMeta.url, {
                     headers: {
                       "Authorization": `Bearer ${token}`,
                       "User-Agent": "curl/7.64.1",
                     },
+                    redirect: "manual",
                   });
-                  if (fileRes.ok) {
-                    const audBuf = await fileRes.arrayBuffer();
+
+                  let cdnUrl = mediaMeta.url;
+                  if (fileRes.status >= 300 && fileRes.status < 400) {
+                    cdnUrl = fileRes.headers.get("location") || mediaMeta.url;
+                  }
+
+                  // Step 2: Fetch final CDN URL WITHOUT Authorization header (AWS S3 rejects Facebook Bearer tokens)
+                  const cdnRes = (fileRes.status === 200) ? fileRes : await fetch(cdnUrl, {
+                    headers: {
+                      "User-Agent": "curl/7.64.1",
+                    },
+                  });
+
+                  if (cdnRes.ok) {
+                    const audBuf = await cdnRes.arrayBuffer();
                     base64Audio = bufferToBase64(audBuf);
                     console.log(`Audio file successfully downloaded. Bytes: ${audBuf.byteLength}, Base64 length: ${base64Audio.length}`);
                     break;
                   } else {
-                    const fileErr = await fileRes.text();
-                    console.warn(`File download failed for URL ${authenticatedMediaUrl}. Status: ${fileRes.status}, Error: ${fileErr}`);
+                    const fileErr = await cdnRes.text();
+                    console.warn(`CDN File download failed for URL ${cdnUrl}. Status: ${cdnRes.status}, Error: ${fileErr}`);
                   }
                 }
               } else {
