@@ -234,7 +234,7 @@ export function SettingsPage() {
 
       if (error) throw error;
       toast("Compte Stripe réinitialisé. Vous pouvez maintenant relancer la configuration.", "success");
-      await refreshCompany();
+      await refreshProfile();
       setConnectStatus({ hasAccount: false, chargesEnabled: false });
     } catch (err: any) {
       toast(err.message || "Erreur lors de la réinitialisation de Stripe Connect", "danger");
@@ -266,7 +266,7 @@ export function SettingsPage() {
 
       if (error) throw error;
       toast("Informations d'entreprise mises à jour avec succès !", "success");
-      await refreshCompany();
+      await refreshProfile();
     } catch (err: any) {
       toast(err.message || "Erreur lors de la sauvegarde.", "danger");
     } finally {
@@ -311,7 +311,7 @@ export function SettingsPage() {
       setLogoUrl(newLogoUrl);
       await supabase.from("companies").update({ logo_url: newLogoUrl }).eq("id", company.id);
       toast("Logo mis à jour avec succès !", "success");
-      await refreshCompany();
+      await refreshProfile();
     } catch (err: any) {
       setLogoError(err.message);
       toast(err.message || "Erreur lors du transfert du logo", "danger");
@@ -336,7 +336,7 @@ export function SettingsPage() {
 
       if (error) throw error;
       toast("Personnalisation visuelle mise à jour avec succès !", "success");
-      await refreshCompany();
+      await refreshProfile();
     } catch (err: any) {
       toast(err.message || "Erreur lors de la sauvegarde du style.", "danger");
     } finally {
