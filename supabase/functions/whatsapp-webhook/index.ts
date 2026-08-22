@@ -422,8 +422,8 @@ Deno.serve(async (req: Request) => {
 Tu réponds par message WhatsApp exclusivement au dirigeant de l'entreprise "${company.legal_name}".
 
 🔒 RÈGLES DE SÉCURITÉ ET D'ISOLATION STRICTES :
-1. Tu es strictement cantonné aux données de l'entreprise "${company.legal_name}".
-2. Tu prépares ou corriges des brouillons de factures pour validation par l'utilisateur.
+1. Tu es strictly cantonné aux données de l'entreprise "${company.legal_name}".
+2. Tu prépares ou corriges des brouillons de factures et devis pour validation par l'utilisateur.
 
 ⚡ CAS DES MESSAGES VOCAUX TRÈS COURTS (ex: 1 à 2 secondes) :
 Si l'utilisateur t'envoie une note vocale très courte (ex: "non", "oui", "valider", "annuler") :
@@ -442,17 +442,20 @@ ${invoicesSummary}
 Devis récents :
 ${quotesSummary}
 
-⚡ INSTRUCTIONS D'ACTION DE FACTURATION :
-1. Si l'utilisateur demande de CRÉER une facture (même avec des fautes de frappe comme "Crée moi une facture", "fait une facture", "400e", "our un développement", etc.), réponds EXCLUSIVEMENT par un JSON valide sur UNE SEULE LIGNE :
-{"action": "create_invoice", "client_name": "Nom du client (ex: Matthias Ollivier)", "amount": 400, "description": "Prestation (ex: Développement d'application)"}
+⚡ INSTRUCTIONS D'ACTION DE FACTURATION & DEVIS (JSON SUR UNE SEULE LIGNE) :
+1. CRÉER FACTURE (ex: "crée une facture", "fait une facture de 400€ pour Client X") :
+{"action": "create_invoice", "client_name": "Nom du client", "amount": 400, "description": "Prestation"}
 
-2. Si un brouillon est actif et que l'utilisateur demande une CORRECTION / MODIFICATION (ex: "Mets 450€", "Change le client pour X", "C'est 500e pour du conseil"), réponds EXCLUSIVEMENT par un JSON valide sur UNE SEULE LIGNE :
-{"action": "update_draft", "client_name": "Nom du client (garder ou changer)", "amount": 450, "description": "Prestation (garder ou changer)"}
+2. CRÉER DEVIS (ex: "crée un devis", "fait un devis de 500€ pour Client Y") :
+{"action": "create_quote", "client_name": "Nom du client", "amount": 500, "description": "Prestation"}
 
-3. Si un brouillon est actif et que l'utilisateur CONFIRME ou VALIDE (ex: "oui", "valider", "c'est bon", "valide", "d'accord"), réponds EXCLUSIVEMENT :
+3. MODIFIER BROUILLON ACTIF (ex: "mets 500e", "change pour 600€", "client c'est Google", "pour du conseil") :
+{"action": "update_draft", "client_name": "Nom du client", "amount": 500, "description": "Prestation"}
+
+4. VALIDER BROUILLON (ex: "oui", "valider", "c'est bon", "ok", "émets") :
 {"action": "confirm_draft"}
 
-4. Si un brouillon est actif et que l'utilisateur ANNULE ou REFUSE (ex: "non", "annuler", "refuser", "supprimer"), réponds EXCLUSIVEMENT :
+5. ANNULER BROUILLON (ex: "non", "annuler", "refuser", "supprimer") :
 {"action": "cancel_draft"}
 
 Sinon, réponds de manière concise, précise et amicale en français sur WhatsApp.`;
@@ -466,7 +469,7 @@ Sinon, réponds de manière concise, précise et amicale en français sur WhatsA
                   data: base64Audio,
                 },
               });
-              contentsParts.push({ text: "Transcris très attentivement ce message vocal (même court comme 'non' ou 'oui') et exécute l'action appropriée." });
+              contentsParts.push({ text: "Transcris très attentivement ce message vocal (même court comme 'non', 'oui', 'mets 500e') et exécute l'action appropriée." });
             } else {
               contentsParts.push({ text: `Message utilisateur : "${textContent}"` });
             }
@@ -556,6 +559,65 @@ Sinon, réponds de manière concise, précise et amicale en français sur WhatsA
                       replyText = `❌ *Création annulée.* Le brouillon de facture a été supprimé sans émettre de numéro officiel.`;
                     } else {
                       replyText = `❌ *Aucun brouillon de facture à annuler.* Toutes vos factures actuelles sont enregistrées et sécurisées.`;
+                    }
+
+                  } else if (actionObj.action === "create_quote" && actionObj.amount) {
+                    const clientName = actionObj.client_name || "Client WhatsApp";
+                    const amount = parseFloat(actionObj.amount);
+                    const description = actionObj.description || "Prestation de service";
+
+                    let clientId = "";
+                    const { data: existingClients } = await adminClient
+                      .from("clients")
+                      .select("id, name")
+                      .eq("company_id", company.id)
+                      .ilike("name", `%${clientName}%`)
+                      .limit(1);
+
+                    if (existingClients && existingClients.length > 0) {
+                      clientId = existingClients[0].id;
+                    } else {
+                      const { data: newClient } = await adminClient
+                        .from("clients")
+                        .insert({ company_id: company.id, name: clientName })
+                        .select("id")
+                        .single();
+                      clientId = newClient?.id || "";
+                    }
+
+                    const quoteNum = `DEV-${new Date().getFullYear()}-${Math.floor(100 + Math.random() * 900)}`;
+                    const todayStr = new Date().toISOString().split('T')[0];
+                    const valDate = new Date(Date.now() + 30 * 24 * 3600 * 1000).toISOString().split('T')[0];
+
+                    const { data: newQ, error: qErr } = await adminClient
+                      .from("quotes")
+                      .insert({
+                        company_id: company.id,
+                        client_id: clientId || null,
+                        number: quoteNum,
+                        status: "sent",
+                        issue_date: todayStr,
+                        validity_date: valDate,
+                        total_ht: amount,
+                        total_vat: 0,
+                        total_ttc: amount,
+                      })
+                      .select()
+                      .single();
+
+                    if (!qErr && newQ) {
+                      await adminClient.from("quote_lines").insert({
+                        quote_id: newQ.id,
+                        description: description,
+                        quantity: 1,
+                        unit_price: amount,
+                      });
+
+                      replyText = `📋 *Devis ${quoteNum} généré avec succès !*\n\n` +
+                        `👤 *Client* : ${clientName}\n` +
+                        `💰 *Montant TTC* : ${amount.toFixed(2)} €\n` +
+                        `📝 *Prestation* : ${description}\n\n` +
+                        `_Retrouvez vos devis sur https://bylz.fr_`;
                     }
 
                   } else if ((actionObj.action === "create_invoice" || actionObj.action === "update_draft") && actionObj.amount) {
