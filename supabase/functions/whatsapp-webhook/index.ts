@@ -146,68 +146,48 @@ Deno.serve(async (req: Request) => {
           console.log(`Starting media download for ID ${mediaId} with ${candidateTokens.length} candidate tokens.`);
           for (const token of candidateTokens) {
             try {
-              console.log(`Attempting media download with token prefix: ${token.substring(0, 15)}...`);
-              const metaMediaRes = await fetch(`https://graph.facebook.com/v21.0/${mediaId}`, {
-                headers: {
-                  "Authorization": `Bearer ${token}`,
-                  "User-Agent": "curl/7.64.1",
-                },
-              });
+              console.log(`Attempting media metadata fetch for ID ${mediaId} with token prefix: ${token.substring(0, 15)}...`);
+              let mediaMetaUrl = "";
 
-              if (metaMediaRes.ok) {
-                const mediaMeta = await metaMediaRes.json();
-                console.log(`Meta media metadata fetched successfully. URL: ${mediaMeta.url}`);
-                if (mediaMeta.url) {
-                  // Strategy 1: Fetch with Authorization header & manual 302 redirect tracking
-                  let audBuf: ArrayBuffer | null = null;
-                  try {
-                    const fileRes = await fetch(mediaMeta.url, {
-                      headers: {
-                        "Authorization": `Bearer ${token}`,
-                        "User-Agent": "curl/7.64.1",
-                      },
-                      redirect: "manual",
-                    });
+              // Step 1: Get media URL from Meta Graph API
+              const metaRes = await fetch(`https://graph.facebook.com/v21.0/${mediaId}?access_token=${token}`);
+              if (metaRes.ok) {
+                const metaJson = await metaRes.json();
+                mediaMetaUrl = metaJson.url || "";
+              } else {
+                const metaRes2 = await fetch(`https://graph.facebook.com/v21.0/${mediaId}`, {
+                  headers: { "Authorization": `Bearer ${token}` },
+                });
+                if (metaRes2.ok) {
+                  const metaJson2 = await metaRes2.json();
+                  mediaMetaUrl = metaJson2.url || "";
+                }
+              }
 
-                    if (fileRes.status >= 300 && fileRes.status < 400) {
-                      const redirectUrl = fileRes.headers.get("location") || fileRes.headers.get("Location");
-                      if (redirectUrl) {
-                        const cdnRes = await fetch(redirectUrl, {
-                          headers: { "User-Agent": "curl/7.64.1" },
-                        });
-                        if (cdnRes.ok) audBuf = await cdnRes.arrayBuffer();
-                      }
-                    } else if (fileRes.ok) {
-                      audBuf = await fileRes.arrayBuffer();
-                    }
-                  } catch (err1) {
-                    console.warn("Strategy 1 manual redirect download error:", err1);
-                  }
+              // Step 2: Download audio file using query access_token without Authorization header
+              if (mediaMetaUrl) {
+                console.log(`Meta media metadata fetched successfully. URL: ${mediaMetaUrl}`);
+                const downloadUrl = mediaMetaUrl.includes("?")
+                  ? `${mediaMetaUrl}&access_token=${token}`
+                  : `${mediaMetaUrl}?access_token=${token}`;
 
-                  // Strategy 2: Fetch with access_token query param
-                  if (!audBuf) {
-                    try {
-                      const urlWithParam = mediaMeta.url.includes("?")
-                        ? `${mediaMeta.url}&access_token=${token}`
-                        : `${mediaMeta.url}?access_token=${token}`;
-                      const paramRes = await fetch(urlWithParam, {
-                        headers: { "User-Agent": "curl/7.64.1" },
-                      });
-                      if (paramRes.ok) audBuf = await paramRes.arrayBuffer();
-                    } catch (err2) {
-                      console.warn("Strategy 2 query param download error:", err2);
-                    }
-                  }
+                const fileRes = await fetch(downloadUrl, {
+                  headers: { "User-Agent": "curl/7.64.1" },
+                });
 
-                  if (audBuf && audBuf.byteLength > 0) {
+                if (fileRes.ok) {
+                  const audBuf = await fileRes.arrayBuffer();
+                  if (audBuf.byteLength > 0) {
                     base64Audio = bufferToBase64(audBuf);
                     console.log(`Audio file successfully downloaded. Bytes: ${audBuf.byteLength}, Base64 length: ${base64Audio.length}`);
                     break;
                   }
+                } else {
+                  const fileErrText = await fileRes.text();
+                  console.warn(`File download failed. Status: ${fileRes.status}, Error: ${fileErrText.substring(0, 100)}`);
                 }
               } else {
-                const metaErrText = await metaMediaRes.text();
-                console.warn(`Token ${token.substring(0, 15)} failed for media ID ${mediaId}. Status: ${metaMediaRes.status}, Error: ${metaErrText}`);
+                console.warn(`Could not retrieve media URL for ID ${mediaId} with token ${token.substring(0, 15)}...`);
               }
             } catch (err) {
               console.error("Error fetching Meta WhatsApp audio media:", err);
