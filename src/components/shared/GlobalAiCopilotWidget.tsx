@@ -3,6 +3,7 @@ import { Bot, X, Sparkles, Send, Mic, ExternalLink } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import { canUseFeature } from "../../lib/planLimits";
+import { supabase } from "../../lib/supabase";
 
 export function GlobalAiCopilotWidget() {
   const { profile, company } = useAuth();
@@ -21,7 +22,7 @@ export function GlobalAiCopilotWidget() {
 
   const isPro = canUseFeature(profile?.plan, "paymentLinks");
 
-  const handleSend = (e: React.FormEvent) => {
+  const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim() || loading) return;
 
@@ -30,19 +31,22 @@ export function GlobalAiCopilotWidget() {
     setMessages((prev) => [...prev, { sender: "user", text: userText }]);
     setLoading(true);
 
-    setTimeout(() => {
-      const lower = userText.toLowerCase();
-      let reply = "";
-      if (lower.includes("facture") && (lower.includes("crée") || lower.includes("creer") || lower.includes("fait"))) {
-        reply = "📄 Brouillon de facture prêt ! Répondez OUI pour émettre la facture ou NON pour annuler.";
-      } else if (lower.includes("ca") || lower.includes("chiffre")) {
-        reply = "📊 Votre CA encaissé s'élève à 3 300,00 €.";
-      } else {
-        reply = "🤖 Je suis votre assistant IA ! Posez-moi une question ou ouvrez l'onglet Assistant IA complet.";
-      }
+    try {
+      const { data, error } = await supabase.functions.invoke("whatsapp-webhook", {
+        body: {
+          text: userText,
+          company_id: company?.id,
+          is_web_client: true,
+        },
+      });
+
+      const reply = data?.reply || (error ? `⚠️ Error: ${error.message}` : "🤖 Désolé, l'assistant n'a pas pu traiter votre demande.");
       setMessages((prev) => [...prev, { sender: "ai", text: reply }]);
+    } catch (err: any) {
+      setMessages((prev) => [...prev, { sender: "ai", text: `⚠️ Une erreur s'est produite: ${err.message}` }]);
+    } finally {
       setLoading(false);
-    }, 600);
+    }
   };
 
   return (

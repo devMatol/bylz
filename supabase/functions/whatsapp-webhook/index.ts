@@ -240,20 +240,31 @@ Deno.serve(async (req: Request) => {
       });
     }
 
-    // 2. Identify Company by phone number
-    const normalizedPhone = fromPhone.replace(/\D/g, "");
-    const { data: companies } = await adminClient
-      .from("companies")
-      .select("id, legal_name, user_id, activity_type")
-      .or(`phone.ilike.%${normalizedPhone.slice(-9)}%,siret.ilike.%${normalizedPhone.slice(-9)}%`)
-      .order("created_at", { ascending: false })
-      .limit(1);
+    const isWebClient = !!body.is_web_client;
+    let company: any = null;
 
-    const company = companies?.[0];
+    if (body.company_id) {
+      const { data: c } = await adminClient
+        .from("companies")
+        .select("id, legal_name, user_id, activity_type")
+        .eq("id", body.company_id)
+        .single();
+      company = c;
+    } else if (fromPhone) {
+      const normalizedPhone = fromPhone.replace(/\D/g, "");
+      const { data: companies } = await adminClient
+        .from("companies")
+        .select("id, legal_name, user_id, activity_type")
+        .or(`phone.ilike.%${normalizedPhone.slice(-9)}%,siret.ilike.%${normalizedPhone.slice(-9)}%`)
+        .order("created_at", { ascending: false })
+        .limit(1);
+      company = companies?.[0];
+    }
+
     let replyText = "";
 
     if (!company) {
-      replyText = `👋 Bonjour ! Votre numéro (${fromPhone}) n'est pas encore relié à un compte Bylz.\n\nConnectez-vous sur https://bylz.fr/settings et renseignez votre numéro de téléphone dans les paramètres de votre entreprise pour activer la gestion IA à distance !`;
+      replyText = `👋 Bonjour ! Votre entreprise n'est pas encore identifiée.\n\nConnectez-vous sur https://bylz.fr/settings et renseignez votre numéro de téléphone dans les paramètres pour activer l'assistant IA !`;
     } else {
       const lowerInput = textContent.toLowerCase().trim();
 
@@ -876,7 +887,7 @@ Sinon, réponds de manière concise, précise et amicale en français sur WhatsA
       });
     }
 
-    if (fromPhone && replyText) {
+    if (!isWebClient && fromPhone && replyText) {
       const phoneNumberId = metaPhoneNumberId || "122107899657443161";
       await sendMetaWhatsAppMessage(phoneNumberId, fromPhone, replyText, WHATSAPP_TOKEN);
     }

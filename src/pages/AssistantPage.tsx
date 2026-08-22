@@ -3,6 +3,7 @@ import { SEO } from "../components/seo/SEO";
 import { PageContainer } from "../components/layout/PageContainer";
 import { useAuth } from "../contexts/AuthContext";
 import { canUseFeature } from "../lib/planLimits";
+import { supabase } from "../lib/supabase";
 import { UpgradeModal } from "../components/shared/UpgradeModal";
 import { Bot, Send, Mic, MessageSquare, Sparkles, CheckCircle2, ShieldCheck, QrCode, Phone, FileText, ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -39,33 +40,34 @@ export function AssistantPage() {
     setLoading(true);
 
     try {
-      // Simulate/invoke Webhook AI response or local intelligent routing
-      const lower = userText.toLowerCase();
-      let reply = "";
+      const { data, error } = await supabase.functions.invoke("whatsapp-webhook", {
+        body: {
+          text: userText,
+          company_id: company?.id,
+          is_web_client: true,
+        },
+      });
 
-      if (lower.includes("facture") && (lower.includes("crée") || lower.includes("creer") || lower.includes("fait"))) {
-        reply = `📄 *Brouillon de facture prêt pour validation*\n\n👤 *Client* : Client Web\n💰 *Montant TTC* : 400,00 €\n📝 *Prestation* : Prestation de service\n\n⚠️ *Validation requise :*\nRépondez **"OUI"** pour émettre la facture ou **"NON"** pour annuler.`;
-      } else if (lower.includes("ca") || lower.includes("chiffre") || lower.includes("solde")) {
-        reply = `📊 *Bilan Financier (${company?.legal_name || 'Bylz'})*\n\n💰 *Chiffre d'Affaires Encaissé* : 3 300,00 €\n⏳ *Factures en attente* : 0,00 €\n📈 *Régime TVA* : Franchise en base (<36 800 €)`;
-      } else if (lower.includes("urssaf") || lower.includes("cotisation")) {
-        reply = `🏛️ *Estimation Cotisations URSSAF*\n\nPour un CA de 3 300,00 €, vos cotisations prévisionnelles (~21.2%) s'élèvent à **699.60 €**.\n\nDéclarez directement vos montants sur https://bylz.fr/urssaf !`;
-      } else {
-        reply = `🤖 Je suis à votre service ! Vous pouvez me demander de :\n1️⃣ *"Créer une facture de 400€ pour Client X"* \n2️⃣ *"Quel est mon CA ce trimestre ?"*\n3️⃣ *"Combien je dois payer à l'URSSAF ?"*`;
-      }
+      const reply = data?.reply || (error ? `⚠️ Erreur: ${error.message}` : "🤖 Désolé, l'assistant n'a pas pu traiter votre demande.");
 
-      setTimeout(() => {
-        setMessages((prev) => [
-          ...prev,
-          {
-            sender: "ai",
-            text: reply,
-            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-          }
-        ]);
-        setLoading(false);
-      }, 700);
-
-    } catch (err) {
+      setMessages((prev) => [
+        ...prev,
+        {
+          sender: "ai",
+          text: reply,
+          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        }
+      ]);
+    } catch (err: any) {
+      setMessages((prev) => [
+        ...prev,
+        {
+          sender: "ai",
+          text: `⚠️ Une erreur s'est produite: ${err.message}`,
+          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        }
+      ]);
+    } finally {
       setLoading(false);
     }
   };
