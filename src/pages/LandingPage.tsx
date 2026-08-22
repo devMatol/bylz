@@ -21,7 +21,10 @@ import { Button } from "../components/ui/Button";
 import { BillingToggle } from "../components/shared/BillingToggle";
 import { type BillingCycle } from "../lib/constants";
 
+import { useAuth } from "../contexts/AuthContext";
+
 export function LandingPage() {
+  const { user } = useAuth();
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(0);
   const [billingCycle, setBillingCycle] = useState<BillingCycle>("annual");
 

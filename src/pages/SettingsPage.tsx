@@ -75,15 +75,6 @@ function FeatureLockWrapper({ children, feature, title, description }: FeatureLo
     return <>{children}</>;
   }
 
-  const modalFeature =
-    feature === "invoicesPerMonth"
-      ? "invoices"
-      : feature === "exports"
-      ? "factpulse"
-      : feature === "quotesPerMonth"
-      ? "quotes"
-      : "bankSync";
-
   return (
     <Card className="p-6 relative overflow-hidden bg-surface-elevated/30 border-dashed">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -102,13 +93,13 @@ function FeatureLockWrapper({ children, feature, title, description }: FeatureLo
         </Button>
       </div>
 
-      <UpgradeModal open={upgradeModalOpen} onClose={() => setUpgradeModalOpen(false)} feature={modalFeature} />
+      <UpgradeModal open={upgradeModalOpen} onClose={() => setUpgradeModalOpen(false)} feature="invoices" />
     </Card>
   );
 }
 
 export function SettingsPage() {
-  const { profile, company, refreshProfile, refreshCompany } = useAuth();
+  const { profile, company, refreshProfile } = useAuth();
   const { toast } = useToast();
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -629,7 +620,7 @@ export function SettingsPage() {
         {/* TAB 4: BANQUE */}
         {activeTab === "bank" && (
           <div className="space-y-6 animate-in fade-in duration-200">
-            <FeatureLockWrapper feature="bankSync" title="Rapprochement Bancaire" description="Connectez vos comptes bancaires professionnels et rapprochez vos factures automatiquement.">
+            <FeatureLockWrapper feature="exports" title="Rapprochement Bancaire" description="Connectez vos comptes bancaires professionnels et rapprochez vos factures automatiquement.">
               <BankSyncSection />
             </FeatureLockWrapper>
           </div>
