@@ -3,7 +3,7 @@ import { useAuth } from "../../contexts/AuthContext";
 import { Skeleton } from "../ui/Skeleton";
 
 export function OnboardingRoute() {
-  const { user, company, loading } = useAuth();
+  const { user, profile, company, loading } = useAuth();
   const location = useLocation();
 
   if (loading) {
@@ -26,7 +26,9 @@ export function OnboardingRoute() {
     !company?.address;
 
   if (company && !params.get("success") && !allowWizard) {
-    return <Navigate to="/dashboard" replace />;
+    const isStarter = profile?.plan === "starter";
+    const defaultPath = isStarter ? "/invoices" : "/dashboard";
+    return <Navigate to={defaultPath} replace />;
   }
 
   return <Outlet />;

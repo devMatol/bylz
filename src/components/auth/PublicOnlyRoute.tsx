@@ -3,7 +3,7 @@ import { useAuth } from "../../contexts/AuthContext";
 import { Skeleton } from "../ui/Skeleton";
 
 export function PublicOnlyRoute() {
-  const { user, company, loading } = useAuth();
+  const { user, profile, company, loading } = useAuth();
   const location = useLocation();
 
   if (loading) {
@@ -15,7 +15,9 @@ export function PublicOnlyRoute() {
   }
 
   if (user) {
-    return <Navigate to={company ? `/dashboard${location.search}` : `/onboarding${location.search}`} replace />;
+    const isStarter = profile?.plan === "starter";
+    const defaultPath = isStarter ? "/invoices" : "/dashboard";
+    return <Navigate to={company ? `${defaultPath}${location.search}` : `/onboarding${location.search}`} replace />;
   }
 
   return <Outlet />;

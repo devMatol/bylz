@@ -24,7 +24,7 @@ import { type BillingCycle } from "../lib/constants";
 import { useAuth } from "../contexts/AuthContext";
 
 export function LandingPage() {
-  const { user, loading } = useAuth();
+  const { user, profile, loading } = useAuth();
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
   const forcePublic = searchParams.get("public") === "true";
@@ -33,7 +33,9 @@ export function LandingPage() {
   const [billingCycle, setBillingCycle] = useState<BillingCycle>("annual");
 
   if (!loading && user && !forcePublic) {
-    return <Navigate to="/dashboard" replace />;
+    const isStarter = profile?.plan === "starter";
+    const defaultPath = isStarter ? "/invoices" : "/dashboard";
+    return <Navigate to={defaultPath} replace />;
   }
 
   const faqs = [

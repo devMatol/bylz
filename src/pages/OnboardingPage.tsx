@@ -1,33 +1,22 @@
 import { useState, useCallback } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import { Step1Company } from "../components/onboarding/Step1Company";
-import { Step2Activity } from "../components/onboarding/Step2Activity";
-import { Step3Customize } from "../components/onboarding/Step3Customize";
-import { SuccessScreen } from "../components/onboarding/SuccessScreen";
 import { INITIAL_ONBOARDING_DATA, buildInvoiceFooter, type OnboardingData } from "../lib/onboarding";
 import { useAuth } from "../contexts/AuthContext";
 import { supabase } from "../lib/supabase";
 import { useToast } from "../components/ui/Toast";
 import { migrateGuestDraft } from "../lib/api";
 
-type Step = 1 | 2 | 3 | "success";
-
 export function OnboardingPage() {
   const { user, refreshProfile } = useAuth();
   const { toast } = useToast();
-  const [searchParams, setSearchParams] = useSearchParams();
-  const [step, setStep] = useState<Step>(1);
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [data, setData] = useState<OnboardingData>(INITIAL_ONBOARDING_DATA);
-  const [migratedInvoiceId, setMigratedInvoiceId] = useState<string | null>(null);
 
   const update = useCallback((patch: Partial<OnboardingData>) => {
     setData((prev) => ({ ...prev, ...patch }));
   }, []);
-
-  const goToStep2 = useCallback(() => setStep(2), []);
-  const goToStep3 = useCallback(() => setStep(3), []);
-  const backToStep1 = useCallback(() => setStep(1), []);
-  const backToStep2 = useCallback(() => setStep(2), []);
 
   const handleSubmit = useCallback(async () => {
     if (!user) return;
@@ -88,11 +77,13 @@ export function OnboardingPage() {
       }
       companyId = insertedComp?.id;
     }
+
+    let targetInvoiceId: string | null = null;
     if (searchParams.get("guest") === "true" && companyId) {
       try {
         const invoiceId = await migrateGuestDraft(companyId);
         if (invoiceId) {
-          setMigratedInvoiceId(invoiceId);
+          targetInvoiceId = invoiceId;
         }
       } catch (err) {
         console.error("Migration error:", err);
@@ -100,24 +91,14 @@ export function OnboardingPage() {
     }
 
     await refreshProfile();
-    
-    // Set success=true to prevent premature redirect from OnboardingRoute
-    const newParams = new URLSearchParams(searchParams);
-    newParams.set("success", "true");
-    setSearchParams(newParams);
+    toast("Profil entreprise configuré avec succès !", "success");
 
-    setStep("success");
-  }, [user, data, refreshProfile, searchParams, setSearchParams, toast]);
+    if (targetInvoiceId) {
+      navigate(`/invoices/${targetInvoiceId}`, { replace: true });
+    } else {
+      navigate("/invoices", { replace: true });
+    }
+  }, [user, data, refreshProfile, searchParams, navigate, toast]);
 
-  if (step === "success") {
-    return <SuccessScreen migratedInvoiceId={migratedInvoiceId} />;
-  }
-
-  return (
-    <>
-      {step === 1 && (
-        <Step1Company data={data} update={update} onNext={handleSubmit} />
-      )}
-    </>
-  );
+  return <Step1Company data={data} update={update} onNext={handleSubmit} />;
 }
