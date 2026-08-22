@@ -142,14 +142,14 @@ export function AssistantPage() {
                 <div
                   className={`max-w-[80%] rounded-2xl px-4 py-3 text-xs sm:text-sm leading-relaxed ${
                     m.sender === "user"
-                      ? "bg-accent text-accent-foreground rounded-tr-none font-medium"
-                      : "bg-card border border-border text-text rounded-tl-none whitespace-pre-line shadow-xs"
+                      ? "bg-emerald-600 text-white rounded-tr-none font-medium shadow-sm"
+                      : "bg-slate-900/90 border border-slate-800 text-slate-100 rounded-tl-none whitespace-pre-line shadow-sm"
                   }`}
                 >
                   {m.text}
                   <div
                     className={`text-[10px] mt-1.5 font-mono ${
-                      m.sender === "user" ? "text-accent-foreground/70 text-right" : "text-muted"
+                      m.sender === "user" ? "text-emerald-100/80 text-right" : "text-slate-400"
                     }`}
                   >
                     {m.time}
@@ -158,34 +158,34 @@ export function AssistantPage() {
               </div>
             ))}
             {loading && (
-              <div className="flex items-center gap-2 text-xs text-muted font-medium bg-card border border-border w-max px-3 py-2 rounded-xl">
-                <Sparkles className="w-4 h-4 text-accent animate-spin" />
+              <div className="flex items-center gap-2 text-xs text-slate-300 font-medium bg-slate-900 border border-slate-800 w-max px-3 py-2 rounded-xl">
+                <Sparkles className="w-4 h-4 text-emerald-400 animate-spin" />
                 L'IA analyse vos instructions...
               </div>
             )}
           </div>
 
           {/* Chat Input Bar */}
-          <form onSubmit={handleSend} className="p-3 bg-card border-t border-border flex items-center gap-2">
+          <form onSubmit={handleSend} className="p-3.5 bg-slate-950/90 border-t border-slate-800 flex items-center gap-2.5">
             <button
               type="button"
-              onClick={() => alert("Dictée vocale active sur WhatsApp ! Transmettez directement vos notes vocales.")}
+              onClick={() => alert("🎙️ Dictée vocale active sur WhatsApp ! Transmettez directement vos notes vocales.")}
               title="Dictée Vocale"
-              className="p-2.5 text-muted hover:text-text hover:bg-muted/50 rounded-xl transition-colors"
+              className="p-2.5 text-emerald-400 hover:text-emerald-300 hover:bg-emerald-500/10 rounded-xl transition-all border border-emerald-500/20 shadow-xs"
             >
-              <Mic className="w-5 h-5 text-accent" />
+              <Mic className="w-5 h-5" />
             </button>
             <input
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder="Posez une question ou dictez : 'Créer une facture de 400€ pour Client X'..."
-              className="flex-1 bg-muted/40 text-text placeholder:text-muted border border-border rounded-xl px-4 py-2.5 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-accent"
+              className="flex-1 bg-slate-900/90 text-slate-100 placeholder:text-slate-400 border border-slate-700/80 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/30 rounded-xl px-4 py-2.5 text-xs sm:text-sm outline-none transition-all shadow-inner font-medium"
             />
             <button
               type="submit"
               disabled={!input.trim() || loading}
-              className="px-4 py-2.5 bg-accent hover:bg-accent/90 disabled:opacity-50 text-accent-foreground rounded-xl text-xs font-bold flex items-center gap-2 transition-all shadow-sm"
+              className="px-5 py-2.5 bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-500 hover:from-emerald-500 hover:to-teal-500 text-white rounded-xl text-xs sm:text-sm font-black flex items-center gap-2 transition-all shadow-lg shadow-emerald-950/40 disabled:opacity-40 disabled:pointer-events-none active:scale-95 border border-emerald-400/30 cursor-pointer"
             >
               <span>Envoyer</span>
               <Send className="w-4 h-4" />
