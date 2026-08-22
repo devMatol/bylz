@@ -12,6 +12,7 @@ const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 const adminClient = createClient(supabaseUrl, serviceKey);
 
 const VERIFY_TOKEN = Deno.env.get("WHATSAPP_VERIFY_TOKEN") || "";
+const APP_SECRET = Deno.env.get("WHATSAPP_APP_SECRET") || "";
 const geminiApiKey = Deno.env.get("GEMINI_API_KEY") || "";
 const WHATSAPP_TOKEN =
   Deno.env.get("WHATSAPP_TOKEN") ||
@@ -377,11 +378,10 @@ Sinon, réponds de manière concise, précise et amicale en français sur WhatsA
                   data: base64Audio,
                 },
               });
-              contentsParts.push({ text: "Transcris et réponds à ce message vocal d'instruction utilisateur." });
+              contentsParts.push({ text: "Transcris et exécute ce message vocal d'instruction utilisateur." });
             } else {
               contentsParts.push({ text: `Message utilisateur : "${textContent}"` });
             }
-            contentsParts.push({ text: systemPrompt });
 
             const geminiRes = await fetch(
               `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiApiKey}`,
@@ -389,6 +389,9 @@ Sinon, réponds de manière concise, précise et amicale en français sur WhatsA
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
+                  system_instruction: {
+                    parts: [{ text: systemPrompt }],
+                  },
                   contents: [{ role: "user", parts: contentsParts }],
                 }),
               }
