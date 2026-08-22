@@ -19,7 +19,13 @@ export function OnboardingRoute() {
   }
 
   const params = new URLSearchParams(location.search);
-  if (company && !params.get("success")) {
+  const allowWizard =
+    params.get("mode") === "complete" ||
+    params.get("mode") === "edit" ||
+    !company?.siret ||
+    !company?.address;
+
+  if (company && !params.get("success") && !allowWizard) {
     return <Navigate to="/dashboard" replace />;
   }
 
