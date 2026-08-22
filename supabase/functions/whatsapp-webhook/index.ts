@@ -310,8 +310,8 @@ Deno.serve(async (req: Request) => {
           .eq("id", company.user_id)
           .single();
         const userPlan = profile?.plan || "starter";
-        const isAdmin = profile?.is_admin === true || (profile as any)?.role === "admin";
-        isUserPro = userPlan === "pro" || userPlan === "solo" || userPlan === "unlimited" || isAdmin;
+        const isAdmin = profile?.is_admin === true || (profile as any)?.role === "admin" || (profile as any)?.admin_role === "super_admin";
+        isUserPro = userPlan === "pro" || userPlan === "unlimited" || userPlan === "admin" || isAdmin;
       }
 
       if (!isUserPro) {
