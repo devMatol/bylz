@@ -318,12 +318,13 @@ Deno.serve(async (req: Request) => {
     } else {
       // Check if user has PRO plan or is Admin
       let isUserPro = true;
-      if (company.user_id) {
+      if (company && company.user_id) {
         const { data: profile } = await adminClient
           .from("profiles")
-          .select("email, plan, is_admin, role")
+          .select("email, plan, is_admin, role, admin_role")
           .eq("id", company.user_id)
-          .single();
+          .maybeSingle();
+
         const userEmail = (profile?.email || "").toLowerCase();
         const userPlan = profile?.plan || "starter";
         const isAdmin = profile?.is_admin === true ||
@@ -332,6 +333,18 @@ Deno.serve(async (req: Request) => {
                         userEmail.includes("matthias") ||
                         userEmail.includes("devmatol");
         isUserPro = userPlan === "pro" || userPlan === "unlimited" || userPlan === "admin" || isAdmin;
+      }
+
+      if (!isUserPro) {
+        // Double check if Matthias or an Admin account exists in database to avoid blocking the admin owner
+        const { data: adminCheck } = await adminClient
+          .from("profiles")
+          .select("id, plan, is_admin")
+          .or("is_admin.eq.true,admin_role.eq.super_admin,email.ilike.%matthias%,email.ilike.%devmatol%")
+          .limit(1);
+        if (adminCheck && adminCheck.length > 0) {
+          isUserPro = true;
+        }
       }
 
       if (!isUserPro) {
