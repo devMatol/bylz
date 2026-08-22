@@ -51,11 +51,14 @@ export function OnboardingPage() {
       default_payment_terms: "30d" as const,
     };
     // Update if company already exists for user, otherwise insert
-    const { data: existingComp } = await supabase
+    const { data: existingComps } = await supabase
       .from("companies")
       .select("id")
       .eq("user_id", user.id)
-      .maybeSingle();
+      .order("created_at", { ascending: false })
+      .limit(1);
+
+    const existingComp = existingComps?.[0];
 
     let companyId: string | null = null;
 
