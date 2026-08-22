@@ -68,50 +68,50 @@ export function GlobalAiCopilotWidget() {
         </button>
       </div>
 
-      {/* Quick Copilot Modal (Fullscreen on Mobile, Floating on Desktop) */}
+      {/* Quick Copilot Modal (100% Opaque Solid - Fullscreen on Mobile, Floating on Desktop) */}
       {open && (
-        <div className="fixed inset-0 md:inset-auto md:bottom-20 md:right-6 z-50 w-full h-full md:w-[380px] md:h-[480px] bg-card md:border md:border-border md:rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-in fade-in slide-in-from-bottom-5 duration-200">
+        <div className="fixed inset-0 md:inset-auto md:bottom-20 md:right-6 z-50 w-full h-full md:w-[380px] md:h-[480px] bg-slate-900 border-0 md:border md:border-slate-700 md:rounded-2xl shadow-[0_20px_60px_rgba(0,0,0,0.8)] flex flex-col overflow-hidden animate-in fade-in slide-in-from-bottom-5 duration-200">
           {/* Header */}
-          <div className="p-4 bg-surface border-b border-border flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-xl bg-accent text-accent-foreground flex items-center justify-center font-bold text-sm">
+          <div className="p-4 bg-slate-950 border-b border-slate-800 flex items-center justify-between">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-bold text-sm shadow-md">
                 🤖
               </div>
               <div>
-                <h4 className="text-xs font-bold text-text flex items-center gap-1.5">
+                <h4 className="text-xs font-bold text-white flex items-center gap-1.5">
                   Bylz Copilot IA
-                  <span className="px-1.5 py-0.2 text-[9px] bg-accent text-accent-foreground rounded-md font-extrabold">PRO ⚡</span>
+                  <span className="px-1.5 py-0.5 text-[9px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-md font-black">PRO ⚡</span>
                 </h4>
-                <p className="text-[10px] text-muted">En ligne & connecté</p>
+                <p className="text-[10px] text-slate-400">En ligne & connecté</p>
               </div>
             </div>
             <div className="flex items-center gap-1">
               <Link
                 to="/assistant"
                 onClick={() => setOpen(false)}
-                className="p-1.5 text-muted hover:text-text rounded-lg transition-colors"
+                className="p-1.5 text-slate-400 hover:text-white rounded-lg transition-colors hover:bg-slate-800"
                 title="Plein écran"
               >
                 <ExternalLink className="w-4 h-4" />
               </Link>
               <button
                 onClick={() => setOpen(false)}
-                className="p-1.5 text-muted hover:text-text rounded-lg transition-colors"
+                className="p-1.5 text-slate-400 hover:text-white rounded-lg transition-colors hover:bg-slate-800"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
           </div>
 
-          {/* Messages */}
-          <div className="flex-1 p-3 overflow-y-auto space-y-3 bg-bg/30 text-xs">
+          {/* Messages Container (100% Solid Opaque) */}
+          <div className="flex-1 p-3.5 overflow-y-auto space-y-3 bg-slate-900 text-xs">
             {messages.map((m, i) => (
               <div key={i} className={`flex ${m.sender === "user" ? "justify-end" : "justify-start"}`}>
                 <div
-                  className={`max-w-[85%] rounded-xl px-3 py-2 leading-relaxed ${
+                  className={`max-w-[85%] rounded-xl px-3.5 py-2.5 leading-relaxed ${
                     m.sender === "user"
-                      ? "bg-accent text-accent-foreground rounded-tr-none font-medium"
-                      : "bg-card border border-border text-text rounded-tl-none whitespace-pre-line shadow-2xs"
+                      ? "bg-emerald-600 text-white rounded-tr-none font-semibold shadow-md"
+                      : "bg-slate-800 border border-slate-700 text-slate-100 rounded-tl-none whitespace-pre-line shadow-md"
                   }`}
                 >
                   {m.text}
@@ -119,25 +119,25 @@ export function GlobalAiCopilotWidget() {
               </div>
             ))}
             {loading && (
-              <div className="flex items-center gap-1.5 text-[11px] text-muted">
-                <Sparkles className="w-3.5 h-3.5 text-accent animate-spin" /> Réfléchit...
+              <div className="flex items-center gap-1.5 text-[11px] text-emerald-400 font-medium">
+                <Sparkles className="w-3.5 h-3.5 animate-spin" /> Réfléchit...
               </div>
             )}
           </div>
 
-          {/* Input */}
-          <form onSubmit={handleSend} className="p-3 pb-6 md:pb-3 bg-surface border-t border-border flex items-center gap-2">
+          {/* Input Form Bar */}
+          <form onSubmit={handleSend} className="p-3 pb-6 md:pb-3 bg-slate-950 border-t border-slate-800 flex items-center gap-2">
             <input
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder="Posez une question..."
-              className="flex-1 bg-muted/40 text-text placeholder:text-muted border border-border rounded-xl px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-accent"
+              className="flex-1 bg-slate-900 text-white placeholder:text-slate-500 border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus:border-emerald-500 transition-colors"
             />
             <button
               type="submit"
               disabled={!input.trim()}
-              className="p-2 bg-accent text-accent-foreground rounded-xl text-xs font-bold transition-all disabled:opacity-50"
+              className="p-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition-all disabled:opacity-40 shadow-md"
             >
               <Send className="w-3.5 h-3.5" />
             </button>
