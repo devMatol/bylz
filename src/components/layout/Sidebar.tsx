@@ -119,10 +119,10 @@ export function Sidebar() {
         <div className="px-4 py-2 space-y-1.5 border-t border-border/60">
           <Link
             to="/?public=true"
-            className="w-full flex items-center gap-2.5 px-3 py-2 rounded text-xs font-bold text-muted hover:text-text hover:bg-surface-hover transition-colors border border-border/50"
+            className="w-full flex items-center gap-2.5 px-3 py-2 rounded text-xs font-bold text-muted hover:text-text hover:bg-surface-hover transition-colors"
           >
             <span className="text-sm">🌐</span>
-            <span>Voir le site vitrine (Accueil)</span>
+            <span>Accueil</span>
           </Link>
 
           <button

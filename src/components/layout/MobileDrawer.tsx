@@ -58,10 +58,10 @@ export function MobileDrawer({ isOpen, onClose }: MobileDrawerProps) {
 
   const drawerLinks = [
     {
-      label: "🌐 Voir l'Accueil (Site Public)",
+      label: "🌐 Accueil",
       path: "/?public=true",
       icon: ChevronRight,
-      desc: "Retourner sur la page d'accueil de Bylz",
+      desc: "Page d'accueil de Bylz",
     },
     {
       label: "🤖 Assistant IA Copilot",
