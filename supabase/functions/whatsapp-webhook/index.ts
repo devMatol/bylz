@@ -491,246 +491,234 @@ Sinon, réponds de manière concise, précise et amicale en français sur WhatsA
             if (geminiRes.ok) {
               const geminiData = await geminiRes.json();
               const rawAiReply = geminiData.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || "";
+              console.log("Raw Gemini AI Reply:", rawAiReply);
 
               const jsonMatch = rawAiReply.match(/\{[\s\S]*?\}/);
+              let actionObj: any = null;
               if (jsonMatch) {
-                try {
-                  const actionObj = JSON.parse(jsonMatch[0]);
+                try { actionObj = JSON.parse(jsonMatch[0]); } catch {}
+              }
 
-                  if (actionObj.action === "confirm_draft") {
-                    if (activeDraft) {
-                      const { data: lastInvoices } = await adminClient
-                        .from("invoices")
-                        .select("number")
-                        .eq("company_id", company.id)
-                        .eq("type", "invoice")
-                        .neq("status", "draft")
-                        .order("created_at", { ascending: false })
-                        .limit(1);
+              const isAiCancel = actionObj?.action === "cancel_draft" || /\b(non|annuler|supprimer|refuser|annule|annulation)\b/i.test(rawAiReply);
+              const isAiConfirm = actionObj?.action === "confirm_draft" || /\b(oui|valider|confirmer|valide|validation)\b/i.test(rawAiReply);
 
-                      const currentYear = new Date().getFullYear();
-                      let nextNum = 1;
-                      if (lastInvoices?.[0]?.number) {
-                        const numMatch = lastInvoices[0].number.match(/FAC-\d{4}-(\d+)/);
-                        if (numMatch) nextNum = parseInt(numMatch[1], 10) + 1;
-                      }
-                      const officialNum = `FAC-${currentYear}-${String(nextNum).padStart(3, '0')}`;
+              if (activeDraft && isAiCancel) {
+                await adminClient
+                  .from("invoices")
+                  .delete()
+                  .eq("id", activeDraft.id);
 
-                      const todayStr = new Date().toISOString().split('T')[0];
-                      const dueDate = new Date(Date.now() + 30 * 24 * 3600 * 1000).toISOString().split('T')[0];
+                replyText = `❌ *Création annulée.* Le brouillon de facture a été supprimé sans émettre de numéro officiel.`;
 
-                      await adminClient
-                        .from("invoices")
-                        .update({
-                          number: officialNum,
-                          status: "pending",
-                          issue_date: todayStr,
-                          due_date: dueDate,
-                        })
-                        .eq("id", activeDraft.id);
+              } else if (activeDraft && isAiConfirm) {
+                const { data: lastInvoices } = await adminClient
+                  .from("invoices")
+                  .select("number")
+                  .eq("company_id", company.id)
+                  .eq("type", "invoice")
+                  .neq("status", "draft")
+                  .order("created_at", { ascending: false })
+                  .limit(1);
 
-                      const clientName = (activeDraft as any).client?.name || "Client";
+                const currentYear = new Date().getFullYear();
+                let nextNum = 1;
+                if (lastInvoices?.[0]?.number) {
+                  const numMatch = lastInvoices[0].number.match(/FAC-\d{4}-(\d+)/);
+                  if (numMatch) nextNum = parseInt(numMatch[1], 10) + 1;
+                }
+                const officialNum = `FAC-${currentYear}-${String(nextNum).padStart(3, '0')}`;
 
-                      const { data: activeLines } = await adminClient
-                        .from("invoice_lines")
-                        .select("description")
-                        .eq("invoice_id", activeDraft.id)
-                        .limit(1);
+                const todayStr = new Date().toISOString().split('T')[0];
+                const dueDate = new Date(Date.now() + 30 * 24 * 3600 * 1000).toISOString().split('T')[0];
 
-                      const desc = activeLines?.[0]?.description || "Prestation de service";
+                await adminClient
+                  .from("invoices")
+                  .update({
+                    number: officialNum,
+                    status: "pending",
+                    issue_date: todayStr,
+                    due_date: dueDate,
+                  })
+                  .eq("id", activeDraft.id);
 
-                      replyText = `✅ *Facture ${officialNum} validée et émise avec succès !*\n\n` +
-                        `👤 *Client* : ${clientName}\n` +
-                        `💰 *Montant TTC* : ${Number(activeDraft.total_ttc).toFixed(2)} €\n` +
-                        `📝 *Prestation* : ${desc}\n` +
-                        `⏳ *Échéance* : ${dueDate}\n\n` +
-                        `_Retrouvez ou téléchargez le PDF de votre facture sur https://bylz.fr/invoices?v=2_`;
-                    } else {
-                      replyText = `⚠️ *Aucun brouillon de facture en attente de validation.*\n\nPour créer une facture, demandez par exemple : *"Créer une facture de 400€ pour Client X"* !`;
-                    }
+                const clientName = (activeDraft as any).client?.name || "Client";
 
-                  } else if (actionObj.action === "cancel_draft") {
-                    if (activeDraft) {
-                      await adminClient
-                        .from("invoices")
-                        .delete()
-                        .eq("id", activeDraft.id);
+                const { data: activeLines } = await adminClient
+                  .from("invoice_lines")
+                  .select("description")
+                  .eq("invoice_id", activeDraft.id)
+                  .limit(1);
 
-                      replyText = `❌ *Création annulée.* Le brouillon de facture a été supprimé sans émettre de numéro officiel.`;
-                    } else {
-                      replyText = `❌ *Aucun brouillon de facture à annuler.* Toutes vos factures actuelles sont enregistrées et sécurisées.`;
-                    }
+                const desc = activeLines?.[0]?.description || "Prestation de service";
 
-                  } else if (actionObj.action === "create_quote" && actionObj.amount) {
-                    const clientName = actionObj.client_name || "Client WhatsApp";
-                    const amount = parseFloat(actionObj.amount);
-                    const description = actionObj.description || "Prestation de service";
+                replyText = `✅ *Facture ${officialNum} validée et émise avec succès !*\n\n` +
+                  `👤 *Client* : ${clientName}\n` +
+                  `💰 *Montant TTC* : ${Number(activeDraft.total_ttc).toFixed(2)} €\n` +
+                  `📝 *Prestation* : ${desc}\n` +
+                  `⏳ *Échéance* : ${dueDate}\n\n` +
+                  `_Retrouvez ou téléchargez le PDF de votre facture sur https://bylz.fr/invoices?v=2_`;
 
-                    let clientId = "";
-                    const { data: existingClients } = await adminClient
+              } else if (actionObj && (actionObj.action === "create_invoice" || actionObj.action === "update_draft" || actionObj.action === "create_quote") && actionObj.amount) {
+                if (actionObj.action === "create_quote") {
+                  const clientName = actionObj.client_name || "Client WhatsApp";
+                  const amount = parseFloat(actionObj.amount);
+                  const description = actionObj.description || "Prestation de service";
+
+                  let clientId = "";
+                  const { data: existingClients } = await adminClient
+                    .from("clients")
+                    .select("id, name")
+                    .eq("company_id", company.id)
+                    .ilike("name", `%${clientName}%`)
+                    .limit(1);
+
+                  if (existingClients && existingClients.length > 0) {
+                    clientId = existingClients[0].id;
+                  } else {
+                    const { data: newClient } = await adminClient
                       .from("clients")
-                      .select("id, name")
-                      .eq("company_id", company.id)
-                      .ilike("name", `%${clientName}%`)
-                      .limit(1);
+                      .insert({ company_id: company.id, name: clientName })
+                      .select("id")
+                      .single();
+                    clientId = newClient?.id || "";
+                  }
 
-                    if (existingClients && existingClients.length > 0) {
-                      clientId = existingClients[0].id;
-                    } else {
-                      const { data: newClient } = await adminClient
-                        .from("clients")
-                        .insert({ company_id: company.id, name: clientName })
-                        .select("id")
-                        .single();
-                      clientId = newClient?.id || "";
-                    }
+                  const quoteNum = `DEV-${new Date().getFullYear()}-${Math.floor(100 + Math.random() * 900)}`;
+                  const todayStr = new Date().toISOString().split('T')[0];
+                  const valDate = new Date(Date.now() + 30 * 24 * 3600 * 1000).toISOString().split('T')[0];
 
-                    const quoteNum = `DEV-${new Date().getFullYear()}-${Math.floor(100 + Math.random() * 900)}`;
-                    const todayStr = new Date().toISOString().split('T')[0];
-                    const valDate = new Date(Date.now() + 30 * 24 * 3600 * 1000).toISOString().split('T')[0];
+                  const { data: newQ, error: qErr } = await adminClient
+                    .from("quotes")
+                    .insert({
+                      company_id: company.id,
+                      client_id: clientId || null,
+                      number: quoteNum,
+                      status: "sent",
+                      issue_date: todayStr,
+                      validity_date: valDate,
+                      total_ht: amount,
+                      total_vat: 0,
+                      total_ttc: amount,
+                    })
+                    .select()
+                    .single();
 
-                    const { data: newQ, error: qErr } = await adminClient
-                      .from("quotes")
-                      .insert({
-                        company_id: company.id,
+                  if (!qErr && newQ) {
+                    await adminClient.from("quote_lines").insert({
+                      quote_id: newQ.id,
+                      description: description,
+                      quantity: 1,
+                      unit_price: amount,
+                    });
+
+                    replyText = `📋 *Devis ${quoteNum} généré avec succès !*\n\n` +
+                      `👤 *Client* : ${clientName}\n` +
+                      `💰 *Montant TTC* : ${amount.toFixed(2)} €\n` +
+                      `📝 *Prestation* : ${description}\n\n` +
+                      `_Retrouvez vos devis sur https://bylz.fr_`;
+                  }
+                } else {
+                  const clientName = actionObj.client_name || (activeDraft as any)?.client?.name || "Client WhatsApp";
+                  const amount = parseFloat(actionObj.amount);
+                  const description = actionObj.description || activeDraft?.items?.[0]?.description || "Prestation de service";
+
+                  let clientId = "";
+                  const { data: existingClients } = await adminClient
+                    .from("clients")
+                    .select("id, name")
+                    .eq("company_id", company.id)
+                    .ilike("name", `%${clientName}%`)
+                    .limit(1);
+
+                  if (existingClients && existingClients.length > 0) {
+                    clientId = existingClients[0].id;
+                  } else {
+                    const { data: newClient } = await adminClient
+                      .from("clients")
+                      .insert({ company_id: company.id, name: clientName })
+                      .select("id")
+                      .single();
+                    clientId = newClient?.id || "";
+                  }
+
+                  const todayStr = new Date().toISOString().split('T')[0];
+                  const dueDate = new Date(Date.now() + 30 * 24 * 3600 * 1000).toISOString().split('T')[0];
+
+                  if (activeDraft && actionObj.action === "update_draft") {
+                    await adminClient
+                      .from("invoices")
+                      .update({
                         client_id: clientId || null,
-                        number: quoteNum,
-                        status: "sent",
-                        issue_date: todayStr,
-                        validity_date: valDate,
                         total_ht: amount,
                         total_vat: 0,
                         total_ttc: amount,
                       })
+                      .eq("id", activeDraft.id);
+
+                    await adminClient
+                      .from("invoice_lines")
+                      .delete()
+                      .eq("invoice_id", activeDraft.id);
+
+                    await adminClient
+                      .from("invoice_lines")
+                      .insert({
+                        invoice_id: activeDraft.id,
+                        description,
+                        quantity: 1,
+                        unit_price: amount,
+                        nature: "service",
+                        position: 0,
+                      });
+
+                    replyText = `✏️ *Brouillon mis à jour avec vos corrections !*\n\n` +
+                      `👤 *Client* : ${clientName}\n` +
+                      `💰 *Montant TTC* : ${amount.toFixed(2)} €\n` +
+                      `📝 *Prestation* : ${description}\n\n` +
+                      `⚠️ *Validation requise :*\n` +
+                      `• Répondez **"OUI"** pour émettre cette facture avec son numéro officiel.\n` +
+                      `• Ou indiquez d'autres corrections (ex: *"Mets 600€"*).\n` +
+                      `• Répondez **"NON"** pour annuler.`;
+                  } else {
+                    const draftNum = `DRAFT-${Math.random().toString(36).substring(7)}`;
+                    const { data: newInv, error: invInsErr } = await adminClient
+                      .from("invoices")
+                      .insert({
+                        company_id: company.id,
+                        client_id: clientId || null,
+                        number: draftNum,
+                        type: "invoice",
+                        status: "draft",
+                        issue_date: todayStr,
+                        due_date: dueDate,
+                        total_ht: amount,
+                        total_vat: 0,
+                        total_ttc: amount,
+                        paid_amount: 0,
+                      })
                       .select()
                       .single();
 
-                    if (!qErr && newQ) {
-                      await adminClient.from("quote_lines").insert({
-                        quote_id: newQ.id,
+                    if (!invInsErr && newInv) {
+                      await adminClient.from("invoice_lines").insert({
+                        invoice_id: newInv.id,
                         description: description,
                         quantity: 1,
                         unit_price: amount,
+                        nature: "service",
+                        position: 0,
                       });
 
-                      replyText = `📋 *Devis ${quoteNum} généré avec succès !*\n\n` +
-                        `👤 *Client* : ${clientName}\n` +
-                        `💰 *Montant TTC* : ${amount.toFixed(2)} €\n` +
-                        `📝 *Prestation* : ${description}\n\n` +
-                        `_Retrouvez vos devis sur https://bylz.fr_`;
-                    }
-
-                  } else if ((actionObj.action === "create_invoice" || actionObj.action === "update_draft") && actionObj.amount) {
-                    const clientName = actionObj.client_name || (activeDraft as any)?.client?.name || "Client WhatsApp";
-                    const amount = parseFloat(actionObj.amount);
-                    const description = actionObj.description || activeDraft?.items?.[0]?.description || "Prestation de service";
-
-                    // 1. Get or create Client
-                    let clientId = "";
-                    const { data: existingClients } = await adminClient
-                      .from("clients")
-                      .select("id, name")
-                      .eq("company_id", company.id)
-                      .ilike("name", `%${clientName}%`)
-                      .limit(1);
-
-                    if (existingClients && existingClients.length > 0) {
-                      clientId = existingClients[0].id;
-                    } else {
-                      const { data: newClient } = await adminClient
-                        .from("clients")
-                        .insert({ company_id: company.id, name: clientName })
-                        .select("id")
-                        .single();
-                      clientId = newClient?.id || "";
-                    }
-
-                    const todayStr = new Date().toISOString().split('T')[0];
-                    const dueDate = new Date(Date.now() + 30 * 24 * 3600 * 1000).toISOString().split('T')[0];
-
-                    if (activeDraft && actionObj.action === "update_draft") {
-                      // Update existing draft
-                      await adminClient
-                        .from("invoices")
-                        .update({
-                          client_id: clientId || null,
-                          total_ht: amount,
-                          total_vat: 0,
-                          total_ttc: amount,
-                        })
-                        .eq("id", activeDraft.id);
-
-                      await adminClient
-                        .from("invoice_lines")
-                        .delete()
-                        .eq("invoice_id", activeDraft.id);
-
-                      await adminClient
-                        .from("invoice_lines")
-                        .insert({
-                          invoice_id: activeDraft.id,
-                          description,
-                          quantity: 1,
-                          unit_price: amount,
-                          nature: "service",
-                          position: 0,
-                        });
-
-                      replyText = `✏️ *Brouillon mis à jour avec vos corrections !*\n\n` +
+                      replyText = `📄 *Brouillon de facture prêt pour validation*\n\n` +
                         `👤 *Client* : ${clientName}\n` +
                         `💰 *Montant TTC* : ${amount.toFixed(2)} €\n` +
                         `📝 *Prestation* : ${description}\n\n` +
                         `⚠️ *Validation requise :*\n` +
-                        `• Répondez **"OUI"** (ou **"VALIDER"**) pour émettre cette facture avec son numéro officiel.\n` +
-                        `• Ou indiquez d'autres corrections (ex: *"Mets 500€"*).\n` +
+                        `• Répondez **"OUI"** pour émettre cette facture avec son numéro officiel.\n` +
+                        `• Ou indiquez vos corrections (ex: *"Mets 500€"*).\n` +
                         `• Répondez **"NON"** pour annuler.`;
-
-                    } else {
-                      // Insert new draft
-                      const draftNum = `DRAFT-${Math.random().toString(36).substring(7)}`;
-                      const { data: newInv, error: invInsErr } = await adminClient
-                        .from("invoices")
-                        .insert({
-                          company_id: company.id,
-                          client_id: clientId || null,
-                          number: draftNum,
-                          type: "invoice",
-                          status: "draft",
-                          issue_date: todayStr,
-                          due_date: dueDate,
-                          total_ht: amount,
-                          total_vat: 0,
-                          total_ttc: amount,
-                          paid_amount: 0,
-                        })
-                        .select()
-                        .single();
-
-                      if (!invInsErr && newInv) {
-                        await adminClient.from("invoice_lines").insert({
-                          invoice_id: newInv.id,
-                          description: description,
-                          quantity: 1,
-                          unit_price: amount,
-                          nature: "service",
-                          position: 0,
-                        });
-
-                        replyText = `📄 *Brouillon de facture prêt pour validation*\n\n` +
-                          `👤 *Client* : ${clientName}\n` +
-                          `💰 *Montant TTC* : ${amount.toFixed(2)} €\n` +
-                          `📝 *Prestation* : ${description}\n\n` +
-                          `⚠️ *Validation requise :*\n` +
-                          `• Répondez **"OUI"** (ou **"VALIDER"**) pour émettre cette facture avec son numéro officiel.\n` +
-                          `• Ou indiquez vos corrections (ex: *"Non, c'est 500€"*).\n` +
-                          `• Répondez **"NON"** (ou **"ANNULER"**) pour supprimer ce brouillon.`;
-                      } else if (invInsErr) {
-                        console.error("Invoice insert error:", invInsErr);
-                      }
                     }
                   }
-                } catch (parseErr) {
-                  console.warn("Error parsing invoice action JSON from Gemini:", parseErr);
                 }
               }
 
