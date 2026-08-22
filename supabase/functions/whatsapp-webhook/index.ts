@@ -154,13 +154,19 @@ Deno.serve(async (req: Request) => {
         body = {};
       }
 
-      const entry = body.entry?.[0];
-      const change = entry?.changes?.[0]?.value;
-      const message = change?.messages?.[0];
-      metaPhoneNumberId = change?.metadata?.phone_number_id || "";
-      fromPhone = message?.from || "";
-      messageType = message?.type || "text";
-      textContent = message?.text?.body || "";
+      let entry: any = null;
+      if (body.is_web_client) {
+        textContent = body.text || body.message || "";
+        fromPhone = "web_client";
+      } else {
+        entry = body.entry?.[0];
+        const change = entry?.changes?.[0]?.value;
+        const message = change?.messages?.[0];
+        metaPhoneNumberId = change?.metadata?.phone_number_id || "";
+        fromPhone = message?.from || "";
+        messageType = message?.type || "text";
+        textContent = message?.text?.body || "";
+      }
 
       if (messageType === "audio" || messageType === "voice") {
         const mediaId = message?.audio?.id || message?.voice?.id;
@@ -266,16 +272,17 @@ Deno.serve(async (req: Request) => {
     if (!company) {
       replyText = `👋 Bonjour ! Votre entreprise n'est pas encore identifiée.\n\nConnectez-vous sur https://bylz.fr/settings et renseignez votre numéro de téléphone dans les paramètres pour activer l'assistant IA !`;
     } else {
-      // Check if user has PRO plan
+      // Check if user has PRO plan or is Admin
       let isUserPro = true;
       if (company.user_id) {
         const { data: profile } = await adminClient
           .from("profiles")
-          .select("plan")
+          .select("plan, is_admin, role")
           .eq("id", company.user_id)
           .single();
         const userPlan = profile?.plan || "starter";
-        isUserPro = userPlan === "pro" || userPlan === "unlimited";
+        const isAdmin = profile?.is_admin === true || (profile as any)?.role === "admin";
+        isUserPro = userPlan === "pro" || userPlan === "solo" || userPlan === "unlimited" || isAdmin;
       }
 
       if (!isUserPro) {
