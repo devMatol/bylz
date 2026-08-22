@@ -235,45 +235,59 @@ export function LandingPage() {
           </div>
         </section>
 
-        {/* TWO PILLARS SECTION (WITH INTERACTIVE LIVE WIDGETS) */}
-        <section id="services" className="py-28 space-y-28">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-28">
+        {/* TWO PILLARS & LIVE DEMO SECTION */}
+        <section id="services" className="py-24 space-y-24">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-24">
 
-            {/* Pillar 1: Facturation sans friction */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
-              <div className="lg:col-span-6 space-y-6">
-                <div className="w-12 h-12 rounded-card bg-primary/20 flex items-center justify-center text-primary bylz-glow-primary">
-                  <FileText className="w-6 h-6" />
-                </div>
+            {/* Pillar 1: Facturation & Live Interactive Demo */}
+            <div className="space-y-8">
+              <div className="text-center max-w-3xl mx-auto space-y-3">
+                <span className="px-3 py-1 rounded-pill bg-primary/15 text-primary text-xs font-black uppercase tracking-wider">
+                  ⚡ Démo Interactive Sans Inscription
+                </span>
                 <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-text">
-                  Facturation sans friction
+                  Testez la création de facture 1-clic en direct
                 </h2>
-                <p className="text-muted text-base leading-relaxed font-normal">
-                  Créez des devis et factures d'aspect ultra-professionnel en quelques secondes. Bylz s'occupe du format légal et de la conformité sans que vous n'ayez à y penser.
+                <p className="text-sm text-muted font-normal">
+                  Remplissez les champs ci-dessous pour générer instantanément votre prévisualisation de facture conforme Factur-X 2026.
                 </p>
-                <ul className="space-y-3.5 text-sm font-semibold text-text">
-                  <li className="flex items-center space-x-3">
-                    <CheckCircle2 className="w-5 h-5 text-primary flex-shrink-0" />
-                    <span>Création de devis & factures en moins de 2 minutes</span>
-                  </li>
-                  <li className="flex items-center space-x-3">
-                    <CheckCircle2 className="w-5 h-5 text-primary flex-shrink-0" />
-                    <span>Format Factur-X & télétransmission DGFiP automatique</span>
-                  </li>
-                  <li className="flex items-center space-x-3">
-                    <CheckCircle2 className="w-5 h-5 text-primary flex-shrink-0" />
-                    <span>Relances automatiques des retards de paiement & Liens Stripe</span>
-                  </li>
-                  <li className="flex items-center space-x-3">
-                    <CheckCircle2 className="w-5 h-5 text-primary flex-shrink-0" />
-                    <span>Recherche SIRET automatique pour remplir les clients B2B</span>
-                  </li>
-                </ul>
               </div>
 
-              {/* Right Column: Interactive Live Invoice Builder */}
-              <div className="lg:col-span-6">
-                <InteractiveInvoiceBuilder />
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+                <div className="lg:col-span-6 space-y-6">
+                  <div className="w-12 h-12 rounded-card bg-primary/20 flex items-center justify-center text-primary bylz-glow-primary">
+                    <FileText className="w-6 h-6" />
+                  </div>
+                  <h3 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-text">
+                    Facturation Factur-X & Devis 2026
+                  </h3>
+                  <p className="text-muted text-base leading-relaxed font-normal">
+                    Créez des devis et factures d'aspect ultra-professionnel en quelques secondes. Bylz s'occupe du format légal et de la conformité sans que vous n'ayez à y penser.
+                  </p>
+                  <ul className="space-y-3.5 text-sm font-semibold text-text">
+                    <li className="flex items-center space-x-3">
+                      <CheckCircle2 className="w-5 h-5 text-primary flex-shrink-0" />
+                      <span>Création de devis & factures en moins de 2 minutes</span>
+                    </li>
+                    <li className="flex items-center space-x-3">
+                      <CheckCircle2 className="w-5 h-5 text-primary flex-shrink-0" />
+                      <span>Format normé Factur-X & télétransmission DGFiP automatique</span>
+                    </li>
+                    <li className="flex items-center space-x-3">
+                      <CheckCircle2 className="w-5 h-5 text-primary flex-shrink-0" />
+                      <span>Relances automatiques des retards de paiement & Liens de paiement Stripe</span>
+                    </li>
+                    <li className="flex items-center space-x-3">
+                      <CheckCircle2 className="w-5 h-5 text-primary flex-shrink-0" />
+                      <span>Recherche SIRET automatique pour remplir les données clients B2B</span>
+                    </li>
+                  </ul>
+                </div>
+
+                {/* Right Column: Interactive Live Invoice Builder */}
+                <div className="lg:col-span-6">
+                  <InteractiveInvoiceBuilder />
+                </div>
               </div>
             </div>
 
@@ -290,7 +304,7 @@ export function LandingPage() {
                   <TrendingUp className="w-6 h-6" />
                 </div>
                 <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-text">
-                  Pilotage fiscal en temps réel
+                  Pilotage fiscal & Cotisations URSSAF
                 </h2>
                 <p className="text-muted text-base leading-relaxed font-normal">
                   Ne soyez plus jamais surpris par les plafonds de TVA ou les appels de cotisations URSSAF. Bylz calcule vos charges à chaque euro encaissé.
@@ -313,6 +327,65 @@ export function LandingPage() {
                     <span>Simulation de l'Impôt sur le Revenu selon votre TMI</span>
                   </li>
                 </ul>
+              </div>
+            </div>
+
+            {/* Pillar 3: Assistant IA WhatsApp & Synchro Bancaire */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+              <div className="lg:col-span-6 space-y-6">
+                <div className="w-12 h-12 rounded-card bg-emerald-500/20 flex items-center justify-center text-emerald-400 font-bold">
+                  🤖
+                </div>
+                <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-text">
+                  Assistant IA WhatsApp & Synchro Bancaire
+                </h2>
+                <p className="text-muted text-base leading-relaxed font-normal">
+                  Dictez vos factures à la voix sur WhatsApp et synchronisez automatiquement vos comptes bancaires via Enable Banking DSP2.
+                </p>
+                <ul className="space-y-3.5 text-sm font-semibold text-text">
+                  <li className="flex items-center space-x-3">
+                    <CheckCircle2 className="w-5 h-5 text-emerald-400 flex-shrink-0" />
+                    <span>Copilot IA & dictée vocale WhatsApp (Gemini 1.5 Flash Audio)</span>
+                  </li>
+                  <li className="flex items-center space-x-3">
+                    <CheckCircle2 className="w-5 h-5 text-emerald-400 flex-shrink-0" />
+                    <span>Synchronisation bancaire automatique Enable Banking (Sécurisé DSP2)</span>
+                  </li>
+                  <li className="flex items-center space-x-3">
+                    <CheckCircle2 className="w-5 h-5 text-emerald-400 flex-shrink-0" />
+                    <span>Rapprochement 1-clic entre vos virements reçus et vos factures en attente</span>
+                  </li>
+                  <li className="flex items-center space-x-3">
+                    <CheckCircle2 className="w-5 h-5 text-emerald-400 flex-shrink-0" />
+                    <span>Relances automatiques de factures impayées à J+3 et J+15</span>
+                  </li>
+                </ul>
+              </div>
+
+              {/* Showcase Banner Card */}
+              <div className="lg:col-span-6 p-8 rounded-card bg-gradient-to-br from-emerald-950/40 via-card to-card border border-emerald-500/30 space-y-6 shadow-2xl">
+                <div className="flex items-center justify-between">
+                  <span className="px-3 py-1 rounded-pill bg-emerald-500/20 text-emerald-400 text-xs font-black">
+                    Nouveau • Assistant IA Pro ⚡
+                  </span>
+                  <span className="text-xs text-muted font-mono">WhatsApp Connected</span>
+                </div>
+
+                <div className="p-4 rounded-xl bg-bg/80 border border-border space-y-3 font-mono text-xs">
+                  <div className="flex items-start gap-2 text-emerald-400">
+                    <span>🎙️</span>
+                    <p><em>« Crée moi une facture de 400€ pour Client X pour du conseil »</em></p>
+                  </div>
+                  <div className="p-3 rounded-lg bg-surface border border-emerald-500/20 text-text space-y-1">
+                    <p className="font-bold text-emerald-400">🤖 Bylz Copilot :</p>
+                    <p>📄 Brouillon de facture prêt pour validation (Client X • 400.00 € TTC).</p>
+                    <p className="text-[10px] text-muted">Répondez OUI pour émettre avec son N° officiel FAC-2026-008.</p>
+                  </div>
+                </div>
+
+                <Link to="/fonctionnalites" className="inline-flex items-center text-xs font-bold text-emerald-400 hover:underline">
+                  Découvrir toutes les fonctionnalités Pro →
+                </Link>
               </div>
             </div>
 

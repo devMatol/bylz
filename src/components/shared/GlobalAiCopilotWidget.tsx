@@ -7,6 +7,7 @@ import { canUseFeature } from "../../lib/planLimits";
 export function GlobalAiCopilotWidget() {
   const { profile, company } = useAuth();
   const [open, setOpen] = useState(false);
+  const [dismissed, setDismissed] = useState(false);
   const [messages, setMessages] = useState<Array<{ sender: "user" | "ai"; text: string }>>([
     {
       sender: "ai",
@@ -15,6 +16,8 @@ export function GlobalAiCopilotWidget() {
   ]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+
+  if (dismissed) return null;
 
   const isPro = canUseFeature(profile?.plan, "paymentLinks");
 
@@ -45,15 +48,25 @@ export function GlobalAiCopilotWidget() {
   return (
     <>
       {/* Floating Toggle Button */}
-      <button
-        onClick={() => setOpen(!open)}
-        className="fixed bottom-20 md:bottom-6 right-4 sm:right-6 z-40 p-3 bg-accent text-accent-foreground rounded-2xl shadow-xl hover:scale-105 transition-all flex items-center gap-2 font-bold text-xs border border-accent/40"
-        title="Ouvrir l'Assistant IA Bylz Copilot"
-      >
-        <Bot className="w-5 h-5 text-accent-foreground" />
-        <span className="hidden sm:inline">Copilot IA</span>
-        <span className="px-1.5 py-0.5 text-[9px] font-extrabold bg-bg/30 text-accent-foreground rounded-md">PRO ⚡</span>
-      </button>
+      <div className="fixed bottom-24 md:bottom-6 right-4 sm:right-6 z-40 flex items-center gap-1">
+        <button
+          onClick={() => setOpen(!open)}
+          className="p-3 bg-accent text-accent-foreground rounded-2xl shadow-xl hover:scale-105 transition-all flex items-center gap-2 font-bold text-xs border border-accent/40"
+          title="Ouvrir l'Assistant IA Bylz Copilot"
+        >
+          <Bot className="w-5 h-5 text-accent-foreground" />
+          <span className="hidden sm:inline">Copilot IA</span>
+          <span className="px-1.5 py-0.5 text-[9px] font-extrabold bg-bg/30 text-accent-foreground rounded-md">PRO ⚡</span>
+        </button>
+
+        <button
+          onClick={() => setDismissed(true)}
+          className="p-2 bg-surface/90 text-muted hover:text-text rounded-full shadow border border-border/80 text-xs transition-colors"
+          title="Masquer le bouton IA"
+        >
+          <X className="w-3.5 h-3.5" />
+        </button>
+      </div>
 
       {/* Floating Quick Modal */}
       {open && (

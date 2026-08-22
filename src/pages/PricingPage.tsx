@@ -222,7 +222,7 @@ export function PricingPage() {
             </div>
 
             <div className="bg-surface border border-border rounded-card overflow-hidden card-shadow">
-              <div className="overflow-x-auto touch-pan-x">
+              <div className="overflow-x-auto touch-pan-y">
                 <table className="w-full min-w-[550px] text-left border-collapse text-xs">
                   <thead>
                     <tr className="bg-surface-hover border-b border-border text-text font-bold">

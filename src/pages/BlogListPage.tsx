@@ -144,42 +144,57 @@ export function BlogListPage() {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              {filteredArticles.map((article) => (
-                <article
-                  key={article.slug}
-                  className="bg-surface border border-border rounded-2xl p-6 flex flex-col justify-between shadow-sm hover:shadow-md hover:border-brand-primary/40 transition-all group"
-                >
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between text-xs text-muted">
-                      <span className="px-2.5 py-1 rounded-md bg-brand-primary/10 text-brand-primary font-bold">
-                        {article.category}
-                      </span>
-                      <span className="flex items-center gap-1 font-medium">
-                        <Clock className="w-3.5 h-3.5" /> {article.readTime}
-                      </span>
+              {filteredArticles.map((article, idx) => {
+                const colors = [
+                  "from-brand-primary/20 via-brand-primary/10 to-surface",
+                  "from-accent/20 via-accent/10 to-surface",
+                  "from-emerald-500/20 via-emerald-500/10 to-surface",
+                ];
+                const bgGradient = colors[idx % colors.length];
+
+                return (
+                  <article
+                    key={article.slug}
+                    className="bg-surface border border-border rounded-2xl overflow-hidden flex flex-col justify-between shadow-sm hover:shadow-xl hover:border-brand-primary/50 transition-all duration-300 group"
+                  >
+                    {/* Visual Card Top Header */}
+                    <div className={`p-6 bg-gradient-to-br ${bgGradient} border-b border-border/50 relative overflow-hidden`}>
+                      <div className="flex items-center justify-between text-xs mb-3">
+                        <span className="px-2.5 py-1 rounded-full bg-brand-primary/15 text-brand-primary font-black text-[11px] uppercase tracking-wider">
+                          {article.category}
+                        </span>
+                        <span className="flex items-center gap-1 font-bold text-muted text-[11px]">
+                          <Clock className="w-3.5 h-3.5 text-brand-primary" /> {article.readTime}
+                        </span>
+                      </div>
+                      <h2 className="text-lg font-black text-text group-hover:text-brand-primary transition-colors leading-snug line-clamp-2">
+                        <Link to={`/blog/${article.slug}`}>{article.title}</Link>
+                      </h2>
                     </div>
 
-                    <h2 className="text-lg font-bold text-text group-hover:text-brand-primary transition-colors leading-snug">
-                      <Link to={`/blog/${article.slug}`}>{article.title}</Link>
-                    </h2>
+                    {/* Body Excerpt */}
+                    <div className="p-6 space-y-4 flex-1 flex flex-col justify-between">
+                      <p className="text-xs text-muted leading-relaxed line-clamp-3">{article.excerpt}</p>
 
-                    <p className="text-xs text-muted leading-relaxed line-clamp-3">{article.excerpt}</p>
-                  </div>
+                      <div className="pt-4 border-t border-border/50 flex items-center justify-between text-xs">
+                        <div className="flex items-center gap-2">
+                          <div className="w-6 h-6 rounded-full bg-brand-primary/20 text-brand-primary font-black text-[10px] flex items-center justify-center">
+                            BZ
+                          </div>
+                          <span className="text-[11px] font-bold text-muted">Équipe Bylz • {article.date}</span>
+                        </div>
 
-                  <div className="pt-6 mt-6 border-t border-border/50 flex items-center justify-between text-xs">
-                    <span className="flex items-center text-muted">
-                      <Calendar className="w-3.5 h-3.5 mr-1" /> {article.date}
-                    </span>
-                    <Link
-                      to={`/blog/${article.slug}`}
-                      className="font-bold text-brand-primary flex items-center gap-1 hover:gap-2 transition-all"
-                    >
-                      <span>Lire l'article</span>
-                      <ArrowRight className="w-3.5 h-3.5" />
-                    </Link>
-                  </div>
-                </article>
-              ))}
+                        <Link
+                          to={`/blog/${article.slug}`}
+                          className="inline-flex items-center font-extrabold text-brand-primary hover:text-brand-primary-hover group-hover:translate-x-0.5 transition-transform"
+                        >
+                          Lire <ArrowRight className="w-3.5 h-3.5 ml-1" />
+                        </Link>
+                      </div>
+                    </div>
+                  </article>
+                );
+              })}
             </div>
           )}
         </div>
