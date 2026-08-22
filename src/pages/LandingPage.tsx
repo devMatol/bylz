@@ -170,13 +170,13 @@ export function LandingPage() {
                 <div className="pt-4 flex flex-wrap items-center justify-center lg:justify-start gap-3">
                   <span className="flex items-center space-x-2 px-4 py-2 rounded-xl bg-emerald-500/15 text-emerald-400 font-black border border-emerald-500/30 text-xs shadow-lg shadow-emerald-950/20 bylz-glow-accent">
                     <ShieldCheck className="w-4 h-4 text-emerald-400" />
-                    <span>Agréé DGFiP 2026 & E-Reporting Certifié</span>
+                    <span>Conforme Réforme 2026 & E-Reporting DGFiP</span>
                   </span>
                   <span className="flex items-center bg-surface border border-border px-3.5 py-2 rounded-xl text-xs font-bold text-muted">
-                    🔒 Données en France (ISO 27001)
+                    🔒 Données en France (RGPD)
                   </span>
                   <span className="flex items-center bg-surface border border-border px-3.5 py-2 rounded-xl text-xs font-bold text-muted">
-                    ⚡ Prêt en 2 min
+                    ⚡ Configuration en 2 min
                   </span>
                 </div>
               </div>
@@ -189,35 +189,24 @@ export function LandingPage() {
           </div>
         </section>
 
-        {/* SOCIAL PROOF & REGULATORY STRIP */}
+        {/* VALUE & COMPLIANCE STRIP */}
         <section className="bg-surface/90 border-y border-border py-5 backdrop-blur-md">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-6 text-center md:text-left">
-            {/* Social Proof */}
+            {/* Value Proposition */}
             <div className="flex items-center gap-3">
-              <div className="flex -space-x-2 overflow-hidden">
-                <div className="inline-block h-9 w-9 rounded-full ring-2 ring-emerald-500 bg-emerald-700 text-white text-xs font-bold flex items-center justify-center">
-                  JD
-                </div>
-                <div className="inline-block h-9 w-9 rounded-full ring-2 ring-emerald-500 bg-teal-700 text-white text-xs font-bold flex items-center justify-center">
-                  MC
-                </div>
-                <div className="inline-block h-9 w-9 rounded-full ring-2 ring-emerald-500 bg-cyan-700 text-white text-xs font-bold flex items-center justify-center">
-                  AE
-                </div>
-                <div className="inline-block h-9 w-9 rounded-full ring-2 ring-emerald-500 bg-indigo-700 text-white text-xs font-bold flex items-center justify-center">
-                  TR
-                </div>
+              <div className="w-10 h-10 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400 font-bold flex-shrink-0">
+                ⚡
               </div>
               <div className="text-xs text-left">
-                <p className="font-extrabold text-text">+1 200 indépendants & auto-entrepreneurs</p>
-                <p className="text-muted font-medium">simplifient leur facturation et leur fiscalité avec Bylz</p>
+                <p className="font-extrabold text-text">Conçu spécifiquement pour les auto-entrepreneurs & indépendants</p>
+                <p className="text-muted font-medium">Facturation hybride Factur-X, suivi des seuils de TVA et calcul URSSAF automatique</p>
               </div>
             </div>
 
             {/* Regulatory Badge */}
             <div className="flex items-center gap-2.5 px-4 py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-bold shadow-xs">
               <ShieldCheck className="w-4 h-4 text-emerald-400 flex-shrink-0" />
-              <span>Conforme à la Réforme de la Facturation Électronique & E-Reporting 2026</span>
+              <span>Format Factur-X (EN 16931) & Transmissions Réglementaires 2026</span>
             </div>
           </div>
         </section>
