@@ -48,20 +48,20 @@ export function GlobalAiCopilotWidget() {
   return (
     <>
       {/* Floating Toggle Button */}
-      <div className="fixed bottom-24 md:bottom-6 right-4 sm:right-6 z-40 flex items-center gap-1">
+      <div className="fixed bottom-24 md:bottom-6 right-4 sm:right-6 z-40 flex items-center gap-1.5">
         <button
           onClick={() => setOpen(!open)}
-          className="p-3 bg-accent text-accent-foreground rounded-2xl shadow-xl hover:scale-105 transition-all flex items-center gap-2 font-bold text-xs border border-accent/40"
+          className="px-3.5 py-2.5 bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-500 text-white rounded-2xl shadow-xl shadow-emerald-600/20 hover:scale-105 active:scale-95 transition-all flex items-center gap-2 font-black text-xs border border-emerald-400/30 bylz-glow-accent"
           title="Ouvrir l'Assistant IA Bylz Copilot"
         >
-          <Bot className="w-5 h-5 text-accent-foreground" />
-          <span className="hidden sm:inline">Copilot IA</span>
-          <span className="px-1.5 py-0.5 text-[9px] font-extrabold bg-bg/30 text-accent-foreground rounded-md">PRO ⚡</span>
+          <Bot className="w-5 h-5 text-white" />
+          <span className="hidden sm:inline tracking-wide">Copilot IA</span>
+          <span className="px-1.5 py-0.5 text-[9px] font-black bg-black/30 text-emerald-200 rounded-md border border-white/10">PRO ⚡</span>
         </button>
 
         <button
           onClick={() => setDismissed(true)}
-          className="p-2 bg-surface/90 text-muted hover:text-text rounded-full shadow border border-border/80 text-xs transition-colors"
+          className="p-2 bg-card/90 text-muted hover:text-text rounded-full shadow-md border border-border text-xs transition-colors hover:bg-surface-hover"
           title="Masquer le bouton IA"
         >
           <X className="w-3.5 h-3.5" />
