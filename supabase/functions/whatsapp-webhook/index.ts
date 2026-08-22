@@ -144,7 +144,16 @@ Deno.serve(async (req: Request) => {
           audioMimeType = mediaContentType.includes("ogg") ? "audio/ogg" : mediaContentType;
           if (mediaUrl) {
             try {
-              const audRes = await fetch(mediaUrl);
+              const twilioSid = Deno.env.get("TWILIO_ACCOUNT_SID") || "";
+              const twilioToken = Deno.env.get("TWILIO_AUTH_TOKEN") || "";
+              const headers: Record<string, string> = {};
+              if (twilioSid && twilioToken) {
+                headers["Authorization"] = `Basic ${btoa(`${twilioSid}:${twilioToken}`)}`;
+              }
+              const controller = new AbortController();
+              const timeoutId = setTimeout(() => controller.abort(), 5000);
+              const audRes = await fetch(mediaUrl, { headers, signal: controller.signal });
+              clearTimeout(timeoutId);
               if (audRes.ok) {
                 const audBuf = await audRes.arrayBuffer();
                 base64Audio = bufferToBase64(audBuf);
@@ -961,10 +970,14 @@ Sinon, réponds de manière concise, précise et amicale en français sur WhatsA
     console.log("WhatsApp reply generated:", replyText);
 
     if (isTwilio) {
-      const twiML = `<?xml version="1.0" encoding="UTF-8"?>\n<Response>\n  <Message>${replyText.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</Message>\n</Response>`;
+      const cleanReply = (replyText || "Bonjour ! Comment puis-je vous aider ?")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
+      const twiML = `<?xml version="1.0" encoding="UTF-8"?>\n<Response>\n  <Message>${cleanReply}</Message>\n</Response>`;
       return new Response(twiML, {
         status: 200,
-        headers: { ...corsHeaders, "Content-Type": "text/xml" },
+        headers: { ...corsHeaders, "Content-Type": "application/xml; charset=utf-8" },
       });
     }
 
@@ -983,6 +996,15 @@ Sinon, réponds de manière concise, précise et amicale en français sur WhatsA
     );
   } catch (err: any) {
     console.error("WhatsApp Webhook error:", err);
+
+    if (req.headers.get("content-type")?.includes("application/x-www-form-urlencoded")) {
+      const fallbackTwiML = `<?xml version="1.0" encoding="UTF-8"?>\n<Response>\n  <Message>🤖 Desolé, une erreur s'est produite. Réessayez dans un instant.</Message>\n</Response>`;
+      return new Response(fallbackTwiML, {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/xml; charset=utf-8" },
+      });
+    }
+
     return new Response(JSON.stringify({ error: err.message }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
