@@ -12,8 +12,11 @@ const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 const adminClient = createClient(supabaseUrl, serviceKey);
 
 const VERIFY_TOKEN = Deno.env.get("WHATSAPP_VERIFY_TOKEN") || "";
-const APP_SECRET = Deno.env.get("WHATSAPP_APP_SECRET") || "";
 const geminiApiKey = Deno.env.get("GEMINI_API_KEY") || "";
+const WHATSAPP_TOKEN =
+  Deno.env.get("WHATSAPP_TOKEN") ||
+  Deno.env.get("WHATSAPP_ACCESS_TOKEN") ||
+  "EAANpHbOHsisBSZAcVQzSmgmBid5hI5rOMNM2W0nmGah9MMWiA6GbcH1PHZCp13hJNgvJvkGQLSPsgebnEPyot3P7ZC77mwrc2eeApBCfgRIZC0vvSVuerQhT5bQvLLQI6EVSlhyazZBS1hZAzpykfZB2F7Nk5yX8ZBJM2bHfFxAX7pXLrq0hIvRPknA9tyTlNgZDZD";
 
 async function signatureIsValid(bodyText: string, header: string | null): Promise<boolean> {
   if (!APP_SECRET) return true;
