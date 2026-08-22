@@ -43,7 +43,7 @@ export function MarketingFooter() {
 
           {/* Col 3: Outils Fiscaux & Blog */}
           <div className="space-y-3">
-            <h4 className="font-bold text-text text-xs uppercase tracking-wider">Outils & Blog SEO</h4>
+            <h4 className="font-bold text-text text-xs uppercase tracking-wider">Outils & Guides Gratuits</h4>
             <ul className="space-y-2 text-xs font-medium">
               <li>
                 <Link to="/outils/simulateur-urssaf" className="text-text/80 hover:text-brand-primary transition-colors font-bold">

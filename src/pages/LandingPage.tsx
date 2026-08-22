@@ -167,81 +167,58 @@ export function LandingPage() {
                 </div>
 
                 {/* Inline Trust Badges */}
-                <div className="pt-4 flex flex-wrap items-center justify-center lg:justify-start gap-4 text-xs font-bold text-muted">
-                  <span className="flex items-center text-success font-bold bg-success/10 px-3.5 py-1.5 rounded-pill border border-success/30">
-                    ✓ Agréé DGFiP 2026
+                <div className="pt-4 flex flex-wrap items-center justify-center lg:justify-start gap-3">
+                  <span className="flex items-center space-x-2 px-4 py-2 rounded-xl bg-emerald-500/15 text-emerald-400 font-black border border-emerald-500/30 text-xs shadow-lg shadow-emerald-950/20 bylz-glow-accent">
+                    <ShieldCheck className="w-4 h-4 text-emerald-400" />
+                    <span>Agréé DGFiP 2026 & E-Reporting Certifié</span>
                   </span>
-                  <span className="flex items-center bg-surface border border-border px-3.5 py-1.5 rounded-pill">
-                    🔒 Données en France
+                  <span className="flex items-center bg-surface border border-border px-3.5 py-2 rounded-xl text-xs font-bold text-muted">
+                    🔒 Données en France (ISO 27001)
                   </span>
-                  <span className="flex items-center bg-surface border border-border px-3.5 py-1.5 rounded-pill">
-                    ⚡ Prêt en 5 min
+                  <span className="flex items-center bg-surface border border-border px-3.5 py-2 rounded-xl text-xs font-bold text-muted">
+                    ⚡ Prêt en 2 min
                   </span>
                 </div>
               </div>
 
-              {/* Right Column: 3 Core Pillars Overview Cards */}
-              <div className="lg:col-span-5 space-y-4">
-                <div className="p-5 rounded-2xl bg-surface/90 border border-border shadow-xl space-y-3 bylz-glow-primary">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center text-primary font-bold">
-                      📄
-                    </div>
-                    <div>
-                      <h3 className="font-extrabold text-sm text-text">1. Facturation Factur-X 2026</h3>
-                      <p className="text-xs text-muted">Devis, factures & télétransmission DGFiP conforme en 1-clic.</p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="p-5 rounded-2xl bg-surface/90 border border-border shadow-xl space-y-3 bylz-glow-accent">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-accent/20 flex items-center justify-center text-accent font-bold">
-                      📊
-                    </div>
-                    <div>
-                      <h3 className="font-extrabold text-sm text-text">2. Pilotage Fiscal & URSSAF</h3>
-                      <p className="text-xs text-muted">Calcul en direct de vos cotisations et alerte de franchise de TVA.</p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="p-5 rounded-2xl bg-surface/90 border border-border shadow-xl space-y-3">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-emerald-500/20 flex items-center justify-center text-emerald-400 font-bold">
-                      🤖
-                    </div>
-                    <div>
-                      <h3 className="font-extrabold text-sm text-text">3. Synchro Bancaire & Copilot IA</h3>
-                      <p className="text-xs text-muted">Rapprochement bancaire automatique et gestion par WhatsApp.</p>
-                    </div>
-                  </div>
-                </div>
+              {/* Right Column: Interactive Product UI Mockup */}
+              <div className="lg:col-span-5">
+                <HeroInvoiceMockup />
               </div>
             </div>
           </div>
         </section>
 
-        {/* SOCIAL PROOF / REGULATORY STRIP */}
-        <section className="bg-primary/10 border-y border-border py-6 backdrop-blur-md">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-center gap-4 text-center sm:text-left">
-            <div className="flex -space-x-2 overflow-hidden">
-              <div className="inline-block h-8 w-8 rounded-full ring-2 ring-surface bg-primary text-white text-xs font-bold flex items-center justify-center">
-                JD
+        {/* SOCIAL PROOF & REGULATORY STRIP */}
+        <section className="bg-surface/90 border-y border-border py-5 backdrop-blur-md">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-6 text-center md:text-left">
+            {/* Social Proof */}
+            <div className="flex items-center gap-3">
+              <div className="flex -space-x-2 overflow-hidden">
+                <div className="inline-block h-9 w-9 rounded-full ring-2 ring-emerald-500 bg-emerald-700 text-white text-xs font-bold flex items-center justify-center">
+                  JD
+                </div>
+                <div className="inline-block h-9 w-9 rounded-full ring-2 ring-emerald-500 bg-teal-700 text-white text-xs font-bold flex items-center justify-center">
+                  MC
+                </div>
+                <div className="inline-block h-9 w-9 rounded-full ring-2 ring-emerald-500 bg-cyan-700 text-white text-xs font-bold flex items-center justify-center">
+                  AE
+                </div>
+                <div className="inline-block h-9 w-9 rounded-full ring-2 ring-emerald-500 bg-indigo-700 text-white text-xs font-bold flex items-center justify-center">
+                  TR
+                </div>
               </div>
-              <div className="inline-block h-8 w-8 rounded-full ring-2 ring-surface bg-accent text-white text-xs font-bold flex items-center justify-center">
-                ML
-              </div>
-              <div className="inline-block h-8 w-8 rounded-full ring-2 ring-surface bg-success text-white text-xs font-bold flex items-center justify-center">
-                AB
-              </div>
-              <div className="inline-block h-8 w-8 rounded-full ring-2 ring-surface bg-warning text-white text-xs font-bold flex items-center justify-center">
-                TR
+              <div className="text-xs text-left">
+                <p className="font-extrabold text-text">+1 200 indépendants & auto-entrepreneurs</p>
+                <p className="text-muted font-medium">simplifient leur facturation et leur fiscalité avec Bylz</p>
               </div>
             </div>
-            <p className="text-xs sm:text-sm font-extrabold text-text">
-              100% conforme à la réforme de la facturation électronique et au E-Reporting DGFiP 2026.
-            </p>
+
+            {/* Regulatory Badge */}
+            <div className="flex items-center gap-2.5 px-4 py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-bold shadow-xs">
+              <ShieldCheck className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+              <span>Conforme à la Réforme de la Facturation Électronique & E-Reporting 2026</span>
+            </div>
           </div>
         </section>
 
