@@ -339,8 +339,13 @@ Deno.serve(async (req: Request) => {
 Tu réponds par message WhatsApp exclusivement au dirigeant de l'entreprise "${company.legal_name}".
 
 🔒 RÈGLES DE SÉCURITÉ ET D'ISOLATION STRICTES :
-1. Tu es strictly cantonné aux données de l'entreprise "${company.legal_name}".
-2. Tu prépares ou corriger des brouillons de factures pour validation par l'utilisateur.
+1. Tu es strictement cantonné aux données de l'entreprise "${company.legal_name}".
+2. Tu prépares ou corriges des brouillons de factures pour validation par l'utilisateur.
+
+⚡ CAS DES MESSAGES VOCAUX TRÈS COURTS (ex: 1 à 2 secondes) :
+Si l'utilisateur t'envoie une note vocale très courte (ex: "non", "oui", "valider", "annuler") :
+- Si un brouillon est actif et qu'il semble dire "non" ou "annuler", réponds EXCLUSIVEMENT : {"action": "cancel_draft"}
+- Si un brouillon est actif et qu'il semble dire "oui" ou "valider", réponds EXCLUSIVEMENT : {"action": "confirm_draft"}
 
 Voici le contexte financier réel de l'entreprise "${company.legal_name}" :
 - Chiffre d'affaires encaissé : ${totalCa.toFixed(2)} €
@@ -378,7 +383,7 @@ Sinon, réponds de manière concise, précise et amicale en français sur WhatsA
                   data: base64Audio,
                 },
               });
-              contentsParts.push({ text: "Transcris et exécute ce message vocal d'instruction utilisateur." });
+              contentsParts.push({ text: "Transcris très attentivement ce message vocal (même court comme 'non' ou 'oui') et exécute l'action appropriée." });
             } else {
               contentsParts.push({ text: `Message utilisateur : "${textContent}"` });
             }
@@ -700,7 +705,21 @@ Sinon, réponds de manière concise, précise et amicale en français sur WhatsA
               `_Consultez vos tableaux de bord sur https://bylz.fr_`;
 
           } else if (!replyText && (messageType === "audio" || messageType === "voice")) {
-            replyText = `🎙️ *Note vocale reçue !*\n\nJe n'ai pas réussi à extraire l'instruction de votre note vocale. Pouvez-vous répéter votre demande ou l'écrire par texte ?`;
+            if (activeDraft) {
+              const clientName = (activeDraft as any).client?.name || "Client";
+              const amount = Number(activeDraft.total_ttc).toFixed(2);
+              replyText = `🎙️ *Note vocale reçue !*\n\n` +
+                `📄 Vous avez un brouillon de facture en attente pour *${clientName}* (${amount} €).\n\n` +
+                `• Répondez **"OUI"** par texte pour la valider et émettre le PDF.\n` +
+                `• Répondez **"NON"** par texte pour l'annuler.\n` +
+                `• Ou indiquez vos corrections (ex: *"Mets 500€"*).`;
+            } else {
+              replyText = `🎙️ *Note vocale reçue !*\n\n` +
+                `Je n'ai pas décelé d'instruction claire dans ce message vocal. Que souhaitez-vous faire ?\n\n` +
+                `1️⃣ *"Créer une facture de 400€ pour Client X"* (texte ou vocal)\n` +
+                `2️⃣ *"Quel est mon chiffre d'affaires ?"*\n` +
+                `3️⃣ *"Liste mes factures"*`;
+            }
           } else if (!replyText) {
             replyText = `🤖 *Bylz Copilot IA (WhatsApp)*\n\n` +
               `Bonjour ! Comment puis-je vous aider aujourd'hui ?\n\n` +
