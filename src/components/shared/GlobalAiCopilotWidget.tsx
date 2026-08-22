@@ -23,7 +23,15 @@ export function GlobalAiCopilotWidget() {
 
   if (dismissed) return null;
 
-  const isPro = profile?.plan === "pro" || profile?.plan === "solo" || profile?.is_admin === true || (profile as any)?.role === "admin" || canUseFeature(profile?.plan, "fiscalDashboard");
+  const isPro =
+    profile?.is_admin === true ||
+    profile?.admin_role === "super_admin" ||
+    profile?.plan === "pro" ||
+    profile?.plan === "solo" ||
+    (profile?.plan as string) === "unlimited" ||
+    (profile?.plan as string) === "admin" ||
+    canUseFeature(profile?.plan, "fiscalDashboard") ||
+    canUseFeature(profile?.plan, "paymentLinks");
 
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();

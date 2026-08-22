@@ -509,23 +509,39 @@ Sinon, réponds de manière concise, précise et amicale en français sur WhatsA
               contentsParts.push({ text: `Message utilisateur : "${textContent}"` });
             }
 
-            const geminiRes = await fetch(
-              `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiApiKey}`,
-              {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                  system_instruction: {
-                    parts: [{ text: systemPrompt }],
-                  },
-                  contents: [{ role: "user", parts: contentsParts }],
-                }),
-              }
-            );
+            const modelsToTry = ["gemini-2.0-flash", "gemini-1.5-flash", "gemini-1.5-pro"];
+            let rawAiReply = "";
 
-            if (geminiRes.ok) {
-              const geminiData = await geminiRes.json();
-              const rawAiReply = geminiData.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || "";
+            for (const model of modelsToTry) {
+              try {
+                const geminiRes = await fetch(
+                  `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${geminiApiKey}`,
+                  {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                      system_instruction: {
+                        parts: [{ text: systemPrompt }],
+                      },
+                      contents: [{ role: "user", parts: contentsParts }],
+                    }),
+                  }
+                );
+
+                if (geminiRes.ok) {
+                  const geminiData = await geminiRes.json();
+                  rawAiReply = geminiData.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || "";
+                  if (rawAiReply) break;
+                } else {
+                  const errTxt = await geminiRes.text();
+                  console.warn(`Gemini model ${model} returned error ${geminiRes.status}: ${errTxt}`);
+                }
+              } catch (mErr) {
+                console.warn(`Error attempting Gemini model ${model}:`, mErr);
+              }
+            }
+
+            if (rawAiReply) {
               console.log("Raw Gemini AI Reply:", rawAiReply);
 
               const jsonMatch = rawAiReply.match(/\{[\s\S]*?\}/);

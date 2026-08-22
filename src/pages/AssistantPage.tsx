@@ -22,7 +22,15 @@ export function AssistantPage() {
   const [loading, setLoading] = useState(false);
   const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
 
-  const isPro = canUseFeature(profile?.plan, "paymentLinks"); // Pro plan feature check
+  const isPro =
+    profile?.is_admin === true ||
+    profile?.admin_role === "super_admin" ||
+    profile?.plan === "pro" ||
+    profile?.plan === "solo" ||
+    (profile?.plan as string) === "unlimited" ||
+    (profile?.plan as string) === "admin" ||
+    canUseFeature(profile?.plan, "fiscalDashboard") ||
+    canUseFeature(profile?.plan, "paymentLinks");
 
   const handleSend = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
