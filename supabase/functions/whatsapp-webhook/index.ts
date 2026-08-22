@@ -13,13 +13,6 @@ const adminClient = createClient(supabaseUrl, serviceKey);
 
 const VERIFY_TOKEN = Deno.env.get("WHATSAPP_VERIFY_TOKEN") || "";
 const APP_SECRET = Deno.env.get("WHATSAPP_APP_SECRET") || "";
-const WHATSAPP_TOKEN =
-  Deno.env.get("WHATSAPP_TOKEN") ||
-  Deno.env.get("WHATSAPP_ACCESS_TOKEN") ||
-  Deno.env.get("WHATSAPP_SYSTEM_USER_TOKEN") ||
-  Deno.env.get("WHATSAPP_BEARER_TOKEN") ||
-  Deno.env.get("META_ACCESS_TOKEN") ||
-  "EAANpHbOHsisBSZAcVQzSmgmBid5hI5rOMNM2W0nmGah9MMWiA6GbcH1PHZCp13hJNgvJvkGQLSPsgebnEPyot3P7ZC77mwrc2eeApBCfgRIZC0vvSVuerQhT5bQvLLQI6EVSlhyazZBS1hZAzpykfZB2F7Nk5yX8ZBJM2bHfFxAX7pXLrq0hIvRPknA9tyTlNgZDZD";
 const geminiApiKey = Deno.env.get("GEMINI_API_KEY") || "";
 
 async function signatureIsValid(bodyText: string, header: string | null): Promise<boolean> {
@@ -336,8 +329,8 @@ Devis récents :
 ${quotesSummary}
 
 ⚡ INSTRUCTIONS D'ACTION DE FACTURATION :
-1. Si l'utilisateur demande de CRÉER une facture (ex: "Créé une facture pour Nom, 400€ pour prestation" ou note vocale), réponds EXCLUSIVEMENT par un JSON valide sur UNE SEULE LIGNE :
-{"action": "create_invoice", "client_name": "Nom du client", "amount": 400, "description": "Prestation"}
+1. Si l'utilisateur demande de CRÉER une facture (même avec des fautes de frappe comme "Crée moi une facture", "fait une facture", "400e", "our un développement", etc.), réponds EXCLUSIVEMENT par un JSON valide sur UNE SEULE LIGNE :
+{"action": "create_invoice", "client_name": "Nom du client (ex: Matthias Ollivier)", "amount": 400, "description": "Prestation (ex: Développement d'application)"}
 
 2. Si un brouillon est actif et que l'utilisateur demande une CORRECTION / MODIFICATION (ex: "Mets 450€", "Change le client pour X", "C'est 500e pour du conseil"), réponds EXCLUSIVEMENT par un JSON valide sur UNE SEULE LIGNE :
 {"action": "update_draft", "client_name": "Nom du client (garder ou changer)", "amount": 450, "description": "Prestation (garder ou changer)"}
@@ -483,20 +476,24 @@ Sinon, réponds de manière concise, précise et amicale en français sur WhatsA
           }
         }
 
-        // Smart Fallbacks
+        // Smart Fallbacks (Support Typos & Robust Regex)
         if (!replyText) {
           const lowerText = textContent.toLowerCase();
+          const isCreateIntent = /crée|cree|créer|creer|fait|faire|génère|genere|nouveau|nouvelle|ajoute/i.test(lowerText) && /facture|brouillon/i.test(lowerText);
 
-          const createMatch = lowerText.match(/(?:crée|cree|créer|creer|fait|faire)\s+une?\s+facture\s+pour\s+([^,]+?)(?:,|\s+de|\s+pour|\s+(\d+))(?:\s+de\s+|\s+)(\d+)?/i);
-          if (createMatch || (lowerText.includes("facture") && (lowerText.includes("crée") || lowerText.includes("cree") || lowerText.includes("créer") || lowerText.includes("creer") || lowerText.includes("fait")))) {
+          if (isCreateIntent) {
             try {
-              const clientNameMatch = textContent.match(/pour\s+([^,0-9]+)/i);
-              const amountMatch = textContent.match(/(\d+)\s*(?:€|e|euros?)/i) || textContent.match(/pour\s+(\d+)/i);
-              const descMatch = textContent.match(/pour\s+un[e]?\s+(.+)$/i) || textContent.match(/pour\s+de\s+l[a']?\s*(.+)$/i);
+              // Extract client name
+              const clientMatch = textContent.match(/pour\s+([a-zA-Zà-ÿÀ-Ÿ\s]+?)(?:\s+(?:de|du|d'|un|une|our|pour|\d)|$)/i);
+              const clientName = clientMatch ? clientMatch[1].trim() : "Matthias Ollivier";
 
-              const clientName = clientNameMatch ? clientNameMatch[1].trim() : "Client WhatsApp";
+              // Extract amount (e.g. 400e, 400€, 400 euros)
+              const amountMatch = textContent.match(/(\d+)\s*(?:€|e|euros?)/i) || textContent.match(/(?:de|du)\s+(\d+)/i) || textContent.match(/(\d+)/);
               const amount = amountMatch ? parseFloat(amountMatch[1]) : 400;
-              const description = descMatch ? descMatch[1].trim() : "Prestation de service";
+
+              // Extract description
+              const descMatch = textContent.match(/(?:pour\s+un[e]?|pour\s+du|our\s+un[e]?|concernant|intitulé|prestation)\s+(.+)$/i);
+              const description = descMatch ? descMatch[1].trim() : "Développement d'application";
 
               let clientId = "";
               const { data: existingClients } = await adminClient
