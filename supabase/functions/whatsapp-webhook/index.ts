@@ -19,6 +19,37 @@ const WHATSAPP_TOKEN =
   Deno.env.get("WHATSAPP_ACCESS_TOKEN") ||
   "EAANpHbOHsisBSZAcVQzSmgmBid5hI5rOMNM2W0nmGah9MMWiA6GbcH1PHZCp13hJNgvJvkGQLSPsgebnEPyot3P7ZC77mwrc2eeApBCfgRIZC0vvSVuerQhT5bQvLLQI6EVSlhyazZBS1hZAzpykfZB2F7Nk5yX8ZBJM2bHfFxAX7pXLrq0hIvRPknA9tyTlNgZDZD";
 
+async function sendMetaWhatsAppMessage(phoneNumberId: string, toPhone: string, text: string, token: string) {
+  if (!phoneNumberId || !toPhone || !text || !token) return;
+  try {
+    const url = `https://graph.facebook.com/v21.0/${phoneNumberId}/messages`;
+    const res = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        messaging_product: "whatsapp",
+        recipient_type: "individual",
+        to: toPhone,
+        type: "text",
+        text: { body: text },
+      }),
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      console.log(`Successfully sent Meta WhatsApp message to ${toPhone}. Msg ID: ${data?.messages?.[0]?.id}`);
+    } else {
+      const errText = await res.text();
+      console.warn(`Failed to send Meta WhatsApp message. Status: ${res.status}, Error: ${errText}`);
+    }
+  } catch (err) {
+    console.error("Error sending Meta WhatsApp message:", err);
+  }
+}
+
 async function signatureIsValid(bodyText: string, header: string | null): Promise<boolean> {
   if (!APP_SECRET) return true;
   if (!header) return false;
@@ -73,6 +104,7 @@ Deno.serve(async (req: Request) => {
     let isTwilio = false;
     let base64Audio = "";
     let audioMimeType = "audio/ogg";
+    let metaPhoneNumberId = "";
 
     if (contentType.includes("application/x-www-form-urlencoded")) {
       isTwilio = true;
@@ -125,6 +157,7 @@ Deno.serve(async (req: Request) => {
       const entry = body.entry?.[0];
       const change = entry?.changes?.[0]?.value;
       const message = change?.messages?.[0];
+      metaPhoneNumberId = change?.metadata?.phone_number_id || "";
       fromPhone = message?.from || "";
       messageType = message?.type || "text";
       textContent = message?.text?.body || "";
@@ -741,6 +774,11 @@ Sinon, réponds de manière concise, précise et amicale en français sur WhatsA
         status: 200,
         headers: { ...corsHeaders, "Content-Type": "text/xml" },
       });
+    }
+
+    if (fromPhone && replyText) {
+      const phoneNumberId = metaPhoneNumberId || "122107899657443161";
+      await sendMetaWhatsAppMessage(phoneNumberId, fromPhone, replyText, WHATSAPP_TOKEN);
     }
 
     return new Response(
