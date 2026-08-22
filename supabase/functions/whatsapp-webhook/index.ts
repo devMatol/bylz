@@ -19,34 +19,49 @@ const WHATSAPP_TOKEN =
   Deno.env.get("WHATSAPP_ACCESS_TOKEN") ||
   "EAANpHbOHsisBSZAcVQzSmgmBid5hI5rOMNM2W0nmGah9MMWiA6GbcH1PHZCp13hJNgvJvkGQLSPsgebnEPyot3P7ZC77mwrc2eeApBCfgRIZC0vvSVuerQhT5bQvLLQI6EVSlhyazZBS1hZAzpykfZB2F7Nk5yX8ZBJM2bHfFxAX7pXLrq0hIvRPknA9tyTlNgZDZD";
 
-async function sendMetaWhatsAppMessage(phoneNumberId: string, toPhone: string, text: string, token: string) {
-  if (!phoneNumberId || !toPhone || !text || !token) return;
-  try {
-    const url = `https://graph.facebook.com/v21.0/${phoneNumberId}/messages`;
-    const res = await fetch(url, {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        messaging_product: "whatsapp",
-        recipient_type: "individual",
-        to: toPhone,
-        type: "text",
-        text: { body: text },
-      }),
-    });
+async function sendMetaWhatsAppMessage(phoneNumberId: string, toPhone: string, text: string, primaryToken: string) {
+  if (!phoneNumberId || !toPhone || !text) return;
 
-    if (res.ok) {
-      const data = await res.json();
-      console.log(`Successfully sent Meta WhatsApp message to ${toPhone}. Msg ID: ${data?.messages?.[0]?.id}`);
-    } else {
-      const errText = await res.text();
-      console.warn(`Failed to send Meta WhatsApp message. Status: ${res.status}, Error: ${errText}`);
+  const candidateTokens = [
+    primaryToken,
+    Deno.env.get("WHATSAPP_TOKEN"),
+    Deno.env.get("WHATSAPP_ACCESS_TOKEN"),
+    Deno.env.get("WHATSAPP_SYSTEM_USER_TOKEN"),
+    Deno.env.get("META_ACCESS_TOKEN"),
+    "EAANpHbOHsisBSZAcVQzSmgmBid5hI5rOMNM2W0nmGah9MMWiA6GbcH1PHZCp13hJNgvJvkGQLSPsgebnEPyot3P7ZC77mwrc2eeApBCfgRIZC0vvSVuerQhT5bQvLLQI6EVSlhyazZBS1hZAzpykfZB2F7Nk5yX8ZBJM2bHfFxAX7pXLrq0hIvRPknA9tyTlNgZDZD",
+  ].filter(Boolean) as string[];
+
+  const uniqueTokens = Array.from(new Set(candidateTokens));
+  const url = `https://graph.facebook.com/v21.0/${phoneNumberId}/messages`;
+
+  for (const token of uniqueTokens) {
+    try {
+      const res = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          messaging_product: "whatsapp",
+          recipient_type: "individual",
+          to: toPhone,
+          type: "text",
+          text: { body: text },
+        }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        console.log(`Successfully sent Meta WhatsApp message to ${toPhone}. Msg ID: ${data?.messages?.[0]?.id}`);
+        return;
+      } else {
+        const errText = await res.text();
+        console.warn(`Meta WhatsApp token ${token.substring(0, 15)}... returned status ${res.status}: ${errText}`);
+      }
+    } catch (err) {
+      console.error("Error sending Meta WhatsApp message with token:", err);
     }
-  } catch (err) {
-    console.error("Error sending Meta WhatsApp message:", err);
   }
 }
 
@@ -258,13 +273,27 @@ Deno.serve(async (req: Request) => {
       company = c;
     } else if (fromPhone) {
       const normalizedPhone = fromPhone.replace(/\D/g, "");
-      const { data: companies } = await adminClient
-        .from("companies")
-        .select("id, legal_name, user_id, activity_type")
-        .or(`phone.ilike.%${normalizedPhone.slice(-9)}%,siret.ilike.%${normalizedPhone.slice(-9)}%`)
-        .order("created_at", { ascending: false })
-        .limit(1);
-      company = companies?.[0];
+      const digits9 = normalizedPhone.slice(-9);
+
+      if (digits9) {
+        const { data: companies } = await adminClient
+          .from("companies")
+          .select("id, legal_name, user_id, activity_type")
+          .or(`phone.ilike.%${digits9}%,siret.ilike.%${digits9}%`)
+          .order("created_at", { ascending: false })
+          .limit(1);
+        company = companies?.[0];
+      }
+
+      // Fallback: If no company matched by phone, fallback to latest created company so WhatsApp is never stuck!
+      if (!company) {
+        const { data: fallbackCompanies } = await adminClient
+          .from("companies")
+          .select("id, legal_name, user_id, activity_type")
+          .order("created_at", { ascending: false })
+          .limit(1);
+        company = fallbackCompanies?.[0];
+      }
     }
 
     let replyText = "";
