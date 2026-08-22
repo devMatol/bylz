@@ -158,35 +158,51 @@ Deno.serve(async (req: Request) => {
                 const mediaMeta = await metaMediaRes.json();
                 console.log(`Meta media metadata fetched successfully. URL: ${mediaMeta.url}`);
                 if (mediaMeta.url) {
-                  // Step 1: Initial request to lookaside.fbsbx.com with Bearer token & manual redirect
-                  const fileRes = await fetch(mediaMeta.url, {
-                    headers: {
-                      "Authorization": `Bearer ${token}`,
-                      "User-Agent": "curl/7.64.1",
-                    },
-                    redirect: "manual",
-                  });
+                  // Strategy 1: Fetch with Authorization header & manual 302 redirect tracking
+                  let audBuf: ArrayBuffer | null = null;
+                  try {
+                    const fileRes = await fetch(mediaMeta.url, {
+                      headers: {
+                        "Authorization": `Bearer ${token}`,
+                        "User-Agent": "curl/7.64.1",
+                      },
+                      redirect: "manual",
+                    });
 
-                  let cdnUrl = mediaMeta.url;
-                  if (fileRes.status >= 300 && fileRes.status < 400) {
-                    cdnUrl = fileRes.headers.get("location") || mediaMeta.url;
+                    if (fileRes.status >= 300 && fileRes.status < 400) {
+                      const redirectUrl = fileRes.headers.get("location") || fileRes.headers.get("Location");
+                      if (redirectUrl) {
+                        const cdnRes = await fetch(redirectUrl, {
+                          headers: { "User-Agent": "curl/7.64.1" },
+                        });
+                        if (cdnRes.ok) audBuf = await cdnRes.arrayBuffer();
+                      }
+                    } else if (fileRes.ok) {
+                      audBuf = await fileRes.arrayBuffer();
+                    }
+                  } catch (err1) {
+                    console.warn("Strategy 1 manual redirect download error:", err1);
                   }
 
-                  // Step 2: Fetch final CDN URL WITHOUT Authorization header (AWS S3 rejects Facebook Bearer tokens)
-                  const cdnRes = (fileRes.status === 200) ? fileRes : await fetch(cdnUrl, {
-                    headers: {
-                      "User-Agent": "curl/7.64.1",
-                    },
-                  });
+                  // Strategy 2: Fetch with access_token query param
+                  if (!audBuf) {
+                    try {
+                      const urlWithParam = mediaMeta.url.includes("?")
+                        ? `${mediaMeta.url}&access_token=${token}`
+                        : `${mediaMeta.url}?access_token=${token}`;
+                      const paramRes = await fetch(urlWithParam, {
+                        headers: { "User-Agent": "curl/7.64.1" },
+                      });
+                      if (paramRes.ok) audBuf = await paramRes.arrayBuffer();
+                    } catch (err2) {
+                      console.warn("Strategy 2 query param download error:", err2);
+                    }
+                  }
 
-                  if (cdnRes.ok) {
-                    const audBuf = await cdnRes.arrayBuffer();
+                  if (audBuf && audBuf.byteLength > 0) {
                     base64Audio = bufferToBase64(audBuf);
                     console.log(`Audio file successfully downloaded. Bytes: ${audBuf.byteLength}, Base64 length: ${base64Audio.length}`);
                     break;
-                  } else {
-                    const fileErr = await cdnRes.text();
-                    console.warn(`CDN File download failed for URL ${cdnUrl}. Status: ${cdnRes.status}, Error: ${fileErr}`);
                   }
                 }
               } else {
@@ -374,9 +390,10 @@ Sinon, réponds de manière concise, précise et amicale en français sur WhatsA
 
             const contentsParts: any[] = [];
             if (base64Audio) {
+              const cleanMime = audioMimeType.includes("ogg") ? "audio/ogg" : audioMimeType;
               contentsParts.push({
-                inlineData: {
-                  mimeType: audioMimeType.includes("ogg") ? "audio/ogg" : audioMimeType,
+                inline_data: {
+                  mime_type: cleanMime,
                   data: base64Audio,
                 },
               });
