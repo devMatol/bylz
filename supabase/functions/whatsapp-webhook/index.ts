@@ -366,10 +366,10 @@ Sinon, réponds de manière concise, précise et amicale en français sur WhatsA
               const geminiData = await geminiRes.json();
               const rawAiReply = geminiData.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || "";
 
-              if (rawAiReply.includes('"action": "create_invoice"') || rawAiReply.includes('"action": "update_draft"') || rawAiReply.startsWith('{')) {
+              const jsonMatch = rawAiReply.match(/\{[\s\S]*?\}/);
+              if (jsonMatch) {
                 try {
-                  const cleanJson = rawAiReply.replace(/```json/gi, '').replace(/```/g, '').trim();
-                  const actionObj = JSON.parse(cleanJson);
+                  const actionObj = JSON.parse(jsonMatch[0]);
 
                   if ((actionObj.action === "create_invoice" || actionObj.action === "update_draft") && actionObj.amount) {
                     const clientName = actionObj.client_name || (activeDraft as any)?.client?.name || "Client WhatsApp";
@@ -479,7 +479,7 @@ Sinon, réponds de manière concise, précise et amicale en français sur WhatsA
         // Smart Fallbacks (Support Typos & Robust Regex)
         if (!replyText) {
           const lowerText = textContent.toLowerCase();
-          const isCreateIntent = /crée|cree|créer|creer|fait|faire|génère|genere|nouveau|nouvelle|ajoute/i.test(lowerText) && /facture|brouillon/i.test(lowerText);
+          const isCreateIntent = /(?:crée|cree|créer|creer|fait|faire|génère|genere|nouveau|nouvelle|ajoute|émets|emets)/i.test(lowerText);
 
           if (isCreateIntent) {
             try {
@@ -560,7 +560,8 @@ Sinon, réponds de manière concise, précise et amicale en français sur WhatsA
             }
           }
 
-          if (!replyText && (lowerText.includes("liste") || lowerText.includes("mes factures") || lowerText.includes("vos factures") || lowerText.includes("facture"))) {
+          // Strict match for listing invoices only
+          if (!replyText && /(?:liste|lister|mes factures|toutes les factures|voir les factures|montre les factures)/i.test(lowerText)) {
             const invList = (invoices || []).map((i) => {
               const clientName = (i as any).client?.name || "Client";
               const statusLabel = i.status === "paid" ? "✅ Payée" : i.status === "pending" ? "⏳ En attente" : i.status === "draft" ? "📄 Brouillon" : i.status;
