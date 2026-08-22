@@ -39,11 +39,14 @@ Deno.serve(async (req: Request) => {
       });
     }
 
-    const { data: company } = await userClient
+    const { data: companies } = await userClient
       .from("companies")
       .select("id, legal_name")
       .eq("user_id", userData.user.id)
-      .maybeSingle();
+      .order("created_at", { ascending: false })
+      .limit(1);
+
+    const company = companies?.[0];
 
     if (!company) {
       return new Response(JSON.stringify({ error: "Entreprise introuvable" }), {
