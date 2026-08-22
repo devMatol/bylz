@@ -423,61 +423,69 @@ Sinon, réponds de manière concise, précise et amicale en français sur WhatsA
                 try {
                   const actionObj = JSON.parse(jsonMatch[0]);
 
-                  if (actionObj.action === "confirm_draft" && activeDraft) {
-                    const { data: lastInvoices } = await adminClient
-                      .from("invoices")
-                      .select("number")
-                      .eq("company_id", company.id)
-                      .eq("type", "invoice")
-                      .neq("status", "draft")
-                      .order("created_at", { ascending: false })
-                      .limit(1);
+                  if (actionObj.action === "confirm_draft") {
+                    if (activeDraft) {
+                      const { data: lastInvoices } = await adminClient
+                        .from("invoices")
+                        .select("number")
+                        .eq("company_id", company.id)
+                        .eq("type", "invoice")
+                        .neq("status", "draft")
+                        .order("created_at", { ascending: false })
+                        .limit(1);
 
-                    const currentYear = new Date().getFullYear();
-                    let nextNum = 1;
-                    if (lastInvoices?.[0]?.number) {
-                      const numMatch = lastInvoices[0].number.match(/FAC-\d{4}-(\d+)/);
-                      if (numMatch) nextNum = parseInt(numMatch[1], 10) + 1;
+                      const currentYear = new Date().getFullYear();
+                      let nextNum = 1;
+                      if (lastInvoices?.[0]?.number) {
+                        const numMatch = lastInvoices[0].number.match(/FAC-\d{4}-(\d+)/);
+                        if (numMatch) nextNum = parseInt(numMatch[1], 10) + 1;
+                      }
+                      const officialNum = `FAC-${currentYear}-${String(nextNum).padStart(3, '0')}`;
+
+                      const todayStr = new Date().toISOString().split('T')[0];
+                      const dueDate = new Date(Date.now() + 30 * 24 * 3600 * 1000).toISOString().split('T')[0];
+
+                      await adminClient
+                        .from("invoices")
+                        .update({
+                          number: officialNum,
+                          status: "pending",
+                          issue_date: todayStr,
+                          due_date: dueDate,
+                        })
+                        .eq("id", activeDraft.id);
+
+                      const clientName = (activeDraft as any).client?.name || "Client";
+
+                      const { data: activeLines } = await adminClient
+                        .from("invoice_lines")
+                        .select("description")
+                        .eq("invoice_id", activeDraft.id)
+                        .limit(1);
+
+                      const desc = activeLines?.[0]?.description || "Prestation de service";
+
+                      replyText = `✅ *Facture ${officialNum} validée et émise avec succès !*\n\n` +
+                        `👤 *Client* : ${clientName}\n` +
+                        `💰 *Montant TTC* : ${Number(activeDraft.total_ttc).toFixed(2)} €\n` +
+                        `📝 *Prestation* : ${desc}\n` +
+                        `⏳ *Échéance* : ${dueDate}\n\n` +
+                        `_Retrouvez ou téléchargez le PDF de votre facture sur https://bylz.fr/invoices?v=2_`;
+                    } else {
+                      replyText = `⚠️ *Aucun brouillon de facture en attente de validation.*\n\nPour créer une facture, demandez par exemple : *"Créer une facture de 400€ pour Client X"* !`;
                     }
-                    const officialNum = `FAC-${currentYear}-${String(nextNum).padStart(3, '0')}`;
 
-                    const todayStr = new Date().toISOString().split('T')[0];
-                    const dueDate = new Date(Date.now() + 30 * 24 * 3600 * 1000).toISOString().split('T')[0];
+                  } else if (actionObj.action === "cancel_draft") {
+                    if (activeDraft) {
+                      await adminClient
+                        .from("invoices")
+                        .delete()
+                        .eq("id", activeDraft.id);
 
-                    await adminClient
-                      .from("invoices")
-                      .update({
-                        number: officialNum,
-                        status: "pending",
-                        issue_date: todayStr,
-                        due_date: dueDate,
-                      })
-                      .eq("id", activeDraft.id);
-
-                    const clientName = (activeDraft as any).client?.name || "Client";
-
-                    const { data: activeLines } = await adminClient
-                      .from("invoice_lines")
-                      .select("description")
-                      .eq("invoice_id", activeDraft.id)
-                      .limit(1);
-
-                    const desc = activeLines?.[0]?.description || "Prestation de service";
-
-                    replyText = `✅ *Facture ${officialNum} validée et émise avec succès !*\n\n` +
-                      `👤 *Client* : ${clientName}\n` +
-                      `💰 *Montant TTC* : ${Number(activeDraft.total_ttc).toFixed(2)} €\n` +
-                      `📝 *Prestation* : ${desc}\n` +
-                      `⏳ *Échéance* : ${dueDate}\n\n` +
-                      `_Retrouvez ou téléchargez le PDF de votre facture sur https://bylz.fr/invoices?v=2_`;
-
-                  } else if (actionObj.action === "cancel_draft" && activeDraft) {
-                    await adminClient
-                      .from("invoices")
-                      .delete()
-                      .eq("id", activeDraft.id);
-
-                    replyText = `❌ *Création annulée.* Le brouillon de facture a été supprimé sans émettre de numéro officiel.`;
+                      replyText = `❌ *Création annulée.* Le brouillon de facture a été supprimé sans émettre de numéro officiel.`;
+                    } else {
+                      replyText = `❌ *Aucun brouillon de facture à annuler.* Toutes vos factures actuelles sont enregistrées et sécurisées.`;
+                    }
 
                   } else if ((actionObj.action === "create_invoice" || actionObj.action === "update_draft") && actionObj.amount) {
                     const clientName = actionObj.client_name || (activeDraft as any)?.client?.name || "Client WhatsApp";
