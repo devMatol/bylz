@@ -47,8 +47,8 @@ export function GlobalAiCopilotWidget() {
 
   return (
     <>
-      {/* Floating Toggle Button */}
-      <div className="fixed bottom-24 md:bottom-6 right-4 sm:right-6 z-40 flex items-center gap-1.5">
+      {/* Floating Toggle Button (Desktop only - hidden on mobile) */}
+      <div className="hidden md:flex fixed bottom-6 right-6 z-40 items-center gap-1.5">
         <button
           onClick={() => setOpen(!open)}
           className="px-3.5 py-2.5 bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-500 text-white rounded-2xl shadow-xl shadow-emerald-600/20 hover:scale-105 active:scale-95 transition-all flex items-center gap-2 font-black text-xs border border-emerald-400/30 bylz-glow-accent"
