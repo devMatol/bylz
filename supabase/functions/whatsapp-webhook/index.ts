@@ -257,9 +257,6 @@ Deno.serve(async (req: Request) => {
     } else {
       const lowerInput = textContent.toLowerCase().trim();
 
-      const isConfirmation = lowerInput === "oui" || lowerInput === "valider" || lowerInput === "confirmer" || lowerInput === "ok" || lowerInput.includes("oui valider") || lowerInput.includes("valide");
-      const isCancellation = lowerInput === "non" || lowerInput === "annuler" || lowerInput.includes("non annuler") || lowerInput.includes("annule");
-
       // Check if there is an active draft invoice awaiting validation
       const { data: draftInvoices } = await adminClient
         .from("invoices")
@@ -271,7 +268,60 @@ Deno.serve(async (req: Request) => {
 
       const activeDraft = draftInvoices?.[0];
 
-      if (activeDraft && (isConfirmation || isCancellation)) {
+      const isConfirmation = /^(?:oui|valider|confirmer|ok|d'accord|valide|c'est bon)$/i.test(lowerInput) || /\b(oui|valider|confirmer|valide)\b/i.test(lowerInput);
+      const isCancellation = /^(?:non|annuler|refuser|supprimer|annule)$/i.test(lowerInput) || /\b(non|annuler|refuser|supprimer|annule)\b/i.test(lowerInput);
+
+      const updateAmountMatch = lowerInput.match(/(?:mets?|change|remplace|modifie|mets? à|c'est)\s*(\d+(?:[\.,]\d+)?)\s*(?:€|e|euros?|$)/i) || (activeDraft ? lowerInput.match(/(\d+(?:[\.,]\d+)?)\s*(?:€|e|euros?)/i) : null);
+      const isUpdateIntent = !!(activeDraft && updateAmountMatch);
+
+      if (activeDraft && isUpdateIntent && updateAmountMatch) {
+        const newAmount = parseFloat(updateAmountMatch[1].replace(',', '.'));
+        if (newAmount > 0) {
+          const clientName = (activeDraft as any).client?.name || "Client";
+
+          const { data: activeLines } = await adminClient
+            .from("invoice_lines")
+            .select("description")
+            .eq("invoice_id", activeDraft.id)
+            .limit(1);
+
+          const desc = activeLines?.[0]?.description || "Prestation de service";
+
+          await adminClient
+            .from("invoices")
+            .update({
+              total_ht: newAmount,
+              total_vat: 0,
+              total_ttc: newAmount,
+            })
+            .eq("id", activeDraft.id);
+
+          await adminClient
+            .from("invoice_lines")
+            .delete()
+            .eq("invoice_id", activeDraft.id);
+
+          await adminClient
+            .from("invoice_lines")
+            .insert({
+              invoice_id: activeDraft.id,
+              description: desc,
+              quantity: 1,
+              unit_price: newAmount,
+              nature: "service",
+              position: 0,
+            });
+
+          replyText = `✏️ *Brouillon mis à jour avec vos corrections !*\n\n` +
+            `👤 *Client* : ${clientName}\n` +
+            `💰 *Montant TTC* : ${newAmount.toFixed(2)} €\n` +
+            `📝 *Prestation* : ${desc}\n\n` +
+            `⚠️ *Validation requise :*\n` +
+            `• Répondez **"OUI"** (ou **"VALIDER"**) pour émettre cette facture avec son numéro officiel.\n` +
+            `• Ou indiquez d'autres corrections (ex: *"Mets 600€"*).\n` +
+            `• Répondez **"NON"** pour annuler.`;
+        }
+      } else if (activeDraft && (isConfirmation || isCancellation)) {
         if (isConfirmation) {
           const { data: lastInvoices } = await adminClient
             .from("invoices")
