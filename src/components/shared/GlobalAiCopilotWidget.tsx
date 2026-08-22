@@ -68,11 +68,11 @@ export function GlobalAiCopilotWidget() {
         </button>
       </div>
 
-      {/* Floating Quick Modal */}
+      {/* Quick Copilot Modal (Fullscreen on Mobile, Floating on Desktop) */}
       {open && (
-        <div className="fixed bottom-36 md:bottom-20 right-4 sm:right-6 z-50 w-[92vw] sm:w-[380px] h-[460px] bg-card border border-border rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-in fade-in slide-in-from-bottom-5 duration-200">
+        <div className="fixed inset-0 md:inset-auto md:bottom-20 md:right-6 z-50 w-full h-full md:w-[380px] md:h-[480px] bg-card md:border md:border-border md:rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-in fade-in slide-in-from-bottom-5 duration-200">
           {/* Header */}
-          <div className="p-3.5 bg-muted/40 border-b border-border flex items-center justify-between">
+          <div className="p-4 bg-surface border-b border-border flex items-center justify-between">
             <div className="flex items-center gap-2">
               <div className="w-8 h-8 rounded-xl bg-accent text-accent-foreground flex items-center justify-center font-bold text-sm">
                 🤖
@@ -126,7 +126,7 @@ export function GlobalAiCopilotWidget() {
           </div>
 
           {/* Input */}
-          <form onSubmit={handleSend} className="p-2.5 bg-card border-t border-border flex items-center gap-1.5">
+          <form onSubmit={handleSend} className="p-3 pb-6 md:pb-3 bg-surface border-t border-border flex items-center gap-2">
             <input
               type="text"
               value={input}
