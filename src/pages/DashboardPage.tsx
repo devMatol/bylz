@@ -267,7 +267,7 @@ export function DashboardPage() {
       ) : (
         <div className={cn(
           "relative",
-          isBlurred && "overflow-hidden max-h-[calc(100vh-4rem)] -mx-4 md:-mx-10 -mb-20 md:-mb-10"
+          isBlurred && "overflow-hidden max-h-[520px] sm:max-h-[580px] -mx-4 md:-mx-10 -mb-20 md:-mb-10"
         )}>
           <div className={cn("space-y-6 transition-all duration-300", isBlurred && "blur-md pointer-events-none select-none opacity-60 px-4 md:px-10 pt-6")}>
             {/* KPI Cards Row with Unified Subtitles & Equal Heights */}
@@ -570,8 +570,8 @@ export function DashboardPage() {
 
           {/* Centered Upgrade Overlay for Starter */}
           {isBlurred && (
-            <div className="absolute inset-0 z-20 flex items-center justify-center p-4">
-              <div className="bg-surface border border-border rounded-card p-8 max-w-md w-full text-center shadow-2xl space-y-4">
+            <div className="absolute inset-0 z-20 flex items-start sm:items-center justify-center pt-6 sm:pt-0 p-4">
+              <div className="bg-surface/95 backdrop-blur-md border border-accent/40 rounded-card p-6 sm:p-8 max-w-md w-full text-center shadow-2xl space-y-4 bylz-glow-accent">
                 {/* Icon */}
                 <div className="w-14 h-14 rounded-2xl bg-amber-500 flex items-center justify-center mx-auto shadow-lg">
                   <Lock className="w-7 h-7 text-white" />
