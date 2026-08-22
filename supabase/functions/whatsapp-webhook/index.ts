@@ -126,6 +126,7 @@ Deno.serve(async (req: Request) => {
     let base64Audio = "";
     let audioMimeType = "audio/ogg";
     let metaPhoneNumberId = "";
+    let body: any = {};
 
     if (contentType.includes("application/x-www-form-urlencoded")) {
       isTwilio = true;
@@ -177,7 +178,6 @@ Deno.serve(async (req: Request) => {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
-      let body: any = {};
       try {
         body = JSON.parse(bodyText);
       } catch {
