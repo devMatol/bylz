@@ -126,21 +126,30 @@ export function LandingPage() {
 
                 {/* CTAs */}
                 <div className="pt-3 flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4">
-                  <Link to="/essai" className="w-full sm:w-auto">
-                    <Button variant="primary" size="lg" className="w-full sm:w-auto bylz-glow-cta text-base py-4 px-8">
-                      <span>Essayer gratuitement (sans carte bancaire)</span>
-                      <ArrowRight className="w-5 h-5 ml-2 text-accent" />
-                    </Button>
-                  </Link>
+                  {user ? (
+                    <Link to="/dashboard" className="w-full sm:w-auto">
+                      <Button variant="primary" size="lg" className="w-full sm:w-auto bylz-glow-cta text-base py-4 px-8 font-extrabold">
+                        <span>🚀 Accéder à mon Tableau de bord</span>
+                        <ArrowRight className="w-5 h-5 ml-2 text-accent" />
+                      </Button>
+                    </Link>
+                  ) : (
+                    <Link to="/essai" className="w-full sm:w-auto">
+                      <Button variant="primary" size="lg" className="w-full sm:w-auto bylz-glow-cta text-base py-4 px-8">
+                        <span>Essayer gratuitement (sans carte bancaire)</span>
+                        <ArrowRight className="w-5 h-5 ml-2 text-accent" />
+                      </Button>
+                    </Link>
+                  )}
                 </div>
 
                 {/* Ghost Anchor Link */}
                 <div className="pt-2">
                   <a
-                    href="#fonctionnalites"
+                    href="#services"
                     className="inline-flex items-center text-xs font-bold text-muted hover:text-primary transition-colors"
                   >
-                    Découvrir les simulateurs interactifs ↓
+                    Découvrir les 3 piliers de la solution Bylz ↓
                   </a>
                 </div>
 
@@ -158,9 +167,43 @@ export function LandingPage() {
                 </div>
               </div>
 
-              {/* Right Column: Floating 3D CSS Mockup */}
-              <div className="lg:col-span-5">
-                <HeroInvoiceMockup />
+              {/* Right Column: 3 Core Pillars Overview Cards */}
+              <div className="lg:col-span-5 space-y-4">
+                <div className="p-5 rounded-2xl bg-surface/90 border border-border shadow-xl space-y-3 bylz-glow-primary">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center text-primary font-bold">
+                      📄
+                    </div>
+                    <div>
+                      <h3 className="font-extrabold text-sm text-text">1. Facturation Factur-X 2026</h3>
+                      <p className="text-xs text-muted">Devis, factures & télétransmission DGFiP conforme en 1-clic.</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="p-5 rounded-2xl bg-surface/90 border border-border shadow-xl space-y-3 bylz-glow-accent">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-accent/20 flex items-center justify-center text-accent font-bold">
+                      📊
+                    </div>
+                    <div>
+                      <h3 className="font-extrabold text-sm text-text">2. Pilotage Fiscal & URSSAF</h3>
+                      <p className="text-xs text-muted">Calcul en direct de vos cotisations et alerte de franchise de TVA.</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="p-5 rounded-2xl bg-surface/90 border border-border shadow-xl space-y-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-emerald-500/20 flex items-center justify-center text-emerald-400 font-bold">
+                      🤖
+                    </div>
+                    <div>
+                      <h3 className="font-extrabold text-sm text-text">3. Synchro Bancaire & Copilot IA</h3>
+                      <p className="text-xs text-muted">Rapprochement bancaire automatique et gestion par WhatsApp.</p>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -190,7 +233,7 @@ export function LandingPage() {
         </section>
 
         {/* TWO PILLARS SECTION (WITH INTERACTIVE LIVE WIDGETS) */}
-        <section id="fonctionnalites" className="py-28 space-y-28">
+        <section id="services" className="py-28 space-y-28">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-28">
 
             {/* Pillar 1: Facturation sans friction */}

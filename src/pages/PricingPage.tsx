@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, Fragment } from "react";
 import { Link } from "react-router-dom";
 import { Check, X, ArrowRight, Sparkles } from "lucide-react";
 import { SEO } from "../components/seo/SEO";
@@ -234,7 +234,7 @@ export function PricingPage() {
                   </thead>
                   <tbody className="divide-y divide-border">
                     {featureMatrix.map((cat, idx) => (
-                      <tr key={idx} className="contents">
+                      <Fragment key={idx}>
                         <tr className="bg-surface-hover/50">
                           <td colSpan={4} className="p-3.5 font-bold text-primary uppercase text-[11px] tracking-wider">
                             {cat.category}
@@ -266,7 +266,7 @@ export function PricingPage() {
                             </td>
                           </tr>
                         ))}
-                      </tr>
+                      </Fragment>
                     ))}
                   </tbody>
                 </table>

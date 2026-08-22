@@ -47,17 +47,17 @@ export function GlobalAiCopilotWidget() {
       {/* Floating Toggle Button */}
       <button
         onClick={() => setOpen(!open)}
-        className="fixed bottom-6 right-6 z-40 p-3.5 bg-accent text-accent-foreground rounded-2xl shadow-xl hover:scale-105 transition-all flex items-center gap-2.5 font-bold text-xs"
+        className="fixed bottom-20 md:bottom-6 right-4 sm:right-6 z-40 p-3 bg-accent text-accent-foreground rounded-2xl shadow-xl hover:scale-105 transition-all flex items-center gap-2 font-bold text-xs border border-accent/40"
         title="Ouvrir l'Assistant IA Bylz Copilot"
       >
-        <Bot className="w-5 h-5" />
+        <Bot className="w-5 h-5 text-accent-foreground" />
         <span className="hidden sm:inline">Copilot IA</span>
-        <span className="px-1.5 py-0.5 text-[9px] font-extrabold bg-bg/20 text-accent-foreground rounded-md">PRO ⚡</span>
+        <span className="px-1.5 py-0.5 text-[9px] font-extrabold bg-bg/30 text-accent-foreground rounded-md">PRO ⚡</span>
       </button>
 
       {/* Floating Quick Modal */}
       {open && (
-        <div className="fixed bottom-24 right-6 z-50 w-[92vw] sm:w-[380px] h-[480px] bg-card border border-border rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-in fade-in slide-in-from-bottom-5 duration-200">
+        <div className="fixed bottom-36 md:bottom-20 right-4 sm:right-6 z-50 w-[92vw] sm:w-[380px] h-[460px] bg-card border border-border rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-in fade-in slide-in-from-bottom-5 duration-200">
           {/* Header */}
           <div className="p-3.5 bg-muted/40 border-b border-border flex items-center justify-between">
             <div className="flex items-center gap-2">

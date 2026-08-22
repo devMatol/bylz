@@ -5,14 +5,16 @@ interface LogoProps {
   className?: string;
   height?: number;
   showText?: boolean;
+  to?: string;
   onClick?: () => void;
 }
 
 export function Logo({
   variant = "gradient",
   className = "",
-  height = 36,
+  height = 42,
   showText = true,
+  to = "/",
   onClick,
 }: LogoProps) {
   let logoSrc = "/bylz-logo-gradient.svg";
@@ -35,15 +37,15 @@ export function Logo({
 
   return (
     <Link
-      to="/"
+      to={to}
       onClick={onClick}
-      className={`inline-flex items-center gap-2.5 group focus:outline-none select-none ${className}`}
+      className={`inline-flex items-center gap-3 group focus:outline-none select-none ${className}`}
     >
       <img
         src={logoSrc}
-        alt="Bylz Logo"
+        alt="Bylz"
         style={{ height: `${height}px` }}
-        className="w-auto object-contain drop-shadow-sm group-hover:scale-[1.02] transition-transform duration-200"
+        className="w-auto object-contain image-rendering-crisp filter drop-shadow-md group-hover:scale-[1.03] transition-transform duration-200"
       />
     </Link>
   );

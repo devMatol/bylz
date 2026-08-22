@@ -51,7 +51,7 @@ export function Sidebar() {
     <>
       <aside className="hidden md:flex fixed left-0 top-0 bottom-0 w-[280px] bg-bg-sidebar border-r border-border flex-col z-30">
         <div className="flex items-center justify-between px-6 h-16 border-b border-border">
-          <Logo variant="gradient" height={28} />
+          <Logo variant="gradient" height={32} to="/dashboard" />
           {(() => {
             const plan = profile?.plan || "starter";
             const badge = PLAN_BADGE[plan] ?? PLAN_BADGE.starter;
@@ -117,6 +117,16 @@ export function Sidebar() {
 
         {/* Support & Admin link footer strip */}
         <div className="px-4 py-2 space-y-1.5 border-t border-border/60">
+          <Link
+            to="/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="w-full flex items-center gap-2.5 px-3 py-2 rounded text-xs font-bold text-muted hover:text-text hover:bg-surface-hover transition-colors border border-border/50"
+          >
+            <span className="text-sm">🌐</span>
+            <span>Voir le site vitrine (Accueil)</span>
+          </Link>
+
           <button
             type="button"
             onClick={() => setSupportOpen(true)}
