@@ -405,11 +405,27 @@ Sinon, réponds de manière concise, précise et amicale en français sur WhatsA
                         .from("invoices")
                         .update({
                           client_id: clientId || null,
-                          items: [{ description, quantity: 1, unit_price: amount, total_ht: amount, vat_rate: 0 }],
                           total_ht: amount,
+                          total_vat: 0,
                           total_ttc: amount,
                         })
                         .eq("id", activeDraft.id);
+
+                      await adminClient
+                        .from("invoice_lines")
+                        .delete()
+                        .eq("invoice_id", activeDraft.id);
+
+                      await adminClient
+                        .from("invoice_lines")
+                        .insert({
+                          invoice_id: activeDraft.id,
+                          description,
+                          quantity: 1,
+                          unit_price: amount,
+                          nature: "service",
+                          position: 0,
+                        });
 
                       replyText = `✏️ *Brouillon mis à jour avec vos corrections !*\n\n` +
                         `👤 *Client* : ${clientName}\n` +
@@ -433,17 +449,8 @@ Sinon, réponds de manière concise, précise et amicale en français sur WhatsA
                           status: "draft",
                           issue_date: todayStr,
                           due_date: dueDate,
-                          items: [
-                            {
-                              description: description,
-                              quantity: 1,
-                              unit_price: amount,
-                              total_ht: amount,
-                              vat_rate: 0,
-                            },
-                          ],
                           total_ht: amount,
-                          vat_amount: 0,
+                          total_vat: 0,
                           total_ttc: amount,
                           paid_amount: 0,
                         })
@@ -451,6 +458,15 @@ Sinon, réponds de manière concise, précise et amicale en français sur WhatsA
                         .single();
 
                       if (!invInsErr && newInv) {
+                        await adminClient.from("invoice_lines").insert({
+                          invoice_id: newInv.id,
+                          description: description,
+                          quantity: 1,
+                          unit_price: amount,
+                          nature: "service",
+                          position: 0,
+                        });
+
                         replyText = `📄 *Brouillon de facture prêt pour validation*\n\n` +
                           `👤 *Client* : ${clientName}\n` +
                           `💰 *Montant TTC* : ${amount.toFixed(2)} €\n` +
@@ -459,6 +475,8 @@ Sinon, réponds de manière concise, précise et amicale en français sur WhatsA
                           `• Répondez **"OUI"** (ou **"VALIDER"**) pour émettre cette facture avec son numéro officiel.\n` +
                           `• Ou indiquez vos corrections (ex: *"Non, c'est 500€"*).\n` +
                           `• Répondez **"NON"** (ou **"ANNULER"**) pour supprimer ce brouillon.`;
+                      } else if (invInsErr) {
+                        console.error("Invoice insert error:", invInsErr);
                       }
                     }
                   }
@@ -518,7 +536,7 @@ Sinon, réponds de manière concise, précise et amicale en français sur WhatsA
               const todayStr = new Date().toISOString().split('T')[0];
               const dueDate = new Date(Date.now() + 30 * 24 * 3600 * 1000).toISOString().split('T')[0];
 
-              const { data: newInv } = await adminClient
+              const { data: newInv, error: fallbackInsErr } = await adminClient
                 .from("invoices")
                 .insert({
                   company_id: company.id,
@@ -528,24 +546,24 @@ Sinon, réponds de manière concise, précise et amicale en français sur WhatsA
                   status: "draft",
                   issue_date: todayStr,
                   due_date: dueDate,
-                  items: [
-                    {
-                      description: description,
-                      quantity: 1,
-                      unit_price: amount,
-                      total_ht: amount,
-                      vat_rate: 0,
-                    },
-                  ],
                   total_ht: amount,
-                  vat_amount: 0,
+                  total_vat: 0,
                   total_ttc: amount,
                   paid_amount: 0,
                 })
                 .select()
                 .single();
 
-              if (newInv) {
+              if (!fallbackInsErr && newInv) {
+                await adminClient.from("invoice_lines").insert({
+                  invoice_id: newInv.id,
+                  description: description,
+                  quantity: 1,
+                  unit_price: amount,
+                  nature: "service",
+                  position: 0,
+                });
+
                 replyText = `📄 *Brouillon de facture prêt pour validation*\n\n` +
                   `👤 *Client* : ${clientName}\n` +
                   `💰 *Montant TTC* : ${amount.toFixed(2)} €\n` +
@@ -554,6 +572,8 @@ Sinon, réponds de manière concise, précise et amicale en français sur WhatsA
                   `• Répondez **"OUI"** (ou **"VALIDER"**) pour émettre cette facture avec son numéro officiel.\n` +
                   `• Ou indiquez vos corrections (ex: *"Mets 500€"*).\n` +
                   `• Répondez **"NON"** (ou **"ANNULER"**) pour supprimer ce brouillon.`;
+              } else if (fallbackInsErr) {
+                console.error("Fallback invoice insert error:", fallbackInsErr);
               }
             } catch (err) {
               console.warn("Error creating draft invoice in fallback:", err);
@@ -572,7 +592,7 @@ Sinon, réponds de manière concise, précise et amicale en français sur WhatsA
               (invList || "Aucune facture trouvée pour le moment.") +
               `\n\n_Retrouvez toutes vos factures sur https://bylz.fr/invoices?v=2_`;
 
-          } else if (!replyText && (lowerText.includes("ca") || lowerText.includes("chiffre") || lowerText.includes("solde") || lowerText.includes("urssaf") || lowerText.includes("tva"))) {
+          } else if (!replyText && /\b(ca|chiffre|chiffres|solde|urssaf|tva)\b/i.test(lowerText)) {
             replyText = `📊 *Bilan Bylz - ${company.legal_name}*\n\n` +
               `💰 *CA Encaissé* : ${totalCa.toFixed(2)} €\n` +
               `⏳ *En attente de paiement* : ${pendingCa.toFixed(2)} €\n` +
