@@ -99,8 +99,8 @@ export function LandingPage() {
   return (
     <div className="min-h-screen bg-bg text-text selection:bg-primary/20 selection:text-primary relative">
       <SEO
-        title="Bylz : Facturation et pilotage fiscal pour auto-entrepreneurs | Conforme 2026"
-        description="Créez des factures conformes 2026, suivez votre CA et anticipez vos cotisations URSSAF en 2 min/jour. Gratuit sans carte bancaire."
+        title="Bylz : Facturation et pilotage fiscal pour indépendants, micro-entreprises & sociétés | Conforme 2026"
+        description="Créez des factures conformes 2026 (Factur-X), suivez votre CA et anticipez vos cotisations URSSAF & impôts en 2 min/jour. Essai gratuit sans carte bancaire."
         canonical="/"
         jsonLd={[softwareSchema, organizationSchema, faqSchema]}
       />
@@ -198,8 +198,8 @@ export function LandingPage() {
                 ⚡
               </div>
               <div className="text-xs text-left">
-                <p className="font-extrabold text-text">Conçu spécifiquement pour les auto-entrepreneurs & indépendants</p>
-                <p className="text-muted font-medium">Facturation hybride Factur-X, suivi des seuils de TVA et calcul URSSAF automatique</p>
+                <p className="font-extrabold text-text">Conçu pour les indépendants, micro-entreprises & sociétés (SASU, EURL, SAS, SARL)</p>
+                <p className="text-muted font-medium">Facturation hybride Factur-X, suivi des seuils de TVA et calcul URSSAF & fiscal automatique</p>
               </div>
             </div>
 

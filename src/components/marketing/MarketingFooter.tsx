@@ -11,7 +11,7 @@ export function MarketingFooter() {
           <div className="md:col-span-2 space-y-4">
             <Logo variant="gradient" height={32} />
             <p className="text-xs text-text/70 max-w-sm leading-relaxed font-normal">
-              La solution intégrée de facturation conforme Factur-X et de pilotage fiscal automatisé pour les micro-entrepreneurs et indépendants en France.
+              La solution intégrée de facturation conforme Factur-X et de pilotage fiscal automatisé pour les indépendants, micro-entreprises et sociétés (SASU, EURL, SAS, SARL) en France.
             </p>
             <div className="flex items-center space-x-2 text-xs text-emerald-600 dark:text-emerald-400 font-bold">
               <ShieldCheck className="w-4 h-4" />

@@ -13,8 +13,8 @@ const DEFAULT_OG_IMAGE = "https://bylz.fr/og-image.png";
 const staticPages = [
   {
     path: "", // Home
-    title: "Bylz : Facturation et pilotage fiscal pour auto-entrepreneurs | Conforme 2026",
-    description: "Créez des factures conformes 2026 (Factur-X), suivez votre CA et anticipez vos cotisations URSSAF en 2 minutes par jour. Essai gratuit sans carte bancaire.",
+    title: "Bylz : Facturation et pilotage fiscal pour indépendants, micro-entreprises & sociétés | Conforme 2026",
+    description: "Créez des factures conformes 2026 (Factur-X), suivez votre CA et anticipez vos cotisations URSSAF & impôts en 2 minutes par jour. Essai gratuit sans carte bancaire.",
     ogType: "website",
     jsonLd: [
       {
@@ -72,8 +72,8 @@ const staticPages = [
         </nav>
       </header>
       <main style="max-width:1200px;margin:0 auto;padding:4rem 2rem;color:#f8fafc;font-family:system-ui,-apple-system,sans-serif;">
-        <h1 style="font-size:2.5rem;font-weight:900;line-height:1.2;margin-bottom:1.5rem;">Bylz — Facturation & Pilotage Fiscal pour Auto-Entrepreneurs (Conforme 2026)</h1>
-        <p style="font-size:1.25rem;color:#94a3b8;max-width:800px;margin-bottom:2rem;">Créez des factures conformes 2026 (Factur-X), suivez votre chiffre d'affaires en temps réel et anticipez vos cotisations URSSAF en 2 minutes par jour. Essai gratuit sans carte bancaire.</p>
+        <h1 style="font-size:2.5rem;font-weight:900;line-height:1.2;margin-bottom:1.5rem;">Bylz — Facturation & Pilotage Fiscal pour Indépendants, Micro-Entreprises & Sociétés (Conforme 2026)</h1>
+        <p style="font-size:1.25rem;color:#94a3b8;max-width:800px;margin-bottom:2rem;">Créez des factures conformes 2026 (Factur-X), suivez votre chiffre d'affaires en temps réel et anticipez vos cotisations URSSAF & taxes en 2 minutes par jour. Essai gratuit sans carte bancaire.</p>
         <div style="display:flex;gap:1rem;margin-bottom:3rem;">
           <a href="/login" style="background:#059669;color:#fff;padding:0.875rem 1.75rem;border-radius:0.75rem;font-weight:bold;text-decoration:none;">Essayer gratuitement</a>
           <a href="/tarifs" style="background:#1e293b;color:#fff;padding:0.875rem 1.75rem;border-radius:0.75rem;font-weight:bold;text-decoration:none;">Voir les offres</a>
