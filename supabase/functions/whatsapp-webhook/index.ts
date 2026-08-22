@@ -143,9 +143,10 @@ Deno.serve(async (req: Request) => {
         ].filter(Boolean) as string[];
 
         if (mediaId && candidateTokens.length > 0) {
+          console.log(`Starting media download for ID ${mediaId} with ${candidateTokens.length} candidate tokens.`);
           for (const token of candidateTokens) {
             try {
-              console.log(`Attempting media download with token prefix: ${token.substring(0, 10)}...`);
+              console.log(`Attempting media download with token prefix: ${token.substring(0, 15)}...`);
               const metaMediaRes = await fetch(`https://graph.facebook.com/v21.0/${mediaId}`, {
                 headers: {
                   "Authorization": `Bearer ${token}`,
@@ -155,7 +156,7 @@ Deno.serve(async (req: Request) => {
 
               if (metaMediaRes.ok) {
                 const mediaMeta = await metaMediaRes.json();
-                console.log(`Meta media metadata fetched. URL: ${mediaMeta.url}`);
+                console.log(`Meta media metadata fetched successfully. URL: ${mediaMeta.url}`);
                 if (mediaMeta.url) {
                   const authenticatedMediaUrl = mediaMeta.url.includes("?")
                     ? `${mediaMeta.url}&access_token=${token}`
@@ -170,16 +171,16 @@ Deno.serve(async (req: Request) => {
                   if (fileRes.ok) {
                     const audBuf = await fileRes.arrayBuffer();
                     base64Audio = bufferToBase64(audBuf);
-                    console.log(`Audio file downloaded. Bytes: ${audBuf.byteLength}, Base64: ${base64Audio.length}`);
+                    console.log(`Audio file successfully downloaded. Bytes: ${audBuf.byteLength}, Base64 length: ${base64Audio.length}`);
                     break;
                   } else {
                     const fileErr = await fileRes.text();
-                    console.warn(`File download failed. Status: ${fileRes.status}, Error: ${fileErr}`);
+                    console.warn(`File download failed for URL ${authenticatedMediaUrl}. Status: ${fileRes.status}, Error: ${fileErr}`);
                   }
                 }
               } else {
                 const metaErrText = await metaMediaRes.text();
-                console.warn(`Token ${token.substring(0, 10)} failed. Status: ${metaMediaRes.status}, Error: ${metaErrText}`);
+                console.warn(`Token ${token.substring(0, 15)} failed for media ID ${mediaId}. Status: ${metaMediaRes.status}, Error: ${metaErrText}`);
               }
             } catch (err) {
               console.error("Error fetching Meta WhatsApp audio media:", err);
@@ -680,7 +681,7 @@ Sinon, réponds de manière concise, précise et amicale en français sur WhatsA
               `_Consultez vos tableaux de bord sur https://bylz.fr_`;
 
           } else if (!replyText && (messageType === "audio" || messageType === "voice")) {
-            replyText = `🎙️ *Note vocale reçue !*\n\nPour permettre à l'IA d'analyser vos notes vocales, veuillez vérifier la clé \`WHATSAPP_TOKEN\` dans vos secrets Supabase.\n\nVous pouvez également envoyer votre commande par texte (ex: *"Créé une facture de 400€ pour Client X"*).`;
+            replyText = `🎙️ *Note vocale reçue !*\n\nJe n'ai pas réussi à extraire l'instruction de votre note vocale. Pouvez-vous répéter votre demande ou l'écrire par texte ?`;
           } else if (!replyText) {
             replyText = `🤖 *Bylz Copilot IA (WhatsApp)*\n\n` +
               `Bonjour ! Comment puis-je vous aider aujourd'hui ?\n\n` +
