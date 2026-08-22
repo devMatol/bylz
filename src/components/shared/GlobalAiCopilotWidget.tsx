@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import { canUseFeature } from "../../lib/planLimits";
 import { supabase } from "../../lib/supabase";
+import { UpgradeModal } from "./UpgradeModal";
 
 export function GlobalAiCopilotWidget() {
   const { profile, company } = useAuth();
@@ -18,6 +19,8 @@ export function GlobalAiCopilotWidget() {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
 
+  const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
+
   if (dismissed) return null;
 
   const isPro = canUseFeature(profile?.plan, "paymentLinks");
@@ -29,6 +32,19 @@ export function GlobalAiCopilotWidget() {
     const userText = input.trim();
     setInput("");
     setMessages((prev) => [...prev, { sender: "user", text: userText }]);
+
+    if (!isPro) {
+      setMessages((prev) => [
+        ...prev,
+        {
+          sender: "ai",
+          text: "⚡ *L'Assistant IA Bylz Copilot (Web & WhatsApp) est réservé aux abonnés PRO ⚡ !*\n\nPour générer vos factures à la voix, calculer vos cotisations URSSAF et piloter votre activité à distance, passez au Plan PRO !\n\n👉 Cliquez ici ou allez sur la page Tarifs pour débloquer le Plan PRO ⚡."
+        }
+      ]);
+      setUpgradeModalOpen(true);
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -148,6 +164,12 @@ export function GlobalAiCopilotWidget() {
           </form>
         </div>
       )}
+
+      <UpgradeModal
+        open={upgradeModalOpen}
+        onClose={() => setUpgradeModalOpen(false)}
+        feature="paymentLinks"
+      />
     </>
   );
 }

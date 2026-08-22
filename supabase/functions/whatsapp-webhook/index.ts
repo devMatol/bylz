@@ -266,7 +266,24 @@ Deno.serve(async (req: Request) => {
     if (!company) {
       replyText = `👋 Bonjour ! Votre entreprise n'est pas encore identifiée.\n\nConnectez-vous sur https://bylz.fr/settings et renseignez votre numéro de téléphone dans les paramètres pour activer l'assistant IA !`;
     } else {
-      const lowerInput = textContent.toLowerCase().trim();
+      // Check if user has PRO plan
+      let isUserPro = true;
+      if (company.user_id) {
+        const { data: profile } = await adminClient
+          .from("profiles")
+          .select("plan")
+          .eq("id", company.user_id)
+          .single();
+        const userPlan = profile?.plan || "starter";
+        isUserPro = userPlan === "pro" || userPlan === "unlimited";
+      }
+
+      if (!isUserPro) {
+        replyText = `⚡ *Bylz Copilot IA (WhatsApp & Web)*\n\n` +
+          `L'Assistant IA par texte et note vocale est une fonctionnalité exclusive réservée aux membres du **Plan PRO ⚡**.\n\n` +
+          `👉 Rendez-vous sur https://bylz.fr/tarifs pour débloquer votre assistant IA illimité et piloter votre facturation à la voix !`;
+      } else {
+        const lowerInput = textContent.toLowerCase().trim();
 
       // Check if there is an active draft invoice awaiting validation
       const { data: draftInvoices } = await adminClient
@@ -876,6 +893,7 @@ Sinon, réponds de manière concise, précise et amicale en français sur WhatsA
         }
       }
     }
+  }
 
     console.log("WhatsApp reply generated:", replyText);
 
