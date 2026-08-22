@@ -157,7 +157,11 @@ Deno.serve(async (req: Request) => {
                 const mediaMeta = await metaMediaRes.json();
                 console.log(`Meta media metadata fetched. URL: ${mediaMeta.url}`);
                 if (mediaMeta.url) {
-                  const fileRes = await fetch(mediaMeta.url, {
+                  const authenticatedMediaUrl = mediaMeta.url.includes("?")
+                    ? `${mediaMeta.url}&access_token=${token}`
+                    : `${mediaMeta.url}?access_token=${token}`;
+
+                  const fileRes = await fetch(authenticatedMediaUrl, {
                     headers: {
                       "Authorization": `Bearer ${token}`,
                       "User-Agent": "curl/7.64.1",
@@ -168,6 +172,9 @@ Deno.serve(async (req: Request) => {
                     base64Audio = bufferToBase64(audBuf);
                     console.log(`Audio file downloaded. Bytes: ${audBuf.byteLength}, Base64: ${base64Audio.length}`);
                     break;
+                  } else {
+                    const fileErr = await fileRes.text();
+                    console.warn(`File download failed. Status: ${fileRes.status}, Error: ${fileErr}`);
                   }
                 }
               } else {
@@ -255,7 +262,14 @@ Deno.serve(async (req: Request) => {
             .eq("id", activeDraft.id);
 
           const clientName = (activeDraft as any).client?.name || "Client";
-          const desc = activeDraft.items?.[0]?.description || "Prestation de service";
+
+          const { data: activeLines } = await adminClient
+            .from("invoice_lines")
+            .select("description")
+            .eq("invoice_id", activeDraft.id)
+            .limit(1);
+
+          const desc = activeLines?.[0]?.description || "Prestation de service";
 
           replyText = `✅ *Facture ${officialNum} validée et émise avec succès !*\n\n` +
             `👤 *Client* : ${clientName}\n` +
@@ -310,13 +324,13 @@ Deno.serve(async (req: Request) => {
               return `- Devis ${q.number || 'Brouillon'} (${clientName}): ${q.total_ttc}€ [Statut: ${q.status}]`;
             }).join("\n") || "Aucun devis enregistré.";
 
-            const draftContextStr = activeDraft ? `\nBROUILLON ACTIF EN COURS (à corriger ou valider) :\n- Client actuel: ${(activeDraft as any).client?.name || 'Client'}\n- Montant actuel: ${activeDraft.total_ttc} €\n- Prestation actuelle: ${activeDraft.items?.[0]?.description || 'Prestation'}` : '';
+            const draftContextStr = activeDraft ? `\nBROUILLON ACTIF EN COURS (à corriger ou valider) :\n- Client actuel: ${(activeDraft as any).client?.name || 'Client'}\n- Montant actuel: ${activeDraft.total_ttc} €` : '';
 
             const systemPrompt = `Tu es Bylz Copilot, l'assistant IA officiel de facturation et gestion fiscale de l'application Bylz (https://bylz.fr).
 Tu réponds par message WhatsApp exclusivement au dirigeant de l'entreprise "${company.legal_name}".
 
 🔒 RÈGLES DE SÉCURITÉ ET D'ISOLATION STRICTES :
-1. Tu es strictement cantonné aux données de l'entreprise "${company.legal_name}".
+1. Tu es strictly cantonné aux données de l'entreprise "${company.legal_name}".
 2. Tu prépares ou corriger des brouillons de factures pour validation par l'utilisateur.
 
 Voici le contexte financier réel de l'entreprise "${company.legal_name}" :
@@ -337,6 +351,12 @@ ${quotesSummary}
 
 2. Si un brouillon est actif et que l'utilisateur demande une CORRECTION / MODIFICATION (ex: "Mets 450€", "Change le client pour X", "C'est 500e pour du conseil"), réponds EXCLUSIVEMENT par un JSON valide sur UNE SEULE LIGNE :
 {"action": "update_draft", "client_name": "Nom du client (garder ou changer)", "amount": 450, "description": "Prestation (garder ou changer)"}
+
+3. Si un brouillon est actif et que l'utilisateur CONFIRME ou VALIDE (ex: "oui", "valider", "c'est bon", "valide", "d'accord"), réponds EXCLUSIVEMENT :
+{"action": "confirm_draft"}
+
+4. Si un brouillon est actif et que l'utilisateur ANNULE ou REFUSE (ex: "non", "annuler", "refuser", "supprimer"), réponds EXCLUSIVEMENT :
+{"action": "cancel_draft"}
 
 Sinon, réponds de manière concise, précise et amicale en français sur WhatsApp.`;
 
@@ -374,7 +394,63 @@ Sinon, réponds de manière concise, précise et amicale en français sur WhatsA
                 try {
                   const actionObj = JSON.parse(jsonMatch[0]);
 
-                  if ((actionObj.action === "create_invoice" || actionObj.action === "update_draft") && actionObj.amount) {
+                  if (actionObj.action === "confirm_draft" && activeDraft) {
+                    const { data: lastInvoices } = await adminClient
+                      .from("invoices")
+                      .select("number")
+                      .eq("company_id", company.id)
+                      .eq("type", "invoice")
+                      .neq("status", "draft")
+                      .order("created_at", { ascending: false })
+                      .limit(1);
+
+                    const currentYear = new Date().getFullYear();
+                    let nextNum = 1;
+                    if (lastInvoices?.[0]?.number) {
+                      const numMatch = lastInvoices[0].number.match(/FAC-\d{4}-(\d+)/);
+                      if (numMatch) nextNum = parseInt(numMatch[1], 10) + 1;
+                    }
+                    const officialNum = `FAC-${currentYear}-${String(nextNum).padStart(3, '0')}`;
+
+                    const todayStr = new Date().toISOString().split('T')[0];
+                    const dueDate = new Date(Date.now() + 30 * 24 * 3600 * 1000).toISOString().split('T')[0];
+
+                    await adminClient
+                      .from("invoices")
+                      .update({
+                        number: officialNum,
+                        status: "pending",
+                        issue_date: todayStr,
+                        due_date: dueDate,
+                      })
+                      .eq("id", activeDraft.id);
+
+                    const clientName = (activeDraft as any).client?.name || "Client";
+
+                    const { data: activeLines } = await adminClient
+                      .from("invoice_lines")
+                      .select("description")
+                      .eq("invoice_id", activeDraft.id)
+                      .limit(1);
+
+                    const desc = activeLines?.[0]?.description || "Prestation de service";
+
+                    replyText = `✅ *Facture ${officialNum} validée et émise avec succès !*\n\n` +
+                      `👤 *Client* : ${clientName}\n` +
+                      `💰 *Montant TTC* : ${Number(activeDraft.total_ttc).toFixed(2)} €\n` +
+                      `📝 *Prestation* : ${desc}\n` +
+                      `⏳ *Échéance* : ${dueDate}\n\n` +
+                      `_Retrouvez ou téléchargez le PDF de votre facture sur https://bylz.fr/invoices?v=2_`;
+
+                  } else if (actionObj.action === "cancel_draft" && activeDraft) {
+                    await adminClient
+                      .from("invoices")
+                      .delete()
+                      .eq("id", activeDraft.id);
+
+                    replyText = `❌ *Création annulée.* Le brouillon de facture a été supprimé sans émettre de numéro officiel.`;
+
+                  } else if ((actionObj.action === "create_invoice" || actionObj.action === "update_draft") && actionObj.amount) {
                     const clientName = actionObj.client_name || (activeDraft as any)?.client?.name || "Client WhatsApp";
                     const amount = parseFloat(actionObj.amount);
                     const description = actionObj.description || activeDraft?.items?.[0]?.description || "Prestation de service";
