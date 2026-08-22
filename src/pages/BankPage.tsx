@@ -5,7 +5,7 @@ import { BankSyncSection } from "../components/settings/BankSyncSection";
 export function BankPage() {
   return (
     <PageContainer
-      title="Rapprochement Bancaire (Open Banking)"
+      title="Banque & Rapprochement Automatique"
       subtitle="Connectez votre compte pro, synchronisez vos virement réels et rapprochez vos factures en 1-clic"
     >
       <SEO title="Banque & Rapprochement Automatique | Bylz" canonical="/bank" />

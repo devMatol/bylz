@@ -73,7 +73,7 @@ export function MobileDrawer({ isOpen, onClose }: MobileDrawerProps) {
       label: "🏛️ Banque & Synchro",
       path: "/bank",
       icon: Landmark,
-      desc: "Rapprochement bancaire 1-clic Enable Banking",
+      desc: "Rapprochement bancaire automatique 1-clic",
     },
     {
       label: "🔔 Relances Automatiques",

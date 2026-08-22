@@ -340,16 +340,16 @@ export function LandingPage() {
                   Assistant IA WhatsApp & Synchro Bancaire
                 </h2>
                 <p className="text-muted text-base leading-relaxed font-normal">
-                  Dictez vos factures à la voix sur WhatsApp et synchronisez automatiquement vos comptes bancaires via Enable Banking DSP2.
+                  Dictez vos factures à la voix sur WhatsApp et connectez votre compte bancaire pro en toute sécurité.
                 </p>
                 <ul className="space-y-3.5 text-sm font-semibold text-text">
                   <li className="flex items-center space-x-3">
                     <CheckCircle2 className="w-5 h-5 text-emerald-400 flex-shrink-0" />
-                    <span>Copilot IA & dictée vocale WhatsApp (Gemini 1.5 Flash Audio)</span>
+                    <span>Assistant IA personnel & dictée vocale sur WhatsApp</span>
                   </li>
                   <li className="flex items-center space-x-3">
                     <CheckCircle2 className="w-5 h-5 text-emerald-400 flex-shrink-0" />
-                    <span>Synchronisation bancaire automatique Enable Banking (Sécurisé DSP2)</span>
+                    <span>Synchronisation bancaire automatique 100% sécurisée (Normes européennes)</span>
                   </li>
                   <li className="flex items-center space-x-3">
                     <CheckCircle2 className="w-5 h-5 text-emerald-400 flex-shrink-0" />
