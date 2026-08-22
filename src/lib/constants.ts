@@ -81,3 +81,6 @@ export const STATUS_LABELS: Record<string, string> = {
   confirmed: "Confirmé",
   error: "Erreur",
 };
+
+export const WHATSAPP_BOT_NUMBER = (import.meta.env.VITE_WHATSAPP_BOT_NUMBER || "33745892750").replace(/\D/g, "");
+export const WHATSAPP_BOT_LINK = `https://wa.me/${WHATSAPP_BOT_NUMBER}?text=Bonjour%20Bylz%20Copilot`;

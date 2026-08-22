@@ -4,6 +4,7 @@ import { PageContainer } from "../components/layout/PageContainer";
 import { useAuth } from "../contexts/AuthContext";
 import { canUseFeature } from "../lib/planLimits";
 import { supabase } from "../lib/supabase";
+import { WHATSAPP_BOT_LINK } from "../lib/constants";
 import { UpgradeModal } from "../components/shared/UpgradeModal";
 import { Bot, Send, Mic, MessageSquare, Sparkles, CheckCircle2, ShieldCheck, QrCode, Phone, FileText, ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -221,7 +222,7 @@ export function AssistantPage() {
 
             <div className="space-y-2">
               <a
-                href="https://wa.me/33600000000?text=Bonjour%20Bylz%20Copilot"
+                href={WHATSAPP_BOT_LINK}
                 target="_blank"
                 rel="noreferrer"
                 className="w-full py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl flex items-center justify-center gap-2 transition-all shadow-xs"
