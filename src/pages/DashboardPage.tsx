@@ -225,7 +225,7 @@ export function DashboardPage() {
           <div className="flex items-center gap-2 w-full sm:w-auto">
             <button
               type="button"
-              onClick={() => navigate("/onboarding?mode=complete")}
+              onClick={() => navigate("/settings?focus=company")}
               className="flex-1 sm:flex-none text-xs whitespace-nowrap bg-surface text-text border border-border px-3 h-8 rounded-pill font-semibold hover:bg-surface-hover transition-colors"
             >
               Saisir mon CA
