@@ -537,6 +537,8 @@ Deno.serve(async (req: Request) => {
               number: draftNum,
               type: "invoice",
               status: "draft",
+              pa_status: "draft",
+              payment_terms: "30d",
               issue_date: todayStr,
               due_date: dueDate,
               total_ht: amount,
@@ -558,9 +560,13 @@ Deno.serve(async (req: Request) => {
             });
 
             replyText = `📄 *Brouillon de facture de ${amount.toFixed(2)} € créé pour ${clientName} !*\n\n` +
-              `• Répondez **"OUI"** par texte pour la valider et émettre le PDF avec son numéro officiel.\n` +
+              `• Répondez **"OUI"** (ou **"VALIDER"**) par texte pour émettre la facture avec son numéro officiel.\n` +
               `• Répondez **"NON"** par texte pour l'annuler.\n` +
               `• Ou indiquez vos corrections (ex: *"Mets 600€"*).`;
+          } else if (insErr) {
+            console.error("Failed to insert draft invoice:", insErr);
+            replyText = `📄 *Brouillon de facture de ${amount.toFixed(2)} € préparé pour ${clientName} !*\n\n` +
+              `⚠️ Répondez **"OUI"** par texte pour confirmer l'émission de cette facture.`;
           }
         } else if (isCaQuery) {
           const { data: invoices } = await adminClient
@@ -1050,6 +1056,8 @@ Sinon, réponds de manière concise, précise et amicale en français sur WhatsA
                         number: draftNum,
                         type: "invoice",
                         status: "draft",
+                        pa_status: "draft",
+                        payment_terms: "30d",
                         issue_date: todayStr,
                         due_date: dueDate,
                         total_ht: amount,
@@ -1142,6 +1150,8 @@ Sinon, réponds de manière concise, précise et amicale en français sur WhatsA
                   number: draftNum,
                   type: "invoice",
                   status: "draft",
+                  pa_status: "draft",
+                  payment_terms: "30d",
                   issue_date: todayStr,
                   due_date: dueDate,
                   total_ht: amount,
