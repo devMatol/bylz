@@ -290,8 +290,8 @@ Deno.serve(async (req: Request) => {
       const normalizedPhone = fromPhone.replace(/\D/g, "");
       const digits9 = normalizedPhone.slice(-9);
 
-      // 1. Try matching phone or siret on company
       if (digits9) {
+        // Step 1: Match company by phone or siret
         const { data: companies } = await adminClient
           .from("companies")
           .select("id, legal_name, user_id, activity_type")
@@ -299,6 +299,7 @@ Deno.serve(async (req: Request) => {
           .order("created_at", { ascending: false });
 
         if (companies && companies.length > 0) {
+          // If multiple companies exist, prefer the one with a PRO or Admin plan
           for (const c of companies) {
             if (c.user_id) {
               const { data: p } = await adminClient
@@ -317,11 +318,11 @@ Deno.serve(async (req: Request) => {
         }
       }
 
-      // 2. If no phone match, find company owned by matthias or PRO/Admin user
+      // Step 2: Fallback for owner / admin account (Matthias)
       if (!company) {
         const { data: proProfiles } = await adminClient
           .from("profiles")
-          .select("id, email, plan, is_admin")
+          .select("id")
           .or("plan.eq.pro,plan.eq.unlimited,plan.eq.admin,is_admin.eq.true,email.ilike.%matthiasollivier123%,email.ilike.%matthias%")
           .order("created_at", { ascending: false });
 
@@ -340,22 +341,12 @@ Deno.serve(async (req: Request) => {
           }
         }
       }
-
-      // 3. Fallback to latest company
-      if (!company) {
-        const { data: fallbackCompanies } = await adminClient
-          .from("companies")
-          .select("id, legal_name, user_id, activity_type")
-          .order("created_at", { ascending: false })
-          .limit(1);
-        company = fallbackCompanies?.[0];
-      }
     }
 
     let replyText = "";
 
     if (!company) {
-      replyText = `👋 Bonjour ! Votre entreprise n'est pas encore identifiée.\n\nConnectez-vous sur https://bylz.fr/settings et renseignez votre numéro de téléphone dans les paramètres pour activer l'assistant IA !`;
+      replyText = `👋 Bonjour ! Votre numéro n'est pas encore associé à un compte Bylz.\n\nConnectez-vous sur https://bylz.fr/settings et renseignez votre numéro de téléphone dans les Paramètres pour activer votre Assistant IA !`;
     } else {
       // Check if user has PRO plan or is Admin
       let isUserPro = false;
@@ -374,24 +365,6 @@ Deno.serve(async (req: Request) => {
                         userEmail.includes("matthias") ||
                         userEmail.includes("devmatol");
         isUserPro = userPlan === "pro" || userPlan === "unlimited" || userPlan === "admin" || isAdmin;
-      }
-
-      if (!isUserPro && company) {
-        // Guarantee owner/admin profile matching for Matthias
-        const { data: matthiasProfile } = await adminClient
-          .from("profiles")
-          .select("id, plan, is_admin, email")
-          .or("email.ilike.%matthiasollivier123%,email.ilike.%matthias%")
-          .maybeSingle();
-
-        if (matthiasProfile && (company.user_id === matthiasProfile.id || matthiasProfile.is_admin || (matthiasProfile.email || "").includes("matthias"))) {
-          isUserPro = true;
-          // Auto-sync profile plan to 'pro' in DB
-          await adminClient
-            .from("profiles")
-            .update({ plan: "pro", is_admin: true })
-            .eq("id", matthiasProfile.id);
-        }
       }
 
       if (!isUserPro) {
