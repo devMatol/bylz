@@ -336,14 +336,13 @@ Deno.serve(async (req: Request) => {
                 }
               }
             }
-            if (!company) company = companies[0];
           }
         }
       }
 
-      // Step 3: Owner / Admin fallback ONLY if phone matches Matthias's owner phone number (0695105490 / 39202435)
+      // Step 3: Owner / Admin fallback — ALWAYS resolve to Matthias PRO company for owner email/phone
       const isMatthiasPhone = digits9.includes("695105490") || digits9.includes("39202435");
-      if (!company && isMatthiasPhone) {
+      if (!company || isMatthiasPhone) {
         const { data: proProfiles } = await adminClient
           .from("profiles")
           .select("id, email, plan, is_admin")
@@ -361,6 +360,7 @@ Deno.serve(async (req: Request) => {
             if (cList && cList.length > 0) {
               company = cList[0];
               if (fromPhone) {
+                // Bind phone number to Matthias PRO company and profile
                 await adminClient
                   .from("companies")
                   .update({ phone: fromPhone })
@@ -400,13 +400,19 @@ Deno.serve(async (req: Request) => {
                         userEmail.includes("devmatol");
         isUserPro = userPlan === "pro" || userPlan === "unlimited" || userPlan === "admin" || isAdmin;
 
-        if (!isUserPro && (userEmail.includes("matthias") || userEmail.includes("devmatol") || profile?.is_admin)) {
+        if (!isUserPro && (userEmail.includes("matthias") || userEmail.includes("devmatol") || profile?.is_admin || (fromPhone && (fromPhone.includes("695105490") || fromPhone.includes("39202435"))))) {
           isUserPro = true;
-          await adminClient
-            .from("profiles")
-            .update({ plan: "pro", is_admin: true })
-            .eq("id", company.user_id);
+          if (company.user_id) {
+            await adminClient
+              .from("profiles")
+              .update({ plan: "pro", is_admin: true })
+              .eq("id", company.user_id);
+          }
         }
+      }
+
+      if (!isUserPro && (fromPhone.includes("695105490") || fromPhone.includes("39202435"))) {
+        isUserPro = true;
       }
 
       if (!isUserPro) {
