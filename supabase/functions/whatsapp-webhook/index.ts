@@ -317,7 +317,7 @@ Deno.serve(async (req: Request) => {
       replyText = `👋 Bonjour ! Votre entreprise n'est pas encore identifiée.\n\nConnectez-vous sur https://bylz.fr/settings et renseignez votre numéro de téléphone dans les paramètres pour activer l'assistant IA !`;
     } else {
       // Check if user has PRO plan or is Admin
-      let isUserPro = true;
+      let isUserPro = false;
       if (company && company.user_id) {
         const { data: profile } = await adminClient
           .from("profiles")
@@ -325,26 +325,11 @@ Deno.serve(async (req: Request) => {
           .eq("id", company.user_id)
           .maybeSingle();
 
-        const userEmail = (profile?.email || "").toLowerCase();
         const userPlan = profile?.plan || "starter";
         const isAdmin = profile?.is_admin === true ||
                         (profile as any)?.role === "admin" ||
-                        (profile as any)?.admin_role === "super_admin" ||
-                        userEmail.includes("matthias") ||
-                        userEmail.includes("devmatol");
+                        (profile as any)?.admin_role === "super_admin";
         isUserPro = userPlan === "pro" || userPlan === "unlimited" || userPlan === "admin" || isAdmin;
-      }
-
-      if (!isUserPro) {
-        // Double check if Matthias or an Admin account exists in database to avoid blocking the admin owner
-        const { data: adminCheck } = await adminClient
-          .from("profiles")
-          .select("id, plan, is_admin")
-          .or("is_admin.eq.true,admin_role.eq.super_admin,email.ilike.%matthias%,email.ilike.%devmatol%")
-          .limit(1);
-        if (adminCheck && adminCheck.length > 0) {
-          isUserPro = true;
-        }
       }
 
       if (!isUserPro) {
