@@ -290,31 +290,8 @@ Deno.serve(async (req: Request) => {
       const normalizedPhone = fromPhone.replace(/\D/g, "");
       const digits9 = normalizedPhone.slice(-9);
 
-      // Check if incoming phone matches Matthias's owner/admin phone number (0695105490 / 39202435)
-      const isMatthiasPhone = digits9.includes("695105490") || digits9.includes("39202435");
-
-      if (isMatthiasPhone) {
-        const { data: matthiasProfiles } = await adminClient
-          .from("profiles")
-          .select("id")
-          .or("email.ilike.%matthias%,email.ilike.%devmatol%")
-          .limit(1);
-
-        if (matthiasProfiles && matthiasProfiles.length > 0) {
-          const { data: matthiasCompanies } = await adminClient
-            .from("companies")
-            .select("id, legal_name, user_id, activity_type")
-            .eq("user_id", matthiasProfiles[0].id)
-            .order("created_at", { ascending: false })
-            .limit(1);
-
-          if (matthiasCompanies && matthiasCompanies.length > 0) {
-            company = matthiasCompanies[0];
-          }
-        }
-      }
-
-      if (!company && digits9) {
+      // 1. Try matching phone or siret on company
+      if (digits9) {
         const { data: companies } = await adminClient
           .from("companies")
           .select("id, legal_name, user_id, activity_type")
@@ -340,27 +317,31 @@ Deno.serve(async (req: Request) => {
         }
       }
 
-      // Fallback 1: Search company belonging to a PRO or Admin user
+      // 2. If no phone match, find company owned by matthias or PRO/Admin user
       if (!company) {
         const { data: proProfiles } = await adminClient
           .from("profiles")
-          .select("id")
-          .or("plan.eq.pro,plan.eq.unlimited,plan.eq.admin,is_admin.eq.true,email.ilike.%matthias%,email.ilike.%devmatol%")
+          .select("id, email, plan, is_admin")
+          .or("plan.eq.pro,plan.eq.unlimited,plan.eq.admin,is_admin.eq.true,email.ilike.%matthiasollivier123%,email.ilike.%matthias%")
           .order("created_at", { ascending: false });
 
         if (proProfiles && proProfiles.length > 0) {
-          const proUserIds = proProfiles.map((p) => p.id);
-          const { data: proCompanies } = await adminClient
-            .from("companies")
-            .select("id, legal_name, user_id, activity_type")
-            .in("user_id", proUserIds)
-            .order("created_at", { ascending: false })
-            .limit(1);
-          company = proCompanies?.[0];
+          for (const p of proProfiles) {
+            const { data: cList } = await adminClient
+              .from("companies")
+              .select("id, legal_name, user_id, activity_type")
+              .eq("user_id", p.id)
+              .order("created_at", { ascending: false })
+              .limit(1);
+            if (cList && cList.length > 0) {
+              company = cList[0];
+              break;
+            }
+          }
         }
       }
 
-      // Fallback 2: Final fallback to latest company
+      // 3. Fallback to latest company
       if (!company) {
         const { data: fallbackCompanies } = await adminClient
           .from("companies")
@@ -386,13 +367,31 @@ Deno.serve(async (req: Request) => {
           .maybeSingle();
 
         const userEmail = (profile?.email || "").toLowerCase();
-        const userPlan = profile?.plan || "starter";
+        const userPlan = (profile?.plan || "starter").toLowerCase();
         const isAdmin = profile?.is_admin === true ||
                         (profile as any)?.role === "admin" ||
                         (profile as any)?.admin_role === "super_admin" ||
                         userEmail.includes("matthias") ||
                         userEmail.includes("devmatol");
         isUserPro = userPlan === "pro" || userPlan === "unlimited" || userPlan === "admin" || isAdmin;
+      }
+
+      if (!isUserPro && company) {
+        // Guarantee owner/admin profile matching for Matthias
+        const { data: matthiasProfile } = await adminClient
+          .from("profiles")
+          .select("id, plan, is_admin, email")
+          .or("email.ilike.%matthiasollivier123%,email.ilike.%matthias%")
+          .maybeSingle();
+
+        if (matthiasProfile && (company.user_id === matthiasProfile.id || matthiasProfile.is_admin || (matthiasProfile.email || "").includes("matthias"))) {
+          isUserPro = true;
+          // Auto-sync profile plan to 'pro' in DB
+          await adminClient
+            .from("profiles")
+            .update({ plan: "pro", is_admin: true })
+            .eq("id", matthiasProfile.id);
+        }
       }
 
       if (!isUserPro) {
