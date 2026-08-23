@@ -422,16 +422,196 @@ Deno.serve(async (req: Request) => {
       } else {
         const lowerInput = textContent.toLowerCase().trim();
 
-      // Check if there is an active draft invoice awaiting validation
-      const { data: draftInvoices } = await adminClient
-        .from("invoices")
-        .select("*, client:clients(name)")
-        .eq("company_id", company.id)
-        .eq("status", "draft")
-        .order("created_at", { ascending: false })
-        .limit(1);
+        // 1. DIRECT INVOICE CREATION REGEX (e.g. "crée une facture de 500e pour Matthias ollivier", "fait une facture 400€ pour Client X")
+        const createInvMatch = lowerInput.match(/(?:crée?r?|fait|génère?s?|émets?)\s*(?:une?\s*)?(?:facture|brouillon)\s*(?:de\s*)?(\d+(?:[\.,]\d+)?)\s*(?:€|e|euros?)?\s*(?:pour\s*)?(.+)?/i);
 
-      const activeDraft = draftInvoices?.[0];
+        // 2. DIRECT QUOTE CREATION REGEX (e.g. "crée un devis de 400e pour Client X")
+        const createQuoteMatch = lowerInput.match(/(?:crée?r?|fait|génère?s?)\s*(?:un\s*)?devis\s*(?:de\s*)?(\d+(?:[\.,]\d+)?)\s*(?:€|e|euros?)?\s*(?:pour\s*)?(.+)?/i);
+
+        // 3. DIRECT CA / URSSAF SUMMARY REGEX
+        const isCaQuery = /\b(ca|chiffre d'affaires|bilan|cotisations?|urssaf|revenus?)\b/i.test(lowerInput) && !createInvMatch && !createQuoteMatch;
+
+        // 4. DIRECT INVOICE LIST REGEX
+        const isListQuery = /\b(liste|factures|mes factures|facturation)\b/i.test(lowerInput) && !createInvMatch && !createQuoteMatch && !isCaQuery;
+
+        if (createQuoteMatch && createQuoteMatch[1]) {
+          const amount = parseFloat(createQuoteMatch[1].replace(',', '.'));
+          let rawClient = (createQuoteMatch[2] || "").trim();
+          rawClient = rawClient.replace(/^(?:pour|a|à)\s+/i, "").trim();
+          const clientName = rawClient || "Client WhatsApp";
+
+          let clientId = "";
+          const { data: existingClients } = await adminClient
+            .from("clients")
+            .select("id, name")
+            .eq("company_id", company.id)
+            .ilike("name", `%${clientName}%`)
+            .limit(1);
+
+          if (existingClients && existingClients.length > 0) {
+            clientId = existingClients[0].id;
+          } else {
+            const { data: newClient } = await adminClient
+              .from("clients")
+              .insert({ company_id: company.id, name: clientName })
+              .select("id")
+              .single();
+            clientId = newClient?.id || "";
+          }
+
+          const quoteNum = `DEV-${new Date().getFullYear()}-${Math.floor(100 + Math.random() * 900)}`;
+          const todayStr = new Date().toISOString().split('T')[0];
+          const valDate = new Date(Date.now() + 30 * 24 * 3600 * 1000).toISOString().split('T')[0];
+
+          const { data: newQ, error: qErr } = await adminClient
+            .from("quotes")
+            .insert({
+              company_id: company.id,
+              client_id: clientId || null,
+              number: quoteNum,
+              status: "sent",
+              issue_date: todayStr,
+              validity_date: valDate,
+              total_ht: amount,
+              total_vat: 0,
+              total_ttc: amount,
+            })
+            .select()
+            .single();
+
+          if (!qErr && newQ) {
+            await adminClient.from("quote_lines").insert({
+              quote_id: newQ.id,
+              description: "Prestation de service",
+              quantity: 1,
+              unit_price: amount,
+            });
+
+            replyText = `📋 *Devis ${quoteNum} généré avec succès !*\n\n` +
+              `👤 *Client* : ${clientName}\n` +
+              `💰 *Montant TTC* : ${amount.toFixed(2)} €\n` +
+              `📝 *Prestation* : Prestation de service\n\n` +
+              `_Retrouvez vos devis sur https://bylz.fr_`;
+          }
+        } else if (createInvMatch && createInvMatch[1]) {
+          const amount = parseFloat(createInvMatch[1].replace(',', '.'));
+          let rawClient = (createInvMatch[2] || "").trim();
+          rawClient = rawClient.replace(/^(?:pour|a|à)\s+/i, "").trim();
+          const clientName = rawClient || "Matthias Ollivier";
+
+          let clientId = "";
+          const { data: existingClients } = await adminClient
+            .from("clients")
+            .select("id, name")
+            .eq("company_id", company.id)
+            .ilike("name", `%${clientName}%`)
+            .limit(1);
+
+          if (existingClients && existingClients.length > 0) {
+            clientId = existingClients[0].id;
+          } else {
+            const { data: newClient } = await adminClient
+              .from("clients")
+              .insert({ company_id: company.id, name: clientName })
+              .select("id")
+              .single();
+            clientId = newClient?.id || "";
+          }
+
+          // Clear any old pending drafts to avoid draft conflicts
+          await adminClient
+            .from("invoices")
+            .delete()
+            .eq("company_id", company.id)
+            .eq("status", "draft");
+
+          const draftNum = `DRAFT-${Math.random().toString(36).substring(7)}`;
+          const todayStr = new Date().toISOString().split('T')[0];
+          const dueDate = new Date(Date.now() + 30 * 24 * 3600 * 1000).toISOString().split('T')[0];
+
+          const { data: newInv, error: insErr } = await adminClient
+            .from("invoices")
+            .insert({
+              company_id: company.id,
+              client_id: clientId || null,
+              number: draftNum,
+              type: "invoice",
+              status: "draft",
+              issue_date: todayStr,
+              due_date: dueDate,
+              total_ht: amount,
+              total_vat: 0,
+              total_ttc: amount,
+              paid_amount: 0,
+            })
+            .select()
+            .single();
+
+          if (!insErr && newInv) {
+            await adminClient.from("invoice_lines").insert({
+              invoice_id: newInv.id,
+              description: "Prestation de service",
+              quantity: 1,
+              unit_price: amount,
+              nature: "service",
+              position: 0,
+            });
+
+            replyText = `📄 *Brouillon de facture de ${amount.toFixed(2)} € créé pour ${clientName} !*\n\n` +
+              `• Répondez **"OUI"** par texte pour la valider et émettre le PDF avec son numéro officiel.\n` +
+              `• Répondez **"NON"** par texte pour l'annuler.\n` +
+              `• Ou indiquez vos corrections (ex: *"Mets 600€"*).`;
+          }
+        } else if (isCaQuery) {
+          const { data: invoices } = await adminClient
+            .from("invoices")
+            .select("id, total_ttc, status, paid_amount")
+            .eq("company_id", company.id);
+
+          const totalCa = (invoices || [])
+            .filter((i) => i.status === "paid")
+            .reduce((s, i) => s + (Number(i.paid_amount) || Number(i.total_ttc)), 0);
+
+          const pendingCa = (invoices || [])
+            .filter((i) => i.status === "pending" || i.status === "late")
+            .reduce((s, i) => s + Number(i.total_ttc), 0);
+
+          replyText = `📊 *Bilan Bylz - ${company.legal_name}*\n\n` +
+            `💰 *CA Encaissé* : ${totalCa.toFixed(2)} €\n` +
+            `⏳ *En attente de paiement* : ${pendingCa.toFixed(2)} €\n` +
+            `🏛️ *Cotisations URSSAF estimées (~21.2%)* : ~${Math.round(totalCa * 0.212)} €\n` +
+            `📈 *Statut TVA* : Franchise Active (< 36 800 €)\n\n` +
+            `_Consultez vos tableaux de bord sur https://bylz.fr_`;
+        } else if (isListQuery) {
+          const { data: invoices } = await adminClient
+            .from("invoices")
+            .select("id, number, total_ttc, status, client:clients(name)")
+            .eq("company_id", company.id)
+            .order("created_at", { ascending: false })
+            .limit(5);
+
+          if (!invoices || invoices.length === 0) {
+            replyText = `📑 Vous n'avez encore aucune facture émise sur Bylz.\n\nDictez *"Créer une facture de 500€ pour Client X"* pour générer votre première facture !`;
+          } else {
+            const listStr = invoices.map((i) => {
+              const cName = (i as any).client?.name || "Client";
+              const st = i.status === "paid" ? "✅ Payée" : i.status === "pending" ? "⏳ En attente" : i.status;
+              return `• ${i.number || 'Brouillon'} - ${cName} : ${Number(i.total_ttc).toFixed(2)} € (${st})`;
+            }).join("\n");
+            replyText = `📑 *Vos 5 dernières factures Bylz :*\n\n${listStr}\n\n_Retrouvez toutes vos factures sur https://bylz.fr/invoices_`;
+          }
+        }
+
+        // Check if there is an active draft invoice awaiting validation
+        const { data: draftInvoices } = await adminClient
+          .from("invoices")
+          .select("*, client:clients(name)")
+          .eq("company_id", company.id)
+          .eq("status", "draft")
+          .order("created_at", { ascending: false })
+          .limit(1);
+
+        const activeDraft = draftInvoices?.[0];
 
       const isConfirmation = /^(?:oui|valider|confirmer|ok|d'accord|valide|c'est bon)$/i.test(lowerInput) || /\b(oui|valider|confirmer|valide)\b/i.test(lowerInput);
       const isCancellation = /^(?:non|annuler|refuser|supprimer|annule)$/i.test(lowerInput) || /\b(non|annuler|refuser|supprimer|annule)\b/i.test(lowerInput);
