@@ -291,7 +291,7 @@ Deno.serve(async (req: Request) => {
       const digits9 = normalizedPhone.slice(-9);
 
       if (digits9) {
-        // Step 1: Search profiles table directly by phone
+        // Step 1: Search profiles table directly by phone number
         const { data: matchedProfiles } = await adminClient
           .from("profiles")
           .select("id, email, plan, is_admin, role, admin_role")
@@ -313,7 +313,7 @@ Deno.serve(async (req: Request) => {
           }
         }
 
-        // Step 2: Search companies table by phone or siret
+        // Step 2: Search companies table directly by phone or siret
         if (!company) {
           const { data: companies } = await adminClient
             .from("companies")
@@ -336,16 +336,18 @@ Deno.serve(async (req: Request) => {
                 }
               }
             }
+            if (!company) company = companies[0];
           }
         }
       }
 
-      // Step 3: Fallback for owner / admin account (Matthias / devmatol or is_admin)
-      if (!company) {
+      // Step 3: Owner / Admin fallback ONLY if phone matches Matthias's owner phone number (0695105490 / 39202435)
+      const isMatthiasPhone = digits9.includes("695105490") || digits9.includes("39202435");
+      if (!company && isMatthiasPhone) {
         const { data: proProfiles } = await adminClient
           .from("profiles")
           .select("id, email, plan, is_admin")
-          .or("plan.eq.pro,plan.eq.unlimited,plan.eq.admin,is_admin.eq.true,email.ilike.%matthiasollivier123%,email.ilike.%matthias%,email.ilike.%devmatol%")
+          .or("email.ilike.%matthiasollivier123%,email.ilike.%matthias%,email.ilike.%devmatol%")
           .order("created_at", { ascending: false });
 
         if (proProfiles && proProfiles.length > 0) {
@@ -369,31 +371,6 @@ Deno.serve(async (req: Request) => {
                   .eq("id", p.id);
               }
               break;
-            }
-          }
-        }
-      }
-
-      // Step 4: Fallback to latest created company in database and auto-bind phone
-      if (!company) {
-        const { data: latestCompanies } = await adminClient
-          .from("companies")
-          .select("id, legal_name, user_id, activity_type")
-          .order("created_at", { ascending: false })
-          .limit(1);
-
-        if (latestCompanies && latestCompanies.length > 0) {
-          company = latestCompanies[0];
-          if (fromPhone) {
-            await adminClient
-              .from("companies")
-              .update({ phone: fromPhone })
-              .eq("id", company.id);
-            if (company.user_id) {
-              await adminClient
-                .from("profiles")
-                .update({ phone: fromPhone, plan: "pro", is_admin: true })
-                .eq("id", company.user_id);
             }
           }
         }
