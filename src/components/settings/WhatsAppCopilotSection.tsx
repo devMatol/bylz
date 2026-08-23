@@ -1,18 +1,19 @@
 import { useState } from "react";
-import { MessageSquare, Phone, Sparkles, Send, CheckCircle2, Mic, Camera, ShieldCheck, Zap } from "lucide-react";
+import { MessageSquare, Phone, Sparkles, Send, CheckCircle2, Mic, Camera, ShieldCheck, Zap, ExternalLink } from "lucide-react";
 import { Card } from "../ui/Card";
 import { Button } from "../ui/Button";
 import { Input } from "../ui/Input";
 import { useToast } from "../ui/Toast";
 import { useAuth } from "../../contexts/AuthContext";
 import { supabase } from "../../lib/supabase";
+import { WHATSAPP_BOT_LINK } from "../../lib/constants";
 
 export function WhatsAppCopilotSection() {
-  const { company } = useAuth();
+  const { company, user } = useAuth();
   const { toast } = useToast();
   const [phone, setPhone] = useState(company?.phone || "");
   const [saving, setSaving] = useState(false);
-  const [activeTab, setActiveTab] = useState<"phone" | "simulator">("simulator");
+  const [activeTab, setActiveTab] = useState<"phone" | "simulator">("phone");
 
   // Simulator State
   const [simText, setSimText] = useState("Quel est mon CA ce mois-ci et mes cotisations URSSAF ?");
@@ -26,15 +27,34 @@ export function WhatsAppCopilotSection() {
 
   const handleSavePhone = async () => {
     if (!company) return;
+    if (!phone.trim()) {
+      toast("Veuillez saisir votre numéro de téléphone mobile.", "warning");
+      return;
+    }
     setSaving(true);
     try {
-      const { error } = await supabase
+      const cleanPhone = phone.trim();
+
+      // 1. Update company phone
+      const { error: companyErr } = await supabase
         .from("companies")
-        .update({ phone })
+        .update({ phone: cleanPhone })
         .eq("id", company.id);
 
-      if (error) throw error;
-      toast("Numéro WhatsApp relié au Pilote IA avec succès !", "success");
+      if (companyErr) throw companyErr;
+
+      // 2. Update profile phone
+      if (user?.id) {
+        await supabase
+          .from("profiles")
+          .update({ phone: cleanPhone })
+          .eq("id", user.id);
+      }
+
+      toast("Numéro WhatsApp relié et Pilote IA activé avec succès !", "success");
+
+      // Open WhatsApp directly
+      window.open(WHATSAPP_BOT_LINK, "_blank");
     } catch (err: any) {
       toast(err.message || "Erreur de sauvegarde", "danger");
     } finally {

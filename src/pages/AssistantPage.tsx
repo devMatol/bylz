@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { SEO } from "../components/seo/SEO";
 import { PageContainer } from "../components/layout/PageContainer";
 import { useAuth } from "../contexts/AuthContext";
@@ -6,11 +6,44 @@ import { canUseFeature } from "../lib/planLimits";
 import { supabase } from "../lib/supabase";
 import { WHATSAPP_BOT_LINK } from "../lib/constants";
 import { UpgradeModal } from "../components/shared/UpgradeModal";
+import { useToast } from "../components/ui/Toast";
 import { Bot, Send, Mic, MessageSquare, Sparkles, CheckCircle2, ShieldCheck, QrCode, Phone, FileText, ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
 
 export function AssistantPage() {
-  const { profile, company } = useAuth();
+  const { profile, company, user } = useAuth();
+  const { toast } = useToast();
+  const [phoneInput, setPhoneInput] = useState(company?.phone || "");
+  const [savingPhone, setSavingPhone] = useState(false);
+
+  useEffect(() => {
+    if (company?.phone) {
+      setPhoneInput(company.phone);
+    }
+  }, [company?.phone]);
+
+  const handleActivateWhatsApp = async () => {
+    if (!phoneInput.trim()) {
+      toast("Veuillez saisir votre numéro de téléphone mobile.", "warning");
+      return;
+    }
+    setSavingPhone(true);
+    try {
+      const clean = phoneInput.trim();
+      if (company?.id) {
+        await supabase.from("companies").update({ phone: clean }).eq("id", company.id);
+      }
+      if (user?.id) {
+        await supabase.from("profiles").update({ phone: clean }).eq("id", user.id);
+      }
+      toast("Numéro WhatsApp relié et Pilote IA activé avec succès !", "success");
+      window.open(WHATSAPP_BOT_LINK, "_blank");
+    } catch (err: any) {
+      toast(err.message || "Erreur lors de la liaison du numéro", "danger");
+    } finally {
+      setSavingPhone(false);
+    }
+  };
   const [messages, setMessages] = useState<Array<{ sender: "user" | "ai"; text: string; time: string }>>([
     {
       sender: "ai",
@@ -212,34 +245,41 @@ export function AssistantPage() {
               </div>
             </div>
 
-            <div className="p-3 rounded-xl bg-muted/40 border border-border space-y-2 text-xs">
+            <div className="p-3 rounded-xl bg-muted/40 border border-border space-y-3 text-xs">
               <div className="flex items-center justify-between text-muted">
                 <span>Statut du numéro :</span>
                 <span className="text-emerald-500 font-bold flex items-center gap-1">
-                  <CheckCircle2 className="w-3.5 h-3.5" /> Relié
+                  <CheckCircle2 className="w-3.5 h-3.5" /> {company?.phone ? "Actif & Relié" : "En attente"}
                 </span>
               </div>
-              <div className="flex items-center justify-between text-muted">
-                <span>Téléphone entreprise :</span>
-                <span className="font-mono text-text font-bold">{company?.phone || "+33 6 XX XX XX XX"}</span>
+
+              <div>
+                <label className="text-[11px] font-bold text-muted mb-1 block">Numéro de mobile WhatsApp :</label>
+                <input
+                  type="text"
+                  placeholder="+33 6 12 34 56 78"
+                  value={phoneInput}
+                  onChange={(e) => setPhoneInput(e.target.value)}
+                  className="w-full bg-surface text-text font-mono text-xs px-3 py-2 rounded-lg border border-border focus:border-emerald-500 outline-none"
+                />
               </div>
             </div>
 
             <div className="space-y-2">
-              <a
-                href={WHATSAPP_BOT_LINK}
-                target="_blank"
-                rel="noreferrer"
-                className="w-full py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl flex items-center justify-center gap-2 transition-all shadow-xs"
+              <button
+                type="button"
+                onClick={handleActivateWhatsApp}
+                disabled={savingPhone}
+                className="w-full py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl flex items-center justify-center gap-2 transition-all shadow-xs cursor-pointer disabled:opacity-50"
               >
                 <Phone className="w-4 h-4" />
-                Ouvrir dans WhatsApp
-              </a>
+                {savingPhone ? "Activation..." : "Activer & Ouvrir le Pilote WhatsApp"}
+              </button>
               <Link
                 to="/settings"
                 className="w-full py-2 px-4 bg-muted hover:bg-muted/80 text-text font-medium text-xs rounded-xl flex items-center justify-center gap-1.5 transition-colors border border-border"
               >
-                Modifier mon téléphone dans Paramètres
+                Gérer dans Paramètres
                 <ArrowRight className="w-3.5 h-3.5" />
               </Link>
             </div>
