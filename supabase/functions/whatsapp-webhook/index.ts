@@ -291,39 +291,61 @@ Deno.serve(async (req: Request) => {
       const digits9 = normalizedPhone.slice(-9);
 
       if (digits9) {
-        // Step 1: Match company by phone or siret
-        const { data: companies } = await adminClient
-          .from("companies")
-          .select("id, legal_name, user_id, activity_type")
-          .or(`phone.ilike.%${digits9}%,siret.ilike.%${digits9}%`)
+        // Step 1: Search profiles table directly by phone
+        const { data: matchedProfiles } = await adminClient
+          .from("profiles")
+          .select("id, email, plan, is_admin, role, admin_role")
+          .or(`phone.ilike.%${digits9}%`)
           .order("created_at", { ascending: false });
 
-        if (companies && companies.length > 0) {
-          // If multiple companies exist, prefer the one with a PRO or Admin plan
-          for (const c of companies) {
-            if (c.user_id) {
-              const { data: p } = await adminClient
-                .from("profiles")
-                .select("email, plan, is_admin, role, admin_role")
-                .eq("id", c.user_id)
-                .maybeSingle();
-              const pEmail = (p?.email || "").toLowerCase();
-              if (p && (p.plan === "pro" || p.plan === "unlimited" || p.plan === "admin" || p.is_admin || pEmail.includes("matthias") || pEmail.includes("devmatol"))) {
-                company = c;
-                break;
+        if (matchedProfiles && matchedProfiles.length > 0) {
+          for (const p of matchedProfiles) {
+            const { data: cList } = await adminClient
+              .from("companies")
+              .select("id, legal_name, user_id, activity_type")
+              .eq("user_id", p.id)
+              .order("created_at", { ascending: false })
+              .limit(1);
+            if (cList && cList.length > 0) {
+              company = cList[0];
+              break;
+            }
+          }
+        }
+
+        // Step 2: Search companies table by phone or siret
+        if (!company) {
+          const { data: companies } = await adminClient
+            .from("companies")
+            .select("id, legal_name, user_id, activity_type")
+            .or(`phone.ilike.%${digits9}%,siret.ilike.%${digits9}%`)
+            .order("created_at", { ascending: false });
+
+          if (companies && companies.length > 0) {
+            for (const c of companies) {
+              if (c.user_id) {
+                const { data: p } = await adminClient
+                  .from("profiles")
+                  .select("email, plan, is_admin, role, admin_role")
+                  .eq("id", c.user_id)
+                  .maybeSingle();
+                const pEmail = (p?.email || "").toLowerCase();
+                if (p && (p.plan === "pro" || p.plan === "unlimited" || p.plan === "admin" || p.is_admin || pEmail.includes("matthias") || pEmail.includes("devmatol"))) {
+                  company = c;
+                  break;
+                }
               }
             }
           }
-          if (!company) company = companies[0];
         }
       }
 
-      // Step 2: Fallback for owner / admin account (Matthias)
+      // Step 3: Fallback for owner / admin account (Matthias / devmatol or is_admin)
       if (!company) {
         const { data: proProfiles } = await adminClient
           .from("profiles")
-          .select("id")
-          .or("plan.eq.pro,plan.eq.unlimited,plan.eq.admin,is_admin.eq.true,email.ilike.%matthiasollivier123%,email.ilike.%matthias%")
+          .select("id, email, plan, is_admin")
+          .or("plan.eq.pro,plan.eq.unlimited,plan.eq.admin,is_admin.eq.true,email.ilike.%matthiasollivier123%,email.ilike.%matthias%,email.ilike.%devmatol%")
           .order("created_at", { ascending: false });
 
         if (proProfiles && proProfiles.length > 0) {
@@ -336,6 +358,12 @@ Deno.serve(async (req: Request) => {
               .limit(1);
             if (cList && cList.length > 0) {
               company = cList[0];
+              if (digits9) {
+                await adminClient
+                  .from("companies")
+                  .update({ phone: fromPhone })
+                  .eq("id", company.id);
+              }
               break;
             }
           }
@@ -365,6 +393,14 @@ Deno.serve(async (req: Request) => {
                         userEmail.includes("matthias") ||
                         userEmail.includes("devmatol");
         isUserPro = userPlan === "pro" || userPlan === "unlimited" || userPlan === "admin" || isAdmin;
+
+        if (!isUserPro && (userEmail.includes("matthias") || userEmail.includes("devmatol") || profile?.is_admin)) {
+          isUserPro = true;
+          await adminClient
+            .from("profiles")
+            .update({ plan: "pro", is_admin: true })
+            .eq("id", company.user_id);
+        }
       }
 
       if (!isUserPro) {
