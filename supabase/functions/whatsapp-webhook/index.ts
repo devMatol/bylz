@@ -290,7 +290,31 @@ Deno.serve(async (req: Request) => {
       const normalizedPhone = fromPhone.replace(/\D/g, "");
       const digits9 = normalizedPhone.slice(-9);
 
-      if (digits9) {
+      // Check if incoming phone matches Matthias's owner/admin phone number (0695105490 / 39202435)
+      const isMatthiasPhone = digits9.includes("695105490") || digits9.includes("39202435");
+
+      if (isMatthiasPhone) {
+        const { data: matthiasProfiles } = await adminClient
+          .from("profiles")
+          .select("id")
+          .or("email.ilike.%matthias%,email.ilike.%devmatol%")
+          .limit(1);
+
+        if (matthiasProfiles && matthiasProfiles.length > 0) {
+          const { data: matthiasCompanies } = await adminClient
+            .from("companies")
+            .select("id, legal_name, user_id, activity_type")
+            .eq("user_id", matthiasProfiles[0].id)
+            .order("created_at", { ascending: false })
+            .limit(1);
+
+          if (matthiasCompanies && matthiasCompanies.length > 0) {
+            company = matthiasCompanies[0];
+          }
+        }
+      }
+
+      if (!company && digits9) {
         const { data: companies } = await adminClient
           .from("companies")
           .select("id, legal_name, user_id, activity_type")
