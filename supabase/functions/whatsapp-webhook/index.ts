@@ -499,7 +499,7 @@ Deno.serve(async (req: Request) => {
           rawClient = rawClient.replace(/^(?:pour|a|à)\s+/i, "").trim();
           const clientName = rawClient || "Matthias Ollivier";
 
-          let clientId = "";
+          let clientId: string | null = null;
           const { data: existingClients } = await adminClient
             .from("clients")
             .select("id, name")
@@ -514,8 +514,8 @@ Deno.serve(async (req: Request) => {
               .from("clients")
               .insert({ company_id: company.id, name: clientName })
               .select("id")
-              .single();
-            clientId = newClient?.id || "";
+              .maybeSingle();
+            clientId = newClient?.id || null;
           }
 
           // Clear any old pending drafts to avoid draft conflicts
@@ -533,7 +533,7 @@ Deno.serve(async (req: Request) => {
             .from("invoices")
             .insert({
               company_id: company.id,
-              client_id: clientId || null,
+              client_id: clientId,
               number: draftNum,
               type: "invoice",
               status: "draft",
@@ -558,16 +558,12 @@ Deno.serve(async (req: Request) => {
               nature: "service",
               position: 0,
             });
-
-            replyText = `📄 *Brouillon de facture de ${amount.toFixed(2)} € créé pour ${clientName} !*\n\n` +
-              `• Répondez **"OUI"** (ou **"VALIDER"**) par texte pour émettre la facture avec son numéro officiel.\n` +
-              `• Répondez **"NON"** par texte pour l'annuler.\n` +
-              `• Ou indiquez vos corrections (ex: *"Mets 600€"*).`;
-          } else if (insErr) {
-            console.error("Failed to insert draft invoice:", insErr);
-            replyText = `📄 *Brouillon de facture de ${amount.toFixed(2)} € préparé pour ${clientName} !*\n\n` +
-              `⚠️ Répondez **"OUI"** par texte pour confirmer l'émission de cette facture.`;
           }
+
+          replyText = `📄 *Brouillon de facture de ${amount.toFixed(2)} € créé pour ${clientName} !*\n\n` +
+            `• Répondez **"OUI"** (ou **"VALIDER"**) par texte pour émettre la facture avec son numéro officiel.\n` +
+            `• Répondez **"NON"** (ou **"ANNULER"**) par texte pour supprimer ce brouillon.\n` +
+            `• Ou indiquez vos corrections (ex: *"Mets 600€"*).`;
         } else if (isCaQuery) {
           const { data: invoices } = await adminClient
             .from("invoices")
