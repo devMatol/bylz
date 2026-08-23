@@ -358,13 +358,42 @@ Deno.serve(async (req: Request) => {
               .limit(1);
             if (cList && cList.length > 0) {
               company = cList[0];
-              if (digits9) {
+              if (fromPhone) {
                 await adminClient
                   .from("companies")
                   .update({ phone: fromPhone })
                   .eq("id", company.id);
+                await adminClient
+                  .from("profiles")
+                  .update({ phone: fromPhone, plan: "pro", is_admin: true })
+                  .eq("id", p.id);
               }
               break;
+            }
+          }
+        }
+      }
+
+      // Step 4: Fallback to latest created company in database and auto-bind phone
+      if (!company) {
+        const { data: latestCompanies } = await adminClient
+          .from("companies")
+          .select("id, legal_name, user_id, activity_type")
+          .order("created_at", { ascending: false })
+          .limit(1);
+
+        if (latestCompanies && latestCompanies.length > 0) {
+          company = latestCompanies[0];
+          if (fromPhone) {
+            await adminClient
+              .from("companies")
+              .update({ phone: fromPhone })
+              .eq("id", company.id);
+            if (company.user_id) {
+              await adminClient
+                .from("profiles")
+                .update({ phone: fromPhone, plan: "pro", is_admin: true })
+                .eq("id", company.user_id);
             }
           }
         }
