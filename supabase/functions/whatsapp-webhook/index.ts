@@ -239,11 +239,24 @@ Deno.serve(async (req: Request) => {
                 console.log(`Meta media metadata fetched successfully. URL: ${mediaMetaUrl}`);
                 
                 let fileRes = await fetch(mediaMetaUrl, {
+                  redirect: "manual",
                   headers: {
                     "Authorization": `Bearer ${token}`,
                     "User-Agent": "curl/7.64.1",
                   },
                 });
+
+                if (fileRes.status >= 300 && fileRes.status < 400) {
+                  const redirectUrl = fileRes.headers.get("location");
+                  if (redirectUrl) {
+                    fileRes = await fetch(redirectUrl, {
+                      headers: {
+                        "Authorization": `Bearer ${token}`,
+                        "User-Agent": "curl/7.64.1",
+                      },
+                    });
+                  }
+                }
 
                 if (!fileRes.ok) {
                   const downloadUrl = mediaMetaUrl.includes("?")
