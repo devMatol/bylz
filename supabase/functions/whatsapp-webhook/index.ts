@@ -600,7 +600,7 @@ Deno.serve(async (req: Request) => {
         const activeDraft = draftInvoices?.[0];
 
       const isConfirmation = /^(?:oui|valider|confirmer|ok|d'accord|valide|c'est bon)$/i.test(lowerInput) || /\b(oui|valider|confirmer|valide)\b/i.test(lowerInput);
-      const isCancellation = /^(?:non|annuler|refuser|supprimer|annule)$/i.test(lowerInput) || /\b(non|annuler|refuser|supprimer|annule)\b/i.test(lowerInput);
+      const isCancellation = /^(?:non|annuler|refuser|supprimer|annule|supprime|efface|effacer|poubelle)$/i.test(lowerInput) || /\b(non|annuler?|refuser?|supprimer?|annule|supprime|effacer?|poubelle)\b/i.test(lowerInput);
 
       if (!replyText && activeDraft) {
         const isNotSpecialCommand = !isConfirmation && !isCancellation && !createInvMatch && !createQuoteMatch;
@@ -1265,30 +1265,6 @@ Sinon, réponds de manière concise, précise et amicale en français sur WhatsA
               (invList || "Aucune facture trouvée pour le moment.") +
               `\n\n_Retrouvez toutes vos factures sur https://bylz.fr/invoices?v=2_`;
 
-          } else if (!replyText && /\b(ca|chiffre|chiffres|solde|urssaf|tva)\b/i.test(lowerText)) {
-            replyText = `📊 *Bilan Bylz - ${company.legal_name}*\n\n` +
-              `💰 *CA Encaissé* : ${totalCa.toFixed(2)} €\n` +
-              `⏳ *En attente de paiement* : ${pendingCa.toFixed(2)} €\n` +
-              `🏛️ *Cotisations URSSAF estimées* : ~${Math.round(totalCa * 0.212)} €\n` +
-              `📈 *Statut TVA* : Franchise Active (<36 800 €)\n\n` +
-              `_Consultez vos tableaux de bord sur https://bylz.fr_`;
-
-          } else if (!replyText && (messageType === "audio" || messageType === "voice")) {
-            if (activeDraft) {
-              const clientName = (activeDraft as any).client?.name || "Client";
-              const amount = Number(activeDraft.total_ttc).toFixed(2);
-              replyText = `🎙️ *Note vocale reçue !*\n\n` +
-                `📄 Vous avez un brouillon de facture en attente pour *${clientName}* (${amount} €).\n\n` +
-                `• Répondez **"OUI"** par texte pour la valider et émettre le PDF.\n` +
-                `• Répondez **"NON"** par texte pour l'annuler.\n` +
-                `• Ou indiquez vos corrections (ex: *"Mets 500€"*).`;
-            } else {
-              replyText = `🎙️ *Note vocale reçue !*\n\n` +
-                `Je n'ai pas décelé d'instruction claire dans ce message vocal. Que souhaitez-vous faire ?\n\n` +
-                `1️⃣ *"Créer une facture de 400€ pour Client X"* (texte ou vocal)\n` +
-                `2️⃣ *"Quel est mon chiffre d'affaires ?"*\n` +
-                `3️⃣ *"Liste mes factures"*`;
-            }
           } else if (!replyText) {
             replyText = `🤖 *Bylz Copilot IA (WhatsApp)*\n\n` +
               `Bonjour ! Comment puis-je vous aider aujourd'hui ?\n\n` +
