@@ -234,16 +234,25 @@ Deno.serve(async (req: Request) => {
                 }
               }
 
-              // Step 2: Download audio file using query access_token without Authorization header
+              // Step 2: Download audio file using Authorization header first, fallback to query access_token
               if (mediaMetaUrl) {
                 console.log(`Meta media metadata fetched successfully. URL: ${mediaMetaUrl}`);
-                const downloadUrl = mediaMetaUrl.includes("?")
-                  ? `${mediaMetaUrl}&access_token=${token}`
-                  : `${mediaMetaUrl}?access_token=${token}`;
-
-                const fileRes = await fetch(downloadUrl, {
-                  headers: { "User-Agent": "curl/7.64.1" },
+                
+                let fileRes = await fetch(mediaMetaUrl, {
+                  headers: {
+                    "Authorization": `Bearer ${token}`,
+                    "User-Agent": "curl/7.64.1",
+                  },
                 });
+
+                if (!fileRes.ok) {
+                  const downloadUrl = mediaMetaUrl.includes("?")
+                    ? `${mediaMetaUrl}&access_token=${token}`
+                    : `${mediaMetaUrl}?access_token=${token}`;
+                  fileRes = await fetch(downloadUrl, {
+                    headers: { "User-Agent": "curl/7.64.1" },
+                  });
+                }
 
                 if (fileRes.ok) {
                   const audBuf = await fileRes.arrayBuffer();
