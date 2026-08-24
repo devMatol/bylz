@@ -187,13 +187,14 @@ Deno.serve(async (req: Request) => {
       }
 
       let entry: any = null;
+      let message: any = null;
       if (body.is_web_client) {
         textContent = body.text || body.message || "";
         fromPhone = "web_client";
       } else {
         entry = body.entry?.[0];
         const change = entry?.changes?.[0]?.value;
-        const message = change?.messages?.[0];
+        message = change?.messages?.[0];
         metaPhoneNumberId = change?.metadata?.phone_number_id || "";
         fromPhone = message?.from || "";
         messageType = message?.type || "text";
