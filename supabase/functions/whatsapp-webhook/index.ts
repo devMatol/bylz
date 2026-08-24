@@ -291,58 +291,38 @@ Deno.serve(async (req: Request) => {
       const digits9 = normalizedPhone.slice(-9);
 
       if (digits9) {
-        // Step 1: Search profiles table directly by phone number
-        const { data: matchedProfiles } = await adminClient
-          .from("profiles")
-          .select("id, email, plan, is_admin, role, admin_role")
-          .or(`phone.ilike.%${digits9}%`)
+        // Step 1: Search companies table directly by phone number or SIRET
+        const { data: companies } = await adminClient
+          .from("companies")
+          .select("id, legal_name, user_id, activity_type, created_at")
+          .or(`phone.ilike.%${digits9}%,siret.ilike.%${digits9}%`)
           .order("created_at", { ascending: false });
 
-        if (matchedProfiles && matchedProfiles.length > 0) {
-          for (const p of matchedProfiles) {
-            const { data: cList } = await adminClient
-              .from("companies")
-              .select("id, legal_name, user_id, activity_type")
-              .eq("user_id", p.id)
-              .order("created_at", { ascending: false })
-              .limit(1);
-            if (cList && cList.length > 0) {
-              company = cList[0];
-              break;
-            }
-          }
-        }
-
-        // Step 2: Search companies table directly by phone or siret
-        if (!company) {
-          const { data: companies } = await adminClient
-            .from("companies")
-            .select("id, legal_name, user_id, activity_type")
-            .or(`phone.ilike.%${digits9}%,siret.ilike.%${digits9}%`)
-            .order("created_at", { ascending: false });
-
-          if (companies && companies.length > 0) {
-            for (const c of companies) {
-              if (c.user_id) {
-                const { data: p } = await adminClient
-                  .from("profiles")
-                  .select("email, plan, is_admin, role, admin_role")
-                  .eq("id", c.user_id)
-                  .maybeSingle();
-                const pEmail = (p?.email || "").toLowerCase();
-                if (p && (p.plan === "pro" || p.plan === "unlimited" || p.plan === "admin" || p.is_admin || pEmail.includes("matthias") || pEmail.includes("devmatol"))) {
-                  company = c;
-                  break;
-                }
+        if (companies && companies.length > 0) {
+          for (const c of companies) {
+            if (c.user_id) {
+              const { data: p } = await adminClient
+                .from("profiles")
+                .select("email, plan, is_admin, role, admin_role")
+                .eq("id", c.user_id)
+                .maybeSingle();
+              const pEmail = (p?.email || "").toLowerCase();
+              if (p && (p.plan === "pro" || p.plan === "unlimited" || p.plan === "admin" || p.is_admin || pEmail.includes("matthias") || pEmail.includes("devmatol"))) {
+                company = c;
+                break;
               }
             }
+          }
+          // If no PRO profile was matched in the loop, accept the first matching company
+          if (!company) {
+            company = companies[0];
           }
         }
       }
 
-      // Step 3: Owner / Admin fallback — ALWAYS resolve to Matthias PRO company for owner email/phone
+      // Step 2: Owner / Admin fallback — STRICTLY restricted to Matthias's owner phone number
       const isMatthiasPhone = digits9.includes("695105490") || digits9.includes("39202435");
-      if (!company || isMatthiasPhone) {
+      if (!company && isMatthiasPhone) {
         const { data: proProfiles } = await adminClient
           .from("profiles")
           .select("id, email, plan, is_admin")
@@ -360,15 +340,10 @@ Deno.serve(async (req: Request) => {
             if (cList && cList.length > 0) {
               company = cList[0];
               if (fromPhone) {
-                // Bind phone number to Matthias PRO company and profile
                 await adminClient
                   .from("companies")
                   .update({ phone: fromPhone })
                   .eq("id", company.id);
-                await adminClient
-                  .from("profiles")
-                  .update({ phone: fromPhone, plan: "pro", is_admin: true })
-                  .eq("id", p.id);
               }
               break;
             }
