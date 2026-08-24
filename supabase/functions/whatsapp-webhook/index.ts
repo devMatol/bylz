@@ -1167,6 +1167,13 @@ Sinon, réponds de manière concise, précise et amicale en français sur WhatsA
                       .select()
                       .single();
 
+                    // Delete any existing draft invoices first
+                    await adminClient
+                      .from("invoices")
+                      .delete()
+                      .eq("company_id", company.id)
+                      .eq("status", "draft");
+
                     if (!invInsErr && newInv) {
                       await adminClient.from("invoice_lines").insert({
                         invoice_id: newInv.id,
@@ -1176,22 +1183,27 @@ Sinon, réponds de manière concise, précise et amicale en français sur WhatsA
                         nature: "service",
                         position: 0,
                       });
-
-                      replyText = `📄 *Brouillon de facture prêt pour validation*\n\n` +
-                        `👤 *Client* : ${clientName}\n` +
-                        `💰 *Montant TTC* : ${amount.toFixed(2)} €\n` +
-                        `📝 *Prestation* : ${description}\n\n` +
-                        `⚠️ *Validation requise :*\n` +
-                        `• Répondez **"OUI"** pour émettre cette facture avec son numéro officiel.\n` +
-                        `• Ou indiquez vos corrections (ex: *"Mets 500€"*).\n` +
-                        `• Répondez **"NON"** pour annuler.`;
                     }
+
+                    replyText = `📄 *Brouillon de facture de ${amount.toFixed(2)} € créé pour ${clientName} !*\n\n` +
+                      `👤 *Client* : ${clientName}\n` +
+                      `💰 *Montant TTC* : ${amount.toFixed(2)} €\n` +
+                      `📝 *Prestation* : ${description}\n\n` +
+                      `⚠️ *Validation requise :*\n` +
+                      `• Répondez **"OUI"** (ou **"VALIDER"**) pour émettre cette facture avec son numéro officiel.\n` +
+                      `• Ou indiquez vos corrections (ex: *"Mets 1200€"*).\n` +
+                      `• Répondez **"NON"** pour annuler.`;
                   }
                 }
               }
 
               if (!replyText && rawAiReply) {
-                replyText = rawAiReply;
+                // Filter out raw JSON strings from being sent to WhatsApp user
+                if (rawAiReply.trim().startsWith("{") && rawAiReply.trim().endsWith("}")) {
+                  replyText = `📄 *Brouillon de facture prêt pour validation*\n\n• Répondez **"OUI"** pour valider et émettre la facture.\n• Répondez **"NON"** pour annuler.`;
+                } else {
+                  replyText = rawAiReply;
+                }
               }
             }
           } catch (gemErr) {
