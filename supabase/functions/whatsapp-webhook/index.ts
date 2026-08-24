@@ -201,46 +201,37 @@ Deno.serve(async (req: Request) => {
         textContent = message?.text?.body || "";
       }
 
+      // ---------------------------------------------------------------------------
+      // BULLETPROOF VOICE / AUDIO MODULE (META CLOUD API & TWILIO)
+      // ---------------------------------------------------------------------------
       if (messageType === "audio" || messageType === "voice") {
-        const mediaId = message?.audio?.id || message?.voice?.id;
-        const rawMime = message?.audio?.mime_type || message?.voice?.mime_type || "audio/ogg";
-        audioMimeType = rawMime.split(";")[0].trim() || "audio/ogg";
-        console.log(`Processing WhatsApp audio message. Media ID: ${mediaId}, Mime: ${audioMimeType}`);
+        try {
+          const voiceObj = message?.voice || message?.audio || entry?.changes?.[0]?.value?.messages?.[0]?.voice || entry?.changes?.[0]?.value?.messages?.[0]?.audio;
+          const mediaId = voiceObj?.id || "";
+          const rawMime = voiceObj?.mime_type || "audio/ogg";
+          audioMimeType = rawMime.split(";")[0].trim() || "audio/ogg";
 
-        const candidateTokens = [
-          "EAANpHbOHsisBSZAcVQzSmgmBid5hI5rOMNM2W0nmGah9MMWiA6GbcH1PHZCp13hJNgvJvkGQLSPsgebnEPyot3P7ZC77mwrc2eeApBCfgRIZC0vvSVuerQhT5bQvLLQI6EVSlhyazZBS1hZAzpykfZB2F7Nk5yX8ZBJM2bHfFxAX7pXLrq0hIvRPknA9tyTlNgZDZD",
-          Deno.env.get("WHATSAPP_TOKEN"),
-          Deno.env.get("WHATSAPP_ACCESS_TOKEN"),
-          Deno.env.get("WHATSAPP_SYSTEM_USER_TOKEN"),
-          Deno.env.get("META_ACCESS_TOKEN"),
-        ].filter(Boolean) as string[];
+          console.log(`[VOICE MODULE] Processing WhatsApp voice note. Media ID: ${mediaId}, Mime: ${audioMimeType}`);
 
-        if (mediaId && candidateTokens.length > 0) {
-          console.log(`Starting media download for ID ${mediaId} with ${candidateTokens.length} candidate tokens.`);
-          for (const token of candidateTokens) {
-            try {
-              console.log(`Attempting media metadata fetch for ID ${mediaId} with token prefix: ${token.substring(0, 15)}...`);
-              let mediaMetaUrl = "";
+          const candidateTokens = [
+            "EAANpHbOHsisBSZAcVQzSmgmBid5hI5rOMNM2W0nmGah9MMWiA6GbcH1PHZCp13hJNgvJvkGQLSPsgebnEPyot3P7ZC77mwrc2eeApBCfgRIZC0vvSVuerQhT5bQvLLQI6EVSlhyazZBS1hZAzpykfZB2F7Nk5yX8ZBJM2bHfFxAX7pXLrq0hIvRPknA9tyTlNgZDZD",
+            Deno.env.get("WHATSAPP_TOKEN"),
+            Deno.env.get("WHATSAPP_ACCESS_TOKEN"),
+            Deno.env.get("META_ACCESS_TOKEN"),
+          ].filter(Boolean) as string[];
 
-              // Step 1: Get media URL from Meta Graph API
-              const metaRes = await fetch(`https://graph.facebook.com/v21.0/${mediaId}?access_token=${token}`);
-              if (metaRes.ok) {
+          if (mediaId && candidateTokens.length > 0) {
+            for (const token of candidateTokens) {
+              try {
+                // Step 1: Query Graph API for media URL
+                const metaRes = await fetch(`https://graph.facebook.com/v21.0/${mediaId}?access_token=${token}`);
+                if (!metaRes.ok) continue;
+
                 const metaJson = await metaRes.json();
-                mediaMetaUrl = metaJson.url || "";
-              } else {
-                const metaRes2 = await fetch(`https://graph.facebook.com/v21.0/${mediaId}`, {
-                  headers: { "Authorization": `Bearer ${token}` },
-                });
-                if (metaRes2.ok) {
-                  const metaJson2 = await metaRes2.json();
-                  mediaMetaUrl = metaJson2.url || "";
-                }
-              }
+                const mediaMetaUrl = metaJson?.url;
+                if (!mediaMetaUrl) continue;
 
-              // Step 2: Download audio file using Authorization header first, fallback to query access_token
-              if (mediaMetaUrl) {
-                console.log(`Meta media metadata fetched successfully. URL: ${mediaMetaUrl}`);
-                
+                // Step 2: Download binary audio file with manual redirect
                 let fileRes = await fetch(mediaMetaUrl, {
                   redirect: "manual",
                   headers: {
@@ -250,9 +241,9 @@ Deno.serve(async (req: Request) => {
                 });
 
                 if (fileRes.status >= 300 && fileRes.status < 400) {
-                  const redirectUrl = fileRes.headers.get("location");
-                  if (redirectUrl) {
-                    fileRes = await fetch(redirectUrl, {
+                  const loc = fileRes.headers.get("location");
+                  if (loc) {
+                    fileRes = await fetch(loc, {
                       headers: {
                         "Authorization": `Bearer ${token}`,
                         "User-Agent": "curl/7.64.1",
@@ -262,157 +253,30 @@ Deno.serve(async (req: Request) => {
                 }
 
                 if (!fileRes.ok) {
-                  const downloadUrl = mediaMetaUrl.includes("?")
+                  const fallbackUrl = mediaMetaUrl.includes("?")
                     ? `${mediaMetaUrl}&access_token=${token}`
                     : `${mediaMetaUrl}?access_token=${token}`;
-                  fileRes = await fetch(downloadUrl, {
+                  fileRes = await fetch(fallbackUrl, {
                     headers: { "User-Agent": "curl/7.64.1" },
                   });
                 }
 
                 if (fileRes.ok) {
                   const audBuf = await fileRes.arrayBuffer();
-                  if (audBuf.byteLength > 0) {
+                  if (audBuf && audBuf.byteLength > 0) {
                     base64Audio = bufferToBase64(audBuf);
-                    console.log(`Audio file successfully downloaded. Bytes: ${audBuf.byteLength}, Base64 length: ${base64Audio.length}`);
+                    console.log(`[VOICE MODULE] Successfully downloaded audio! Bytes: ${audBuf.byteLength}, Base64 len: ${base64Audio.length}`);
                     break;
                   }
-                } else {
-                  const fileErrText = await fileRes.text();
-                  console.warn(`File download failed. Status: ${fileRes.status}, Error: ${fileErrText.substring(0, 100)}`);
                 }
-              } else {
-                console.warn(`Could not retrieve media URL for ID ${mediaId} with token ${token.substring(0, 15)}...`);
-              }
-            } catch (err) {
-              console.error("Error fetching Meta WhatsApp audio media:", err);
-            }
-          }
-        } else {
-          console.warn("Missing mediaId or WHATSAPP_TOKEN for audio download.");
-        }
-      }
-    }
-
-    if (!fromPhone && !textContent && !base64Audio) {
-      return new Response(JSON.stringify({ status: "ignored_no_message" }), {
-        status: 200,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    const isWebClient = !!body.is_web_client;
-    let company: any = null;
-
-    if (body.company_id) {
-      const { data: c } = await adminClient
-        .from("companies")
-        .select("id, legal_name, user_id, activity_type")
-        .eq("id", body.company_id)
-        .single();
-      company = c;
-    } else if (fromPhone) {
-      const normalizedPhone = fromPhone.replace(/\D/g, "");
-      const digits9 = normalizedPhone.slice(-9);
-
-      if (digits9) {
-        // Step 1: Search companies table directly by phone number or SIRET
-        const { data: companies } = await adminClient
-          .from("companies")
-          .select("id, legal_name, user_id, activity_type, created_at")
-          .or(`phone.ilike.%${digits9}%,siret.ilike.%${digits9}%`)
-          .order("created_at", { ascending: false });
-
-        if (companies && companies.length > 0) {
-          for (const c of companies) {
-            if (c.user_id) {
-              const { data: p } = await adminClient
-                .from("profiles")
-                .select("email, plan, is_admin, role, admin_role")
-                .eq("id", c.user_id)
-                .maybeSingle();
-              const pEmail = (p?.email || "").toLowerCase();
-              if (p && (p.plan === "pro" || p.plan === "unlimited" || p.plan === "admin" || p.is_admin || pEmail.includes("matthias") || pEmail.includes("devmatol"))) {
-                company = c;
-                break;
+              } catch (tokenErr) {
+                console.warn(`[VOICE MODULE] Token fetch error:`, tokenErr);
               }
             }
           }
-          // If no PRO profile was matched in the loop, accept the first matching company
-          if (!company) {
-            company = companies[0];
-          }
+        } catch (vErr) {
+          console.error(`[VOICE MODULE] Critical voice extraction error:`, vErr);
         }
-      }
-
-      // Step 2: Owner / Admin fallback — STRICTLY restricted to Matthias's owner phone number
-      const isMatthiasPhone = digits9.includes("695105490") || digits9.includes("39202435");
-      if (!company && isMatthiasPhone) {
-        const { data: proProfiles } = await adminClient
-          .from("profiles")
-          .select("id, email, plan, is_admin")
-          .or("email.ilike.%matthiasollivier123%,email.ilike.%matthias%,email.ilike.%devmatol%")
-          .order("created_at", { ascending: false });
-
-        if (proProfiles && proProfiles.length > 0) {
-          for (const p of proProfiles) {
-            const { data: cList } = await adminClient
-              .from("companies")
-              .select("id, legal_name, user_id, activity_type")
-              .eq("user_id", p.id)
-              .order("created_at", { ascending: false })
-              .limit(1);
-            if (cList && cList.length > 0) {
-              company = cList[0];
-              if (fromPhone) {
-                await adminClient
-                  .from("companies")
-                  .update({ phone: fromPhone })
-                  .eq("id", company.id);
-              }
-              break;
-            }
-          }
-        }
-      }
-    }
-
-    let replyText = "";
-
-    if (!company) {
-      replyText = `👋 Bonjour ! Votre numéro n'est pas encore associé à un compte Bylz.\n\nConnectez-vous sur https://bylz.fr/settings et renseignez votre numéro de téléphone dans les Paramètres pour activer votre Assistant IA !`;
-    } else {
-      // Check if user has PRO plan or is Admin
-      let isUserPro = false;
-      if (company && company.user_id) {
-        const { data: profile } = await adminClient
-          .from("profiles")
-          .select("email, plan, is_admin, role, admin_role")
-          .eq("id", company.user_id)
-          .maybeSingle();
-
-        const userEmail = (profile?.email || "").toLowerCase();
-        const userPlan = (profile?.plan || "starter").toLowerCase();
-        const isAdmin = profile?.is_admin === true ||
-                        (profile as any)?.role === "admin" ||
-                        (profile as any)?.admin_role === "super_admin" ||
-                        userEmail.includes("matthias") ||
-                        userEmail.includes("devmatol");
-        isUserPro = userPlan === "pro" || userPlan === "unlimited" || userPlan === "admin" || isAdmin;
-
-        if (!isUserPro && (userEmail.includes("matthias") || userEmail.includes("devmatol") || profile?.is_admin || (fromPhone && (fromPhone.includes("695105490") || fromPhone.includes("39202435"))))) {
-          isUserPro = true;
-          if (company.user_id) {
-            await adminClient
-              .from("profiles")
-              .update({ plan: "pro", is_admin: true })
-              .eq("id", company.user_id);
-          }
-        }
-      }
-
-      if (!isUserPro && (fromPhone.includes("695105490") || fromPhone.includes("39202435"))) {
-        isUserPro = true;
       }
 
       if (!isUserPro) {
