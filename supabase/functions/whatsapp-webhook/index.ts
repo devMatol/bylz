@@ -407,7 +407,25 @@ Deno.serve(async (req: Request) => {
         const lowerInput = textContent.toLowerCase().trim();
 
         // 1. DIRECT INVOICE CREATION REGEX (e.g. "crée une facture de 500e pour Matthias ollivier", "fait une facture 400€ pour Client X")
-        const createInvMatch = lowerInput.match(/(?:crée?r?|fait|génère?s?|émets?)\s*(?:une?\s*)?(?:facture|brouillon)\s*(?:de\s*)?(\d+(?:[\.,]\d+)?)\s*(?:€|e|euros?)?\s*(?:pour\s*)?(.+)?/i);
+        // 1. DIRECT INVOICE CREATION MULTI-PATTERN PARSER (e.g. "crée une facture pour mon auto d'un montant de 1000e", "crée une facture de 500e pour Matthias ollivier")
+        const createInvMatchP1 = lowerInput.match(/(?:crée?r?|fait|génère?s?|émets?|nouvelle?)\s*(?:une?\s*)?(?:facture|brouillon)\s*(?:de\s*)?(\d+(?:[\.,]\d+)?)\s*(?:€|e|euros?)?\s*(?:pour\s*|client\s*)?(.+)?/i);
+        const createInvMatchP2 = lowerInput.match(/(?:crée?r?|fait|génère?s?|émets?|nouvelle?)\s*(?:une?\s*)?(?:facture|brouillon)\s*(?:pour\s*|client\s*)(.+?)\s*(?:d'un\s*montant\s*de|de|d'|pour)\s*(\d+(?:[\.,]\d+)?)\s*(?:€|e|euros?)/i);
+
+        let parsedInvAmount = 0;
+        let parsedInvClient = "";
+        let isCreateInvIntent = false;
+
+        if (createInvMatchP2 && createInvMatchP2[2]) {
+          isCreateInvIntent = true;
+          parsedInvClient = createInvMatchP2[1].trim();
+          parsedInvAmount = parseFloat(createInvMatchP2[2].replace(',', '.'));
+        } else if (createInvMatchP1 && createInvMatchP1[1]) {
+          isCreateInvIntent = true;
+          parsedInvAmount = parseFloat(createInvMatchP1[1].replace(',', '.'));
+          parsedInvClient = (createInvMatchP1[2] || "").trim();
+        }
+
+        const createInvMatch = isCreateInvIntent ? [lowerInput, parsedInvAmount.toString(), parsedInvClient] : null;
 
         // 2. DIRECT QUOTE CREATION REGEX (e.g. "crée un devis de 400e pour Client X")
         const createQuoteMatch = lowerInput.match(/(?:crée?r?|fait|génère?s?)\s*(?:un\s*)?devis\s*(?:de\s*)?(\d+(?:[\.,]\d+)?)\s*(?:€|e|euros?)?\s*(?:pour\s*)?(.+)?/i);
