@@ -498,8 +498,11 @@ Deno.serve(async (req: Request) => {
         } else if (createInvMatch && createInvMatch[1]) {
           const amount = parseFloat(createInvMatch[1].replace(',', '.'));
           let rawClient = (createInvMatch[2] || "").trim();
-          rawClient = rawClient.replace(/^(?:pour|a|à)\s+/i, "").trim();
-          const clientName = rawClient || "Matthias Ollivier";
+          rawClient = rawClient
+            .replace(/d'un\s*montant\s*de|d'un\s*prix\s*de|d'un\s*valeur\s*de|d'un\s*tarif\s*de/gi, "")
+            .replace(/^(?:pour|a|à)\s+/i, "")
+            .trim();
+          let clientName = rawClient.replace(/['"]/g, "").trim() || "Mon Auto";
 
           let clientId: string | null = null;
           const { data: existingClients } = await adminClient
