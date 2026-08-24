@@ -603,12 +603,19 @@ Deno.serve(async (req: Request) => {
       const isCancellation = /^(?:non|annuler|refuser|supprimer|annule)$/i.test(lowerInput) || /\b(non|annuler|refuser|supprimer|annule)\b/i.test(lowerInput);
 
       if (!replyText && activeDraft) {
+        const isNotSpecialCommand = !isConfirmation && !isCancellation && !createInvMatch && !createQuoteMatch;
+
         const updateAmountMatch = lowerInput.match(/(?:mets?|change|remplace|modifie|mets? à|c'est)\s*(\d+(?:[\.,]\d+)?)\s*(?:€|e|euros?|$)/i) || lowerInput.match(/^(\d+(?:[\.,]\d+)?)\s*(?:€|e|euros?)$/i);
-        const updateClientMatch = lowerInput.match(/(?:client|pour|nom|client\s*c'est)\s+(?:le\s*client\s*)?(?:c'est\s*|est\s*|pour\s*)?([a-zA-Zà-ÿÀ-Ÿ0-9\s\.\-_]+)$/i);
+        const updateClientMatch = isNotSpecialCommand ? (
+          lowerInput.match(/^(?:client|pour|nom|client\s*c'est|le\s*client\s*c'est|met\s*le\s*client|change\s*le\s*client)\s*:?\s*(.+)$/i) ||
+          lowerInput.match(/^(?:c'est\s*|pour\s*|client\s*)([a-zA-Zà-ÿÀ-Ÿ0-9\s\.\-_]{2,50})$/i)
+        ) : null;
+        const updateDescMatch = isNotSpecialCommand ? lowerInput.match(/(?:description|prestation|intitulé|motif)\s*:?\s*(.+)$/i) : null;
 
         if (updateClientMatch && updateClientMatch[1]) {
-          const rawClient = updateClientMatch[1].trim();
-          if (rawClient && !/^(?:de|du|la|le|une|un|facture|brouillon)$/i.test(rawClient)) {
+          let rawClient = updateClientMatch[1].trim();
+          rawClient = rawClient.replace(/^(?:le\s*client|c'est|pour|a|à)\s+/i, "").trim();
+          if (rawClient && !/^(?:de|du|la|le|une|un|facture|brouillon|oui|non)$/i.test(rawClient)) {
             let clientId: string | null = null;
             const { data: existingClients } = await adminClient
               .from("clients")
@@ -639,7 +646,39 @@ Deno.serve(async (req: Request) => {
               `💰 *Montant TTC* : ${activeAmount} €\n\n` +
               `⚠️ *Validation requise :*\n` +
               `• Répondez **"OUI"** (ou **"VALIDER"**) pour émettre cette facture avec son numéro officiel.\n` +
-              `• Ou indiquez d'autres corrections (ex: *"Mets 600€"*).\n` +
+              `• Ou indiquez d'autres corrections (ex: *"Mets 600€"*, *"Prestation site web"*).\n` +
+              `• Répondez **"NON"** pour annuler.`;
+          }
+        }
+
+        if (!replyText && updateDescMatch && updateDescMatch[1]) {
+          const newDesc = updateDescMatch[1].trim();
+          if (newDesc) {
+            const clientName = (activeDraft as any).client?.name || "Client";
+            const activeAmount = Number(activeDraft.total_ttc).toFixed(2);
+
+            await adminClient
+              .from("invoice_lines")
+              .delete()
+              .eq("invoice_id", activeDraft.id);
+
+            await adminClient
+              .from("invoice_lines")
+              .insert({
+                invoice_id: activeDraft.id,
+                description: newDesc,
+                quantity: 1,
+                unit_price: Number(activeDraft.total_ttc),
+                nature: "service",
+                position: 0,
+              });
+
+            replyText = `✏️ *Description du brouillon mise à jour !*\n\n` +
+              `👤 *Client* : ${clientName}\n` +
+              `💰 *Montant TTC* : ${activeAmount} €\n` +
+              `📝 *Prestation* : ${newDesc}\n\n` +
+              `⚠️ *Validation requise :*\n` +
+              `• Répondez **"OUI"** pour émettre cette facture.\n` +
               `• Répondez **"NON"** pour annuler.`;
           }
         }
@@ -694,12 +733,13 @@ Deno.serve(async (req: Request) => {
         }
       } else if (isConfirmation || isCancellation) {
         if (isCancellation) {
-          if (activeDraft) {
-            await adminClient
-              .from("invoices")
-              .delete()
-              .eq("id", activeDraft.id);
-          }
+          // Permanently delete ALL drafts for this company
+          await adminClient
+            .from("invoices")
+            .delete()
+            .eq("company_id", company.id)
+            .eq("status", "draft");
+
           replyText = `❌ *Création annulée.* Le brouillon de facture a été supprimé sans émettre de numéro officiel.`;
         } else if (isConfirmation) {
           if (activeDraft) {
