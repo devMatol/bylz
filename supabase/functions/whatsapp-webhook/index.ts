@@ -621,9 +621,9 @@ Deno.serve(async (req: Request) => {
             await adminClient
               .from("invoices")
               .update({ client_id: clientId })
-              .eq("id", activeDraft.id);
+              .eq("id", targetDraft.id);
 
-            const activeAmount = Number(activeDraft.total_ttc).toFixed(2);
+            const activeAmount = Number(targetDraft.total_ttc).toFixed(2);
             replyText = `✏️ *Client du brouillon mis à jour avec succès !*\n\n` +
               `👤 *Client* : ${rawClient}\n` +
               `💰 *Montant TTC* : ${activeAmount} €\n\n` +
@@ -637,13 +637,13 @@ Deno.serve(async (req: Request) => {
         if (!replyText && updateDescMatch && updateDescMatch[1]) {
           const newDesc = updateDescMatch[1].trim();
           if (newDesc) {
-            const clientName = (activeDraft as any).client?.name || "Client";
-            const activeAmount = Number(activeDraft.total_ttc).toFixed(2);
+            const clientName = (targetDraft as any).client?.name || "Client";
+            const activeAmount = Number(targetDraft.total_ttc).toFixed(2);
 
             await adminClient
               .from("invoice_lines")
               .delete()
-              .eq("invoice_id", activeDraft.id);
+              .eq("invoice_id", targetDraft.id);
 
             await adminClient
               .from("invoice_lines")
@@ -651,7 +651,7 @@ Deno.serve(async (req: Request) => {
                 invoice_id: activeDraft.id,
                 description: newDesc,
                 quantity: 1,
-                unit_price: Number(activeDraft.total_ttc),
+                unit_price: Number(targetDraft.total_ttc),
                 nature: "service",
                 position: 0,
               });
@@ -669,12 +669,12 @@ Deno.serve(async (req: Request) => {
         if (!replyText && updateAmountMatch && updateAmountMatch[1]) {
           const newAmount = parseFloat(updateAmountMatch[1].replace(',', '.'));
           if (newAmount > 0) {
-            const clientName = (activeDraft as any).client?.name || "Client";
+            const clientName = (targetDraft as any).client?.name || "Client";
 
             const { data: activeLines } = await adminClient
               .from("invoice_lines")
               .select("description")
-              .eq("invoice_id", activeDraft.id)
+              .eq("invoice_id", targetDraft.id)
               .limit(1);
 
             const desc = activeLines?.[0]?.description || "Prestation de service";
@@ -686,12 +686,12 @@ Deno.serve(async (req: Request) => {
                 total_vat: 0,
                 total_ttc: newAmount,
               })
-              .eq("id", activeDraft.id);
+              .eq("id", targetDraft.id);
 
             await adminClient
               .from("invoice_lines")
               .delete()
-              .eq("invoice_id", activeDraft.id);
+              .eq("invoice_id", targetDraft.id);
 
             await adminClient
               .from("invoice_lines")
@@ -754,21 +754,21 @@ Deno.serve(async (req: Request) => {
                 issue_date: todayStr,
                 due_date: dueDate,
               })
-              .eq("id", activeDraft.id);
+              .eq("id", targetDraft.id);
 
-            const clientName = (activeDraft as any).client?.name || "Client";
+            const clientName = (targetDraft as any).client?.name || "Client";
 
             const { data: activeLines } = await adminClient
               .from("invoice_lines")
               .select("description")
-              .eq("invoice_id", activeDraft.id)
+              .eq("invoice_id", targetDraft.id)
               .limit(1);
 
             const desc = activeLines?.[0]?.description || "Prestation de service";
 
             replyText = `✅ *Facture ${officialNum} validée et émise avec succès !*\n\n` +
               `👤 *Client* : ${clientName}\n` +
-              `💰 *Montant TTC* : ${Number(activeDraft.total_ttc).toFixed(2)} €\n` +
+              `💰 *Montant TTC* : ${Number(targetDraft.total_ttc).toFixed(2)} €\n` +
               `📝 *Prestation* : ${desc}\n` +
               `⏳ *Échéance* : ${dueDate}\n\n` +
               `_Retrouvez ou téléchargez le PDF de votre facture sur https://bylz.fr/invoices?v=2_`;
@@ -816,7 +816,7 @@ Deno.serve(async (req: Request) => {
               return `- Devis ${q.number || 'Brouillon'} (${clientName}): ${q.total_ttc}€ [Statut: ${q.status}]`;
             }).join("\n") || "Aucun devis enregistré.";
 
-            const draftContextStr = activeDraft ? `\nBROUILLON ACTIF EN COURS (à corriger ou valider) :\n- Client actuel: ${(activeDraft as any).client?.name || 'Client'}\n- Montant actuel: ${activeDraft.total_ttc} €` : '';
+            const draftContextStr = activeDraft ? `\nBROUILLON ACTIF EN COURS (à corriger ou valider) :\n- Client actuel: ${(targetDraft as any).client?.name || 'Client'}\n- Montant actuel: ${targetDraft.total_ttc} €` : '';
 
             const systemPrompt = `Tu es Bylz Copilot, l'assistant IA officiel de facturation et gestion fiscale de l'application Bylz (https://bylz.fr).
 Tu réponds par message WhatsApp exclusivement au dirigeant de l'entreprise "${company.legal_name}".
@@ -919,12 +919,25 @@ Sinon, réponds de manière concise, précise et amicale en français sur WhatsA
               const isAiCancel = actionObj?.action === "cancel_draft" || /\b(non|annuler|supprimer|refuser|annule|annulation)\b/i.test(rawAiReply);
               const isAiConfirm = actionObj?.action === "confirm_draft" || /\b(oui|valider|confirmer|valide|validation)\b/i.test(rawAiReply);
 
+              // Dynamically re-query for active draft if needed (check status = 'draft' or DRAFT- prefix)
+              let targetDraft = activeDraft;
+              if (!targetDraft) {
+                const { data: latestDrafts } = await adminClient
+                  .from("invoices")
+                  .select("*, client:clients(name)")
+                  .eq("company_id", company.id)
+                  .or("status.eq.draft,number.ilike.DRAFT-%")
+                  .order("created_at", { ascending: false })
+                  .limit(1);
+                targetDraft = latestDrafts?.[0] || null;
+              }
+
               if (isAiCancel) {
-                if (activeDraft) {
+                if (targetDraft) {
                   await adminClient
                     .from("invoices")
                     .delete()
-                    .eq("id", activeDraft.id);
+                    .eq("id", targetDraft.id);
 
                   replyText = `❌ *Création annulée.* Le brouillon de facture a été supprimé sans émettre de numéro officiel.`;
                 } else {
@@ -932,9 +945,10 @@ Sinon, réponds de manière concise, précise et amicale en français sur WhatsA
                 }
 
               } else if (isAiConfirm) {
-                if (!activeDraft) {
+                if (!targetDraft) {
                   replyText = `ℹ️ Aucun brouillon de facture en attente de validation.\n\nDictez *"Créer une facture de 500€ pour Client X"* pour générer un brouillon !`;
                 } else {
+                  // Use targetDraft for validation
                 const { data: lastInvoices } = await adminClient
                   .from("invoices")
                   .select("number")
@@ -963,21 +977,21 @@ Sinon, réponds de manière concise, précise et amicale en français sur WhatsA
                     issue_date: todayStr,
                     due_date: dueDate,
                   })
-                  .eq("id", activeDraft.id);
+                  .eq("id", targetDraft.id);
 
-                const clientName = (activeDraft as any).client?.name || "Client";
+                const clientName = (targetDraft as any).client?.name || "Client";
 
                 const { data: activeLines } = await adminClient
                   .from("invoice_lines")
                   .select("description")
-                  .eq("invoice_id", activeDraft.id)
+                  .eq("invoice_id", targetDraft.id)
                   .limit(1);
 
                 const desc = activeLines?.[0]?.description || "Prestation de service";
 
                 replyText = `✅ *Facture ${officialNum} validée et émise avec succès !*\n\n` +
                   `👤 *Client* : ${clientName}\n` +
-                  `💰 *Montant TTC* : ${Number(activeDraft.total_ttc).toFixed(2)} €\n` +
+                  `💰 *Montant TTC* : ${Number(targetDraft.total_ttc).toFixed(2)} €\n` +
                   `📝 *Prestation* : ${desc}\n` +
                   `⏳ *Échéance* : ${dueDate}\n\n` +
                   `_Retrouvez ou téléchargez le PDF de votre facture sur https://bylz.fr/invoices?v=2_`;
@@ -1043,7 +1057,7 @@ Sinon, réponds de manière concise, précise et amicale en français sur WhatsA
                       `_Retrouvez vos devis sur https://bylz.fr_`;
                   }
                 } else {
-                  const clientName = actionObj.client_name || (activeDraft as any)?.client?.name || "Client WhatsApp";
+                  const clientName = actionObj.client_name || (targetDraft as any)?.client?.name || "Client WhatsApp";
                   const amount = parseFloat(actionObj.amount);
                   const description = actionObj.description || activeDraft?.items?.[0]?.description || "Prestation de service";
 
@@ -1078,12 +1092,12 @@ Sinon, réponds de manière concise, précise et amicale en français sur WhatsA
                         total_vat: 0,
                         total_ttc: amount,
                       })
-                      .eq("id", activeDraft.id);
+                      .eq("id", targetDraft.id);
 
                     await adminClient
                       .from("invoice_lines")
                       .delete()
-                      .eq("invoice_id", activeDraft.id);
+                      .eq("invoice_id", targetDraft.id);
 
                     await adminClient
                       .from("invoice_lines")
