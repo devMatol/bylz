@@ -726,7 +726,7 @@ Deno.serve(async (req: Request) => {
 
           replyText = `❌ *Création annulée.* Le brouillon de facture a été supprimé sans émettre de numéro officiel.`;
         } else if (isConfirmation) {
-          if (activeDraft) {
+          if (targetDraft) {
             const { data: lastInvoices } = await adminClient
               .from("invoices")
               .select("number")
