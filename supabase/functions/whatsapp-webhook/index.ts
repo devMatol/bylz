@@ -128,6 +128,7 @@ Deno.serve(async (req: Request) => {
     let base64Audio = "";
     let audioMimeType = "audio/ogg";
     let metaPhoneNumberId = "";
+    let replyText = "";
     let body: any = {};
 
     if (contentType.includes("application/x-www-form-urlencoded")) {
