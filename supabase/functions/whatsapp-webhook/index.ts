@@ -147,22 +147,32 @@ Deno.serve(async (req: Request) => {
           audioMimeType = mediaContentType.includes("ogg") ? "audio/ogg" : mediaContentType;
           if (mediaUrl) {
             try {
-              const twilioSid = Deno.env.get("TWILIO_ACCOUNT_SID") || "";
-              const twilioToken = Deno.env.get("TWILIO_AUTH_TOKEN") || "";
-              const headers: Record<string, string> = {};
+              const extractedSidMatch = mediaUrl.match(/\/Accounts\/(AC[a-fA-F0-9]{32})\//i);
+              const twilioSid = extractedSidMatch ? extractedSidMatch[1] : (Deno.env.get("TWILIO_ACCOUNT_SID") || "");
+              const twilioToken = Deno.env.get("TWILIO_AUTH_TOKEN") || Deno.env.get("WHATSAPP_TOKEN") || "";
+
+              const headers: Record<string, string> = { "User-Agent": "curl/7.64.1" };
               if (twilioSid && twilioToken) {
                 headers["Authorization"] = `Basic ${btoa(`${twilioSid}:${twilioToken}`)}`;
               }
-              const controller = new AbortController();
-              const timeoutId = setTimeout(() => controller.abort(), 5000);
-              const audRes = await fetch(mediaUrl, { headers, signal: controller.signal });
-              clearTimeout(timeoutId);
+
+              let audRes = await fetch(mediaUrl, { headers });
+              if (!audRes.ok) {
+                console.warn(`[TWILIO AUDIO] Auth fetch failed (${audRes.status}), attempting unauthenticated fetch...`);
+                audRes = await fetch(mediaUrl);
+              }
+
               if (audRes.ok) {
                 const audBuf = await audRes.arrayBuffer();
-                base64Audio = bufferToBase64(audBuf);
+                if (audBuf && audBuf.byteLength > 0) {
+                  base64Audio = bufferToBase64(audBuf);
+                  console.log(`[TWILIO AUDIO] Audio successfully downloaded! Bytes: ${audBuf.byteLength}, Base64 len: ${base64Audio.length}`);
+                }
+              } else {
+                console.warn(`[TWILIO AUDIO] Media fetch failed with status: ${audRes.status}`);
               }
             } catch (err) {
-              console.warn("Error fetching Twilio audio media:", err);
+              console.error("[TWILIO AUDIO] Error fetching Twilio audio media:", err);
             }
           }
         } else if (mediaContentType.startsWith("image/")) {
@@ -1195,11 +1205,8 @@ Sinon, réponds de manière concise, précise et amicale en français sur WhatsA
     console.log("WhatsApp reply generated:", replyText);
 
     if (isTwilio) {
-      const cleanReply = (replyText || "Bonjour ! Comment puis-je vous aider ?")
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;");
-      const twiML = `<?xml version="1.0" encoding="UTF-8"?>\n<Response>\n  <Message>${cleanReply}</Message>\n</Response>`;
+      const cleanReply = replyText || "Bonjour ! Comment puis-je vous aider ?";
+      const twiML = `<?xml version="1.0" encoding="UTF-8"?>\n<Response>\n  <Message><![CDATA[${cleanReply}]]></Message>\n</Response>`;
       return new Response(twiML, {
         status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/xml; charset=utf-8" },
