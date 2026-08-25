@@ -162,8 +162,9 @@ Deno.serve(async (req: Request) => {
               if (audRes.status >= 300 && audRes.status < 400) {
                 const loc = audRes.headers.get("location");
                 if (loc) {
-                  console.log(`[TWILIO AUDIO] Redirecting to S3: ${loc.substring(0, 60)}...`);
-                  audRes = await fetch(loc, { headers: { "User-Agent": "curl/7.64.1" } });
+                  const fullLoc = loc.startsWith("http") ? loc : new URL(loc, mediaUrl).toString();
+                  console.log(`[TWILIO AUDIO] Redirecting to full URL: ${fullLoc.substring(0, 60)}...`);
+                  audRes = await fetch(fullLoc, { headers: { "User-Agent": "curl/7.64.1" } });
                 }
               }
 
@@ -1199,13 +1200,17 @@ Sinon, réponds de manière concise, précise et amicale en français sur WhatsA
               `\n\n_Retrouvez toutes vos factures sur https://bylz.fr/invoices?v=2_`;
 
           } else if (!replyText) {
-            replyText = `🤖 *Bylz Copilot IA (WhatsApp)*\n\n` +
-              `Bonjour ! Comment puis-je vous aider aujourd'hui ?\n\n` +
-              `1️⃣ *"Créé une facture pour Nom, 400€ pour un site web"*\n` +
-              `2️⃣ *"Liste moi mes factures"*\n` +
-              `3️⃣ *"Quel est mon CA ce mois-ci ?"*\n` +
-              `🎙️ *Message vocal* : Dictez vos commandes par note vocale !\n\n` +
-              `_Gérez votre activité sur https://bylz.fr_`;
+            if (messageType === "audio" || messageType === "voice") {
+              replyText = `🎙️ *Note vocale reçue !*\n\nJe n'ai pas pu décoder l'audio de ce message vocal. Pouvez-vous s'il vous plaît réécrire votre commande en texte ?`;
+            } else {
+              replyText = `🤖 *Bylz Copilot IA (WhatsApp)*\n\n` +
+                `Bonjour ! Comment puis-je vous aider aujourd'hui ?\n\n` +
+                `1️⃣ *"Créé une facture pour Nom, 400€ pour un site web"*\n` +
+                `2️⃣ *"Liste moi mes factures"*\n` +
+                `3️⃣ *"Quel est mon CA ce mois-ci ?"*\n` +
+                `🎙️ *Message vocal* : Dictez vos commandes par note vocale !\n\n` +
+                `_Gérez votre activité sur https://bylz.fr_`;
+            }
           }
         }
       }
