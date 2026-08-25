@@ -797,12 +797,14 @@ Deno.serve(async (req: Request) => {
 
             const desc = activeLines?.[0]?.description || "Prestation de service";
 
-            replyText = `✅ *Facture ${officialNum} validée et émise avec succès !*\n\n` +
+            replyText = `⏳ *Facture ${officialNum} enregistrée en attente !*\n\n` +
               `👤 *Client* : ${clientName}\n` +
               `💰 *Montant TTC* : ${Number(targetDraft.total_ttc).toFixed(2)} €\n` +
               `📝 *Prestation* : ${desc}\n` +
               `⏳ *Échéance* : ${dueDate}\n\n` +
-              `_Retrouvez ou téléchargez le PDF de votre facture sur https://bylz.fr/invoices?v=2_`;
+              `✍️ *Action requise* : Votre facture est prête mais nécessite d'être complétée (adresse du client, SIRET, mentions éventuelles).\n` +
+              `👉 *Complétez et envoyez votre facture ici* :\n` +
+              `https://bylz.fr/invoices`;
           } else {
             replyText = `ℹ️ Aucun brouillon de facture en attente de validation.\n\nDictez *"Créer une facture de 500€ pour Client X"* pour générer un brouillon !`;
           }
@@ -1082,12 +1084,14 @@ Sinon, réponds de manière concise, précise et amicale en français sur WhatsA
 
                 const desc = activeLines?.[0]?.description || "Prestation de service";
 
-                replyText = `✅ *Facture ${officialNum} validée et émise avec succès !*\n\n` +
+                replyText = `⏳ *Facture ${officialNum} enregistrée en attente !*\n\n` +
                   `👤 *Client* : ${clientName}\n` +
                   `💰 *Montant TTC* : ${Number(targetDraft.total_ttc).toFixed(2)} €\n` +
                   `📝 *Prestation* : ${desc}\n` +
                   `⏳ *Échéance* : ${dueDate}\n\n` +
-                  `_Retrouvez ou téléchargez le PDF de votre facture sur https://bylz.fr/invoices?v=2_`;
+                  `✍️ *Action requise* : Votre facture est prête mais nécessite d'être complétée (adresse du client, SIRET, mentions éventuelles).\n` +
+                  `👉 *Complétez et envoyez votre facture ici* :\n` +
+                  `https://bylz.fr/invoices`;
                 }
 
               } else if (actionObj && (actionObj.action === "create_invoice" || actionObj.action === "update_draft" || actionObj.action === "create_quote") && actionObj.amount) {
