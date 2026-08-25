@@ -120,6 +120,12 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
+    const debugLogs: string[] = [];
+    function dbg(msg: string) {
+      console.log(`[DEBUG] ${msg}`);
+      debugLogs.push(msg);
+    }
+
     const contentType = req.headers.get("content-type") || "";
     let fromPhone = "";
     let textContent = "";
@@ -133,6 +139,7 @@ Deno.serve(async (req: Request) => {
 
     if (contentType.includes("application/x-www-form-urlencoded") || contentType.includes("multipart/form-data") || req.headers.has("x-twilio-signature")) {
       isTwilio = true;
+      dbg("Mode: Twilio (Form-Data)");
       const formData = await req.formData();
       const rawFrom = formData.get("From")?.toString() || "";
       fromPhone = rawFrom.replace("whatsapp:", "").trim();
@@ -181,6 +188,7 @@ Deno.serve(async (req: Request) => {
                 if (audBuf && audBuf.byteLength > 0) {
                   base64Audio = bufferToBase64(audBuf);
                   console.log(`[TWILIO AUDIO] Audio successfully downloaded! Bytes: ${audBuf.byteLength}, Base64 len: ${base64Audio.length}`);
+                  dbg(`Audio Twilio telecharge: ${audBuf.byteLength} octets`);
                 }
               } else {
                 console.warn(`[TWILIO AUDIO] Media fetch failed with status: ${audRes.status}`);
@@ -220,6 +228,7 @@ Deno.serve(async (req: Request) => {
         metaPhoneNumberId = change?.metadata?.phone_number_id || "";
         fromPhone = message?.from || "";
         messageType = message?.type || "text";
+        dbg(`Mode: Meta Cloud API (type=${messageType})`);
         textContent = message?.text?.body || "";
       }
 
@@ -232,6 +241,7 @@ Deno.serve(async (req: Request) => {
           const mediaId = voiceObj?.id || "";
           const rawMime = voiceObj?.mime_type || "audio/ogg";
           audioMimeType = rawMime.split(";")[0].trim() || "audio/ogg";
+          dbg(`Voice Note Media ID: ${mediaId}`);
 
           console.log(`[VOICE MODULE] Processing WhatsApp voice note. Media ID: ${mediaId}, Mime: ${audioMimeType}`);
 
@@ -286,6 +296,7 @@ Deno.serve(async (req: Request) => {
                   if (audBuf && audBuf.byteLength > 0) {
                     base64Audio = bufferToBase64(audBuf);
                     console.log(`[VOICE MODULE] Successfully downloaded audio! Bytes: ${audBuf.byteLength}, Base64 len: ${base64Audio.length}`);
+                    dbg(`Audio telecharge: ${audBuf.byteLength} octets`);
                     break;
                   }
                 }
@@ -746,6 +757,7 @@ Deno.serve(async (req: Request) => {
           .filter((i) => i.status === "pending" || i.status === "late")
           .reduce((s, i) => s + Number(i.total_ttc), 0);
 
+        dbg(`IA Gemini appelee (audioLen=${base64Audio.length}, text="${textContent.substring(0, 30)}")`);
         if (geminiApiKey && (textContent || base64Audio)) {
           try {
             const invoicesSummary = (invoices || []).map((i) => {
@@ -850,6 +862,7 @@ Sinon, réponds de manière concise, précise et amicale en français sur WhatsA
             }
 
             if (rawAiReply) {
+              dbg(`Reponse Gemini: "${rawAiReply.substring(0, 60)}"`);
               console.log("Raw Gemini AI Reply:", rawAiReply);
 
               const jsonMatch = rawAiReply.match(/\{[\s\S]*?\}/);
@@ -1222,21 +1235,23 @@ Sinon, réponds de manière concise, précise et amicale en français sur WhatsA
     }
   }
 
-    console.log("WhatsApp reply generated:", replyText);
+    const debugSummary = "\n\n------------------\n🛠️ *DIAGNOSTIC EN DIRECT* :\n" + debugLogs.map(l => "• " + l).join("\n");
+    const finalReplyWithDebug = (replyText || "Bonjour ! Comment puis-je vous aider ?") + debugSummary;
+
+    console.log("WhatsApp reply generated:", finalReplyWithDebug);
 
     if (isTwilio) {
-      const cleanReply = replyText || "Bonjour ! Comment puis-je vous aider ?";
-      const twiML = `<?xml version="1.0" encoding="UTF-8"?>\n<Response>\n  <Message><![CDATA[${cleanReply}]]></Message>\n</Response>`;
+      const twiML = `<?xml version="1.0" encoding="UTF-8"?>\n<Response>\n  <Message><![CDATA[${finalReplyWithDebug}]]></Message>\n</Response>`;
       return new Response(twiML, {
         status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/xml; charset=utf-8" },
       });
     }
 
-    if (!isWebClient && fromPhone && replyText) {
+    if (!isWebClient && fromPhone) {
       const phoneNumberId = metaPhoneNumberId || "122107899657443161";
       const validMetaToken = "EAANpHbOHsisBSZAcVQzSmgmBid5hI5rOMNM2W0nmGah9MMWiA6GbcH1PHZCp13hJNgvJvkGQLSPsgebnEPyot3P7ZC77mwrc2eeApBCfgRIZC0vvSVuerQhT5bQvLLQI6EVSlhyazZBS1hZAzpykfZB2F7Nk5yX8ZBJM2bHfFxAX7pXLrq0hIvRPknA9tyTlNgZDZD";
-      await sendMetaWhatsAppMessage(phoneNumberId, fromPhone, replyText, validMetaToken);
+      await sendMetaWhatsAppMessage(phoneNumberId, fromPhone, finalReplyWithDebug, validMetaToken);
     }
 
     return new Response(
@@ -1250,16 +1265,27 @@ Sinon, réponds de manière concise, précise et amicale en français sur WhatsA
   } catch (err: any) {
     console.error("WhatsApp Webhook error:", err);
     const errDetail = err?.stack || err?.message || String(err);
+    dbg(`[CRITICAL ERROR] ${errDetail}`);
+
+    const debugSummary = "\n\n------------------\n🛠️ *DIAGNOSTIC EN DIRECT* :\n" + (debugLogs || []).map(l => "• " + l).join("\n");
+    const errReplyWithDebug = `🤖 *Erreur lors du traitement !*\n\n⚠️ Détail : ${errDetail}` + debugSummary;
+
+    if (fromPhone) {
+      try {
+        const validMetaToken = "EAANpHbOHsisBSZAcVQzSmgmBid5hI5rOMNM2W0nmGah9MMWiA6GbcH1PHZCp13hJNgvJvkGQLSPsgebnEPyot3P7ZC77mwrc2eeApBCfgRIZC0vvSVuerQhT5bQvLLQI6EVSlhyazZBS1hZAzpykfZB2F7Nk5yX8ZBJM2bHfFxAX7pXLrq0hIvRPknA9tyTlNgZDZD";
+        await sendMetaWhatsAppMessage(metaPhoneNumberId || "122107899657443161", fromPhone, errReplyWithDebug, validMetaToken);
+      } catch {}
+    }
 
     if (req.headers.get("content-type")?.includes("application/x-www-form-urlencoded")) {
-      const fallbackTwiML = `<?xml version="1.0" encoding="UTF-8"?>\n<Response>\n  <Message><![CDATA[🤖 Erreur Webhook : ${errDetail}]]></Message>\n</Response>`;
+      const fallbackTwiML = `<?xml version="1.0" encoding="UTF-8"?>\n<Response>\n  <Message><![CDATA[${errReplyWithDebug}]]></Message>\n</Response>`;
       return new Response(fallbackTwiML, {
         status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/xml; charset=utf-8" },
       });
     }
 
-    return new Response(JSON.stringify({ error: errDetail }), {
+    return new Response(JSON.stringify({ error: errDetail, debug: debugLogs }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
