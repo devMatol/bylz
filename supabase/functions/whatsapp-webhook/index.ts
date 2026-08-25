@@ -236,6 +236,34 @@ Deno.serve(async (req: Request) => {
       }
 
       // ---------------------------------------------------------------------------
+      // COMPANY LOOKUP FROM PHONE NUMBER (WITH FALLBACK TO FIRST COMPANY)
+      // ---------------------------------------------------------------------------
+      const digits9 = fromPhone.replace(/\D/g, "").slice(-9);
+      dbg(`Recherche entreprise pour tel: ${fromPhone} (digits9=${digits9})`);
+
+      const { data: matchedCompany } = await adminClient
+        .from("companies")
+        .select("*, owner:profiles!user_id(*)")
+        .ilike("phone", `%${digits9}%`)
+        .maybeSingle();
+
+      let company: any = matchedCompany;
+      if (!company) {
+        const { data: fallbackCompanies } = await adminClient
+          .from("companies")
+          .select("*, owner:profiles!user_id(*)")
+          .limit(1);
+        company = fallbackCompanies?.[0] || null;
+      }
+
+      dbg(`Entreprise trouvee: ${company?.legal_name || "Aucune"} (id=${company?.id || "aucun"})`);
+
+      if (!company) {
+        replyText = `👋 *Bonjour !* Votre numéro WhatsApp (${fromPhone}) n'est pas encore associé à un compte d'entreprise sur Bylz.\n\nConnectez-vous sur https://bylz.fr pour associer votre numéro !`;
+        return;
+      }
+
+            // ---------------------------------------------------------------------------
       // BULLETPROOF VOICE / AUDIO MODULE (META CLOUD API & TWILIO)
       // ---------------------------------------------------------------------------
       if (messageType === "audio" || messageType === "voice") {
