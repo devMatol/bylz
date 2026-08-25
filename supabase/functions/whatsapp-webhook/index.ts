@@ -311,8 +311,9 @@ Deno.serve(async (req: Request) => {
 
         // 1. DIRECT INVOICE CREATION REGEX (e.g. "crée une facture de 500e pour Matthias ollivier", "fait une facture 400€ pour Client X")
         // 1. DIRECT INVOICE CREATION MULTI-PATTERN PARSER (e.g. "crée une facture pour mon auto d'un montant de 1000e", "crée une facture de 500e pour Matthias ollivier")
-        const createInvMatchP1 = lowerInput.match(/(?:crée?r?|fait|génère?s?|émets?|nouvelle?)\s*(?:une?\s*)?(?:facture|brouillon)\s*(?:de\s*)?(\d+(?:[\.,]\d+)?)\s*(?:€|e|euros?)?\s*(?:pour\s*|client\s*)?(.+)?/i);
-        const createInvMatchP2 = lowerInput.match(/(?:crée?r?|fait|génère?s?|émets?|nouvelle?)\s*(?:une?\s*)?(?:facture|brouillon)\s*(?:pour\s*|client\s*)(.+?)\s*(?:d'un\s*montant\s*de|de|d'|pour)\s*(\d+(?:[\.,]\d+)?)\s*(?:€|e|euros?)/i);
+        const createInvMatchP1 = lowerInput.match(/(?:créé|crée?r?|creer?|fait|génère?s?|genere?s?|émets?|emets?|nouvelle?)\s*(?:une?\s*)?(?:facture|brouillon)\s*(?:de\s*)?(\d+(?:[\.,]\d+)?)\s*(?:€|e|euros?)?\s*(?:pour\s*|client\s*)?(.+)?/i);
+        const createInvMatchP2 = lowerInput.match(/(?:créé|crée?r?|creer?|fait|génère?s?|genere?s?|émets?|emets?|nouvelle?)\s*(?:une?\s*)?(?:facture|brouillon)\s*(?:pour\s*|client\s*)(.+?)\s*(?:d'un\s*montant\s*de|de|d'|pour)\s*(\d+(?:[\.,]\d+)?)\s*(?:€|e|euros?)/i);
+        const createInvMatchP3 = lowerInput.match(/(?:créé|crée?r?|creer?|fait|génère?s?|genere?s?|émets?|emets?|nouvelle?)\s*(?:une?\s*)?(?:facture|brouillon)\s*(?:pour\s*|client\s*)(.+?)\s*(\d+(?:[\.,]\d+)?)\s*(?:€|e|euros?)/i);
 
         let parsedInvAmount = 0;
         let parsedInvClient = "";
@@ -322,6 +323,10 @@ Deno.serve(async (req: Request) => {
           isCreateInvIntent = true;
           parsedInvClient = createInvMatchP2[1].trim();
           parsedInvAmount = parseFloat(createInvMatchP2[2].replace(',', '.'));
+        } else if (createInvMatchP3 && createInvMatchP3[2]) {
+          isCreateInvIntent = true;
+          parsedInvClient = createInvMatchP3[1].trim();
+          parsedInvAmount = parseFloat(createInvMatchP3[2].replace(',', '.'));
         } else if (createInvMatchP1 && createInvMatchP1[1]) {
           isCreateInvIntent = true;
           parsedInvAmount = parseFloat(createInvMatchP1[1].replace(',', '.'));
@@ -814,7 +819,7 @@ Sinon, réponds de manière concise, précise et amicale en français sur WhatsA
               contentsParts.push({ text: `Message utilisateur : "${textContent}"` });
             }
 
-            const modelsToTry = ["gemini-3.6-flash", "gemini-3.5-flash", "gemini-flash-latest"];
+            const modelsToTry = ["gemini-3.5-flash", "gemini-3.6-flash", "gemini-flash-latest"];
             let rawAiReply = "";
 
             for (const model of modelsToTry) {
