@@ -817,7 +817,7 @@ Deno.serve(async (req: Request) => {
               return `- Devis ${q.number || 'Brouillon'} (${clientName}): ${q.total_ttc}€ [Statut: ${q.status}]`;
             }).join("\n") || "Aucun devis enregistré.";
 
-            const draftContextStr = activeDraft ? `\nBROUILLON ACTIF EN COURS (à corriger ou valider) :\n- Client actuel: ${(targetDraft as any).client?.name || 'Client'}\n- Montant actuel: ${targetDraft.total_ttc} €` : '';
+            const draftContextStr = activeDraft ? `\nBROUILLON ACTIF EN COURS (à corriger ou valider) :\n- Client actuel: ${(activeDraft as any).client?.name || 'Client'}\n- Montant actuel: ${activeDraft.total_ttc} €` : '';
 
             const systemPrompt = `Tu es Bylz Copilot, l'assistant IA officiel de facturation et gestion fiscale de l'application Bylz (https://bylz.fr).
 Tu réponds par message WhatsApp exclusivement au dirigeant de l'entreprise "${company.legal_name}".
