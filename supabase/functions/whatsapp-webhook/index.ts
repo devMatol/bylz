@@ -919,11 +919,38 @@ Sinon, réponds de manière concise, précise et amicale en français sur WhatsA
                 try { actionObj = JSON.parse(jsonMatch[0]); } catch {}
               }
 
-              const isAiCancel = actionObj?.action === "cancel_draft" || /\b(non|annuler|supprimer|refuser|annule|annulation)\b/i.test(rawAiReply);
+              let isAiCancel = actionObj?.action === "cancel_draft" || /\b(non|annuler|supprimer|refuser|annule|annulation)\b/i.test(rawAiReply);
               let isAiConfirm = actionObj?.action === "confirm_draft" || /\b(oui|valider|confirmer|valide|validation)\b/i.test(rawAiReply);
-              if (!isAiConfirm && !isAiCancel && !rawAiReply && targetDraft && (messageType === "audio" || messageType === "voice")) {
-                dbg("Fallback Automatique Vocale: Brouillon en attente -> Execution Validation (OUI)");
-                isAiConfirm = true;
+
+              // If Gemini failed to produce text on audio but active draft exists, run targeted audio check for yes/no safety
+              if (!isAiConfirm && !isAiCancel && !rawAiReply && base64Audio && (messageType === "audio" || messageType === "voice")) {
+                try {
+                  const checkRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiApiKey}`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                      contents: [{
+                        role: "user",
+                        parts: [
+                          { inline_data: { mime_type: audioMimeType.includes("ogg") ? "audio/ogg" : audioMimeType, data: base64Audio } },
+                          { text: "L'utilisateur dit-il 'non' (ou annuler) ou 'oui' (ou valider) dans ce vocal ? Réponds EXCLUSIVEMENT 'NON' ou 'OUI'." }
+                        ]
+                      }]
+                    })
+                  });
+                  if (checkRes.ok) {
+                    const checkData = await checkRes.json();
+                    const checkTxt = checkData.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || "";
+                    dbg(`Secours Vocal Cible Oui/Non: "${checkTxt}"`);
+                    if (/non|annuler|refuser|supprimer/i.test(checkTxt)) {
+                      isAiCancel = true;
+                    } else if (/oui|valider|ok|confirmer/i.test(checkTxt)) {
+                      isAiConfirm = true;
+                    }
+                  }
+                } catch (checkErr) {
+                  dbg(`[EXCEPT CHECK OUI/NON] ${checkErr?.message}`);
+                }
               }
 
               // Dynamically re-query for active draft if needed (check status = 'draft', DRAFT- prefix, or recent creation)
