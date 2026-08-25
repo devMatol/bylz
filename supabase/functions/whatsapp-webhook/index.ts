@@ -726,6 +726,28 @@ Deno.serve(async (req: Request) => {
 
           replyText = `❌ *Création annulée.* Le brouillon de facture a été supprimé sans émettre de numéro officiel.`;
         } else if (isConfirmation) {
+          if (!targetDraft) {
+            const { data: d1 } = await adminClient
+              .from("invoices")
+              .select("*, client:clients(name)")
+              .eq("company_id", company.id)
+              .eq("status", "draft")
+              .order("created_at", { ascending: false })
+              .limit(1);
+            targetDraft = d1?.[0] || null;
+
+            if (!targetDraft) {
+              const { data: d2 } = await adminClient
+                .from("invoices")
+                .select("*, client:clients(name)")
+                .eq("company_id", company.id)
+                .ilike("number", "DRAFT-%")
+                .order("created_at", { ascending: false })
+                .limit(1);
+              targetDraft = d2?.[0] || null;
+            }
+          }
+
           if (targetDraft) {
             const { data: lastInvoices } = await adminClient
               .from("invoices")
