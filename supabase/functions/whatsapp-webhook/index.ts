@@ -922,14 +922,25 @@ Sinon, réponds de manière concise, précise et amicale en français sur WhatsA
               // Dynamically re-query for active draft if needed (check status = 'draft' or DRAFT- prefix)
               let targetDraft = activeDraft;
               if (!targetDraft) {
-                const { data: latestDrafts } = await adminClient
+                const { data: d1 } = await adminClient
                   .from("invoices")
                   .select("*, client:clients(name)")
                   .eq("company_id", company.id)
-                  .or("status.eq.draft,number.ilike.DRAFT-%")
+                  .eq("status", "draft")
                   .order("created_at", { ascending: false })
                   .limit(1);
-                targetDraft = latestDrafts?.[0] || null;
+                targetDraft = d1?.[0] || null;
+
+                if (!targetDraft) {
+                  const { data: d2 } = await adminClient
+                    .from("invoices")
+                    .select("*, client:clients(name)")
+                    .eq("company_id", company.id)
+                    .ilike("number", "DRAFT-%")
+                    .order("created_at", { ascending: false })
+                    .limit(1);
+                  targetDraft = d2?.[0] || null;
+                }
               }
 
               if (isAiCancel) {
