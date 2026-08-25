@@ -581,6 +581,7 @@ Deno.serve(async (req: Request) => {
           .limit(1);
 
         const activeDraft = draftInvoices?.[0];
+        let targetDraft: any = activeDraft;
 
       const isConfirmation = /^(?:oui|valider|confirmer|ok|d'accord|valide|c'est bon)$/i.test(lowerInput) || /\b(oui|valider|confirmer|valide)\b/i.test(lowerInput);
       const isCancellation = /^(?:non|annuler|refuser|supprimer|annule|supprime|efface|effacer|poubelle)$/i.test(lowerInput) || /\b(non|annuler?|refuser?|supprimer?|annule|supprime|effacer?|poubelle)\b/i.test(lowerInput);
@@ -954,7 +955,7 @@ Sinon, réponds de manière concise, précise et amicale en français sur WhatsA
               }
 
               // Dynamically re-query for active draft if needed (check status = 'draft', DRAFT- prefix, or recent creation)
-              let targetDraft = activeDraft;
+              targetDraft = activeDraft;
               if (!targetDraft) {
                 const { data: d1 } = await adminClient
                   .from("invoices")
