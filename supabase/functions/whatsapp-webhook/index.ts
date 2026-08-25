@@ -919,7 +919,7 @@ Sinon, réponds de manière concise, précise et amicale en français sur WhatsA
               const isAiCancel = actionObj?.action === "cancel_draft" || /\b(non|annuler|supprimer|refuser|annule|annulation)\b/i.test(rawAiReply);
               const isAiConfirm = actionObj?.action === "confirm_draft" || /\b(oui|valider|confirmer|valide|validation)\b/i.test(rawAiReply);
 
-              // Dynamically re-query for active draft if needed (check status = 'draft' or DRAFT- prefix)
+              // Dynamically re-query for active draft if needed (check status = 'draft', DRAFT- prefix, or recent creation)
               let targetDraft = activeDraft;
               if (!targetDraft) {
                 const { data: d1 } = await adminClient
@@ -941,7 +941,24 @@ Sinon, réponds de manière concise, précise et amicale en français sur WhatsA
                     .limit(1);
                   targetDraft = d2?.[0] || null;
                 }
+
+                if (!targetDraft) {
+                  const { data: d3 } = await adminClient
+                    .from("invoices")
+                    .select("*, client:clients(name)")
+                    .eq("company_id", company.id)
+                    .order("created_at", { ascending: false })
+                    .limit(1);
+                  if (d3?.[0]) {
+                    const ageMs = Date.now() - new Date(d3[0].created_at).getTime();
+                    if (ageMs < 15 * 60 * 1000) { // Created within last 15 minutes
+                      targetDraft = d3[0];
+                    }
+                  }
+                }
               }
+
+              dbg(`Cible Facture Recherchee: ID=${targetDraft?.id || "AUCUNE"}, Num=${targetDraft?.number || "AUCUN"}, Statut=${targetDraft?.status || "AUCUN"}`);
 
               if (isAiCancel) {
                 if (targetDraft) {
