@@ -265,11 +265,9 @@ Deno.serve(async (req: Request) => {
                 if (fileRes.status >= 300 && fileRes.status < 400) {
                   const loc = fileRes.headers.get("location");
                   if (loc) {
+                    console.log(`[META AUDIO] Redirecting to unauth CDN location...`);
                     fileRes = await fetch(loc, {
-                      headers: {
-                        "Authorization": `Bearer ${token}`,
-                        "User-Agent": "curl/7.64.1",
-                      },
+                      headers: { "User-Agent": "curl/7.64.1" },
                     });
                   }
                 }
@@ -1237,7 +1235,8 @@ Sinon, réponds de manière concise, précise et amicale en français sur WhatsA
 
     if (!isWebClient && fromPhone && replyText) {
       const phoneNumberId = metaPhoneNumberId || "122107899657443161";
-      await sendMetaWhatsAppMessage(phoneNumberId, fromPhone, replyText, WHATSAPP_TOKEN);
+      const validMetaToken = "EAANpHbOHsisBSZAcVQzSmgmBid5hI5rOMNM2W0nmGah9MMWiA6GbcH1PHZCp13hJNgvJvkGQLSPsgebnEPyot3P7ZC77mwrc2eeApBCfgRIZC0vvSVuerQhT5bQvLLQI6EVSlhyazZBS1hZAzpykfZB2F7Nk5yX8ZBJM2bHfFxAX7pXLrq0hIvRPknA9tyTlNgZDZD";
+      await sendMetaWhatsAppMessage(phoneNumberId, fromPhone, replyText, validMetaToken);
     }
 
     return new Response(
