@@ -1202,7 +1202,7 @@ Sinon, réponds de manière concise, précise et amicale en français sur WhatsA
 
           } else if (!replyText) {
             if (messageType === "audio" || messageType === "voice") {
-              replyText = `🎙️ *Note vocale reçue !*\n\nJe n'ai pas pu décoder l'audio de ce message vocal. Pouvez-vous s'il vous plaît réécrire votre commande en texte ?`;
+              replyText = `🎙️ *Note vocale reçue !*\n\n⚠️ Diagnostic serveur : Impossible de télécharger l'audio (base64 est vide). Statut Twilio/Meta media. Pouvez-vous réécrire votre commande en texte ?`;
             } else {
               replyText = `🤖 *Bylz Copilot IA (WhatsApp)*\n\n` +
                 `Bonjour ! Comment puis-je vous aider aujourd'hui ?\n\n` +
