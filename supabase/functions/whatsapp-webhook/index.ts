@@ -417,7 +417,7 @@ Deno.serve(async (req: Request) => {
           } else {
             const { data: newClient } = await adminClient
               .from("clients")
-              .insert({ company_id: company.id, name: clientName, type: "b2b" })
+              .insert({ company_id: company.id, name: clientName, type: "b2c" })
               .select("id")
               .single();
             clientId = newClient?.id || "";
@@ -477,11 +477,14 @@ Deno.serve(async (req: Request) => {
           if (existingClients && existingClients.length > 0) {
             clientId = existingClients[0].id;
           } else {
-            const { data: newClient } = await adminClient
+            const { data: newClient, error: cInsErr } = await adminClient
               .from("clients")
-              .insert({ company_id: company.id, name: clientName, type: "b2b" })
+              .insert({ company_id: company.id, name: clientName, type: "b2c" })
               .select("id")
-              .maybeSingle();
+              .single();
+            if (cInsErr) {
+              dbg(`[CLIENT INSERT ERROR] ${cInsErr.message || JSON.stringify(cInsErr)}`);
+            }
             clientId = newClient?.id || null;
           }
 
@@ -515,6 +518,12 @@ Deno.serve(async (req: Request) => {
             })
             .select()
             .single();
+
+          if (insErr) {
+            dbg(`[INSERT ERROR REGEX] ${insErr.message || JSON.stringify(insErr)}`);
+          } else {
+            dbg(`[INSERT SUCCESS REGEX] ID=${newInv?.id}`);
+          }
 
           if (!insErr && newInv) {
             await adminClient.from("invoice_lines").insert({
@@ -613,7 +622,7 @@ Deno.serve(async (req: Request) => {
             } else {
               const { data: newClient } = await adminClient
                 .from("clients")
-                .insert({ company_id: company.id, name: rawClient, type: "b2b" })
+                .insert({ company_id: company.id, name: rawClient, type: "b2c" })
                 .select("id")
                 .maybeSingle();
               clientId = newClient?.id || null;
@@ -1102,7 +1111,7 @@ Sinon, réponds de manière concise, précise et amicale en français sur WhatsA
                   } else {
                     const { data: newClient } = await adminClient
                       .from("clients")
-                      .insert({ company_id: company.id, name: clientName, type: "b2b" })
+                      .insert({ company_id: company.id, name: clientName, type: "b2c" })
                       .select("id")
                       .single();
                     clientId = newClient?.id || "";
@@ -1160,7 +1169,7 @@ Sinon, réponds de manière concise, précise et amicale en français sur WhatsA
                   } else {
                     const { data: newClient } = await adminClient
                       .from("clients")
-                      .insert({ company_id: company.id, name: clientName, type: "b2b" })
+                      .insert({ company_id: company.id, name: clientName, type: "b2c" })
                       .select("id")
                       .single();
                     clientId = newClient?.id || "";
@@ -1308,7 +1317,7 @@ Sinon, réponds de manière concise, précise et amicale en français sur WhatsA
               } else {
                 const { data: newClient } = await adminClient
                   .from("clients")
-                  .insert({ company_id: company.id, name: clientName, type: "b2b" })
+                  .insert({ company_id: company.id, name: clientName, type: "b2c" })
                   .select("id")
                   .single();
                 clientId = newClient?.id || "";
