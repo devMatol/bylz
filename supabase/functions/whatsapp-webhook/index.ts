@@ -1193,7 +1193,7 @@ Sinon, réponds de manière concise, précise et amicale en français sur WhatsA
             try {
               // Extract client name
               const clientMatch = textContent.match(/pour\s+([a-zA-Zà-ÿÀ-Ÿ\s]+?)(?:\s+(?:de|du|d'|un|une|our|pour|\d)|$)/i);
-              const clientName = clientMatch ? clientMatch[1].trim() : "Matthias Ollivier";
+              const clientName = clientMatch ? clientMatch[1].trim() : "Client WhatsApp";
 
               // Extract amount (e.g. 400e, 400€, 400 euros)
               const amountMatch = textContent.match(/(\d+)\s*(?:€|e|euros?)/i) || textContent.match(/(?:de|du)\s+(\d+)/i) || textContent.match(/(\d+)/);
