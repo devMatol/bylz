@@ -1228,16 +1228,17 @@ Sinon, réponds de manière concise, précise et amicale en français sur WhatsA
     );
   } catch (err: any) {
     console.error("WhatsApp Webhook error:", err);
+    const errDetail = err?.stack || err?.message || String(err);
 
     if (req.headers.get("content-type")?.includes("application/x-www-form-urlencoded")) {
-      const fallbackTwiML = `<?xml version="1.0" encoding="UTF-8"?>\n<Response>\n  <Message>🤖 Desolé, une erreur s'est produite. Réessayez dans un instant.</Message>\n</Response>`;
+      const fallbackTwiML = `<?xml version="1.0" encoding="UTF-8"?>\n<Response>\n  <Message><![CDATA[🤖 Erreur Webhook : ${errDetail}]]></Message>\n</Response>`;
       return new Response(fallbackTwiML, {
         status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/xml; charset=utf-8" },
       });
     }
 
-    return new Response(JSON.stringify({ error: err.message }), {
+    return new Response(JSON.stringify({ error: errDetail }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
