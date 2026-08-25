@@ -234,10 +234,11 @@ Deno.serve(async (req: Request) => {
         dbg(`Mode: Meta Cloud API (type=${messageType})`);
         textContent = message?.text?.body || "";
       }
+    }
 
-      // ---------------------------------------------------------------------------
-      // COMPANY LOOKUP FROM PHONE NUMBER (WITH FALLBACK TO FIRST COMPANY)
-      // ---------------------------------------------------------------------------
+    // ---------------------------------------------------------------------------
+    // COMPANY LOOKUP FROM PHONE NUMBER (WITH FALLBACK TO FIRST COMPANY)
+    // ---------------------------------------------------------------------------
       const digits9 = fromPhone.replace(/\D/g, "").slice(-9);
       dbg(`Recherche entreprise pour tel: ${fromPhone} (digits9=${digits9})`);
 
@@ -1259,12 +1260,10 @@ Sinon, réponds de manière concise, précise et amicale en français sur WhatsA
                 `3️⃣ *"Quel est mon CA ce mois-ci ?"*\n` +
                 `🎙️ *Message vocal* : Dictez vos commandes par note vocale !\n\n` +
                 `_Gérez votre activité sur https://bylz.fr_`;
-            }
           }
         }
       }
     }
-  }
 
     const debugSummary = "\n\n------------------\n🛠️ *DIAGNOSTIC EN DIRECT* :\n" + debugLogs.map(l => "• " + l).join("\n");
     const finalReplyWithDebug = (replyText || "Bonjour ! Comment puis-je vous aider ?") + debugSummary;
@@ -1293,6 +1292,7 @@ Sinon, réponds de manière concise, précise et amicale en français sur WhatsA
       }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
+  }
   } catch (err: any) {
     console.error("WhatsApp Webhook error:", err);
     const errDetail = err?.stack || err?.message || String(err);
