@@ -886,6 +886,7 @@ Sinon, réponds de manière concise, précise et amicale en français sur WhatsA
                   {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
+                    signal: AbortSignal.timeout(6000), // 6 second max timeout per model to stay well under Twilio 15s limit
                     body: JSON.stringify({
                       system_instruction: {
                         parts: [{ text: systemPrompt }],
