@@ -758,20 +758,19 @@ Deno.serve(async (req: Request) => {
           }
 
           if (targetDraft) {
-            const { data: lastInvoices } = await adminClient
+            const currentYear = new Date().getFullYear();
+            const { data: numData } = await adminClient
               .from("invoices")
               .select("number")
               .eq("company_id", company.id)
-              .eq("type", "invoice")
-              .neq("status", "draft")
-              .order("created_at", { ascending: false })
+              .like("number", `FAC-${currentYear}-%`)
+              .order("number", { ascending: false })
               .limit(1);
 
-            const currentYear = new Date().getFullYear();
             let nextNum = 1;
-            if (lastInvoices?.[0]?.number) {
-              const numMatch = lastInvoices[0].number.match(/FAC-\d{4}-(\d+)/);
-              if (numMatch) nextNum = parseInt(numMatch[1], 10) + 1;
+            if (numData && numData.length > 0) {
+              const m = /-(\d+)$/.exec(numData[0].number);
+              if (m) nextNum = parseInt(m[1], 10) + 1;
             }
             const officialNum = `FAC-${currentYear}-${String(nextNum).padStart(3, '0')}`;
 
@@ -1044,20 +1043,19 @@ Sinon, réponds de manière concise, précise et amicale en français sur WhatsA
                   replyText = `ℹ️ Aucun brouillon de facture en attente de validation.\n\nDictez *"Créer une facture de 500€ pour Client X"* pour générer un brouillon !`;
                 } else {
                   // Use targetDraft for validation
-                const { data: lastInvoices } = await adminClient
+                const currentYear = new Date().getFullYear();
+                const { data: numData } = await adminClient
                   .from("invoices")
                   .select("number")
                   .eq("company_id", company.id)
-                  .eq("type", "invoice")
-                  .neq("status", "draft")
-                  .order("created_at", { ascending: false })
+                  .like("number", `FAC-${currentYear}-%`)
+                  .order("number", { ascending: false })
                   .limit(1);
 
-                const currentYear = new Date().getFullYear();
                 let nextNum = 1;
-                if (lastInvoices?.[0]?.number) {
-                  const numMatch = lastInvoices[0].number.match(/FAC-\d{4}-(\d+)/);
-                  if (numMatch) nextNum = parseInt(numMatch[1], 10) + 1;
+                if (numData && numData.length > 0) {
+                  const m = /-(\d+)$/.exec(numData[0].number);
+                  if (m) nextNum = parseInt(m[1], 10) + 1;
                 }
                 const officialNum = `FAC-${currentYear}-${String(nextNum).padStart(3, '0')}`;
 
