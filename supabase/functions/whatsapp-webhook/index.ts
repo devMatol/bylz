@@ -874,7 +874,7 @@ Sinon, réponds de manière concise, précise et amicale en français sur WhatsA
               contentsParts.push({ text: `Message utilisateur : "${textContent}"` });
             }
 
-            const modelsToTry = ["gemini-3.5-flash", "gemini-3.6-flash", "gemini-flash-latest"];
+            const modelsToTry = ["gemini-2.5-flash", "gemini-1.5-flash", "gemini-2.0-flash", "gemini-1.5-pro"];
             let rawAiReply = "";
 
             for (const model of modelsToTry) {
@@ -899,6 +899,7 @@ Sinon, réponds de manière concise, précise et amicale en français sur WhatsA
                   if (rawAiReply) break;
                 } else {
                   const errTxt = await geminiRes.text();
+                  dbg(`[GEMINI ERR ${model}] HTTP ${geminiRes.status}: ${errTxt.substring(0, 60)}`);
                   console.warn(`Gemini model ${model} returned error ${geminiRes.status}: ${errTxt}`);
                 }
               } catch (mErr) {
