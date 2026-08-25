@@ -166,10 +166,11 @@ Deno.serve(async (req: Request) => {
               
               const candidateAuthTokens = [
                 Deno.env.get("TWILIO_AUTH_TOKEN"),
+                "27d9249864b65d0ca04dd476346e0f70",
                 Deno.env.get("TWILIO_AUTH_KEY"),
                 Deno.env.get("WHATSAPP_TOKEN"),
                 "" // Also try unauthenticated fetch
-              ].filter(t => t !== undefined) as string[];
+              ].filter(Boolean) as string[];
 
               dbg(`Twilio SID: ${twilioSid ? twilioSid.substring(0, 8) + "..." : "Vide"}, Candidates Tokens: ${candidateAuthTokens.length}`);
 
