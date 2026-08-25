@@ -131,7 +131,7 @@ Deno.serve(async (req: Request) => {
     let replyText = "";
     let body: any = {};
 
-    if (contentType.includes("application/x-www-form-urlencoded")) {
+    if (contentType.includes("application/x-www-form-urlencoded") || contentType.includes("multipart/form-data") || req.headers.has("x-twilio-signature")) {
       isTwilio = true;
       const formData = await req.formData();
       const rawFrom = formData.get("From")?.toString() || "";
@@ -143,9 +143,12 @@ Deno.serve(async (req: Request) => {
         const mediaContentType = formData.get("MediaContentType0")?.toString() || "";
         const mediaUrl = formData.get("MediaUrl0")?.toString() || "";
 
-        if (mediaContentType.startsWith("audio/") || mediaContentType.includes("ogg")) {
+        console.log(`[TWILIO MEDIA DETECTED] NumMedia: ${numMedia}, ContentType0: ${mediaContentType}, MediaUrl0: ${mediaUrl}`);
+        if (mediaContentType.startsWith("image/")) {
+          messageType = "image";
+        } else {
           messageType = "audio";
-          audioMimeType = mediaContentType.includes("ogg") ? "audio/ogg" : mediaContentType;
+          audioMimeType = mediaContentType.includes("ogg") ? "audio/ogg" : (mediaContentType || "audio/ogg");
           if (mediaUrl) {
             try {
               const extractedSidMatch = mediaUrl.match(/\/Accounts\/(AC[a-fA-F0-9]{32})\//i);
@@ -186,8 +189,6 @@ Deno.serve(async (req: Request) => {
               console.error("[TWILIO AUDIO] Error fetching Twilio audio media:", err);
             }
           }
-        } else if (mediaContentType.startsWith("image/")) {
-          messageType = "image";
         }
       }
     } else {
