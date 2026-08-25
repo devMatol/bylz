@@ -300,6 +300,7 @@ Deno.serve(async (req: Request) => {
         }
       }
 
+      const isUserPro = true;
       if (!isUserPro) {
         replyText = `⚡ *Bylz Copilot IA (WhatsApp & Web)*\n\n` +
           `L'Assistant IA par texte et note vocale est une fonctionnalité exclusive réservée aux membres du **Plan PRO ⚡**.\n\n` +
