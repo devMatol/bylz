@@ -119,23 +119,23 @@ Deno.serve(async (req: Request) => {
     return new Response(null, { status: 204, headers: corsHeaders });
   }
 
-  try {
-    const debugLogs: string[] = [];
-    function dbg(msg: string) {
-      console.log(`[DEBUG] ${msg}`);
-      debugLogs.push(msg);
-    }
+  const debugLogs: string[] = [];
+  function dbg(msg: string) {
+    console.log(`[DEBUG] ${msg}`);
+    debugLogs.push(msg);
+  }
+  let fromPhone = "";
+  let textContent = "";
+  let messageType = "text";
+  let isTwilio = false;
+  let base64Audio = "";
+  let audioMimeType = "audio/ogg";
+  let metaPhoneNumberId = "";
+  let replyText = "";
+  let body: any = {};
 
+  try {
     const contentType = req.headers.get("content-type") || "";
-    let fromPhone = "";
-    let textContent = "";
-    let messageType = "text";
-    let isTwilio = false;
-    let base64Audio = "";
-    let audioMimeType = "audio/ogg";
-    let metaPhoneNumberId = "";
-    let replyText = "";
-    let body: any = {};
 
     if (contentType.includes("application/x-www-form-urlencoded") || contentType.includes("multipart/form-data") || req.headers.has("x-twilio-signature")) {
       isTwilio = true;
@@ -875,7 +875,7 @@ Sinon, réponds de manière concise, précise et amicale en français sur WhatsA
               contentsParts.push({ text: `Message utilisateur : "${textContent}"` });
             }
 
-            const modelsToTry = ["gemini-1.5-flash", "gemini-2.0-flash-exp", "gemini-1.5-pro", "gemini-flash-latest"];
+            const modelsToTry = ["gemini-flash-latest", "gemini-1.5-flash", "gemini-2.0-flash", "gemini-1.5-pro"];
             let rawAiReply = "";
 
             for (const model of modelsToTry) {
