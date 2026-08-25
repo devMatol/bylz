@@ -919,15 +919,22 @@ Sinon, réponds de manière concise, précise et amicale en français sur WhatsA
               const isAiCancel = actionObj?.action === "cancel_draft" || /\b(non|annuler|supprimer|refuser|annule|annulation)\b/i.test(rawAiReply);
               const isAiConfirm = actionObj?.action === "confirm_draft" || /\b(oui|valider|confirmer|valide|validation)\b/i.test(rawAiReply);
 
-              if (activeDraft && isAiCancel) {
-                await adminClient
-                  .from("invoices")
-                  .delete()
-                  .eq("id", activeDraft.id);
+              if (isAiCancel) {
+                if (activeDraft) {
+                  await adminClient
+                    .from("invoices")
+                    .delete()
+                    .eq("id", activeDraft.id);
 
-                replyText = `❌ *Création annulée.* Le brouillon de facture a été supprimé sans émettre de numéro officiel.`;
+                  replyText = `❌ *Création annulée.* Le brouillon de facture a été supprimé sans émettre de numéro officiel.`;
+                } else {
+                  replyText = `ℹ️ Aucun brouillon de facture en attente d'annulation.`;
+                }
 
-              } else if (activeDraft && isAiConfirm) {
+              } else if (isAiConfirm) {
+                if (!activeDraft) {
+                  replyText = `ℹ️ Aucun brouillon de facture en attente de validation.\n\nDictez *"Créer une facture de 500€ pour Client X"* pour générer un brouillon !`;
+                } else {
                 const { data: lastInvoices } = await adminClient
                   .from("invoices")
                   .select("number")
@@ -974,6 +981,7 @@ Sinon, réponds de manière concise, précise et amicale en français sur WhatsA
                   `📝 *Prestation* : ${desc}\n` +
                   `⏳ *Échéance* : ${dueDate}\n\n` +
                   `_Retrouvez ou téléchargez le PDF de votre facture sur https://bylz.fr/invoices?v=2_`;
+                }
 
               } else if (actionObj && (actionObj.action === "create_invoice" || actionObj.action === "update_draft" || actionObj.action === "create_quote") && actionObj.amount) {
                 if (actionObj.action === "create_quote") {
