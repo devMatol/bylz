@@ -139,16 +139,19 @@ Deno.serve(async (req: Request) => {
 
     if (contentType.includes("application/x-www-form-urlencoded") || contentType.includes("multipart/form-data") || req.headers.has("x-twilio-signature")) {
       isTwilio = true;
-      dbg("Mode: Twilio (Form-Data)");
-      const formData = await req.formData();
-      const rawFrom = formData.get("From")?.toString() || "";
+      dbg("Mode: Twilio (URLSearchParams)");
+      const bodyText = await req.text();
+      const params = new URLSearchParams(bodyText);
+      const rawFrom = params.get("From") || "";
       fromPhone = rawFrom.replace("whatsapp:", "").trim();
-      textContent = formData.get("Body")?.toString() || "";
-      const numMedia = parseInt(formData.get("NumMedia")?.toString() || "0", 10);
+      textContent = params.get("Body") || "";
+      dbg(`Phone: ${fromPhone}, Text: "${textContent}"`);
+
+      const numMedia = parseInt(params.get("NumMedia") || "0", 10);
+      const mediaContentType = params.get("MediaContentType0") || "";
+      const mediaUrl = params.get("MediaUrl0") || "";
 
       if (numMedia > 0) {
-        const mediaContentType = formData.get("MediaContentType0")?.toString() || "";
-        const mediaUrl = formData.get("MediaUrl0")?.toString() || "";
 
         console.log(`[TWILIO MEDIA DETECTED] NumMedia: ${numMedia}, ContentType0: ${mediaContentType}, MediaUrl0: ${mediaUrl}`);
         if (mediaContentType.startsWith("image/")) {
