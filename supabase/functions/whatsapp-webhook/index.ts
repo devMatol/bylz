@@ -797,13 +797,13 @@ Deno.serve(async (req: Request) => {
 
             const desc = activeLines?.[0]?.description || "Prestation de service";
 
-            replyText = `⏳ *Facture ${officialNum} enregistrée en attente !*\n\n` +
+            replyText = `📝 *Brouillon de facture enregistré sur votre compte Bylz !*\n\n` +
               `👤 *Client* : ${clientName}\n` +
               `💰 *Montant TTC* : ${Number(targetDraft.total_ttc).toFixed(2)} €\n` +
-              `📝 *Prestation* : ${desc}\n` +
-              `⏳ *Échéance* : ${dueDate}\n\n` +
-              `✍️ *Action requise* : Votre facture est prête mais nécessite d'être complétée (adresse du client, SIRET, mentions éventuelles).\n` +
-              `👉 *Complétez et envoyez votre facture ici* :\n` +
+              `📝 *Prestation* : ${desc}\n\n` +
+              `🔒 *Statut* : **Brouillon modifiable**\n` +
+              `_Pour respecter la conformité légale, complétez l'adresse et le SIRET du client sur votre tableau de bord avant d'émettre le numéro officiel._\n\n` +
+              `👉 *Finaliser et émettre votre facture en 1 clic* :\n` +
               `https://bylz.fr/invoices`;
           } else {
             replyText = `ℹ️ Aucun brouillon de facture en attente de validation.\n\nDictez *"Créer une facture de 500€ pour Client X"* pour générer un brouillon !`;
@@ -1084,13 +1084,13 @@ Sinon, réponds de manière concise, précise et amicale en français sur WhatsA
 
                 const desc = activeLines?.[0]?.description || "Prestation de service";
 
-                replyText = `⏳ *Facture ${officialNum} enregistrée en attente !*\n\n` +
+                replyText = `📝 *Brouillon de facture enregistré sur votre compte Bylz !*\n\n` +
                   `👤 *Client* : ${clientName}\n` +
                   `💰 *Montant TTC* : ${Number(targetDraft.total_ttc).toFixed(2)} €\n` +
-                  `📝 *Prestation* : ${desc}\n` +
-                  `⏳ *Échéance* : ${dueDate}\n\n` +
-                  `✍️ *Action requise* : Votre facture est prête mais nécessite d'être complétée (adresse du client, SIRET, mentions éventuelles).\n` +
-                  `👉 *Complétez et envoyez votre facture ici* :\n` +
+                  `📝 *Prestation* : ${desc}\n\n` +
+                  `🔒 *Statut* : **Brouillon modifiable**\n` +
+                  `_Pour respecter la conformité légale, complétez l'adresse et le SIRET du client sur votre tableau de bord avant d'émettre le numéro officiel._\n\n` +
+                  `👉 *Finaliser et émettre votre facture en 1 clic* :\n` +
                   `https://bylz.fr/invoices`;
                 }
 
@@ -1403,13 +1403,14 @@ Sinon, réponds de manière concise, précise et amicale en français sur WhatsA
       }
     }
 
-    const debugSummary = "\n\n------------------\n🛠️ *DIAGNOSTIC EN DIRECT* :\n" + debugLogs.map(l => "• " + l).join("\n");
-    const finalReplyWithDebug = (replyText || "Bonjour ! Comment puis-je vous aider ?") + debugSummary;
+    // Debug summary kept in server logs only (commented out for clean user-facing WhatsApp messages)
+    // const debugSummary = "\n\n------------------\n🛠️ *DIAGNOSTIC EN DIRECT* :\n" + debugLogs.map(l => "• " + l).join("\n");
+    const finalReply = replyText || "Bonjour ! Comment puis-je vous aider ?";
 
-    console.log("WhatsApp reply generated:", finalReplyWithDebug);
+    console.log("WhatsApp reply generated:", finalReply);
 
     if (isTwilio) {
-      const twiML = `<?xml version="1.0" encoding="UTF-8"?>\n<Response>\n  <Message><![CDATA[${finalReplyWithDebug}]]></Message>\n</Response>`;
+      const twiML = `<?xml version="1.0" encoding="UTF-8"?>\n<Response>\n  <Message><![CDATA[${finalReply}]]></Message>\n</Response>`;
       return new Response(twiML, {
         status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/xml; charset=utf-8" },
@@ -1419,7 +1420,7 @@ Sinon, réponds de manière concise, précise et amicale en français sur WhatsA
     if (!isWebClient && fromPhone) {
       const phoneNumberId = metaPhoneNumberId || "122107899657443161";
       const validMetaToken = "EAANpHbOHsisBSZAcVQzSmgmBid5hI5rOMNM2W0nmGah9MMWiA6GbcH1PHZCp13hJNgvJvkGQLSPsgebnEPyot3P7ZC77mwrc2eeApBCfgRIZC0vvSVuerQhT5bQvLLQI6EVSlhyazZBS1hZAzpykfZB2F7Nk5yX8ZBJM2bHfFxAX7pXLrq0hIvRPknA9tyTlNgZDZD";
-      await sendMetaWhatsAppMessage(phoneNumberId, fromPhone, finalReplyWithDebug, validMetaToken);
+      await sendMetaWhatsAppMessage(phoneNumberId, fromPhone, finalReply, validMetaToken);
     }
 
     return new Response(
@@ -1436,18 +1437,18 @@ Sinon, réponds de manière concise, précise et amicale en français sur WhatsA
     const errDetail = err?.stack || err?.message || String(err);
     dbg(`[CRITICAL ERROR] ${errDetail}`);
 
-    const debugSummary = "\n\n------------------\n🛠️ *DIAGNOSTIC EN DIRECT* :\n" + (debugLogs || []).map(l => "• " + l).join("\n");
-    const errReplyWithDebug = `🤖 *Erreur lors du traitement !*\n\n⚠️ Détail : ${errDetail}` + debugSummary;
+    // const debugSummary = "\n\n------------------\n🛠️ *DIAGNOSTIC EN DIRECT* :\n" + (debugLogs || []).map(l => "• " + l).join("\n");
+    const errReply = `🤖 *Une petite erreur est survenue lors du traitement.*\n\nPouvez-vous reformuler ou répéter votre demande ?`;
 
     if (fromPhone) {
       try {
         const validMetaToken = "EAANpHbOHsisBSZAcVQzSmgmBid5hI5rOMNM2W0nmGah9MMWiA6GbcH1PHZCp13hJNgvJvkGQLSPsgebnEPyot3P7ZC77mwrc2eeApBCfgRIZC0vvSVuerQhT5bQvLLQI6EVSlhyazZBS1hZAzpykfZB2F7Nk5yX8ZBJM2bHfFxAX7pXLrq0hIvRPknA9tyTlNgZDZD";
-        await sendMetaWhatsAppMessage(metaPhoneNumberId || "122107899657443161", fromPhone, errReplyWithDebug, validMetaToken);
+        await sendMetaWhatsAppMessage(metaPhoneNumberId || "122107899657443161", fromPhone, errReply, validMetaToken);
       } catch {}
     }
 
     if (req.headers.get("content-type")?.includes("application/x-www-form-urlencoded")) {
-      const fallbackTwiML = `<?xml version="1.0" encoding="UTF-8"?>\n<Response>\n  <Message><![CDATA[${errReplyWithDebug}]]></Message>\n</Response>`;
+      const fallbackTwiML = `<?xml version="1.0" encoding="UTF-8"?>\n<Response>\n  <Message><![CDATA[${errReply}]]></Message>\n</Response>`;
       return new Response(fallbackTwiML, {
         status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/xml; charset=utf-8" },
