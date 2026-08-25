@@ -876,7 +876,7 @@ Sinon, réponds de manière concise, précise et amicale en français sur WhatsA
               contentsParts.push({ text: `Message utilisateur : "${textContent}"` });
             }
 
-            const modelsToTry = ["gemini-flash-latest", "gemini-1.5-flash-latest", "gemini-2.0-flash-exp", "gemini-1.5-pro-latest"];
+            const modelsToTry = ["gemini-3.5-flash", "gemini-3.6-flash", "gemini-flash-latest"];
             let rawAiReply = "";
 
             for (const model of modelsToTry) {
