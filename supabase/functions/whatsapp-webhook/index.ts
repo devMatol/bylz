@@ -417,7 +417,7 @@ Deno.serve(async (req: Request) => {
           } else {
             const { data: newClient } = await adminClient
               .from("clients")
-              .insert({ company_id: company.id, name: clientName })
+              .insert({ company_id: company.id, name: clientName, type: "b2b" })
               .select("id")
               .single();
             clientId = newClient?.id || "";
@@ -479,7 +479,7 @@ Deno.serve(async (req: Request) => {
           } else {
             const { data: newClient } = await adminClient
               .from("clients")
-              .insert({ company_id: company.id, name: clientName })
+              .insert({ company_id: company.id, name: clientName, type: "b2b" })
               .select("id")
               .maybeSingle();
             clientId = newClient?.id || null;
@@ -613,7 +613,7 @@ Deno.serve(async (req: Request) => {
             } else {
               const { data: newClient } = await adminClient
                 .from("clients")
-                .insert({ company_id: company.id, name: rawClient })
+                .insert({ company_id: company.id, name: rawClient, type: "b2b" })
                 .select("id")
                 .maybeSingle();
               clientId = newClient?.id || null;
@@ -1080,7 +1080,7 @@ Sinon, réponds de manière concise, précise et amicale en français sur WhatsA
                   } else {
                     const { data: newClient } = await adminClient
                       .from("clients")
-                      .insert({ company_id: company.id, name: clientName })
+                      .insert({ company_id: company.id, name: clientName, type: "b2b" })
                       .select("id")
                       .single();
                     clientId = newClient?.id || "";
@@ -1138,7 +1138,7 @@ Sinon, réponds de manière concise, précise et amicale en français sur WhatsA
                   } else {
                     const { data: newClient } = await adminClient
                       .from("clients")
-                      .insert({ company_id: company.id, name: clientName })
+                      .insert({ company_id: company.id, name: clientName, type: "b2b" })
                       .select("id")
                       .single();
                     clientId = newClient?.id || "";
@@ -1286,7 +1286,7 @@ Sinon, réponds de manière concise, précise et amicale en français sur WhatsA
               } else {
                 const { data: newClient } = await adminClient
                   .from("clients")
-                  .insert({ company_id: company.id, name: clientName })
+                  .insert({ company_id: company.id, name: clientName, type: "b2b" })
                   .select("id")
                   .single();
                 clientId = newClient?.id || "";
