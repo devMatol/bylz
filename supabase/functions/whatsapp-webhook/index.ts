@@ -1175,6 +1175,12 @@ Sinon, réponds de manière concise, précise et amicale en français sur WhatsA
                       .select()
                       .single();
 
+                    if (invInsErr) {
+                      dbg(`[DB ERROR INVOICE INSERT] ${invInsErr.message || JSON.stringify(invInsErr)}`);
+                    } else {
+                      dbg(`[DB SUCCESS INVOICE INSERT] ID=${newInv?.id}`);
+                    }
+
                     if (!invInsErr && newInv) {
                       await adminClient.from("invoice_lines").insert({
                         invoice_id: newInv.id,
