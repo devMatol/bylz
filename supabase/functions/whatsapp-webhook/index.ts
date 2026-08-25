@@ -157,10 +157,19 @@ Deno.serve(async (req: Request) => {
                 headers["Authorization"] = `Basic ${btoa(`${twilioSid}:${twilioToken}`)}`;
               }
 
-              let audRes = await fetch(mediaUrl, { headers });
+              let audRes = await fetch(mediaUrl, { redirect: "manual", headers });
+              console.log(`[TWILIO AUDIO] Initial fetch status: ${audRes.status}`);
+              if (audRes.status >= 300 && audRes.status < 400) {
+                const loc = audRes.headers.get("location");
+                if (loc) {
+                  console.log(`[TWILIO AUDIO] Redirecting to S3: ${loc.substring(0, 60)}...`);
+                  audRes = await fetch(loc, { headers: { "User-Agent": "curl/7.64.1" } });
+                }
+              }
+
               if (!audRes.ok) {
-                console.warn(`[TWILIO AUDIO] Auth fetch failed (${audRes.status}), attempting unauthenticated fetch...`);
-                audRes = await fetch(mediaUrl);
+                console.warn(`[TWILIO AUDIO] Manual redirect fetch failed (${audRes.status}), attempting standard fetch...`);
+                audRes = await fetch(mediaUrl, { headers: { "User-Agent": "curl/7.64.1" } });
               }
 
               if (audRes.ok) {
