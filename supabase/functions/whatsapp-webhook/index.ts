@@ -1319,7 +1319,7 @@ Sinon, réponds de manière concise, précise et amicale en français sur WhatsA
               `\n\n_Retrouvez toutes vos factures sur https://bylz.fr/invoices?v=2_`;
 
           } else if (!replyText) {
-            if (messageType === "audio" || messageType === "voice") {
+            if ((messageType === "audio" || messageType === "voice") && !base64Audio) {
               replyText = `🎙️ *Note vocale reçue !*\n\n⚠️ Diagnostic serveur : Impossible de télécharger l'audio (base64 est vide). Statut Twilio/Meta media. Pouvez-vous réécrire votre commande en texte ?`;
             } else {
               replyText = `🤖 *Bylz Copilot IA (WhatsApp)*\n\n` +
