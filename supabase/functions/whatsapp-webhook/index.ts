@@ -1105,6 +1105,13 @@ Sinon, réponds de manière concise, précise et amicale en français sur WhatsA
                       `• Ou indiquez d'autres corrections (ex: *"Mets 600€"*).\n` +
                       `• Répondez **"NON"** pour annuler.`;
                   } else {
+                    // Delete any existing draft invoices BEFORE inserting new one
+                    await adminClient
+                      .from("invoices")
+                      .delete()
+                      .eq("company_id", company.id)
+                      .eq("status", "draft");
+
                     const draftNum = `DRAFT-${Math.random().toString(36).substring(7)}`;
                     const { data: newInv, error: invInsErr } = await adminClient
                       .from("invoices")
@@ -1125,13 +1132,6 @@ Sinon, réponds de manière concise, précise et amicale en français sur WhatsA
                       })
                       .select()
                       .single();
-
-                    // Delete any existing draft invoices first
-                    await adminClient
-                      .from("invoices")
-                      .delete()
-                      .eq("company_id", company.id)
-                      .eq("status", "draft");
 
                     if (!invInsErr && newInv) {
                       await adminClient.from("invoice_lines").insert({
