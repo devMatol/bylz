@@ -151,8 +151,8 @@ Deno.serve(async (req: Request) => {
       const mediaContentType = params.get("MediaContentType0") || "";
       const mediaUrl = params.get("MediaUrl0") || "";
 
+      dbg(`Twilio Media: NumMedia=${numMedia}, ContentType=${mediaContentType}`);
       if (numMedia > 0) {
-
         console.log(`[TWILIO MEDIA DETECTED] NumMedia: ${numMedia}, ContentType0: ${mediaContentType}, MediaUrl0: ${mediaUrl}`);
         if (mediaContentType.startsWith("image/")) {
           messageType = "image";
@@ -163,41 +163,53 @@ Deno.serve(async (req: Request) => {
             try {
               const extractedSidMatch = mediaUrl.match(/\/Accounts\/(AC[a-fA-F0-9]{32})\//i);
               const twilioSid = extractedSidMatch ? extractedSidMatch[1] : (Deno.env.get("TWILIO_ACCOUNT_SID") || "");
-              const twilioToken = Deno.env.get("TWILIO_AUTH_TOKEN") || Deno.env.get("WHATSAPP_TOKEN") || "";
+              
+              const candidateAuthTokens = [
+                Deno.env.get("TWILIO_AUTH_TOKEN"),
+                Deno.env.get("TWILIO_AUTH_KEY"),
+                Deno.env.get("WHATSAPP_TOKEN"),
+                "" // Also try unauthenticated fetch
+              ].filter(t => t !== undefined) as string[];
 
-              const headers: Record<string, string> = { "User-Agent": "curl/7.64.1" };
-              if (twilioSid && twilioToken) {
-                headers["Authorization"] = `Basic ${btoa(`${twilioSid}:${twilioToken}`)}`;
-              }
+              dbg(`Twilio SID: ${twilioSid ? twilioSid.substring(0, 8) + "..." : "Vide"}, Candidates Tokens: ${candidateAuthTokens.length}`);
 
-              let audRes = await fetch(mediaUrl, { redirect: "manual", headers });
-              console.log(`[TWILIO AUDIO] Initial fetch status: ${audRes.status}`);
-              if (audRes.status >= 300 && audRes.status < 400) {
-                const loc = audRes.headers.get("location");
-                if (loc) {
-                  const fullLoc = loc.startsWith("http") ? loc : new URL(loc, mediaUrl).toString();
-                  console.log(`[TWILIO AUDIO] Redirecting to full URL: ${fullLoc.substring(0, 60)}...`);
-                  audRes = await fetch(fullLoc, { headers: { "User-Agent": "curl/7.64.1" } });
+              let successDownloaded = false;
+              for (const token of candidateAuthTokens) {
+                const headers: Record<string, string> = { "User-Agent": "curl/7.64.1" };
+                if (twilioSid && token) {
+                  headers["Authorization"] = `Basic ${btoa(`${twilioSid}:${token}`)}`;
+                }
+
+                let audRes = await fetch(mediaUrl, { redirect: "manual", headers });
+                dbg(`Twilio Fetch (token=${token ? "present" : "aucun"}) -> HTTP ${audRes.status}`);
+
+                if (audRes.status >= 300 && audRes.status < 400) {
+                  const loc = audRes.headers.get("location");
+                  if (loc) {
+                    const fullLoc = loc.startsWith("http") ? loc : new URL(loc, mediaUrl).toString();
+                    dbg(`Twilio Redirect -> ${fullLoc.substring(0, 50)}...`);
+                    audRes = await fetch(fullLoc, { headers: { "User-Agent": "curl/7.64.1" } });
+                    dbg(`Twilio Redirect Fetch -> HTTP ${audRes.status}`);
+                  }
+                }
+
+                if (audRes.ok) {
+                  const audBuf = await audRes.arrayBuffer();
+                  if (audBuf && audBuf.byteLength > 0) {
+                    base64Audio = bufferToBase64(audBuf);
+                    dbg(`Audio Twilio Telecharge avec Succes: ${audBuf.byteLength} octets`);
+                    successDownloaded = true;
+                    break;
+                  }
                 }
               }
 
-              if (!audRes.ok) {
-                console.warn(`[TWILIO AUDIO] Manual redirect fetch failed (${audRes.status}), attempting standard fetch...`);
-                audRes = await fetch(mediaUrl, { headers: { "User-Agent": "curl/7.64.1" } });
+              if (!successDownloaded) {
+                dbg(`ECHEC Telechargement Audio Twilio: Aucun token valide`);
               }
-
-              if (audRes.ok) {
-                const audBuf = await audRes.arrayBuffer();
-                if (audBuf && audBuf.byteLength > 0) {
-                  base64Audio = bufferToBase64(audBuf);
-                  console.log(`[TWILIO AUDIO] Audio successfully downloaded! Bytes: ${audBuf.byteLength}, Base64 len: ${base64Audio.length}`);
-                  dbg(`Audio Twilio telecharge: ${audBuf.byteLength} octets`);
-                }
-              } else {
-                console.warn(`[TWILIO AUDIO] Media fetch failed with status: ${audRes.status}`);
-              }
-            } catch (err) {
+            } catch (err: any) {
               console.error("[TWILIO AUDIO] Error fetching Twilio audio media:", err);
+              dbg(`Erreur Twilio Audio: ${err?.message || String(err)}`);
             }
           }
         }
