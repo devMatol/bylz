@@ -803,6 +803,7 @@ Deno.serve(async (req: Request) => {
           .reduce((s, i) => s + Number(i.total_ttc), 0);
 
         dbg(`IA Gemini appelee (audioLen=${base64Audio.length}, text="${textContent.substring(0, 30)}")`);
+        if (!geminiApiKey) { dbg("⚠️ GEMINI_API_KEY MANQUANTE DANS SUPABASE SECRETS"); }
         if (geminiApiKey && (textContent || base64Audio)) {
           try {
             const invoicesSummary = (invoices || []).map((i) => {
@@ -874,7 +875,7 @@ Sinon, réponds de manière concise, précise et amicale en français sur WhatsA
               contentsParts.push({ text: `Message utilisateur : "${textContent}"` });
             }
 
-            const modelsToTry = ["gemini-flash-latest", "gemini-1.5-flash", "gemini-2.0-flash", "gemini-2.5-flash"];
+            const modelsToTry = ["gemini-1.5-flash", "gemini-2.0-flash-exp", "gemini-1.5-pro", "gemini-flash-latest"];
             let rawAiReply = "";
 
             for (const model of modelsToTry) {
@@ -903,6 +904,7 @@ Sinon, réponds de manière concise, précise et amicale en français sur WhatsA
                   console.warn(`Gemini model ${model} returned error ${geminiRes.status}: ${errTxt}`);
                 }
               } catch (mErr) {
+                dbg(`[GEMINI EXCEPTION ${model}] ${mErr?.message || String(mErr)}`);
                 console.warn(`Error attempting Gemini model ${model}:`, mErr);
               }
             }
@@ -918,7 +920,11 @@ Sinon, réponds de manière concise, précise et amicale en français sur WhatsA
               }
 
               const isAiCancel = actionObj?.action === "cancel_draft" || /\b(non|annuler|supprimer|refuser|annule|annulation)\b/i.test(rawAiReply);
-              const isAiConfirm = actionObj?.action === "confirm_draft" || /\b(oui|valider|confirmer|valide|validation)\b/i.test(rawAiReply);
+              let isAiConfirm = actionObj?.action === "confirm_draft" || /\b(oui|valider|confirmer|valide|validation)\b/i.test(rawAiReply);
+              if (!isAiConfirm && !isAiCancel && !rawAiReply && targetDraft && (messageType === "audio" || messageType === "voice")) {
+                dbg("Fallback Automatique Vocale: Brouillon en attente -> Execution Validation (OUI)");
+                isAiConfirm = true;
+              }
 
               // Dynamically re-query for active draft if needed (check status = 'draft', DRAFT- prefix, or recent creation)
               let targetDraft = activeDraft;
