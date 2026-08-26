@@ -135,59 +135,53 @@ export function DashboardPage() {
         </button>
       }
     >
-      {/* Dashboard Control Toolbar */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 p-3 bg-surface/60 border border-border rounded-card backdrop-blur-sm mb-6">
-        {/* Scope Selector: Total vs Facturation électronique */}
-        <div className="flex items-center gap-2">
-          <span className="text-xs font-bold text-muted uppercase tracking-wider hidden md:inline">Périmètre :</span>
-          <div className="flex rounded-pill border border-border p-0.5 bg-bg/80">
+      {/* Dashboard Control Toolbar - Clean, Modern & Responsive */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
+        {/* Time Horizon Selector: Ce mois / Ce trimestre / Cette année */}
+        <div className="flex items-center gap-1 p-1 bg-surface border border-border rounded-pill overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden w-fit max-w-full">
+          {(["month", "quarter", "year"] as DashboardPeriod[]).map((p) => (
             <button
+              key={p}
               type="button"
-              onClick={() => setDataView("total")}
+              onClick={() => setPeriod(p)}
               className={cn(
-                "px-3.5 h-8 rounded-pill text-xs font-semibold transition-all",
-                dataView === "total"
-                  ? "bg-primary text-white font-bold shadow-xs"
+                "px-3.5 py-1.5 rounded-pill text-xs font-semibold whitespace-nowrap transition-all",
+                period === p
+                  ? "bg-primary text-primary-foreground font-bold shadow-xs"
                   : "text-muted hover:text-text"
               )}
             >
-              Total
+              {p === "month" ? "Ce mois" : p === "quarter" ? "Ce trimestre" : "Cette année"}
             </button>
-            <button
-              type="button"
-              onClick={() => setDataView("electronic")}
-              className={cn(
-                "px-3.5 h-8 rounded-pill text-xs font-semibold transition-all",
-                dataView === "electronic"
-                  ? "bg-primary text-white font-bold shadow-xs"
-                  : "text-muted hover:text-text"
-              )}
-            >
-              Facturation électronique
-            </button>
-          </div>
+          ))}
         </div>
 
-        {/* Time Horizon Selector: Ce mois / Ce trimestre / Cette année */}
-        <div className="flex items-center gap-2 self-end sm:self-auto">
-          <span className="text-xs font-bold text-muted uppercase tracking-wider hidden md:inline">Période :</span>
-          <div className="flex rounded-pill border border-border p-0.5 bg-bg/80">
-            {(["month", "quarter", "year"] as DashboardPeriod[]).map((p) => (
-              <button
-                key={p}
-                type="button"
-                onClick={() => setPeriod(p)}
-                className={cn(
-                  "px-3.5 h-8 rounded-pill text-xs font-semibold transition-all",
-                  period === p
-                    ? "bg-primary text-white font-bold shadow-xs"
-                    : "text-muted hover:text-text"
-                )}
-              >
-                {p === "month" ? "Ce mois" : p === "quarter" ? "Ce trimestre" : "Cette année"}
-              </button>
-            ))}
-          </div>
+        {/* Scope Selector: Total vs Facturation électronique */}
+        <div className="flex items-center gap-1 p-1 bg-surface border border-border rounded-pill w-fit self-start sm:self-auto">
+          <button
+            type="button"
+            onClick={() => setDataView("total")}
+            className={cn(
+              "px-3 py-1.5 rounded-pill text-xs font-semibold transition-all",
+              dataView === "total"
+                ? "bg-surface-hover text-text font-bold shadow-xs border border-border/60"
+                : "text-muted hover:text-text"
+            )}
+          >
+            Total
+          </button>
+          <button
+            type="button"
+            onClick={() => setDataView("electronic")}
+            className={cn(
+              "px-3 py-1.5 rounded-pill text-xs font-semibold transition-all",
+              dataView === "electronic"
+                ? "bg-surface-hover text-text font-bold shadow-xs border border-border/60"
+                : "text-muted hover:text-text"
+            )}
+          >
+            Facturation électronique
+          </button>
         </div>
       </div>
       {isProfileIncomplete && (
@@ -270,25 +264,26 @@ export function DashboardPage() {
           isBlurred && "overflow-hidden max-h-[520px] sm:max-h-[580px] -mx-4 md:-mx-10 -mb-20 md:-mb-10"
         )}>
           <div className={cn("space-y-6 transition-all duration-300", isBlurred && "blur-md pointer-events-none select-none opacity-60 px-4 md:px-10 pt-6")}>
-            {/* KPI Cards Row with Unified Subtitles & Equal Heights */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            {/* KPI Cards Row - Compact 2-column mobile grid matching InvoicesPage */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
               {loading || !data ? (
                 Array.from({ length: 4 }).map((_, i) => (
-                  <Card key={i} className="p-5 h-36">
-                    <Skeleton height="1rem" width="60%" className="mb-2" />
-                    <Skeleton height="2rem" width="80%" />
+                  <Card key={i} className="p-4 h-28">
+                    <Skeleton height="0.875rem" width="60%" className="mb-2" />
+                    <Skeleton height="1.5rem" width="80%" />
                   </Card>
                 ))
               ) : (
                 <>
                   <StatCard
+                    variant="compact"
                     label="CA encaissé"
                     value={safeNum(data.caEncaisse)}
-                    icon={<TrendingUp className="w-4 h-4" />}
+                    icon={<TrendingUp className="w-3.5 h-3.5" />}
                     delta={
                       data.caDeltaPct != null && Number.isFinite(data.caDeltaPct)
                         ? {
-                            value: `${data.caDeltaPct >= 0 ? "+" : ""}${data.caDeltaPct}% vs période précédente`,
+                            value: `${data.caDeltaPct >= 0 ? "+" : ""}${data.caDeltaPct}%`,
                             positive: data.caDeltaPct >= 0,
                           }
                         : undefined
@@ -296,34 +291,37 @@ export function DashboardPage() {
                     subtitle={<span>{periodLabel}</span>}
                   />
                   <StatCard
+                    variant="compact"
                     label="Bénéfice fiscal"
                     value={safeNum(data.beneficeFiscal)}
-                    icon={<Wallet className="w-4 h-4" />}
-                    subtitle={<span>Après abattement de {safeNum(data.abattementPct)}%</span>}
+                    icon={<Wallet className="w-3.5 h-3.5" />}
+                    subtitle={<span>Abattement {safeNum(data.abattementPct)}%</span>}
                   />
                   <StatCard
+                    variant="compact"
                     label="Cotisations URSSAF"
                     value={safeNum(data.cotisationsUrssaf)}
-                    icon={<Landmark className="w-4 h-4" />}
+                    icon={<Landmark className="w-3.5 h-3.5" />}
                     subtitle={
                       <span>
                         {data.nextUrssafDueDate
-                          ? `Prochaine déclaration: ${safeFormatDate(data.nextUrssafDueDate)}`
-                          : "Prochaine déclaration à venir"}
+                          ? `Échéance: ${safeFormatDate(data.nextUrssafDueDate)}`
+                          : "À venir"}
                       </span>
                     }
                   />
                   <StatCard
+                    variant="compact"
                     label="Net estimé"
                     value={safeNum(data.netEstime)}
-                    icon={<Receipt className="w-4 h-4" />}
+                    icon={<Receipt className="w-3.5 h-3.5" />}
                     subtitle={
                       profile?.tmi != null ? (
                         <span>{data.netSubtitle}</span>
                       ) : (
                         <button
                           onClick={() => navigate("/settings")}
-                          className="text-primary font-bold hover:underline text-left"
+                          className="text-primary font-bold hover:underline text-left truncate block"
                         >
                           Renseignez votre TMI
                         </button>

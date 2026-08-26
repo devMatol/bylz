@@ -25,13 +25,30 @@ export function StatCard({
 }: StatCardProps) {
   if (variant === "compact") {
     return (
-      <Card className={cn("p-4 h-full flex flex-col justify-between", className)}>
+      <Card className={cn("p-3.5 sm:p-4 h-full flex flex-col justify-between", className)}>
         <div>
-          <p className="text-xs text-muted mb-1 font-semibold">{label}</p>
-          <Amount value={value} size="md" />
+          <div className="flex items-center justify-between gap-1 mb-1">
+            <p className="text-xs text-muted font-semibold truncate">{label}</p>
+            {icon && <span className="text-primary/70 scale-90">{icon}</span>}
+          </div>
+          <div className="flex items-baseline justify-between gap-1 flex-wrap">
+            <Amount value={value} size="md" />
+            {delta && (
+              <span
+                className={cn(
+                  "inline-flex items-center gap-0.5 text-[10px] font-bold px-1.5 py-0.2 rounded-pill border whitespace-nowrap",
+                  delta.positive
+                    ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
+                    : "bg-rose-500/10 text-rose-400 border-rose-500/20"
+                )}
+              >
+                {delta.positive ? "▲" : "▼"} {delta.value}
+              </span>
+            )}
+          </div>
         </div>
         {subtitle && (
-          <div className="text-[11px] text-muted mt-2 pt-2 border-t border-border/40 font-medium">
+          <div className="text-[11px] text-muted mt-2 pt-2 border-t border-border/40 font-medium truncate">
             {subtitle}
           </div>
         )}
