@@ -47,6 +47,12 @@ export function Sidebar() {
     navigate("/login");
   }
 
+  const isMatthias =
+    user?.email?.toLowerCase() === "matthiasollivier123@gmail.com" ||
+    profile?.email?.toLowerCase() === "matthiasollivier123@gmail.com";
+
+  const visibleNavItems = NAV_ITEMS.filter((item) => item.path !== "/bank" || isMatthias);
+
   return (
     <>
       <aside className="hidden md:flex fixed left-0 top-0 bottom-0 w-[280px] bg-bg-sidebar border-r border-border flex-col z-30">
@@ -65,7 +71,7 @@ export function Sidebar() {
         </div>
 
         <nav className="flex-1 flex flex-col gap-1 p-4 overflow-y-auto">
-          {NAV_ITEMS.map((item) => {
+          {visibleNavItems.map((item) => {
             const Icon = item.icon;
             const userPlan = profile?.plan || "starter";
             const isLocked =

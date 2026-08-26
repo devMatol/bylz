@@ -46,11 +46,13 @@ interface Row {
 }
 
 export function InvoicesPage() {
-  const { profile, company } = useAuth();
+  const { user, profile, company } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [params, setParams] = useSearchParams();
-  const isMatthias = profile?.email?.toLowerCase() === "matthiasollivier123@gmail.com";
+  const isMatthias =
+    user?.email?.toLowerCase() === "matthiasollivier123@gmail.com" ||
+    profile?.email?.toLowerCase() === "matthiasollivier123@gmail.com";
   const [activeTab, setActiveTab] = useState<"sales" | "purchases" | "reconciliation">("sales");
   const [unmatchedCount, setUnmatchedCount] = useState(0);
   const [filter, setFilter] = useState<Filter>("all");

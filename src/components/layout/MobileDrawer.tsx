@@ -56,6 +56,10 @@ export function MobileDrawer({ isOpen, onClose }: MobileDrawerProps) {
       </span>
     );
 
+  const isMatthias =
+    user?.email?.toLowerCase() === "matthiasollivier123@gmail.com" ||
+    profile?.email?.toLowerCase() === "matthiasollivier123@gmail.com";
+
   const drawerLinks = [
     {
       label: "🌐 Accueil",
@@ -69,12 +73,16 @@ export function MobileDrawer({ isOpen, onClose }: MobileDrawerProps) {
       icon: Settings,
       desc: "Dictée vocale, conseils & WhatsApp",
     },
-    {
-      label: "🏛️ Banque & Synchro",
-      path: "/bank",
-      icon: Landmark,
-      desc: "Rapprochement bancaire automatique 1-clic",
-    },
+    ...(isMatthias
+      ? [
+          {
+            label: "🏛️ Banque & Synchro",
+            path: "/bank",
+            icon: Landmark,
+            desc: "Rapprochement bancaire automatique 1-clic",
+          },
+        ]
+      : []),
     {
       label: "🔔 Relances Automatiques",
       path: "/reminders",

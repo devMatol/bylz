@@ -99,7 +99,7 @@ function FeatureLockWrapper({ children, feature, title, description }: FeatureLo
 }
 
 export function SettingsPage() {
-  const { profile, company, refreshProfile } = useAuth();
+  const { user, profile, company, refreshProfile } = useAuth();
   const { toast } = useToast();
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -346,6 +346,10 @@ export function SettingsPage() {
 
   const currentPlan = profile?.plan || "starter";
 
+  const isMatthias =
+    user?.email?.toLowerCase() === "matthiasollivier123@gmail.com" ||
+    profile?.email?.toLowerCase() === "matthiasollivier123@gmail.com";
+
   return (
     <PageContainer title="Paramètres" subtitle="Gérez votre abonnement, votre entreprise et vos intégrations en toute simplicité">
       <div className="space-y-6 max-w-6xl">
@@ -359,7 +363,9 @@ export function SettingsPage() {
             { id: "bank", label: "🏦 Banque & Synchro" },
             { id: "compliance", label: "🛡️ Conformité & Relances" },
             { id: "ai", label: "🤖 Assistant IA & WhatsApp" },
-          ].map((t) => (
+          ]
+            .filter((t) => t.id !== "bank" || isMatthias)
+            .map((t) => (
             <button
               key={t.id}
               type="button"
