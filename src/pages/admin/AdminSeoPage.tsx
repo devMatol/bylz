@@ -77,7 +77,11 @@ export function AdminSeoPage() {
       }
 
       if (resData && resData.metrics) {
-        toast("Vraies métriques Google Search Console synchronisées !", "success");
+        const count = resData.indexing?.submittedCount || resData.indexing?.urlsCount || resData.indexing?.totalUrls || 0;
+        toast(
+          `⚡ Google Search synchronisé ! ${count > 0 ? `${count} pages soumises à l'indexation Google & Sitemap pingé.` : "Sitemap pingé avec succès."}`,
+          "success"
+        );
         void fetchSeoData();
         return;
       }

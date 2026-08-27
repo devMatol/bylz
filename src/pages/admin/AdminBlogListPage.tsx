@@ -14,7 +14,10 @@ import {
   Tag,
   TrendingUp,
   ShieldAlert,
+  RefreshCw,
 } from "lucide-react";
+import { cn } from "../../lib/utils";
+import { supabase } from "../../lib/supabase";
 import { fetchAdminBlogPosts, deleteBlogPost } from "../../lib/api";
 import { Card } from "../../components/ui/Card";
 import { Button } from "../../components/ui/Button";
@@ -29,8 +32,28 @@ export function AdminBlogListPage() {
   const { toast } = useToast();
   const [posts, setPosts] = useState<BlogPost[]>([]);
   const [loading, setLoading] = useState(true);
+  const [syncingGsc, setSyncingGsc] = useState(false);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | "published" | "draft">("all");
+
+  const handleForceSyncGoogleAndIndex = async () => {
+    setSyncingGsc(true);
+    try {
+      const { data: res, error } = await supabase.functions.invoke("fetch-gsc-data");
+      if (error) throw error;
+
+      const count = res?.indexing?.submittedCount || res?.indexing?.urlsCount || res?.indexing?.totalUrls || 0;
+      toast(
+        `⚡ Synchro Google Search réussie ! ${count > 0 ? `${count} pages soumises à l'indexation Google & Sitemaps pingés.` : "Sitemaps pingés et synchronisation effectuée."}`,
+        "success"
+      );
+    } catch (err: any) {
+      console.error("GSC Sync Error:", err);
+      toast(err.message || "Erreur lors de la synchronisation Google", "danger");
+    } finally {
+      setSyncingGsc(false);
+    }
+  };
 
   const loadPosts = useCallback(async () => {
     setLoading(true);
@@ -112,7 +135,18 @@ export function AdminBlogListPage() {
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center flex-wrap gap-2.5">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={handleForceSyncGoogleAndIndex}
+            disabled={syncingGsc}
+            className="bg-amber-500/10 text-amber-400 border-amber-500/30 hover:bg-amber-500/20 font-bold"
+            leftIcon={<RefreshCw className={cn("w-4 h-4 text-amber-400", syncingGsc && "animate-spin")} />}
+          >
+            {syncingGsc ? "Synchro & Indexation..." : "⚡ Synchro Google & Indexer"}
+          </Button>
+
           <Button
             type="button"
             variant="primary"

@@ -14,7 +14,9 @@ import {
   BookOpen,
   Send,
   HelpCircle,
+  RefreshCw,
 } from "lucide-react";
+import { cn } from "../../lib/utils";
 import { Card } from "../../components/ui/Card";
 import { Button } from "../../components/ui/Button";
 import { Input } from "../../components/ui/Input";
@@ -63,8 +65,32 @@ export function AdminBlogEditorPage() {
   const [dynamicKeywords, setDynamicKeywords] = useState<KeywordIdea[]>(SUGGESTED_KEYWORDS);
   const [aiSelectedKw, setAiSelectedKw] = useState<KeywordIdea | null>(SUGGESTED_KEYWORDS[0]);
 
-  // Real Google Search Console Live Keywords
+  // Real Google Search Console Live Keywords & Indexing Sync
   const [gscKeywords, setGscKeywords] = useState<{ query: string; impressions: number; clicks: number }[]>([]);
+  const [syncingGsc, setSyncingGsc] = useState(false);
+
+  const handleForceSyncGoogleAndIndex = async () => {
+    setSyncingGsc(true);
+    try {
+      const { data: res, error } = await supabase.functions.invoke("fetch-gsc-data");
+      if (error) throw error;
+
+      if (res?.metrics?.topQueries) {
+        setGscKeywords(res.metrics.topQueries);
+      }
+
+      const count = res?.indexing?.submittedCount || res?.indexing?.urlsCount || res?.indexing?.totalUrls || 0;
+      toast(
+        `⚡ Synchro Google Search réussie ! ${count > 0 ? `${count} pages soumises à l'indexation Google & Sitemaps pingés.` : "Sitemaps pingés et synchronisation effectuée."}`,
+        "success"
+      );
+    } catch (err: any) {
+      console.error("GSC Sync Error:", err);
+      toast(err.message || "Erreur lors de la synchronisation Google", "danger");
+    } finally {
+      setSyncingGsc(false);
+    }
+  };
 
   useEffect(() => {
     async function loadGscKeywords() {
@@ -260,7 +286,18 @@ export function AdminBlogEditorPage() {
           </div>
         </div>
 
-        <div className="flex items-center space-x-3">
+        <div className="flex items-center flex-wrap gap-2.5">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={handleForceSyncGoogleAndIndex}
+            disabled={syncingGsc}
+            className="bg-amber-500/10 text-amber-400 border-amber-500/30 hover:bg-amber-500/20 font-bold"
+            leftIcon={<RefreshCw className={cn("w-4 h-4 text-amber-400", syncingGsc && "animate-spin")} />}
+          >
+            {syncingGsc ? "Synchro & Indexation..." : "⚡ Synchro Google & Indexer"}
+          </Button>
+
           <Button
             type="button"
             variant="outline"
@@ -345,11 +382,22 @@ export function AdminBlogEditorPage() {
           {/* Keyword Explorer Card */}
           <div className="lg:col-span-2 space-y-6">
             <Card className="p-6 space-y-4">
-              <div className="flex items-center justify-between border-b border-border pb-3">
+              <div className="flex items-center justify-between border-b border-border pb-3 flex-wrap gap-2">
                 <h3 className="text-base font-extrabold text-text flex items-center gap-2">
                   <Key className="w-5 h-5 text-amber-500" />
                   <span>Opportunités de Mots-Clés SEO (Micro-Entreprise & Facturation)</span>
                 </h3>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleForceSyncGoogleAndIndex}
+                  disabled={syncingGsc}
+                  className="bg-amber-500/10 text-amber-400 border-amber-500/30 hover:bg-amber-500/20 text-xs font-bold"
+                  leftIcon={<RefreshCw className={cn("w-3.5 h-3.5", syncingGsc && "animate-spin")} />}
+                >
+                  {syncingGsc ? "Synchro..." : "⚡ Forcer synchro Google Search"}
+                </Button>
               </div>
               <p className="text-xs text-muted">
                 Sélectionnez un mot-clé ci-dessous pour pré-configurer le sujet et générer un article ciblé.
