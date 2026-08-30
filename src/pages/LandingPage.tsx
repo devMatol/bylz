@@ -607,11 +607,12 @@ export function LandingPage() {
               Testez Bylz gratuitement dès aujourd'hui. Aucune carte bancaire requise.
             </p>
             <div className="pt-4">
-              <Link to="/essai">
-                <Button variant="outline" size="lg" className="px-9 py-4 text-base font-black shadow-2xl hover:scale-105 bg-white text-primary border-white">
-                  <span>Démarrer l'essai gratuit</span>
-                  <ArrowRight className="w-5 h-5 ml-2 text-primary" />
-                </Button>
+              <Link
+                to="/essai"
+                className="inline-flex items-center justify-center gap-2 px-9 py-4 text-base font-black rounded-card shadow-2xl transition-all duration-200 hover:scale-105 bg-white hover:bg-slate-50 text-[#011142] border border-white"
+              >
+                <span className="text-[#011142]">Démarrer l'essai gratuit</span>
+                <ArrowRight className="w-5 h-5 text-[#011142]" />
               </Link>
             </div>
             <p className="text-xs text-white/80 font-semibold">Sans engagement • Résiliable à tout moment</p>
