@@ -78,6 +78,9 @@ const SimulateurUrssafPage = lazy(() =>
 const SimulateurTvaPage = lazy(() =>
   import("./pages/outils/SimulateurTvaPage").then((m) => ({ default: m.SimulateurTvaPage }))
 );
+const NotFoundPage = lazy(() =>
+  import("./pages/NotFoundPage").then((m) => ({ default: m.NotFoundPage }))
+);
 
 // Admin Back-Office Pages
 const AdminSalesPage = lazy(() =>
@@ -316,7 +319,14 @@ function App() {
                   </Route>
                 </Route>
 
-                <Route path="*" element={<Navigate to="/" replace />} />
+                <Route
+                  path="*"
+                  element={
+                    <Suspense fallback={<div className="min-h-screen bg-bg" />}>
+                      <NotFoundPage />
+                    </Suspense>
+                  }
+                />
               </Routes>
             </NotificationsProvider>
           </BrowserRouter>

@@ -6,7 +6,6 @@ const supabaseUrl = "https://sbwbjkzustnlnnilkogm.supabase.co";
 const anonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNid2Jqa3p1c3RubG5uaWxrb2dtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ0NTk5MzYsImV4cCI6MjEwMDAzNTkzNn0.OjKjWTdgWiGyecOsvIu_OjCwOExiDKR74eow-Lleo40";
 
 const supabase = createClient(supabaseUrl, anonKey);
-
 const today = new Date().toISOString().slice(0, 10);
 
 const staticUrls = [
@@ -16,7 +15,6 @@ const staticUrls = [
   { loc: "https://bylz.fr/conformite", priority: "0.9", changefreq: "weekly" },
   { loc: "https://bylz.fr/outils/simulateur-urssaf", priority: "0.9", changefreq: "weekly" },
   { loc: "https://bylz.fr/outils/simulateur-seuil-tva", priority: "0.9", changefreq: "weekly" },
-  { loc: "https://bylz.fr/essai", priority: "0.8", changefreq: "weekly" },
   { loc: "https://bylz.fr/blog", priority: "0.8", changefreq: "daily" },
   { loc: "https://bylz.fr/contact", priority: "0.6", changefreq: "monthly" },
   { loc: "https://bylz.fr/mentions-legales", priority: "0.3", changefreq: "yearly" },
@@ -24,10 +22,26 @@ const staticUrls = [
   { loc: "https://bylz.fr/confidentialite", priority: "0.3", changefreq: "yearly" },
 ];
 
+const STATIC_BLOG_SLUGS = [
+  "reforme-factur-x-2026-auto-entrepreneurs",
+  "franchise-tva-2026-seuils-et-regles",
+  "calcul-cotisations-urssaf-bnc-bic"
+];
+
 async function generateSitemap() {
   console.log("Generating sitemap.xml...");
 
-  let blogUrls = [];
+  const blogMap = new Map();
+
+  for (const slug of STATIC_BLOG_SLUGS) {
+    blogMap.set(slug, {
+      loc: `https://bylz.fr/blog/${slug}`,
+      lastmod: today,
+      priority: "0.7",
+      changefreq: "monthly",
+    });
+  }
+
   try {
     const { data: posts } = await supabase
       .from("blog_posts")
@@ -35,27 +49,20 @@ async function generateSitemap() {
       .eq("status", "published");
 
     if (posts && posts.length > 0) {
-      blogUrls = posts.map((p) => ({
-        loc: `https://bylz.fr/blog/${p.slug}`,
-        lastmod: (p.updated_at || p.published_at || today).slice(0, 10),
-        priority: "0.7",
-        changefreq: "monthly",
-      }));
+      for (const p of posts) {
+        blogMap.set(p.slug, {
+          loc: `https://bylz.fr/blog/${p.slug}`,
+          lastmod: (p.updated_at || p.published_at || today).slice(0, 10),
+          priority: "0.7",
+          changefreq: "monthly",
+        });
+      }
     }
   } catch (err) {
     console.warn("Notice fetching blog posts for sitemap:", err);
   }
 
-  // Fallback default blog posts if DB empty
-  if (blogUrls.length === 0) {
-    blogUrls = [
-      { loc: "https://bylz.fr/blog/reforme-factur-x-2026-auto-entrepreneurs", lastmod: today, priority: "0.7", changefreq: "monthly" },
-      { loc: "https://bylz.fr/blog/franchise-tva-2026-seuils-et-regles", lastmod: today, priority: "0.7", changefreq: "monthly" },
-      { loc: "https://bylz.fr/blog/calcul-cotisations-urssaf-bnc-bic", lastmod: today, priority: "0.7", changefreq: "monthly" },
-    ];
-  }
-
-  const allUrls = [...staticUrls, ...blogUrls];
+  const allUrls = [...staticUrls, ...Array.from(blogMap.values())];
 
   let xml = `<?xml version="1.0" encoding="UTF-8"?>\n`;
   xml += `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n`;

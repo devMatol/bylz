@@ -2,6 +2,8 @@ User-agent: *
 Allow: /
 Allow: /tarifs
 Allow: /fonctionnalites
+Allow: /conformite
+Allow: /outils/
 Allow: /blog
 Allow: /contact
 Allow: /essai

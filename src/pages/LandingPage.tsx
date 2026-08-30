@@ -69,9 +69,9 @@ export function LandingPage() {
     applicationCategory: "BusinessApplication",
     operatingSystem: "Web",
     offers: [
-      { "@type": "Offer", price: "0", priceCurrency: "EUR", name: "Starter" },
-      { "@type": "Offer", price: "9.00", priceCurrency: "EUR", name: "Solo" },
-      { "@type": "Offer", price: "19.00", priceCurrency: "EUR", name: "Pro" },
+      { "@type": "Offer", price: "0.00", priceCurrency: "EUR", name: "Starter" },
+      { "@type": "Offer", price: "8.90", priceCurrency: "EUR", name: "Solo" },
+      { "@type": "Offer", price: "12.90", priceCurrency: "EUR", name: "Pro" },
     ],
   };
 
@@ -80,7 +80,7 @@ export function LandingPage() {
     "@type": "Organization",
     name: "Bylz",
     url: "https://bylz.fr",
-    logo: "https://bylz.fr/logo.png",
+    logo: "https://bylz.fr/og-image.png",
   };
 
   const faqSchema = {
@@ -99,7 +99,7 @@ export function LandingPage() {
   return (
     <div className="min-h-screen bg-bg text-text selection:bg-primary/20 selection:text-primary relative">
       <SEO
-        title="Bylz : Facturation et pilotage fiscal pour indépendants, micro-entreprises & sociétés | Conforme 2026"
+        title="Bylz — Facturation Factur-X & Pilotage Fiscal | Auto-Entrepreneurs"
         description="Créez des factures conformes 2026 (Factur-X), suivez votre CA et anticipez vos cotisations URSSAF & impôts en 2 min/jour. Essai gratuit sans carte bancaire."
         canonical="/"
         jsonLd={[softwareSchema, organizationSchema, faqSchema]}
