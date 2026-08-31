@@ -15,6 +15,9 @@ import {
   TrendingUp,
   ShieldAlert,
   RefreshCw,
+  ShieldCheck,
+  Bot,
+  Zap,
 } from "lucide-react";
 import { cn } from "../../lib/utils";
 import { supabase } from "../../lib/supabase";
@@ -33,6 +36,8 @@ export function AdminBlogListPage() {
   const [posts, setPosts] = useState<BlogPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [syncingGsc, setSyncingGsc] = useState(false);
+  const [triggeringAutoPilot, setTriggeringAutoPilot] = useState(false);
+  const [lastAutoPilotRun, setLastAutoPilotRun] = useState<any>(null);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | "published" | "draft">("all");
 
@@ -52,6 +57,30 @@ export function AdminBlogListPage() {
       toast(err.message || "Erreur lors de la synchronisation Google", "danger");
     } finally {
       setSyncingGsc(false);
+    }
+  };
+
+  const handleTriggerAutoPilot = async () => {
+    setTriggeringAutoPilot(true);
+    try {
+      const { data: res, error } = await supabase.functions.invoke("auto-publish-blog");
+      if (error) throw error;
+
+      if (res?.article) {
+        toast(
+          `🚀 Auto-Pilote : Nouvel article publié "${res.article.title}" (Score SEO: ${res.article.seo_score}/100) et soumis à Googlebot !`,
+          "success"
+        );
+        void loadPosts();
+        if (res?.executionSummary) {
+          setLastAutoPilotRun(res.executionSummary);
+        }
+      }
+    } catch (err: any) {
+      console.error("AutoPilot trigger error:", err);
+      toast(err.message || "Erreur lors de l'exécution de l'Auto-Pilote SEO", "danger");
+    } finally {
+      setTriggeringAutoPilot(false);
     }
   };
 
@@ -159,9 +188,43 @@ export function AdminBlogListPage() {
         </div>
       </div>
 
+      {/* Auto-Pilote SEO 100% Autonome Banner */}
+      <Card className="p-5 border border-primary/30 bg-gradient-to-r from-primary/10 via-surface to-accent/10 relative overflow-hidden shadow-xl">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+          <div className="space-y-2">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-xs font-black uppercase tracking-wider">
+                <Bot className="w-3.5 h-3.5" /> Auto-Pilote SEO Actif
+              </span>
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-primary/20 text-primary text-xs font-bold">
+                <ShieldCheck className="w-3.5 h-3.5" /> Bouclier Anti-Cannibalisation 100% Blindé
+              </span>
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-400 text-xs font-bold">
+                <Zap className="w-3.5 h-3.5" /> Google Indexing Immédiat
+              </span>
+            </div>
+            <p className="text-sm font-semibold text-text">
+              Génération autonome de 2 articles SEO / semaine calibrés sur les intentions réelles de Google Search Console.
+            </p>
+            <p className="text-xs text-muted">
+              Vérification de distance lexicale & sémantique avant chaque publication pour garantir 0 doublon et 0 cannibalisation de mots-clés.
+            </p>
+          </div>
 
-
-      {/* Metrics Banner */}
+          <div className="flex items-center gap-3">
+            <Button
+              type="button"
+              variant="primary"
+              onClick={handleTriggerAutoPilot}
+              disabled={triggeringAutoPilot}
+              className="bylz-glow-cta text-xs font-black px-5 py-3 whitespace-nowrap bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500"
+              leftIcon={<Sparkles className={cn("w-4 h-4", triggeringAutoPilot && "animate-spin")} />}
+            >
+              {triggeringAutoPilot ? "Génération & Indexation..." : "🚀 Déclencher l'Auto-Pilote maintenant"}
+            </Button>
+          </div>
+        </div>
+      </Card>
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <Card className="p-4 flex items-center space-x-4">
           <div className="p-3 rounded-xl bg-brand-primary/10 text-brand-primary">
