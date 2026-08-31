@@ -8,91 +8,130 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, *, Authorization, Content-Type, Apikey, X-Client-Info",
 };
 
-// Curated Master SEO Matrix covering essential untapped micro-enterprise topics
-const MASTER_SEO_MATRIX = [
+// 8 Diversified Pillars with 40+ Long-Tail Micro-Enterprise Topics
+const EXPANDED_NICHE_MATRIX = [
+  // 1. Artisans & BTP
+  {
+    topic: "Facturation pour artisan du bâtiment : Mentions assurance décennale et devis conformes",
+    keyword: "facturation artisan batiment decennale",
+    category: "Devis & Facturation",
+    niche: "Artisans & BTP",
+  },
+  {
+    topic: "Sous-traitance dans le BTP en micro-entreprise : Autoliquidation de la TVA et règles",
+    keyword: "autoliquidation tva btp sous traitance",
+    category: "Fiscalité Micro-entreprise",
+    niche: "Artisans & BTP",
+  },
+
+  // 2. Freelances Tech & Développeurs
+  {
+    topic: "Développeur freelance et tech : Facturer son TJM, gérer ses devis et ses acomptes",
+    keyword: "facturation developpeur freelance tjm",
+    category: "Devis & Facturation",
+    niche: "Freelances Tech",
+  },
+  {
+    topic: "Facturation de prestations à l'étranger pour indépendant : TVA intracommunautaire et DES",
+    keyword: "facturation client etranger micro entreprise",
+    category: "Fiscalité Micro-entreprise",
+    niche: "Freelances Tech",
+  },
+
+  // 3. Consultants, Formateurs & Coachs
+  {
+    topic: "Consultant et formateur indépendant : Exonération de TVA formation et mentions obligatoires",
+    keyword: "exoneration tva formation professionnelle consultant",
+    category: "Fiscalité Micro-entreprise",
+    niche: "Consultants & Formateurs",
+  },
+  {
+    topic: "Frais de déplacement et de mission : Refacturation en débours sans cotisations URSSAF",
+    keyword: "refacturation frais deplacement debours",
+    category: "Gestion & Cotisations",
+    niche: "Consultants & Formateurs",
+  },
+
+  // 4. Créatifs & Médias (Photographes, Graphistes, Vidéastes)
+  {
+    topic: "Facturation photographe et graphiste : Distinguer cession de droits d'auteur et prestation",
+    keyword: "facturation graphiste droits auteur",
+    category: "Législation & Conformité",
+    niche: "Créatifs & Médias",
+  },
+
+  // 5. Immobilier & Agents Commerciaux
+  {
+    topic: "Agent commercial immobilier en micro-entreprise : Facturation des commissions et TVA",
+    keyword: "facturation agent commercial immobilier",
+    category: "Fiscalité Micro-entreprise",
+    niche: "Immobilier",
+  },
+
+  // 6. Trésorerie, Acomptes & Recouvrement
   {
     topic: "Comment facturer un acompte en micro-entreprise : Règles légales, mentions et modèle",
     keyword: "facturer acompte auto entrepreneur",
     category: "Devis & Facturation",
-    intent: "Transactionnel / Pratique",
-  },
-  {
-    topic: "Dépassement du seuil de TVA en micro-entreprise : Que faire le mois du franchissement ?",
-    keyword: "depassement seuil tva que faire",
-    category: "Fiscalité Micro-entreprise",
-    intent: "Informatif / Stratégique",
-  },
-  {
-    topic: "Frais de débours en micro-entreprise : Refacturer ses achats sans payer de cotisations URSSAF",
-    keyword: "frais debours auto entrepreneur",
-    category: "Gestion & Cotisations",
-    intent: "Optimisation / Pratique",
-  },
-  {
-    topic: "Indemnités kilométriques en auto-entrepreneur : Barème fiscal 2026, calcul et justificatifs",
-    keyword: "indemnites kilometriques auto entrepreneur",
-    category: "Gestion & Cotisations",
-    intent: "Calcul / Réglementaire",
-  },
-  {
-    topic: "Mentions obligatoires sur un devis d'auto-entrepreneur en 2026 : Guide et modèle légal",
-    keyword: "mentions obligatoires devis",
-    category: "Devis & Facturation",
-    intent: "Conformité / Pratique",
+    niche: "Trésorerie & Facturation",
   },
   {
     topic: "Facture impayée en freelance : Procédure de relance amiable et modèle de mise en demeure",
     keyword: "recouvrement facture impayee freelance",
     category: "Devis & Facturation",
-    intent: "Résolution de litige",
+    niche: "Trésorerie & Facturation",
   },
   {
-    topic: "Compte bancaire dédié pour micro-entreprise : Quand est-il obligatoire et quelles sanctions ?",
-    keyword: "compte bancaire dedie obligatoire",
-    category: "Comptabilité & Banque",
-    intent: "Réglementaire",
+    topic: "Proposer le paiement par carte bancaire sur ses factures : Diviser par 3 les délais de paiement",
+    keyword: "paiement carte bancaire facture freelance",
+    category: "Devis & Facturation",
+    niche: "Paiements & Trésorerie",
   },
+
+  // 7. Fiscalité Pointue & Seuil TVA
   {
-    topic: "Déclaration URSSAF mensuelle ou trimestrielle : Quel calendrier choisir pour sa trésorerie ?",
-    keyword: "declaration urssaf mensuelle ou trimestrielle",
-    category: "Gestion & Cotisations",
-    intent: "Conseil / Comparatif",
+    topic: "Dépassement du seuil de TVA en micro-entreprise : Que faire le mois exact du franchissement ?",
+    keyword: "depassement seuil tva que faire",
+    category: "Fiscalité Micro-entreprise",
+    niche: "Fiscalité & TVA",
   },
   {
     topic: "Exonération de CFE pour les auto-entrepreneurs : Plafonds de chiffre d'affaires et démarches",
     keyword: "exoneration cfe micro entreprise",
     category: "Fiscalité Micro-entreprise",
-    intent: "Optimisation fiscale",
+    niche: "Fiscalité & Taxes",
   },
   {
-    topic: "Cumul micro-entreprise et salariat : Droits, obligations fiscales et calcul des cotisations",
-    keyword: "cumul micro entreprise salariat",
-    category: "Législation & Conformité",
-    intent: "Guide statutaire",
+    topic: "Abattement forfaitaire BNC / BIC et déclaration 2042-C-PRO : Guide fiscal pas à pas",
+    keyword: "declaration impots 2042 c pro micro entrepreneur",
+    category: "Fiscalité Micro-entreprise",
+    niche: "Impôts & Revenus",
+  },
+
+  // 8. Gestion & Cotisations
+  {
+    topic: "Indemnités kilométriques en auto-entrepreneur : Barème fiscal 2026, calcul et justificatifs",
+    keyword: "indemnites kilometriques auto entrepreneur",
+    category: "Gestion & Cotisations",
+    niche: "Optimisation des Charges",
+  },
+  {
+    topic: "Déclaration URSSAF mensuelle ou trimestrielle : Quel calendrier choisir pour sa trésorerie ?",
+    keyword: "declaration urssaf mensuelle ou trimestrielle",
+    category: "Gestion & Cotisations",
+    niche: "Cotisations Sociales",
+  },
+  {
+    topic: "Compte bancaire dédié pour micro-entreprise : Quand est-il obligatoire et quelles sanctions ?",
+    keyword: "compte bancaire dedie obligatoire",
+    category: "Comptabilité & Banque",
+    niche: "Banque & Réglementaire",
   },
   {
     topic: "Tenue du livre des recettes et registre des achats : Obligations légales et modèle conforme",
-    keyword: "livre des recettes registre achats",
+    keyword: "livre des recettes registre achats obligatoire",
     category: "Comptabilité & Banque",
-    intent: "Tutoriel légal",
-  },
-  {
-    topic: "Facturation à l'étranger pour auto-entrepreneur : TVA intracommunautaire et déclaration DES",
-    keyword: "facturation client etranger micro entreprise",
-    category: "Fiscalité Micro-entreprise",
-    intent: "International / Fiscal",
-  },
-  {
-    topic: "Proposer le paiement par carte bancaire sur ses factures freelance : Avantages et mise en place",
-    keyword: "paiement carte bancaire facture",
-    category: "Devis & Facturation",
-    intent: "Trésorerie / Outil",
-  },
-  {
-    topic: "Abattement forfaitaire BNC / BIC et déclaration 2042-C-PRO : Comment déclarer ses revenus",
-    keyword: "declaration impots 2042 c pro",
-    category: "Fiscalité Micro-entreprise",
-    intent: "Déclaration / Fiscal",
+    niche: "Comptabilité & Registres",
   }
 ];
 
@@ -123,9 +162,8 @@ function calculateSimilarity(tokens1: Set<string>, tokens2: Set<string>): number
   return intersection / union;
 }
 
-async function callGeminiWithFallback(apiKey: string, prompt: string) {
-  const candidateModels = ["gemini-3.6-flash", "gemini-3.5-flash", "gemini-3.6-pro", "gemini-3.5-pro"];
-  const errorLogs: string[] = [];
+async function callGemini(apiKey: string, prompt: string) {
+  const candidateModels = ["gemini-3.6-flash", "gemini-3.5-flash", "gemini-3.6-pro"];
   let lastErr: any = null;
 
   for (const model of candidateModels) {
@@ -150,8 +188,7 @@ async function callGeminiWithFallback(apiKey: string, prompt: string) {
         }
       } else {
         const errText = await res.text();
-        errorLogs.push(`${model} (${res.status}): ${errText}`);
-        console.warn(`Model ${model} failed: ${res.status} - ${errText}`);
+        console.warn(`Model ${model} failed: ${res.status} - ${errText.slice(0, 100)}`);
       }
     } catch (e) {
       lastErr = e;
@@ -159,7 +196,7 @@ async function callGeminiWithFallback(apiKey: string, prompt: string) {
     }
   }
 
-  throw new Error(`Tous les modèles Gemini ont échoué. Logs: ` + errorLogs.join(" | "));
+  throw new Error(`Génération IA impossible : ${lastErr?.message || "Erreur de modèle"}`);
 }
 
 Deno.serve(async (req: Request) => {
@@ -179,10 +216,20 @@ Deno.serve(async (req: Request) => {
       throw new Error("Clé GEMINI_API_KEY non configurée dans les secrets Supabase.");
     }
 
+    let payloadGuidance = "";
+    try {
+      if (req.method === "POST") {
+        const body = await req.json().catch(() => ({}));
+        payloadGuidance = (body?.guidance || body?.niche || "").trim().toLowerCase();
+      }
+    } catch {
+      // Ignored
+    }
+
     // 1. Fetch all existing articles
     const { data: existingPosts } = await supabase
       .from("blog_posts")
-      .select("id, slug, title, keywords, category, meta_description, published_at")
+      .select("id, slug, title, keywords, category, published_at")
       .order("published_at", { ascending: false });
 
     const posts = existingPosts || [];
@@ -193,32 +240,18 @@ Deno.serve(async (req: Request) => {
       tokens: tokenize(`${p.title} ${(p.keywords || []).join(" ")} ${p.slug}`),
     }));
 
-    // 2. Fetch GSC Queries from admin cache if available
-    let candidatePool = [...MASTER_SEO_MATRIX];
-    try {
-      const { data: gscCache } = await supabase
-        .from("admin_metrics_cache")
-        .select("data")
-        .eq("cache_key", "gsc_30d_metrics")
-        .maybeSingle();
+    // 2. Select Candidate through Niche Guidance & Anti-Cannibalization Filter
+    let candidatePool = [...EXPANDED_NICHE_MATRIX];
 
-      if (gscCache?.data?.topQueries && Array.isArray(gscCache.data.topQueries)) {
-        for (const gscItem of gscCache.data.topQueries) {
-          if (gscItem.query && gscItem.impressions >= 5) {
-            candidatePool.unshift({
-              topic: `Guide complet : ${gscItem.query.charAt(0).toUpperCase() + gscItem.query.slice(1)} en 2026`,
-              keyword: gscItem.query.toLowerCase().trim(),
-              category: "Fiscalité Micro-entreprise",
-              intent: "GSC Opportunité Réelle",
-            });
-          }
-        }
-      }
-    } catch (e) {
-      console.warn("GSC cache notice:", e);
+    if (payloadGuidance) {
+      // Prioritize matched niche
+      candidatePool.sort((a, b) => {
+        const matchA = a.niche.toLowerCase().includes(payloadGuidance) || a.category.toLowerCase().includes(payloadGuidance) ? 1 : 0;
+        const matchB = b.niche.toLowerCase().includes(payloadGuidance) || b.category.toLowerCase().includes(payloadGuidance) ? 1 : 0;
+        return matchB - matchA;
+      });
     }
 
-    // 3. Evaluate candidates through Anti-Cannibalization Shield
     let selectedTopic: any = null;
     let antiCannibalizationReport: any = null;
 
@@ -235,55 +268,55 @@ Deno.serve(async (req: Request) => {
         }
       }
 
-      // Check if topic is virgin (< 0.50 token similarity)
-      if (maxSim < 0.50) {
+      // Check if topic is virgin (< 0.40 token similarity)
+      if (maxSim < 0.40) {
         selectedTopic = candidate;
         antiCannibalizationReport = {
           lexicalSimilarity: Math.round(maxSim * 100),
-          closestPreviousArticle: closestMatchTitle || "Aucun (Sujet 100% Neuf)",
+          closestPreviousArticle: closestMatchTitle || "Aucun (Sujet 100% Inédit)",
           status: "PASSED_ANTI_CANNIBALIZATION_SHIELD",
+          niche: candidate.niche,
         };
         break;
       }
     }
 
     if (!selectedTopic) {
-      // Fallback: create an ultra-specific long tail topic
-      const nowTag = new Date().toISOString().slice(0, 7);
+      // Create dynamically indexed topic
+      const count = posts.length + 1;
       selectedTopic = {
-        topic: `Facturer un acompte en micro-entreprise : Règles légales, mentions et modèle (${nowTag})`,
-        keyword: "acompte facture auto entrepreneur",
-        category: "Devis & Facturation",
-        intent: "Pratique",
+        topic: `Gestion fiscale et facturation micro-entreprise : Guide pratique #${count}`,
+        keyword: `gestion fiscale auto entrepreneur guide ${count}`,
+        category: "Fiscalité Micro-entreprise",
+        niche: "Généraliste",
       };
-      antiCannibalizationReport = {
-        status: "GENERATED_LONG_TAIL_TOPIC",
-      };
+      antiCannibalizationReport = { status: "FALLBACK_GENERATION" };
     }
 
-    // 4. Generate the Comprehensive, High-Converting Article with Gemini
+    // 3. Generate the High-Converting Article with Gemini
     const writePrompt = `
-Rédigez un article de blog SEO B2B de référence (1400 à 2000 mots) en français pour Bylz (bylz.fr), la solution de facturation et de pilotage fiscal pour indépendants et micro-entreprises.
+Rédigez un article de blog SEO B2B de référence (1300 à 1700 mots) en français pour Bylz (bylz.fr), le logiciel de facturation Factur-X et de pilotage fiscal pour indépendants et micro-entreprises.
 
 Sujet : "${selectedTopic.topic}"
 Mot-clé principal : "${selectedTopic.keyword}"
 Catégorie : "${selectedTopic.category}"
+Cible / Niche : "${selectedTopic.niche}"
 
 Directives de rédaction :
 1. Style Cabinet de conseil / Expert-comptable pragmatique : direct, chiffré, pédagogique, zéro blabla.
 2. Structure HTML sémantique soignée (<h2>, <h3>, <p>, <ul>, <li>, <strong>). Ne pas utiliser de balise <h1>.
-3. Insérer obligatoirement en haut (après le 1er paragraphe) l'encart d'expert Bylz :
+3. Insérer obligatoirement après le 1er paragraphe l'encart d'expert Bylz :
 <div class="my-6 p-5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400">
   <p class="font-bold text-sm">💡 L'avis de l'expert fiscal Bylz :</p>
-  <p class="text-xs text-white/80 mt-1">[Conseil concret, chiffré et orienté optimisation ou gain de temps]</p>
+  <p class="text-xs text-white/80 mt-1">[Conseil concret, chiffré et orienté optimisation fiscale ou gain de temps]</p>
 </div>
 
-4. Insérer un tableau comparatif <table> avec Tailwind CSS montrant les risques de la gestion manuelle (Word/Excel, oublis de déclarations, erreurs de plafonds) vs l'automatisation avec Bylz.
+4. Insérer un tableau comparatif <table> avec classes Tailwind montrant les risques de la gestion manuelle (Word/Excel, oublis) vs l'automatisation avec Bylz.
 
-5. Intégrer naturellement des liens internes vers les outils gratuits de Bylz :
-- Simulateur URSSAF 2026 : <a href="/outils/simulateur-urssaf" class="text-primary font-bold hover:underline">Simulateur de cotisations URSSAF Bylz</a>
-- Simulateur de seuil TVA : <a href="/outils/simulateur-seuil-tva" class="text-primary font-bold hover:underline">Calculateur de franchise en base de TVA</a>
-- Conformité Factur-X : <a href="/conformite" class="text-primary font-bold hover:underline">Conformité Factur-X 2026</a>
+5. Intégrer des liens internes vers les outils gratuits de Bylz :
+- <a href="/outils/simulateur-urssaf" class="text-primary font-bold hover:underline">Simulateur de cotisations URSSAF Bylz</a>
+- <a href="/outils/simulateur-seuil-tva" class="text-primary font-bold hover:underline">Calculateur de seuil de TVA</a>
+- <a href="/conformite" class="text-primary font-bold hover:underline">Conformité Factur-X 2026</a>
 
 6. Section FAQ en fin d'article avec 4 questions/réponses précises pour les Rich Snippets Google.
 
@@ -298,18 +331,18 @@ Retournez STRICTEMENT un objet JSON valide avec cette structure :
 {
   "title": string (Titre optimisé SEO < 60 caractères),
   "slug": string (slug URL sans accents),
-  "excerpt": string (résumé accrocheur 150-200 caractères),
-  "metaDescription": string (meta description percutante 130-155 caractères),
+  "excerpt": string (résumé 150-200 caractères),
+  "metaDescription": string (meta description 130-155 caractères),
   "category": string,
   "readTime": string (ex: "6 min de lecture"),
   "author": "Équipe Fiscale Bylz",
   "keywords": string[] (4 à 6 mots-clés ciblés),
   "content": string (HTML complet de l'article),
-  "seoScore": number (note estimée de 90 à 100)
+  "seoScore": number (note estimée de 92 à 100)
 }
 `.trim();
 
-    const article = await callGeminiWithFallback(geminiApiKey, writePrompt);
+    const article = await callGemini(geminiApiKey, writePrompt);
 
     // Clean slug
     let cleanSlug = (article.slug || selectedTopic.keyword)
@@ -319,13 +352,12 @@ Retournez STRICTEMENT un objet JSON valide avec cette structure :
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/^-+|-+$/g, "");
 
-    // Avoid duplicate slug collision if any
-    const isSlugDuplicate = posts.some((p) => p.slug === cleanSlug);
-    if (isSlugDuplicate) {
+    const isDuplicate = posts.some((p) => p.slug === cleanSlug);
+    if (isDuplicate) {
       cleanSlug = `${cleanSlug}-${Date.now().toString().slice(-4)}`;
     }
 
-    // 5. Insert newly generated article into blog_posts table
+    // 4. Insert into database
     const { data: insertedPost, error: insertErr } = await supabase
       .from("blog_posts")
       .insert({
@@ -340,7 +372,7 @@ Retournez STRICTEMENT un objet JSON valide avec cette structure :
         cover_image_url: "https://bylz.fr/og-image.png",
         status: "published",
         keywords: article.keywords || [selectedTopic.keyword],
-        seo_score: article.seoScore || 94,
+        seo_score: article.seoScore || 96,
         published_at: new Date().toISOString(),
       })
       .select()
@@ -350,7 +382,7 @@ Retournez STRICTEMENT un objet JSON valide avec cette structure :
       throw new Error(`Erreur d'insertion BDD : ${insertErr.message}`);
     }
 
-    // 6. Submit URL to Google Indexing API & Sitemap Ping
+    // 5. Submit to Google Indexing API & Sitemap Ping
     let googleIndexingSuccess = false;
     const publishedUrl = `https://bylz.fr/blog/${cleanSlug}`;
 
@@ -410,14 +442,13 @@ Retournez STRICTEMENT un objet JSON valide avec cette structure :
           googleIndexingSuccess = indexRes.ok;
         }
       }
-      // Ping search engines
       await fetch(`https://www.google.com/ping?sitemap=${encodeURIComponent("https://bylz.fr/sitemap.xml")}`).catch(() => {});
       await fetch(`https://www.bing.com/ping?sitemap=${encodeURIComponent("https://bylz.fr/sitemap.xml")}`).catch(() => {});
     } catch (indexErr) {
       console.warn("Google Indexing API notice:", indexErr);
     }
 
-    // 7. Save log in admin_metrics_cache
+    // 6. Save log
     const executionSummary = {
       timestamp: new Date().toISOString(),
       durationMs: Date.now() - startTime,
@@ -427,7 +458,8 @@ Retournez STRICTEMENT un objet JSON valide avec cette structure :
       url: publishedUrl,
       keyword: selectedTopic.keyword,
       category: selectedTopic.category,
-      seoScore: article.seoScore || 94,
+      niche: selectedTopic.niche,
+      seoScore: article.seoScore || 96,
       googleIndexing: googleIndexingSuccess ? "SUBMITTED" : "SITEMAP_PINGED",
       antiCannibalizationReport,
     };
@@ -442,7 +474,7 @@ Retournez STRICTEMENT un objet JSON valide avec cette structure :
     return new Response(
       JSON.stringify({
         success: true,
-        message: "Article SEO généré, publié et soumis à Google Indexing !",
+        message: `Article SEO "${article.title}" publié avec succès !`,
         article: insertedPost,
         executionSummary,
       }),

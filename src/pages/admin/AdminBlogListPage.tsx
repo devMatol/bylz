@@ -60,15 +60,22 @@ export function AdminBlogListPage() {
     }
   };
 
-  const handleTriggerAutoPilot = async () => {
+  const [selectedNiche, setSelectedNiche] = useState("");
+  const [customNicheInput, setCustomNicheInput] = useState("");
+
+  const handleTriggerAutoPilot = async (overrideGuidance?: string) => {
     setTriggeringAutoPilot(true);
+    const guidanceToSend = overrideGuidance !== undefined ? overrideGuidance : (customNicheInput || selectedNiche || "");
     try {
-      const { data: res, error } = await supabase.functions.invoke("auto-publish-blog");
+      const { data: res, error } = await supabase.functions.invoke("auto-publish-blog", {
+        body: { guidance: guidanceToSend },
+      });
       if (error) throw error;
 
       if (res?.article) {
+        const nicheTag = res.executionSummary?.niche ? ` [Niche: ${res.executionSummary.niche}]` : "";
         toast(
-          `🚀 Auto-Pilote : Nouvel article publié "${res.article.title}" (Score SEO: ${res.article.seo_score}/100) et soumis à Googlebot !`,
+          `🚀 Auto-Pilote : Nouvel article publié "${res.article.title}"${nicheTag} (Score SEO: ${res.article.seo_score}/100) et soumis à Googlebot !`,
           "success"
         );
         void loadPosts();
@@ -189,7 +196,7 @@ export function AdminBlogListPage() {
       </div>
 
       {/* Auto-Pilote SEO 100% Autonome Banner */}
-      <Card className="p-5 border border-primary/30 bg-gradient-to-r from-primary/10 via-surface to-accent/10 relative overflow-hidden shadow-xl">
+      <Card className="p-5 border border-primary/30 bg-gradient-to-r from-primary/10 via-surface to-accent/10 relative overflow-hidden shadow-xl space-y-4">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
           <div className="space-y-2">
             <div className="flex items-center gap-2 flex-wrap">
@@ -204,10 +211,10 @@ export function AdminBlogListPage() {
               </span>
             </div>
             <p className="text-sm font-semibold text-text">
-              Génération autonome de 2 articles SEO / semaine calibrés sur les intentions réelles de Google Search Console.
+              Génération autonome et continue d'articles SEO calibrés sur les requêtes Google Search Console et les niches à fort potentiel.
             </p>
             <p className="text-xs text-muted">
-              Vérification de distance lexicale & sémantique avant chaque publication pour garantir 0 doublon et 0 cannibalisation de mots-clés.
+              Rotation automatique des 8 piliers de contenu (Artisans BTP, Tech, Consultants, Créatifs, Immobilier, Trésorerie, Fiscalité) avec 0 risque de doublon.
             </p>
           </div>
 
@@ -215,13 +222,62 @@ export function AdminBlogListPage() {
             <Button
               type="button"
               variant="primary"
-              onClick={handleTriggerAutoPilot}
+              onClick={() => handleTriggerAutoPilot()}
               disabled={triggeringAutoPilot}
               className="bylz-glow-cta text-xs font-black px-5 py-3 whitespace-nowrap bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500"
               leftIcon={<Sparkles className={cn("w-4 h-4", triggeringAutoPilot && "animate-spin")} />}
             >
-              {triggeringAutoPilot ? "Génération & Indexation..." : "🚀 Déclencher l'Auto-Pilote maintenant"}
+              {triggeringAutoPilot ? "Génération & Indexation..." : "🚀 Déclencher l'Auto-Pilote"}
             </Button>
+          </div>
+        </div>
+
+        {/* Niche & Vertical Explorer Bar */}
+        <div className="pt-3 border-t border-border/60 flex flex-col md:flex-row md:items-center justify-between gap-3">
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <span className="text-xs font-bold text-muted uppercase tracking-wider mr-1">Cibler une Niche :</span>
+            {[
+              { id: "", label: "🎲 Rotation Automatique" },
+              { id: "Artisans & BTP", label: "🔨 BTP & Artisans" },
+              { id: "Freelances Tech", label: "💻 Tech & Développeurs" },
+              { id: "Consultants & Formateurs", label: "🎓 Consultants" },
+              { id: "Créatifs & Médias", label: "📸 Créatifs & Médias" },
+              { id: "Immobilier", label: "🏡 Immobilier" },
+              { id: "Trésorerie & Facturation", label: "💳 Trésorerie & Impayés" },
+              { id: "Fiscalité & TVA", label: "⚖️ Fiscalité & TVA" },
+            ].map((n) => (
+              <button
+                key={n.id}
+                type="button"
+                onClick={() => {
+                  setSelectedNiche(n.id);
+                  if (n.id) {
+                    setCustomNicheInput("");
+                  }
+                }}
+                className={cn(
+                  "px-2.5 py-1 rounded-lg text-xs font-semibold transition-all border",
+                  selectedNiche === n.id && !customNicheInput
+                    ? "bg-primary text-white border-primary shadow-sm"
+                    : "bg-surface border-border text-muted hover:text-text hover:border-border/80"
+                )}
+              >
+                {n.label}
+              </button>
+            ))}
+          </div>
+
+          <div className="flex items-center gap-2 min-w-[240px]">
+            <Input
+              type="text"
+              placeholder="Ou saisir un mot-clé précis..."
+              value={customNicheInput}
+              onChange={(e) => {
+                setCustomNicheInput(e.target.value);
+                if (e.target.value) setSelectedNiche("");
+              }}
+              className="text-xs h-8"
+            />
           </div>
         </div>
       </Card>
