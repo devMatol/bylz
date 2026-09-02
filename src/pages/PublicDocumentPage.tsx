@@ -326,9 +326,16 @@ export function PublicDocumentPage() {
             </p>
           </div>
 
-          <div className="text-left sm:text-right">
+          <div className="text-left sm:text-right flex flex-col sm:items-end">
+            {doc.company.logo_url && (
+              <img
+                src={doc.company.logo_url}
+                alt="Logo entreprise"
+                className="w-12 h-12 object-contain rounded-xl bg-white p-1 mb-2 border border-slate-700 shadow-sm"
+              />
+            )}
             <p className="text-xs font-bold text-slate-400 uppercase">Émetteur</p>
-            <p className="text-sm font-bold text-white">{doc.company.legal_name}</p>
+            <p className="text-sm font-bold text-white">{doc.company.commercial_name || doc.company.legal_name}</p>
             {doc.company.siret && <p className="text-xs text-slate-400">SIRET : {doc.company.siret}</p>}
             <p className="text-xs text-slate-400">{doc.company.address}</p>
           </div>

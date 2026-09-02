@@ -13,6 +13,8 @@ import {
   Loader2,
   Building,
   Upload,
+  Palette,
+  Trash2,
 } from "lucide-react";
 import { PageContainer } from "../components/layout/PageContainer";
 import { Card } from "../components/ui/Card";
@@ -51,6 +53,7 @@ import { BankSyncSection } from "../components/settings/BankSyncSection";
 import { PushNotificationToggle } from "../components/pwa/PushNotificationToggle";
 import { WhatsAppCopilotSection } from "../components/settings/WhatsAppCopilotSection";
 import { canUseFeature, type FeatureKey } from "../lib/planLimits";
+import { ACCENT_COLORS } from "../lib/onboarding";
 
 interface ConnectStatus {
   hasAccount: boolean;
@@ -320,6 +323,19 @@ export function SettingsPage() {
     }
   };
 
+  const handleRemoveLogo = async () => {
+    setLogoUrl("");
+    if (company?.id) {
+      try {
+        await supabase.from("companies").update({ logo_url: null }).eq("id", company.id);
+        toast("Logo retiré avec succès !", "success");
+        await refreshProfile();
+      } catch (err: any) {
+        toast(err.message || "Erreur lors du retrait du logo", "danger");
+      }
+    }
+  };
+
   const handleSaveDesign = async (e: FormEvent) => {
     e.preventDefault();
     if (!company) return;
@@ -480,38 +496,225 @@ export function SettingsPage() {
             </Card>
 
             <Card className="p-6 space-y-6">
-              <h3 className="text-base font-bold text-text flex items-center gap-2">🎨 Personnalisation visuelle des factures</h3>
+              <div>
+                <h3 className="text-base font-bold text-text flex items-center gap-2">
+                  <Palette className="w-5 h-5 text-brand-primary" />
+                  <span>Personnalisation visuelle des devis & factures</span>
+                </h3>
+                <p className="text-xs text-muted mt-1">
+                  Adaptez l'apparence de vos documents légaux à l'identité visuelle de votre entreprise.
+                </p>
+              </div>
+
+              {/* Starter Included Callout Banner */}
+              <div className="flex items-start sm:items-center gap-2.5 p-3.5 rounded-xl bg-primary/10 border border-primary/20 text-xs text-primary font-medium">
+                <Sparkles className="w-4 h-4 flex-shrink-0 mt-0.5 sm:mt-0 text-primary" />
+                <span>
+                  <strong>Inclus dans tous les plans (Starter, Solo et Pro) :</strong> Votre logo et votre couleur d'accentuation sont appliqués automatiquement sur tous vos devis, factures et fichiers PDF Factur-X conformes 2026.
+                </span>
+              </div>
+
               <form onSubmit={handleSaveDesign} className="space-y-6">
-                <div className="space-y-2">
-                  <label className="block text-xs font-bold text-muted uppercase">Logo d'entreprise</label>
-                  <div className="flex items-center gap-4">
-                    {logoUrl ? (
-                      <div className="relative group w-16 h-16 rounded-xl border border-border overflow-hidden bg-white">
-                        <img src={logoUrl} alt="Logo" className="w-full h-full object-cover" />
-                        <button type="button" onClick={() => setLogoUrl("")} className="absolute inset-0 bg-black/50 text-white text-xs font-bold opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">Retirer</button>
-                      </div>
-                    ) : (
-                      <div className="w-16 h-16 rounded-xl bg-surface-hover border border-dashed border-border flex items-center justify-center text-muted">
-                        <Building className="w-6 h-6 opacity-40" />
-                      </div>
-                    )}
-                    <div>
-                      <input type="file" id="logo-upload" accept="image/png, image/jpeg" onChange={(e) => { const f = e.target.files?.[0]; if (f) void handleLogoUpload(f); }} className="hidden" />
-                      <label htmlFor="logo-upload" className="inline-flex items-center justify-center h-9 px-4 rounded-xl border border-border bg-surface hover:bg-surface-hover text-xs font-bold text-text cursor-pointer transition-colors">
-                        {logoUploading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Upload className="w-3.5 h-3.5 mr-2" />}
-                        Télécharger un logo
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                  {/* Left Column: Form Controls */}
+                  <div className="lg:col-span-7 space-y-5">
+                    {/* Logo Section */}
+                    <div className="space-y-2">
+                      <label className="block text-xs font-bold text-muted uppercase tracking-wider">
+                        Logo de l'entreprise
                       </label>
+                      <div className="flex items-center gap-4">
+                        {logoUrl ? (
+                          <div className="relative group w-16 h-16 rounded-xl border border-border overflow-hidden bg-white p-1 flex items-center justify-center shadow-sm flex-shrink-0">
+                            <img src={logoUrl} alt="Logo entreprise" className="w-full h-full object-contain" />
+                          </div>
+                        ) : (
+                          <div className="w-16 h-16 rounded-xl bg-surface-hover border border-dashed border-border flex items-center justify-center text-muted flex-shrink-0">
+                            <Building className="w-7 h-7 opacity-40" />
+                          </div>
+                        )}
+                        <div className="space-y-1.5 flex-1">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <input
+                              type="file"
+                              id="logo-upload"
+                              accept="image/png, image/jpeg, image/webp, image/svg+xml"
+                              onChange={(e) => {
+                                const f = e.target.files?.[0];
+                                if (f) void handleLogoUpload(f);
+                              }}
+                              className="hidden"
+                            />
+                            <label
+                              htmlFor="logo-upload"
+                              className="inline-flex items-center justify-center h-9 px-4 rounded-xl border border-border bg-surface hover:bg-surface-hover text-xs font-bold text-text cursor-pointer transition-colors shadow-sm"
+                            >
+                              {logoUploading ? (
+                                <Loader2 className="w-3.5 h-3.5 animate-spin mr-1.5" />
+                              ) : (
+                                <Upload className="w-3.5 h-3.5 mr-1.5" />
+                              )}
+                              {logoUrl ? "Changer le logo" : "Télécharger un logo"}
+                            </label>
+
+                            {logoUrl && (
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={handleRemoveLogo}
+                                className="text-danger hover:bg-danger/10 text-xs font-semibold h-9 px-3"
+                              >
+                                <Trash2 className="w-3.5 h-3.5 mr-1" />
+                                Retirer
+                              </Button>
+                            )}
+                          </div>
+                          <p className="text-[11px] text-muted">
+                            PNG, JPG, WEBP ou SVG (max. 2 Mo). Privilégiez un fond transparent.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Accent Color Section */}
+                    <div className="space-y-2 pt-2 border-t border-border/60">
+                      <label className="block text-xs font-bold text-muted uppercase tracking-wider">
+                        Couleur d'accentuation des documents
+                      </label>
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-2.5 flex-wrap">
+                          {ACCENT_COLORS.map((col) => (
+                            <button
+                              key={col}
+                              type="button"
+                              onClick={() => setAccentColor(col)}
+                              className={`w-8 h-8 rounded-full transition-transform flex items-center justify-center border-2 ${
+                                accentColor.toLowerCase() === col.toLowerCase()
+                                  ? "scale-110 border-white shadow-md ring-2 ring-primary"
+                                  : "border-transparent hover:scale-105"
+                              }`}
+                              style={{ backgroundColor: col }}
+                              title={col}
+                            >
+                              {accentColor.toLowerCase() === col.toLowerCase() && (
+                                <Check className="w-4 h-4 text-white drop-shadow-md" />
+                              )}
+                            </button>
+                          ))}
+                        </div>
+
+                        {/* Custom Hex Picker */}
+                        <div className="flex items-center gap-2 max-w-xs">
+                          <input
+                            type="color"
+                            value={accentColor}
+                            onChange={(e) => setAccentColor(e.target.value)}
+                            className="w-8 h-8 rounded-lg border border-border cursor-pointer bg-transparent p-0.5"
+                            title="Choisir une couleur personnalisée"
+                          />
+                          <Input
+                            type="text"
+                            value={accentColor.toUpperCase()}
+                            onChange={(e) => setAccentColor(e.target.value)}
+                            placeholder="#7C6FE0"
+                            className="text-xs font-mono h-8"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Invoice Footer Mentions */}
+                    <div className="space-y-1.5 pt-2 border-t border-border/60">
+                      <label className="block text-xs font-bold text-muted uppercase tracking-wider">
+                        Mentions de bas de page (Pied de facture)
+                      </label>
+                      <textarea
+                        rows={3}
+                        value={invoiceFooter}
+                        onChange={(e) => setInvoiceFooter(e.target.value)}
+                        placeholder="Ex: IBAN : FR76 ... • Règlement par virement sous 30 jours • Assurance décennale X n°12345..."
+                        className="w-full bg-surface border border-border rounded-xl p-3 text-xs text-text placeholder:text-muted/60 focus:outline-none focus:ring-1 focus:ring-primary"
+                      />
+                      <p className="text-[11px] text-muted">
+                        Ces mentions sont insérées en bas de page de toutes vos factures et devis officiels.
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Right Column: Live Mini-Preview */}
+                  <div className="lg:col-span-5 space-y-2">
+                    <label className="block text-xs font-bold text-muted uppercase tracking-wider">
+                      Aperçu en direct
+                    </label>
+                    <div className="bg-white rounded-2xl p-5 border border-border shadow-lg space-y-4 text-slate-900 select-none">
+                      {/* Preview Header */}
+                      <div className="flex items-start justify-between gap-3 border-b border-slate-100 pb-3">
+                        <div className="flex items-center gap-2.5">
+                          {logoUrl ? (
+                            <img
+                              src={logoUrl}
+                              alt="Logo preview"
+                              className="w-9 h-9 object-contain rounded-lg border border-slate-200 bg-white p-0.5"
+                            />
+                          ) : (
+                            <div
+                              className="w-9 h-9 rounded-lg flex items-center justify-center text-white text-xs font-bold font-mono"
+                              style={{ backgroundColor: accentColor }}
+                            >
+                              {(commercialName || legalName || "B").slice(0, 2).toUpperCase()}
+                            </div>
+                          )}
+                          <div className="min-w-0">
+                            <p className="text-xs font-bold text-slate-900 truncate max-w-[140px]">
+                              {commercialName || legalName || "Votre Entreprise"}
+                            </p>
+                            <p className="text-[10px] text-slate-500 truncate max-w-[140px]">
+                              {address || "Paris, France"}
+                            </p>
+                          </div>
+                        </div>
+
+                        <span
+                          className="px-2.5 py-1 rounded-md text-[10px] font-black uppercase tracking-wider text-white shadow-sm"
+                          style={{ backgroundColor: accentColor }}
+                        >
+                          FACTURE
+                        </span>
+                      </div>
+
+                      {/* Preview Line Items Mock */}
+                      <div className="space-y-1.5 text-[11px]">
+                        <div className="flex justify-between text-slate-500 text-[10px] pb-1 border-b border-slate-100">
+                          <span>Description</span>
+                          <span>Total HT</span>
+                        </div>
+                        <div className="flex justify-between py-1 text-slate-700 font-medium">
+                          <span>Prestation de services</span>
+                          <span>1 000,00 €</span>
+                        </div>
+                      </div>
+
+                      {/* Preview Total */}
+                      <div className="pt-2 border-t border-slate-200 flex justify-between items-center">
+                        <span className="text-xs font-bold text-slate-900">Net à payer</span>
+                        <span className="text-sm font-black" style={{ color: accentColor }}>
+                          1 000,00 €
+                        </span>
+                      </div>
+
+                      {/* Preview Footer */}
+                      {invoiceFooter && (
+                        <div className="pt-2 border-t border-slate-100 text-[9px] text-slate-400 line-clamp-2 leading-tight">
+                          {invoiceFooter}
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
 
-                <div>
-                  <label className="block text-xs font-bold text-muted uppercase mb-1">Mentions de bas de facture</label>
-                  <textarea rows={3} value={invoiceFooter} onChange={(e) => setInvoiceFooter(e.target.value)} placeholder="IBAN, Pénalités de retard..." className="w-full bg-surface border border-border rounded-xl p-3 text-xs text-text" />
-                </div>
-
-                <div className="flex justify-end">
-                  <Button type="submit" variant="primary" disabled={savingDesign}>
+                <div className="flex justify-end pt-3 border-t border-border">
+                  <Button type="submit" variant="primary" disabled={savingDesign} className="bylz-glow-cta px-6">
                     {savingDesign ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
                     Sauvegarder le style
                   </Button>

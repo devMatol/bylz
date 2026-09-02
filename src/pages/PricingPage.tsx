@@ -56,7 +56,7 @@ export function PricingPage() {
         { name: "Nombre de clients actifs", starter: "3 max", solo: "Illimités", pro: "Illimités" },
         { name: "Format hybride Factur-X conforme 2026", starter: true, solo: true, pro: true },
         { name: "Recherche SIRET automatique client", starter: true, solo: true, pro: true },
-        { name: "Personnalisation du logo & couleurs", starter: false, solo: true, pro: true },
+        { name: "Personnalisation du logo & couleurs", starter: true, solo: true, pro: true },
         { name: "Avoirs & Notes de crédit", starter: true, solo: true, pro: true },
       ],
     },
@@ -130,6 +130,12 @@ export function PricingPage() {
                 <p className="text-xs text-muted leading-relaxed border-t border-border pt-4 font-normal">
                   Le plan idéal pour tester Bylz et émettre vos premières factures légales gratuitement.
                 </p>
+                <ul className="space-y-2 text-xs text-muted font-medium pt-2">
+                  <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-emerald-500" /> Jusqu'à 3 factures / mois</li>
+                  <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-emerald-500" /> Jusqu'à 3 clients actifs</li>
+                  <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-emerald-500" /> Logo & couleurs personnalisés</li>
+                  <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-emerald-500" /> Format Factur-X conforme 2026</li>
+                </ul>
               </div>
               <div className="pt-8">
                 <Link to="/signup?plan=starter" className="block w-full">

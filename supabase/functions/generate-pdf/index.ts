@@ -167,7 +167,28 @@ Deno.serve(async (req: Request) => {
 
     let y = height - 50;
 
-    // Header: company info left, title right
+    // Header: company info left (with logo if present), title right
+    if (company.logo_url) {
+      try {
+        const imgRes = await fetch(company.logo_url);
+        if (imgRes.ok) {
+          const imgBytes = new Uint8Array(await imgRes.arrayBuffer());
+          const isPng = company.logo_url.toLowerCase().includes(".png") || (imgBytes[0] === 0x89 && imgBytes[1] === 0x50);
+          const img = isPng ? await pdfDoc.embedPng(imgBytes) : await pdfDoc.embedJpg(imgBytes);
+          const dims = img.scaleToFit(80, 40);
+          page.drawImage(img, {
+            x: 50,
+            y: y - dims.height,
+            width: dims.width,
+            height: dims.height,
+          });
+          y -= (dims.height + 10);
+        }
+      } catch (err) {
+        console.warn("Could not embed logo in PDF:", err);
+      }
+    }
+
     const displayName = company.commercial_name || company.legal_name;
     page.drawText(displayName || "", { x: 50, y, size: 12, font: fontBold, color: black });
     y -= 16;

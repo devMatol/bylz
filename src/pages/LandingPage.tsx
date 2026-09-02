@@ -434,11 +434,15 @@ export function LandingPage() {
                 <ul className="space-y-3 text-xs text-text font-semibold">
                   <li className="flex items-center space-x-2">
                     <CheckCircle2 className="w-4 h-4 text-success" />
-                    <span>Jusqu'à 10 factures / mois</span>
+                    <span>Jusqu'à 3 factures / mois</span>
                   </li>
                   <li className="flex items-center space-x-2">
                     <CheckCircle2 className="w-4 h-4 text-success" />
                     <span>Jusqu'à 3 clients actifs</span>
+                  </li>
+                  <li className="flex items-center space-x-2">
+                    <CheckCircle2 className="w-4 h-4 text-success" />
+                    <span>Logo & Couleurs personnalisés</span>
                   </li>
                   <li className="flex items-center space-x-2">
                     <CheckCircle2 className="w-4 h-4 text-success" />
