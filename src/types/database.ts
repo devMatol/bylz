@@ -378,4 +378,17 @@ export interface BankTransaction {
   created_at: string;
 }
 
+export interface InvoiceModelLead {
+  id: string;
+  email: string;
+  name: string | null;
+  company: string | null;
+  template_type: string | null;
+  total_amount: number | null;
+  source_url: string | null;
+  user_agent?: string | null;
+  metadata?: Record<string, unknown>;
+  created_at: string;
+}
+
 

@@ -77,6 +77,19 @@ const STATIC_BLOG_ARTICLES = [
       </ul>
       <p>Bylz intègre ces moteurs de calcul et simule instantanément votre reste à vivre net après cotisations et impôt estimé.</p>
     `
+  },
+  {
+    slug: "modele-facture-auto-entrepreneur-gratuit",
+    title: "Modèle de Facture Auto-Entrepreneur Gratuit 2026 : Exemples Word, Excel et Format Conforme",
+    excerpt: "Téléchargez un modèle de facture officiel pour micro-entrepreneur. Mentions obligatoires, franchise en base de TVA (art. 293 B) et pourquoi éviter les modèles Word et Excel en 2026.",
+    date: "2026-09-04T10:00:00.000Z",
+    readTime: "6 min de lecture",
+    author: "Équipe Fiscale Bylz",
+    category: "Devis & Facturation",
+    content: `
+      <h2>Quelles sont les obligations de facturation pour un auto-entrepreneur ?</h2>
+      <p>En tant qu'auto-entrepreneur, vous devez émettre une facture conforme pour vos clients B2B et B2C comportant l'ensemble des mentions légales obligatoires 2026.</p>
+    `
   }
 ];
 
@@ -196,6 +209,20 @@ const staticPages = [
       "@type": "WebApplication",
       "name": "Simulateur Seuil de Franchise de TVA 2026 | Bylz",
       "applicationCategory": "FinanceApplication",
+      "operatingSystem": "Web",
+      "offers": { "@type": "Offer", "price": "0.00", "priceCurrency": "EUR" }
+    }
+  },
+  {
+    path: "outils/modele-facture-gratuit",
+    title: "Modèle de Facture Gratuit 2026 : Auto-Entrepreneur, Artisan & Freelance (PDF)",
+    description: "Créez et téléchargez votre modèle de facture gratuit conforme aux obligations 2026 (Factur-X, franchise TVA art. 293 B, mentions obligatoires). Prêt en 30 secondes.",
+    ogType: "website",
+    jsonLd: {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "Générateur de Modèle de Facture Gratuit Conforme 2026 | Bylz",
+      "applicationCategory": "BusinessApplication",
       "operatingSystem": "Web",
       "offers": { "@type": "Offer", "price": "0.00", "priceCurrency": "EUR" }
     }

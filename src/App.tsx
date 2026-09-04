@@ -78,6 +78,9 @@ const SimulateurUrssafPage = lazy(() =>
 const SimulateurTvaPage = lazy(() =>
   import("./pages/outils/SimulateurTvaPage").then((m) => ({ default: m.SimulateurTvaPage }))
 );
+const ModeleFacturePage = lazy(() =>
+  import("./pages/outils/ModeleFacturePage").then((m) => ({ default: m.ModeleFacturePage }))
+);
 const NotFoundPage = lazy(() =>
   import("./pages/NotFoundPage").then((m) => ({ default: m.NotFoundPage }))
 );
@@ -205,6 +208,22 @@ function App() {
                   element={
                     <MarketingSuspense>
                       <SimulateurTvaPage />
+                    </MarketingSuspense>
+                  }
+                />
+                <Route
+                  path="/outils/modele-facture-gratuit"
+                  element={
+                    <MarketingSuspense>
+                      <ModeleFacturePage />
+                    </MarketingSuspense>
+                  }
+                />
+                <Route
+                  path="/modele-facture-gratuit"
+                  element={
+                    <MarketingSuspense>
+                      <ModeleFacturePage />
                     </MarketingSuspense>
                   }
                 />

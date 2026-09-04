@@ -87,4 +87,42 @@ export const BLOG_ARTICLES: BlogArticle[] = [
       <p>Bylz intègre ces moteurs de calcul et simule instantanément votre reste à vivre net après cotisations et impôt estimé.</p>
     `,
   },
+  {
+    slug: "modele-facture-auto-entrepreneur-gratuit",
+    title: "Modèle de Facture Auto-Entrepreneur Gratuit 2026 : Exemples Word, Excel et Format Conforme",
+    excerpt:
+      "Téléchargez un modèle de facture officiel pour micro-entrepreneur. Mentions obligatoires, franchise en base de TVA (art. 293 B) et pourquoi éviter les modèles Word et Excel en 2026.",
+    date: "04 Septembre 2026",
+    readTime: "6 min de lecture",
+    author: "Équipe Fiscale Bylz",
+    category: "Devis & Facturation",
+    content: `
+      <h2>Quelles sont les obligations de facturation pour un auto-entrepreneur ?</h2>
+      <p>En tant qu'auto-entrepreneur (micro-entrepreneur), vous êtes soumis à des règles strictes de facturation dès votre premier euro de chiffre d'affaires. Une facture doit être délivrée pour toute prestation de service ou vente réalisée à destination d'un professionnel (B2B), ainsi que pour les particuliers (B2C) dès que le montant dépasse 25 € TTC ou sur demande du client.</p>
+
+      <h2>Les mentions obligatoires d'un modèle de facture auto-entrepreneur</h2>
+      <p>Pour être parfaitement valable aux yeux de l'administration fiscale et de l'URSSAF, chaque facture doit comporter :</p>
+      <ul>
+        <li><strong>Identité complète de votre micro-entreprise :</strong> Vos nom et prénom légaux (suivis obligatoirement de la mention « EI » ou « Entrepreneur Individuel »), votre adresse professionnelle et votre numéro SIRET à 14 chiffres.</li>
+        <li><strong>Coordonnées du client :</strong> Nom de la société ou du particulier, adresse de facturation (et adresse de livraison si différente).</li>
+        <li><strong>Numérotation continue et chronologique :</strong> Votre séquence de numérotation ne doit comporter aucun trou ni doublon (ex : <code>FAC-2026-001</code>, <code>FAC-2026-002</code>).</li>
+        <li><strong>Dates clés :</strong> Date d'émission de la facture et date limite de paiement (échéance).</li>
+        <li><strong>Détail des prestations :</strong> Description précise de la prestation ou marchandise, quantité et prix unitaire hors taxes.</li>
+        <li><strong>Mention TVA obligatoire :</strong> Si vous êtes en franchise en base, la mention légale incontournable <em>« TVA non applicable, art. 293 B du CGI »</em> doit obligatoirement figurer.</li>
+        <li><strong>Conditions de règlement :</strong> Taux des pénalités de retard applicables et indemnité forfaitaire pour frais de recouvrement de 40 € (pour les clients professionnels).</li>
+      </ul>
+
+      <h2>Pourquoi les modèles Word et Excel gratuits sont-ils déconseillés en 2026 ?</h2>
+      <p>Pendant longtemps, de nombreux indépendants ont téléchargé des modèles gratuits de facture au format Excel (XLSX) ou Word (DOCX). Cependant, cette pratique présente aujourd'hui trois risques majeurs :</p>
+      <ul>
+        <li><strong>Amendes fiscales pour numérotation non conforme :</strong> En modifiant manuellement des fichiers Word, le risque de créer deux factures portant le même numéro ou d'omettre une facture dans la séquence est très élevé. L'administration sanctionne ces irrégularités par une amende de 15 € par mention manquante ou inexacte.</li>
+        <li><strong>Erreurs de calcul de TVA et cotisations :</strong> Une erreur de formule dans un tableur Excel peut fausser vos déclarations URSSAF trimestrielles ou mensuelles et entraîner des redressements.</li>
+        <li><strong>La réforme Factur-X et facturation électronique 2026 :</strong> Les factures au format papier ou simple PDF généré sur Word ne répondent pas aux normes de transmission électronique obligatoire. Utiliser un outil conforme comme Bylz vous garantit une transition sans stress.</li>
+      </ul>
+
+      <h2>Générez votre facture gratuite et conforme ci-dessous</h2>
+      <p>Utilisez notre configurateur interactif ci-dessous pour remplir vos informations, personnaliser vos couleurs et télécharger gratuitement votre facture au format PDF officiel Factur-X.</p>
+    `,
+  },
 ];
+

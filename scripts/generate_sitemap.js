@@ -15,6 +15,7 @@ const staticUrls = [
   { loc: "https://bylz.fr/conformite", priority: "0.9", changefreq: "weekly" },
   { loc: "https://bylz.fr/outils/simulateur-urssaf", priority: "0.9", changefreq: "weekly" },
   { loc: "https://bylz.fr/outils/simulateur-seuil-tva", priority: "0.9", changefreq: "weekly" },
+  { loc: "https://bylz.fr/outils/modele-facture-gratuit", priority: "0.9", changefreq: "weekly" },
   { loc: "https://bylz.fr/blog", priority: "0.8", changefreq: "daily" },
   { loc: "https://bylz.fr/contact", priority: "0.6", changefreq: "monthly" },
   { loc: "https://bylz.fr/mentions-legales", priority: "0.3", changefreq: "yearly" },
@@ -25,7 +26,8 @@ const staticUrls = [
 const STATIC_BLOG_SLUGS = [
   "reforme-factur-x-2026-auto-entrepreneurs",
   "franchise-tva-2026-seuils-et-regles",
-  "calcul-cotisations-urssaf-bnc-bic"
+  "calcul-cotisations-urssaf-bnc-bic",
+  "modele-facture-auto-entrepreneur-gratuit"
 ];
 
 async function generateSitemap() {

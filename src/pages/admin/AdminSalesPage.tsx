@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
-import { TrendingUp, Download, DollarSign, Users, ArrowUpRight, Percent, Calendar, Shield, Gift } from "lucide-react";
+import { TrendingUp, Download, DollarSign, Users, ArrowUpRight, Percent, Calendar, Shield, Gift, FileText, Mail, Globe } from "lucide-react";
 import { supabase } from "../../lib/supabase";
-import type { Profile, Plan } from "../../types/database";
+import type { Profile, Plan, InvoiceModelLead } from "../../types/database";
 import { Card } from "../../components/ui/Card";
 import { Skeleton } from "../../components/ui/Skeleton";
 import { Button } from "../../components/ui/Button";
@@ -23,15 +23,21 @@ interface SalesMetrics {
 export function AdminSalesPage() {
   const [loading, setLoading] = useState(true);
   const [metrics, setMetrics] = useState<SalesMetrics | null>(null);
+  const [leads, setLeads] = useState<InvoiceModelLead[]>([]);
 
   const calculateMetrics = useCallback(async () => {
     setLoading(true);
     try {
-      // 1. Fetch profiles and active plans
-      const [{ data: profs }, { data: plansData }] = await Promise.all([
+      // 1. Fetch profiles, active plans, and invoice leads
+      const [{ data: profs }, { data: plansData }, { data: leadsData }] = await Promise.all([
         supabase.from("profiles").select("*"),
         supabase.from("plans").select("*"),
+        supabase.from("invoice_model_leads").select("*").order("created_at", { ascending: false }).limit(200),
       ]);
+
+      if (leadsData) {
+        setLeads(leadsData as InvoiceModelLead[]);
+      }
 
       const profiles = (profs as Profile[]) || [];
       const plans = (plansData as Plan[]) || [];
@@ -169,6 +175,24 @@ export function AdminSalesPage() {
     const a = document.createElement("a");
     a.href = url;
     a.download = `bylz_metriques_ventes_${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleExportLeadsCSV = () => {
+    if (!leads.length) return;
+    let csv = "Date,Email,Nom,Entreprise,Modele,Montant Total TTC (EUR),URL Source\n";
+    for (const l of leads) {
+      const date = new Date(l.created_at).toLocaleString("fr-FR");
+      const clean = (val: string | null | undefined) => `"${(val || "").replace(/"/g, '""')}"`;
+      csv += `${clean(date)},${clean(l.email)},${clean(l.name)},${clean(l.company)},${clean(l.template_type)},${l.total_amount ?? 0},${clean(l.source_url)}\n`;
+    }
+
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `bylz_leads_modeles_facture_${new Date().toISOString().slice(0, 10)}.csv`;
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -374,8 +398,114 @@ export function AdminSalesPage() {
               </table>
             </div>
           </Card>
+
+          {/* Inbound Leads from Free Invoice Templates */}
+          <Card className="bg-slate-900 border-slate-800 p-6 space-y-4 shadow-2xl">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-slate-800">
+              <div>
+                <h3 className="font-extrabold text-white text-sm flex items-center gap-2">
+                  <FileText className="w-4 h-4 text-rose-400" />
+                  <span>Leads Inbound — Modèles de Facture Téléchargés</span>
+                  <span className="px-2 py-0.5 rounded-full bg-rose-500/20 border border-rose-500/30 text-rose-300 text-xs font-mono font-bold">
+                    {leads.length} prospect{leads.length > 1 ? "s" : ""}
+                  </span>
+                </h3>
+                <p className="text-xs text-slate-400 mt-1">
+                  Emails et profils collectés via le configurateur gratuit de factures (SEO & Landing Pages).
+                </p>
+              </div>
+
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleExportLeadsCSV}
+                disabled={leads.length === 0}
+                leftIcon={<Download className="w-3.5 h-3.5 text-rose-400" />}
+                className="border-slate-800 text-slate-200 hover:bg-slate-800 text-xs font-bold self-start sm:self-auto"
+              >
+                Exporter Leads (CSV)
+              </Button>
+            </div>
+
+            {leads.length === 0 ? (
+              <div className="py-8 text-center text-slate-500 text-xs">
+                Aucun lead enregistré pour le moment.
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs border-collapse">
+                  <thead>
+                    <tr className="bg-slate-950 border-b border-slate-800 text-slate-400 font-bold uppercase tracking-wider text-[11px]">
+                      <th className="p-3">Date</th>
+                      <th className="p-3">Email</th>
+                      <th className="p-3">Nom / Entreprise</th>
+                      <th className="p-3">Modèle</th>
+                      <th className="p-3 text-right">Montant Testé</th>
+                      <th className="p-3">Source</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-800/60 font-sans text-slate-300">
+                    {leads.map((lead) => {
+                      const templateLabels: Record<string, string> = {
+                        bnc: "Auto-entrepreneur BNC",
+                        artisan: "Artisan BTP / BIC",
+                        freelance: "Freelance Services",
+                        commerce: "Commerce BIC",
+                      };
+                      return (
+                        <tr key={lead.id} className="hover:bg-slate-800/40 transition-colors">
+                          <td className="p-3 font-mono text-slate-400 whitespace-nowrap text-[11px]">
+                            {new Date(lead.created_at).toLocaleDateString("fr-FR", {
+                              day: "2-digit",
+                              month: "short",
+                              year: "numeric",
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })}
+                          </td>
+                          <td className="p-3 font-semibold text-white">
+                            <a
+                              href={`mailto:${lead.email}`}
+                              className="text-rose-300 hover:underline flex items-center gap-1.5"
+                            >
+                              <Mail className="w-3 h-3 text-rose-400 flex-shrink-0" />
+                              <span>{lead.email}</span>
+                            </a>
+                          </td>
+                          <td className="p-3">
+                            <div className="font-medium text-slate-200">{lead.company || "—"}</div>
+                            {lead.name && <div className="text-[11px] text-slate-400">{lead.name}</div>}
+                          </td>
+                          <td className="p-3">
+                            <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium bg-slate-800 border border-slate-700 text-slate-200">
+                              {templateLabels[lead.template_type || ""] || lead.template_type || "Standard"}
+                            </span>
+                          </td>
+                          <td className="p-3 text-right font-mono font-bold text-white">
+                            {lead.total_amount ? formatAmount(lead.total_amount) : "0,00 €"}
+                          </td>
+                          <td className="p-3 text-[11px] font-mono text-slate-400 max-w-[200px] truncate" title={lead.source_url || ""}>
+                            {lead.source_url ? (
+                              <span className="flex items-center gap-1 text-slate-400">
+                                <Globe className="w-3 h-3 flex-shrink-0 text-slate-500" />
+                                {lead.source_url.replace(/^https?:\/\/[^/]+/, "") || "/"}
+                              </span>
+                            ) : (
+                              "—"
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </Card>
         </div>
       )}
     </div>
   );
 }
+

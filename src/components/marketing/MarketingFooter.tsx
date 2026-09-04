@@ -56,6 +56,11 @@ export function MarketingFooter() {
                 </Link>
               </li>
               <li>
+                <Link to="/outils/modele-facture-gratuit" className="text-text/80 hover:text-brand-primary transition-colors font-bold text-emerald-500">
+                  📄 Modèle Facture Gratuit
+                </Link>
+              </li>
+              <li>
                 <Link to="/blog" className="text-text/80 hover:text-brand-primary transition-colors">
                   Blog & Guides Fiscaux
                 </Link>

@@ -7,6 +7,7 @@ import { MarketingFooter } from "../components/marketing/MarketingFooter";
 import { BLOG_ARTICLES } from "../data/blogArticles";
 import { fetchBlogPostBySlug, incrementBlogPostViews } from "../lib/api";
 import { sanitizeHtml } from "../lib/sanitizeHtml";
+import { InvoiceModelConfigurator } from "../components/tools/InvoiceModelConfigurator";
 
 export function BlogPostPage() {
   const { slug } = useParams<{ slug: string }>();
@@ -241,6 +242,37 @@ export function BlogPostPage() {
             className="prose prose-slate dark:prose-invert max-w-none text-sm leading-relaxed space-y-4 font-normal"
             dangerouslySetInnerHTML={{ __html: sanitizeHtml(article.content) }}
           />
+
+          {/* Embedded Configurator if article relates to invoice templates */}
+          {(article.slug.includes("modele") ||
+            article.title.toLowerCase().includes("modèle") ||
+            article.category.toLowerCase().includes("facturation")) && (
+            <div className="mt-12 pt-8 border-t border-border space-y-6">
+              <div className="text-center space-y-2">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-xs font-bold uppercase tracking-wider">
+                  <Sparkles className="w-3.5 h-3.5" /> Configurateur Express Embarqué
+                </span>
+                <h3 className="text-xl sm:text-2xl font-black text-text">
+                  Personnalisez et téléchargez votre modèle de facture conforme
+                </h3>
+                <p className="text-xs text-muted max-w-lg mx-auto">
+                  Modifiez vos coordonnées et téléchargez directement votre facture officielle en PDF gratuit.
+                </p>
+              </div>
+              <InvoiceModelConfigurator
+                initialPreset={
+                  article.slug.includes("artisan") || article.slug.includes("batiment")
+                    ? "artisan_btp"
+                    : article.slug.includes("commerce")
+                    ? "commerce"
+                    : article.slug.includes("freelance") || article.slug.includes("service")
+                    ? "freelance_service"
+                    : "auto_entrepreneur"
+                }
+                sourcePage={`/blog/${article.slug}`}
+              />
+            </div>
+          )}
 
           {/* CTA Banner inside Article */}
           <div className="mt-12 bg-gradient-to-r from-brand-primary/10 via-indigo-500/10 to-brand-accent/10 border border-brand-primary/20 rounded-2xl p-6 text-center space-y-4 shadow-lg">
