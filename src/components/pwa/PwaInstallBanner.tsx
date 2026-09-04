@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { X, Smartphone, Share, PlusSquare, Info } from "lucide-react";
+import { X, Smartphone, Share, PlusSquare, Info, Copy, Check, ExternalLink, Compass } from "lucide-react";
 import { Button } from "../ui/Button";
 
 export function triggerPwaInstallModal() {
@@ -16,6 +16,12 @@ function checkIsIos(): boolean {
   return isIosDevice || isIpadOs;
 }
 
+function checkIsChromeIos(): boolean {
+  if (typeof window === "undefined") return false;
+  const ua = window.navigator.userAgent.toLowerCase();
+  return checkIsIos() && /crios/.test(ua);
+}
+
 function checkIsStandalone(): boolean {
   if (typeof window === "undefined") return false;
   return (
@@ -30,6 +36,8 @@ export function PwaInstallBanner() {
   const [showIosModal, setShowIosModal] = useState(false);
   const [installed, setInstalled] = useState(false);
   const [isIosDevice, setIsIosDevice] = useState(false);
+  const [isChromeOnIos, setIsChromeOnIos] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     const isStandalone = checkIsStandalone();
@@ -39,22 +47,23 @@ export function PwaInstallBanner() {
     }
 
     const isIos = checkIsIos();
+    const isChrome = checkIsChromeIos();
     setIsIosDevice(isIos);
+    setIsChromeOnIos(isChrome);
 
     const isDismissed = localStorage.getItem("bylz-dismiss-pwa-banner") === "true";
 
-    // 1. On iOS: Safari does NOT fire beforeinstallprompt.
-    // We show the banner if not dismissed and not in standalone mode.
+    // 1. On iOS: Safari/Chrome does NOT fire beforeinstallprompt.
     if (isIos) {
       if (!isDismissed) {
         const timer = setTimeout(() => {
           setShowBanner(true);
-        }, 1200);
+        }, 1000);
         return () => clearTimeout(timer);
       }
     }
 
-    // 2. On Android / Chrome: listen for beforeinstallprompt
+    // 2. On Android / Chrome Desktop: listen for beforeinstallprompt
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault();
       setDeferredPrompt(e);
@@ -65,7 +74,7 @@ export function PwaInstallBanner() {
 
     window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
 
-    // 3. Custom event to open install modal from settings or mobile menu
+    // 3. Custom event to open install modal anywhere
     const handleOpenInstall = () => {
       if (checkIsStandalone()) {
         alert("L'application Bylz est déjà installée sur votre écran d'accueil !");
@@ -112,6 +121,14 @@ export function PwaInstallBanner() {
     setShowBanner(false);
   };
 
+  const handleCopyLinkForSafari = () => {
+    if (typeof navigator !== "undefined" && navigator.clipboard) {
+      navigator.clipboard.writeText(window.location.origin);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 3000);
+    }
+  };
+
   if (installed) return null;
 
   return (
@@ -132,7 +149,7 @@ export function PwaInstallBanner() {
                   <h4 className="text-sm font-bold text-white flex items-center gap-1.5">
                     <span>Installer l'application Bylz</span>
                     <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-pill bg-primary/20 text-primary border border-primary/30">
-                      {isIosDevice ? "iOS / iPhone" : "Mobile PWA"}
+                      {isIosDevice ? "iPhone iOS" : "Mobile PWA"}
                     </span>
                   </h4>
                   <p className="text-xs text-slate-300 mt-0.5">
@@ -178,7 +195,7 @@ export function PwaInstallBanner() {
 
       {/* iOS Step-by-Step Installation Modal */}
       {showIosModal && (
-        <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
+        <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/85 backdrop-blur-md animate-fade-in">
           <div className="relative w-full max-w-lg rounded-t-3xl sm:rounded-3xl border border-slate-700 bg-slate-900 p-6 shadow-2xl text-white space-y-5 max-h-[92vh] overflow-y-auto">
             {/* Header */}
             <div className="flex items-center justify-between pb-3 border-b border-slate-800">
@@ -190,11 +207,11 @@ export function PwaInstallBanner() {
                   <h3 className="text-base font-black text-white flex items-center gap-2">
                     <span>Installer Bylz sur iPhone</span>
                     <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded bg-primary/20 text-primary font-bold">
-                      iOS PWA
+                      {isChromeOnIos ? "Chrome iOS" : "Safari iOS"}
                     </span>
                   </h3>
                   <p className="text-xs text-slate-400">
-                    Guide d'installation rapide en 3 étapes simples
+                    Guide d'installation rapide en 3 étapes
                   </p>
                 </div>
               </div>
@@ -207,15 +224,40 @@ export function PwaInstallBanner() {
               </button>
             </div>
 
-            {/* Explanation why there is no automatic popup on iOS */}
-            <div className="p-3.5 rounded-2xl bg-primary/10 border border-primary/20 text-xs text-slate-300 flex items-start gap-2.5">
+            {/* If user is in Chrome on iOS, offer Safari recommendation */}
+            {isChromeOnIos && (
+              <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-xs space-y-2 text-amber-200">
+                <div className="flex items-center gap-2 font-bold text-amber-300">
+                  <Compass className="w-4 h-4 text-amber-400 flex-shrink-0" />
+                  <span>Recommandé : Ouvrez Bylz dans Safari</span>
+                </div>
+                <p className="text-[11px] leading-relaxed text-slate-300">
+                  Sur iPhone, <strong>Apple réserve les notifications de paiement</strong> aux applications installées depuis <strong>Safari</strong>. Dans Chrome, vous n'aurez pas les notifications d'encaissement directes.
+                </p>
+                <div className="pt-1">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={handleCopyLinkForSafari}
+                    leftIcon={copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                    className="text-xs font-bold border-amber-500/40 text-amber-200 hover:bg-amber-500/20"
+                  >
+                    {copied ? "Lien copié ! Ouvrez Safari et collez-le" : "Copier le lien pour l'ouvrir dans Safari"}
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {/* Explanation why Apple doesn't allow automatic popups */}
+            <div className="p-3 rounded-xl bg-slate-800/80 border border-slate-700/80 text-xs text-slate-300 flex items-start gap-2.5">
               <Info className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />
-              <p>
-                <strong>Pourquoi pas de notification automatique ?</strong> Apple ne permet pas aux sites web d'afficher des bannières automatiques d'installation sur Safari. L'ajout se fait manuellement via le bouton de partage en 10 secondes.
+              <p className="text-[11px] leading-relaxed">
+                <strong>Pourquoi pas de pop-up automatique ?</strong> Sur iOS, Apple interdit aux sites d'afficher des notifications automatiques d'installation. L'ajout se fait via le bouton de <strong>Partage</strong>.
               </p>
             </div>
 
-            {/* Step-by-Step Guide */}
+            {/* Step-by-Step Guide tailored to browser */}
             <div className="space-y-3">
               {/* Step 1 */}
               <div className="flex items-start gap-3.5 p-3.5 rounded-2xl bg-slate-800/60 border border-slate-700/60">
@@ -224,13 +266,21 @@ export function PwaInstallBanner() {
                 </div>
                 <div className="space-y-1">
                   <div className="flex items-center gap-2 font-bold text-sm text-white">
-                    <span>Appuyez sur le bouton Partager</span>
+                    <span>Appuyez sur Partager</span>
                     <span className="p-1 rounded-md bg-slate-700 text-primary inline-flex items-center">
                       <Share className="w-3.5 h-3.5" />
                     </span>
                   </div>
                   <p className="text-xs text-slate-300 leading-relaxed">
-                    Dans <strong>Safari</strong>, touchez l'icône de partage (le carré bleu avec une flèche vers le haut) située au centre de la barre en bas de votre écran.
+                    {isChromeOnIos ? (
+                      <>
+                        Dans Chrome, touchez l'icône de <strong>Partage</strong> (carré avec une flèche vers le haut) située <strong>en haut à droite</strong> à côté de la barre d'adresse.
+                      </>
+                    ) : (
+                      <>
+                        Dans Safari, touchez l'icône de <strong>Partage</strong> (le carré avec une flèche vers le haut) située <strong>au centre de la barre en bas</strong>.
+                      </>
+                    )}
                   </p>
                 </div>
               </div>
@@ -248,7 +298,7 @@ export function PwaInstallBanner() {
                     </span>
                   </div>
                   <p className="text-xs text-slate-300 leading-relaxed">
-                    Faites défiler le menu d'options vers le bas et appuyez sur la ligne avec le symbole plus <strong>« Sur l'écran d'accueil »</strong>.
+                    Dans la feuille qui s'ouvre, faites défiler vers le bas et touchez la ligne <strong>« Sur l'écran d'accueil »</strong> (icône avec un plus).
                   </p>
                 </div>
               </div>
@@ -266,15 +316,10 @@ export function PwaInstallBanner() {
                     </span>
                   </div>
                   <p className="text-xs text-slate-300 leading-relaxed">
-                    En haut à droite de votre écran, confirmez en appuyant sur <strong>« Ajouter »</strong>. L'icône de Bylz apparaîtra immédiatement avec vos applications !
+                    En haut à droite de l'écran, confirmez en appuyant sur <strong>« Ajouter »</strong>. L'icône de Bylz est alors immédiatement disponible avec vos applications !
                   </p>
                 </div>
               </div>
-            </div>
-
-            {/* In-App Browser Warning */}
-            <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-[11px] text-amber-300">
-              ⚡ <strong>Astuce</strong> : Si vous consultez le site depuis WhatsApp, Instagram ou LinkedIn, touchez les trois petits points et faites <strong>« Ouvrir dans Safari »</strong>.
             </div>
 
             {/* Footer Action */}

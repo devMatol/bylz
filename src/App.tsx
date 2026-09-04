@@ -38,6 +38,7 @@ import { AssistantPage } from "./pages/AssistantPage";
 import { BankPage } from "./pages/BankPage";
 import { RemindersPage } from "./pages/RemindersPage";
 import { PublicDocumentPage } from "./pages/PublicDocumentPage";
+import { PwaInstallBanner } from "./components/pwa/PwaInstallBanner";
 
 // Code-split marketing & tools bundle from main app
 const LandingPage = lazy(() =>
@@ -347,6 +348,7 @@ function App() {
                   }
                 />
               </Routes>
+              <PwaInstallBanner />
             </NotificationsProvider>
           </BrowserRouter>
         </AuthProvider>

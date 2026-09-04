@@ -4,14 +4,13 @@ import { Sidebar } from "./Sidebar";
 import { BottomNav } from "./BottomNav";
 import { Topbar } from "./Topbar";
 import { ErrorBoundary } from "../ErrorBoundary";
-import { PwaInstallBanner } from "../pwa/PwaInstallBanner";
-import { registerServiceWorker } from "../../lib/pushNotifications";
 import {
   PageHeaderProvider,
   usePageHeader,
 } from "./PageHeaderContext";
 
 import { GlobalAiCopilotWidget } from "../shared/GlobalAiCopilotWidget";
+import { registerServiceWorker } from "../../lib/pushNotifications";
 
 const routeTitles: Record<string, string> = {
   "/": "Tableau de bord",
@@ -62,7 +61,6 @@ function ShellContent() {
         </main>
       </div>
       <BottomNav />
-      <PwaInstallBanner />
       <GlobalAiCopilotWidget />
     </div>
   );
