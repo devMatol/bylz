@@ -45,10 +45,14 @@ async function generateSitemap() {
   }
 
   try {
-    const { data: posts } = await supabase
+    const fetchPromise = supabase
       .from("blog_posts")
       .select("slug, updated_at, published_at")
       .eq("status", "published");
+    const timeoutPromise = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error("Supabase query timeout")), 4000)
+    );
+    const { data: posts } = await Promise.race([fetchPromise, timeoutPromise]);
 
     if (posts && posts.length > 0) {
       for (const p of posts) {
