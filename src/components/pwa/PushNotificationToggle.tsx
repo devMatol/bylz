@@ -8,14 +8,25 @@ import {
   requestNotificationPermission,
   sendNativePushNotification,
 } from "../../lib/pushNotifications";
+import { triggerPwaInstallModal } from "./PwaInstallBanner";
 
 export function PushNotificationToggle() {
   const { toast } = useToast();
   const [permission, setPermission] = useState<NotificationPermission>("default");
   const [loading, setLoading] = useState(false);
+  const [showIosTip, setShowIosTip] = useState(false);
 
   useEffect(() => {
     setPermission(getNotificationPermissionState());
+
+    if (typeof window !== "undefined") {
+      const ua = window.navigator.userAgent.toLowerCase();
+      const isIos = /iphone|ipad|ipod/.test(ua) || ((window.navigator as any).maxTouchPoints > 1 && /macintosh/.test(ua));
+      const isStandalone = window.matchMedia("(display-mode: standalone)").matches || (window.navigator as any).standalone === true;
+      if (isIos && !isStandalone) {
+        setShowIosTip(true);
+      }
+    }
   }, []);
 
   const handleEnablePush = async () => {
@@ -102,6 +113,28 @@ export function PushNotificationToggle() {
           )}
         </div>
       </div>
+
+      {showIosTip && (
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-slate-300 bg-primary/10 border border-primary/20 p-3.5 rounded-xl">
+          <div className="space-y-0.5">
+            <p className="font-bold text-white flex items-center gap-1.5">
+              <span>📱 Installation requise sur iPhone (iOS)</span>
+            </p>
+            <p className="text-slate-400 text-[11px] leading-relaxed">
+              Pour recevoir les notifications push sur iPhone, Apple exige que Bylz soit d'abord ajouté à votre écran d'accueil.
+            </p>
+          </div>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={triggerPwaInstallModal}
+            className="text-xs shrink-0 self-start sm:self-auto border-primary/30 text-primary hover:bg-primary/20"
+          >
+            Voir comment installer
+          </Button>
+        </div>
+      )}
 
       {permission === "denied" && (
         <p className="text-xs text-amber-400 bg-amber-500/10 border border-amber-500/20 p-3 rounded-xl">

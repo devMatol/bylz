@@ -11,9 +11,11 @@ import {
   User,
   Crown,
   ChevronRight,
+  Smartphone,
 } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
 import { Button } from "../ui/Button";
+import { triggerPwaInstallModal } from "../pwa/PwaInstallBanner";
 
 interface MobileDrawerProps {
   isOpen: boolean;
@@ -169,6 +171,30 @@ export function MobileDrawer({ isOpen, onClose }: MobileDrawerProps) {
               </div>
             </Link>
           )}
+
+          {/* PWA Install Button */}
+          <button
+            type="button"
+            onClick={() => {
+              onClose();
+              triggerPwaInstallModal();
+            }}
+            className="w-full text-left p-3 rounded-xl bg-primary/10 border border-primary/30 hover:bg-primary/20 transition-all flex items-center justify-between group"
+          >
+            <div className="flex items-center space-x-2.5">
+              <div className="w-7 h-7 rounded-lg bg-primary/20 flex items-center justify-center text-primary">
+                <Smartphone className="w-4 h-4" />
+              </div>
+              <div>
+                <p className="text-xs font-bold text-white flex items-center gap-1.5">
+                  <span>Installer l'application</span>
+                  <span className="text-[9px] px-1.5 py-0.2 rounded bg-primary/20 text-primary font-bold">iOS & Android</span>
+                </p>
+                <p className="text-[10px] text-slate-400">Ajouter Bylz sur votre écran d'accueil</p>
+              </div>
+            </div>
+            <ChevronRight className="w-4 h-4 text-primary group-hover:translate-x-0.5 transition-transform" />
+          </button>
 
           {/* Navigation Links */}
           <div className="space-y-1.5 pt-2">
