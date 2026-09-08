@@ -654,7 +654,8 @@ export function GuestEditorPageContent() {
                     onClick={() => openWall("emit_invoice")}
                     className={canEmit ? "bylz-glow-primary" : ""}
                   >
-                    Émettre ma facture
+                    <span className="hidden sm:inline">Émettre ma facture</span>
+                    <span className="sm:hidden">Émettre</span>
                   </Button>
                 </div>
               </div>

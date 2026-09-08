@@ -305,7 +305,8 @@ export function InvoiceDetailPage() {
       loading={busy}
       className="w-full"
     >
-      {isCreditNote ? "Émettre l'avoir" : "Émettre la facture"}
+      <span className="hidden sm:inline">{isCreditNote ? "Émettre l'avoir" : "Émettre la facture"}</span>
+      <span className="sm:hidden">Émettre</span>
     </Button>
   ) : isPendingOrLate && !isCreditNote ? (
     <Button

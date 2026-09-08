@@ -322,7 +322,8 @@ export function QuoteNewPage() {
             disabled={!canSubmit}
             onClick={() => void submit("draft")}
           >
-            Enregistrer le brouillon
+            <span className="hidden sm:inline">Enregistrer le brouillon</span>
+            <span className="sm:hidden">Enregistrer</span>
           </Button>
           <Button
             type="button"
@@ -332,7 +333,8 @@ export function QuoteNewPage() {
             disabled={!canSubmit}
             onClick={() => void submit("sent")}
           >
-            Enregistrer et envoyer
+            <span className="hidden sm:inline">Enregistrer et envoyer</span>
+            <span className="sm:hidden">Envoyer</span>
           </Button>
         </div>
       </div>

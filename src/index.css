@@ -13,6 +13,15 @@
     box-shadow: 0 0 0 3px var(--glow-primary), var(--shadow-input-focus);
   }
 
+  /* Prevent iOS Safari / Chrome auto-zoom on input focus */
+  @media screen and (max-width: 768px) {
+    input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="button"]):not([type="submit"]):not([type="color"]),
+    select,
+    textarea {
+      font-size: 16px !important;
+    }
+  }
+
   /* Glassmorphism & Glow Utilities */
   .glass-card {
     background: rgba(var(--surface-rgb, 15, 23, 42), 0.75);

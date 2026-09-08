@@ -455,7 +455,8 @@ export function InvoiceNewPage() {
             disabled={!canSubmit}
             onClick={() => void saveDraft()}
           >
-            Enregistrer le brouillon
+            <span className="hidden sm:inline">Enregistrer le brouillon</span>
+            <span className="sm:hidden">Enregistrer</span>
           </Button>
           <Button
             type="button"
@@ -465,7 +466,10 @@ export function InvoiceNewPage() {
             disabled={!canSubmit}
             onClick={() => setEmitOpen(true)}
           >
-            Émettre la facture
+            <span className="hidden sm:inline">
+              {isCreditNote ? "Émettre l'avoir" : "Émettre la facture"}
+            </span>
+            <span className="sm:hidden">Émettre</span>
           </Button>
         </div>
       </div>
