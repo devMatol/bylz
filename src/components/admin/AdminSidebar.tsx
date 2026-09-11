@@ -11,6 +11,7 @@ import {
   Crown,
   Shield,
   LogOut,
+  BarChart3,
 } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
 import { cn } from "../../lib/utils";
@@ -29,6 +30,7 @@ export function AdminSidebar({ onItemClick, isMobile = false }: AdminSidebarProp
   const isSuperAdmin = activeProfile?.admin_role === "super_admin" || isOwnerEmail;
 
   const adminNavItems = [
+    { label: "Portée & Reach", path: "/admin/reach", icon: BarChart3 },
     { label: "Métriques Ventes", path: "/admin/ventes", icon: TrendingUp },
     { label: "Blog & Contenu SEO", path: "/admin/blog", icon: FileText },
     { label: "Centre E-mails & Logs", path: "/admin/emails", icon: FileText },

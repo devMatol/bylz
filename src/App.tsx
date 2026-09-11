@@ -87,6 +87,9 @@ const NotFoundPage = lazy(() =>
 );
 
 // Admin Back-Office Pages
+const AdminReachPage = lazy(() =>
+  import("./pages/admin/AdminReachPage").then((m) => ({ default: m.AdminReachPage }))
+);
 const AdminSalesPage = lazy(() =>
   import("./pages/admin/AdminSalesPage").then((m) => ({ default: m.AdminSalesPage }))
 );
@@ -288,7 +291,8 @@ function App() {
                       </MarketingSuspense>
                     }
                   >
-                    <Route index element={<Navigate to="/admin/ventes" replace />} />
+                    <Route index element={<Navigate to="/admin/reach" replace />} />
+                    <Route path="reach" element={<AdminReachPage />} />
                     <Route path="ventes" element={<AdminSalesPage />} />
                     <Route path="blog" element={<AdminBlogListPage />} />
                     <Route path="blog/editor" element={<AdminBlogEditorPage />} />
