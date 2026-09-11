@@ -1,5 +1,16 @@
 import { useState } from "react";
-import { Mail, Send, CheckCircle2, AlertCircle, X, Sparkles, TrendingUp, Users, Eye, MousePointer, FileText } from "lucide-react";
+import {
+  Mail,
+  Send,
+  CheckCircle2,
+  AlertCircle,
+  Copy,
+  Sparkles,
+  KeyRound,
+  Check,
+  ChevronDown,
+  ChevronUp,
+} from "lucide-react";
 import { Modal } from "../ui/Modal";
 import { Button } from "../ui/Button";
 import { Input } from "../ui/Input";
@@ -39,47 +50,19 @@ export function SendReachReportModal({
   );
   const [customNote, setCustomNote] = useState("");
   const [sending, setSending] = useState(false);
+  const [copied, setCopied] = useState(false);
 
-  const handleSend = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!recipient || !recipient.includes("@")) {
-      toast("Veuillez saisir une adresse email valide.", "warning");
-      return;
-    }
+  // In-modal Resend Key setup state
+  const [showKeyConfig, setShowKeyConfig] = useState(false);
+  const [resendApiKey, setResendApiKey] = useState("");
+  const [savingKey, setSavingKey] = useState(false);
 
-    setSending(true);
-
-    try {
-      // Build an executive HTML email body
-      const topPagesHtml = reportData.topPages
-        .slice(0, 4)
-        .map(
-          (p) =>
-            `<tr>
-              <td style="padding: 10px 12px; border-bottom: 1px solid #1e293b; color: #f1f5f9; font-weight: 600;">${p.title} <span style="font-size: 11px; color: #64748b; display: block;">${p.page}</span></td>
-              <td style="padding: 10px 12px; border-bottom: 1px solid #1e293b; text-align: right; color: #38bdf8; font-family: monospace; font-weight: 700;">${p.views.toLocaleString("fr-FR")}</td>
-              <td style="padding: 10px 12px; border-bottom: 1px solid #1e293b; text-align: right; color: #94a3b8;">${p.percentage}%</td>
-            </tr>`
-        )
-        .join("");
-
-      const channelsHtml = reportData.acquisitionChannels
-        .map(
-          (c) =>
-            `<div style="display: inline-block; background: #090d16; border: 1px solid #334155; border-radius: 8px; padding: 8px 14px; margin: 4px;">
-              <span style="font-size: 11px; color: #94a3b8; text-transform: uppercase;">${c.label}</span>
-              <div style="font-size: 15px; font-weight: 800; color: #f8fafc;">${c.percentage}% <span style="font-size: 11px; font-weight: normal; color: #64748b;">(${c.count.toLocaleString("fr-FR")})</span></div>
-            </div>`
-        )
-        .join("");
-
-      const bodyHtml = `
-Bonjour,
+  const getReportPlainText = () => {
+    return `Bonjour,
 
 Voici le rapport officiel de portée et de visibilité (Reach) pour Bylz sur la période : ${reportData.periodLabel}.
 
-${customNote ? `${customNote}\n\n` : ""}
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+${customNote ? `${customNote}\n\n` : ""}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 RÉSUMÉ EXÉCUTIF DU REACH
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 • Portée globale (Visiteurs uniques) : ${reportData.totalReach.toLocaleString("fr-FR")} (${reportData.growthRate >= 0 ? "+" : ""}${reportData.growthRate}% vs période précédente)
@@ -100,27 +83,90 @@ ${reportData.acquisitionChannels.map((c) => `• ${c.label} : ${c.percentage}% (
 
 Consultez le cockpit complet en direct sur : https://bylz.fr/admin/reach
 `;
+  };
 
-      const { error } = await supabase.functions.invoke("send-email", {
+  const handleCopyReport = async () => {
+    try {
+      await navigator.clipboard.writeText(getReportPlainText());
+      setCopied(true);
+      toast("Rapport copié dans le presse-papier !", "success");
+      setTimeout(() => setCopied(false), 3000);
+    } catch {
+      toast("Impossible de copier automatiquement dans le presse-papier.", "warning");
+    }
+  };
+
+  const handleSaveResendKey = async () => {
+    const key = resendApiKey.trim();
+    if (!key.startsWith("re_")) {
+      toast("La clé API Resend doit commencer par 're_'.", "warning");
+      return;
+    }
+
+    setSavingKey(true);
+    try {
+      const { error } = await supabase.from("system_settings").upsert({
+        key: "resend_api_key",
+        value: key,
+        updated_at: new Date().toISOString(),
+      });
+
+      if (error) throw error;
+
+      toast("Clé API Resend enregistrée avec succès !", "success");
+      setShowKeyConfig(false);
+      setResendApiKey("");
+    } catch (err: any) {
+      toast(err.message || "Erreur lors de l'enregistrement de la clé.", "danger");
+    } finally {
+      setSavingKey(false);
+    }
+  };
+
+  const handleSend = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!recipient || !recipient.includes("@")) {
+      toast("Veuillez saisir une adresse email valide.", "warning");
+      return;
+    }
+
+    setSending(true);
+
+    try {
+      const bodyText = getReportPlainText();
+
+      const { data, error } = await supabase.functions.invoke("send-email", {
         body: {
           to: recipient.trim(),
           subject: subject.trim(),
-          body: bodyHtml,
+          body: bodyText,
           document_type: "support",
           document_id: "none",
         },
       });
 
-      if (error) throw error;
+      if (error) {
+        let msg = error.message;
+        try {
+          if ((error as any).context && typeof (error as any).context.json === "function") {
+            const json = await (error as any).context.json();
+            if (json?.error) msg = json.error;
+          }
+        } catch {}
+        throw new Error(msg);
+      }
 
       toast(`Rapport envoyé avec succès à ${recipient} !`, "success");
       onClose();
     } catch (err: any) {
       console.error("Error sending reach report email:", err);
-      toast(
-        err?.message || "Impossible d'envoyer l'e-mail. Vérifiez la configuration Resend.",
-        "danger"
-      );
+      const msg = err?.message || "Impossible d'envoyer l'e-mail.";
+      toast(msg, "danger");
+
+      // If missing Resend key, suggest opening the config
+      if (msg.toLowerCase().includes("resend") || msg.toLowerCase().includes("clé")) {
+        setShowKeyConfig(true);
+      }
     } finally {
       setSending(false);
     }
@@ -139,7 +185,7 @@ Consultez le cockpit complet en direct sur : https://bylz.fr/admin/reach
                 Envoyer le Rapport de Reach
               </h3>
               <p className="text-xs text-slate-400">
-                Synthèse exécutive envoyée directement par e-mail
+                Synthèse exécutive envoyée par e-mail ou copiable
               </p>
             </div>
           </div>
@@ -181,7 +227,7 @@ Consultez le cockpit complet en direct sur : https://bylz.fr/admin/reach
               rows={2}
               value={customNote}
               onChange={(e) => setCustomNote(e.target.value)}
-              placeholder="Ex: Bonjour, voici les excellents résultats de trafic de Bylz pour ce mois-ci..."
+              placeholder="Ex: Bonjour, voici les chiffres clés de visibilité Bylz pour ce mois-ci..."
               className="w-full rounded-lg bg-slate-900 border border-slate-700 p-3 text-xs text-white placeholder:text-slate-500 focus:border-rose-500 focus:outline-none resize-none"
             />
           </div>
@@ -226,27 +272,81 @@ Consultez le cockpit complet en direct sur : https://bylz.fr/admin/reach
             </div>
           </div>
 
-          <div className="flex items-center justify-end space-x-3 pt-2">
+          {/* Optional In-Modal Resend API Key Setup */}
+          <div className="pt-1">
+            <button
+              type="button"
+              onClick={() => setShowKeyConfig(!showKeyConfig)}
+              className="text-[11px] text-slate-400 hover:text-slate-200 flex items-center gap-1 font-semibold transition-colors"
+            >
+              <KeyRound className="w-3 h-3 text-rose-400" />
+              <span>Configurer ou mettre à jour la clé API Resend</span>
+              {showKeyConfig ? <ChevronUp className="w-3 h-3 ml-1" /> : <ChevronDown className="w-3 h-3 ml-1" />}
+            </button>
+
+            {showKeyConfig && (
+              <div className="mt-2.5 p-3 rounded-lg bg-slate-950 border border-slate-800 space-y-2">
+                <p className="text-[11px] text-slate-400 leading-relaxed">
+                  Collez votre clé Resend valide (commençant par <code className="text-emerald-400 font-mono">re_</code>) pour activer l'envoi d'e-mails :
+                </p>
+                <div className="flex items-center gap-2">
+                  <Input
+                    type="password"
+                    placeholder="re_123456789..."
+                    value={resendApiKey}
+                    onChange={(e) => setResendApiKey(e.target.value)}
+                    className="bg-slate-900 border-slate-700 text-xs font-mono text-white h-8"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={handleSaveResendKey}
+                    loading={savingKey}
+                    className="h-8 text-xs font-bold border-slate-700 text-emerald-400 hover:bg-slate-900 flex-shrink-0"
+                  >
+                    Enregistrer
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-2 pt-2 border-t border-slate-800">
             <Button
               type="button"
               variant="outline"
               size="sm"
-              onClick={onClose}
-              disabled={sending}
-              className="border-slate-700 text-slate-300 hover:bg-slate-800 text-xs"
+              onClick={handleCopyReport}
+              leftIcon={copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
+              className="w-full sm:w-auto border-slate-700 text-slate-300 hover:bg-slate-800 text-xs"
             >
-              Annuler
+              {copied ? "Rapport copié !" : "Copier le rapport"}
             </Button>
-            <Button
-              type="submit"
-              variant="primary"
-              size="sm"
-              loading={sending}
-              leftIcon={<Send className="w-4 h-4" />}
-              className="bylz-glow-cta text-xs font-bold bg-rose-600 hover:bg-rose-500 text-white"
-            >
-              Envoyer le rapport par email
-            </Button>
+
+            <div className="flex items-center space-x-2 w-full sm:w-auto justify-end">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={onClose}
+                disabled={sending}
+                className="border-slate-700 text-slate-300 hover:bg-slate-800 text-xs"
+              >
+                Annuler
+              </Button>
+              <Button
+                type="submit"
+                variant="primary"
+                size="sm"
+                loading={sending}
+                leftIcon={<Send className="w-4 h-4" />}
+                className="bylz-glow-cta text-xs font-bold bg-rose-600 hover:bg-rose-500 text-white"
+              >
+                Envoyer par email
+              </Button>
+            </div>
           </div>
         </form>
       </div>

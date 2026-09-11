@@ -327,14 +327,6 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
-    const resendKey = Deno.env.get("RESEND_API_KEY");
-    if (!resendKey) {
-      return new Response(
-        JSON.stringify({ error: "Service email non configuré (RESEND_API_KEY manquant sur Supabase)" }),
-        { status: 503, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
     const authHeader = req.headers.get("Authorization") || "";
     const token = authHeader.replace("Bearer ", "");
     if (!token) {
@@ -346,16 +338,42 @@ Deno.serve(async (req: Request) => {
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || anonKey;
 
-    const userClient = createClient(supabaseUrl, anonKey, {
-      global: { headers: { Authorization: `Bearer ${token}` } },
-    });
-    const { data: userData, error: userErr } = await userClient.auth.getUser();
-    if (userErr || !userData.user) {
-      return new Response(JSON.stringify({ error: "JWT invalide" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+    let isServiceRole = false;
+    let userId: string | null = null;
+
+    try {
+      const parts = token.split(".");
+      if (parts.length === 3) {
+        const payloadStr = atob(parts[1].replace(/-/g, "+").replace(/_/g, "/"));
+        const payload = JSON.parse(payloadStr);
+        if (payload?.role === "service_role") {
+          isServiceRole = true;
+        } else if (payload?.sub) {
+          userId = payload.sub;
+        }
+      }
+    } catch {
+      // not a decoded jwt
+    }
+
+    let userClient: any = null;
+    if (isServiceRole) {
+      userClient = createClient(supabaseUrl, serviceRoleKey);
+    } else {
+      userClient = createClient(supabaseUrl, anonKey, {
+        global: { headers: { Authorization: `Bearer ${token}` } },
       });
+      if (!userId) {
+        const { data: userData, error: userErr } = await userClient.auth.getUser();
+        if (userErr || !userData?.user) {
+          return new Response(JSON.stringify({ error: "JWT invalide" }), {
+            status: 401,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+      }
     }
 
     const { to, subject, body, document_type, document_id } = await req.json();
@@ -405,19 +423,36 @@ Deno.serve(async (req: Request) => {
     const safeSubjectHtml = escapeHtml(safeSubject);
     const safeBodyHtml = escapeHtml(safeBodyText);
 
-    const resendKey = Deno.env.get("RESEND_API_KEY");
-    if (!resendKey) {
-      return new Response(
-        JSON.stringify({ error: "Clé API Resend non configurée (RESEND_API_KEY)" }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
     // The email record is written with the service role: clients cannot write it.
     const serviceClient = createClient(
       supabaseUrl,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || anonKey
     );
+
+    let resendKey = (Deno.env.get("RESEND_API_KEY") || "").trim();
+    if (!resendKey.startsWith("re_") || resendKey.includes("\n") || resendKey.includes(" ")) {
+      try {
+        const { data: resendRow } = await serviceClient
+          .from("system_settings")
+          .select("value")
+          .eq("key", "resend_api_key")
+          .maybeSingle();
+        if (resendRow?.value && typeof resendRow.value === "string" && resendRow.value.trim().startsWith("re_")) {
+          resendKey = resendRow.value.trim();
+        }
+      } catch {
+        // fallback
+      }
+    }
+
+    if (!resendKey || !resendKey.startsWith("re_") || resendKey.includes("\n") || resendKey.includes(" ")) {
+      return new Response(
+        JSON.stringify({
+          error: "Service email non configuré : la clé RESEND_API_KEY est invalide ou manquante sur Supabase (elle doit commencer par 're_')."
+        }),
+        { status: 503, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
     // Fetch custom logo from system_settings or default
     let customLogoUrl = "https://bylz.fr/logo.png";
@@ -611,7 +646,7 @@ Deno.serve(async (req: Request) => {
   } catch (err: any) {
     console.error("send-email Edge Function error:", err);
     return new Response(
-      JSON.stringify({ error: "Erreur interne" }),
+      JSON.stringify({ error: err?.message || "Erreur interne", stack: String(err?.stack || "") }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
