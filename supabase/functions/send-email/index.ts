@@ -429,26 +429,40 @@ Deno.serve(async (req: Request) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || anonKey
     );
 
-    let resendKey = (Deno.env.get("RESEND_API_KEY") || "").trim();
-    if (!resendKey.startsWith("re_") || resendKey.includes("\n") || resendKey.includes(" ")) {
+    const rawEnvResend = Deno.env.get("RESEND_API_KEY") || "";
+    const match = rawEnvResend.match(/re_[A-Za-z0-9_-]+/);
+    let resendKey = match ? match[0] : rawEnvResend.trim();
+
+    if (!resendKey || !resendKey.startsWith("re_")) {
       try {
         const { data: resendRow } = await serviceClient
           .from("system_settings")
           .select("value")
           .eq("key", "resend_api_key")
           .maybeSingle();
-        if (resendRow?.value && typeof resendRow.value === "string" && resendRow.value.trim().startsWith("re_")) {
-          resendKey = resendRow.value.trim();
+        let val = resendRow?.value;
+        if (typeof val === "string") {
+          try {
+            const parsed = JSON.parse(val);
+            if (typeof parsed === "string") val = parsed;
+          } catch {}
+          val = val.trim();
+        }
+        if (typeof val === "string") {
+          const rowMatch = val.match(/re_[A-Za-z0-9_-]+/);
+          if (rowMatch) resendKey = rowMatch[0];
         }
       } catch {
         // fallback
       }
     }
 
-    if (!resendKey || !resendKey.startsWith("re_") || resendKey.includes("\n") || resendKey.includes(" ")) {
+    if (!resendKey || !resendKey.startsWith("re_")) {
+      const preview = rawEnvResend ? rawEnvResend.slice(0, 45).replace(/[\r\n]+/g, " ") : "vide";
       return new Response(
         JSON.stringify({
-          error: "Service email non configuré : la clé RESEND_API_KEY est invalide ou manquante sur Supabase (elle doit commencer par 're_')."
+          error: `La clé RESEND_API_KEY sur Supabase contient actuellement "${preview}..." au lieu d'une clé API valide commençant par 're_'.`,
+          detail: "Veuillez renseigner votre vraie clé API Resend (depuis resend.com/api-keys)."
         }),
         { status: 503, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
