@@ -88,13 +88,23 @@ Deno.serve(async (req) => {
       return corsResponse({ error: 'priceId is required' }, 400);
     }
 
-    // Never let the client name an arbitrary Stripe price: a caller could
-    // otherwise subscribe itself to a cheap or test price of its choosing.
+    // Allow both Stripe price IDs and client price constant aliases
     const ALLOWED_PRICE_IDS = new Set([
-      'price_1TvYmr2X0yCzQQsNrPbSS9NC', // solo
-      'price_1TvYnW2X0yCzQQsN930PPkgJ', // pro
+      'price_1TvYmr2X0yCzQQsNrPbSS9NC', // solo Stripe ID
+      'price_1TvYnW2X0yCzQQsN930PPkgJ', // pro Stripe ID
+      'price_SOLO_ANNUAL_50',
+      'price_SOLO_MONTHLY_890',
+      'price_PRO_ANNUAL_75',
+      'price_PRO_ANNUAL_80',
+      'price_PRO_MONTHLY_1290',
+      'price_SOLO',
+      'price_PRO',
     ]);
-    if (!ALLOWED_PRICE_IDS.has(String(priceId))) {
+    const isValidPrice =
+      ALLOWED_PRICE_IDS.has(String(priceId)) ||
+      /^(price_|plan_)(SOLO|PRO)_(ANNUAL|MONTHLY)/i.test(String(priceId));
+
+    if (!isValidPrice) {
       return corsResponse({ error: 'Offre invalide' }, 400);
     }
 
@@ -111,12 +121,70 @@ Deno.serve(async (req) => {
     // Safely get or recreate Customer ID for current Stripe account
     const customerId = await getOrCreateCustomer(user.id, user.email, profile.stripe_customer_id);
 
-    const origin = req.headers.get('origin') || 'http://localhost:5173';
+    const origin =
+      req.headers.get('origin') ||
+      (req.headers.get('referer') ? new URL(req.headers.get('referer')!).origin : null) ||
+      'https://bylz.fr';
     const successUrl = `${origin}/settings?checkout=success`;
     const cancelUrl = `${origin}/settings`;
 
     // Only apply 14-day trial if user has never used a trial and has no subscription
     const eligibleForTrial = !profile.trial_used && !profile.stripe_subscription_id;
+
+    // Detect plan and cadence
+    const pLower = String(priceId || '').toLowerCase();
+    const isPro = pLower.includes('pro') || priceId === 'price_1TvYnW2X0yCzQQsN930PPkgJ';
+    const isMonthly = pLower.includes('_m') || pLower.includes('month');
+
+    let unitAmount = 5000; // Solo Annual (50 €)
+    let interval: 'year' | 'month' = 'year';
+    let planName = 'Bylz Solo (Annuel)';
+
+    if (isPro && !isMonthly) {
+      unitAmount = 8000; // Pro Annual (80 €)
+      planName = 'Bylz Pro (Annuel)';
+      interval = 'year';
+    } else if (isPro && isMonthly) {
+      unitAmount = 1290; // Pro Monthly (12.90 €)
+      planName = 'Bylz Pro (Mensuel)';
+      interval = 'month';
+    } else if (!isPro && isMonthly) {
+      unitAmount = 890; // Solo Monthly (8.90 €)
+      planName = 'Bylz Solo (Mensuel)';
+      interval = 'month';
+    }
+
+    const isCustomVirtualPrice =
+      priceId.startsWith('price_SOLO') ||
+      priceId.startsWith('price_PRO') ||
+      priceId.startsWith('plan_');
+
+    const subscriptionData: any = {
+      metadata: {
+        user_id: user.id,
+        plan: isPro ? 'pro' : 'solo',
+      },
+    };
+    if (eligibleForTrial) {
+      subscriptionData.trial_period_days = 14;
+    }
+
+    const buildLineItems = (usePriceData = false) => {
+      if (usePriceData || isCustomVirtualPrice) {
+        return [
+          {
+            price_data: {
+              currency: 'eur',
+              product_data: { name: planName },
+              unit_amount: unitAmount,
+              recurring: { interval },
+            },
+            quantity: 1,
+          },
+        ];
+      }
+      return [{ price: priceId, quantity: 1 }];
+    };
 
     let session: Stripe.Checkout.Session;
 
@@ -124,79 +192,51 @@ Deno.serve(async (req) => {
       session = await stripe.checkout.sessions.create({
         customer: customerId,
         payment_method_types: ['card'],
-        line_items: [
-          {
-            price: priceId,
-            quantity: 1,
-          },
-        ],
+        line_items: buildLineItems(false),
         mode: 'subscription',
         success_url: successUrl,
         cancel_url: cancelUrl,
-        ...(eligibleForTrial ? { subscription_data: { trial_period_days: 14 } } : {}),
+        subscription_data: subscriptionData,
         metadata: {
           user_id: user.id,
+          plan: isPro ? 'pro' : 'solo',
         },
       });
     } catch (err: any) {
-      // Fallback 1: Customer invalid during creation
+      // Fallback 1: Customer invalid during creation (recreated in Stripe)
       if (err.message?.includes('No such customer')) {
         const freshCustId = await getOrCreateCustomer(user.id, user.email, null);
         session = await stripe.checkout.sessions.create({
           customer: freshCustId,
           payment_method_types: ['card'],
-          line_items: [{ price: priceId, quantity: 1 }],
+          line_items: buildLineItems(false),
           mode: 'subscription',
           success_url: successUrl,
           cancel_url: cancelUrl,
-          ...(eligibleForTrial ? { subscription_data: { trial_period_days: 14 } } : {}),
-          metadata: { user_id: user.id },
+          subscription_data: subscriptionData,
+          metadata: {
+            user_id: user.id,
+            plan: isPro ? 'pro' : 'solo',
+          },
         });
       }
-      // Fallback 2: Price ID does not exist in current Stripe account -> create inline price data matching plan & interval
-      else if (err.message?.includes('No such price') || err.code === 'resource_missing' || err.statusCode === 404) {
-        const pLower = (priceId || '').toLowerCase();
-        const isPro = pLower.includes('pro');
-        const isMonthly = pLower.includes('_m') || pLower.includes('month');
-        
-        let unitAmount = 5000; // Solo Annual default (50 €)
-        let interval: 'year' | 'month' = 'year';
-        let planName = 'Bylz Solo (Annuel)';
-
-        if (isPro && !isMonthly) {
-          unitAmount = 7500; // Pro Annual (75 €)
-          planName = 'Bylz Pro (Annuel)';
-          interval = 'year';
-        } else if (isPro && isMonthly) {
-          unitAmount = 1290; // Pro Monthly (12.90 €)
-          planName = 'Bylz Pro (Mensuel)';
-          interval = 'month';
-        } else if (!isPro && isMonthly) {
-          unitAmount = 890; // Solo Monthly (8.90 €)
-          planName = 'Bylz Solo (Mensuel)';
-          interval = 'month';
-        }
-
+      // Fallback 2: Price ID does not exist in Stripe -> fallback to price_data
+      else if (
+        err.message?.includes('No such price') ||
+        err.code === 'resource_missing' ||
+        err.statusCode === 404
+      ) {
         session = await stripe.checkout.sessions.create({
           customer: customerId,
           payment_method_types: ['card'],
-          line_items: [
-            {
-              price_data: {
-                currency: 'eur',
-                product_data: { name: planName },
-                unit_amount: unitAmount,
-                recurring: { interval },
-              },
-              quantity: 1,
-            },
-          ],
+          line_items: buildLineItems(true),
           mode: 'subscription',
           success_url: successUrl,
           cancel_url: cancelUrl,
-          ...(eligibleForTrial ? { subscription_data: { trial_period_days: 14 } } : {}),
+          subscription_data: subscriptionData,
           metadata: {
             user_id: user.id,
+            plan: isPro ? 'pro' : 'solo',
           },
         });
       } else {

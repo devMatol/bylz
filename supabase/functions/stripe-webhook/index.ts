@@ -153,14 +153,19 @@ async function handleWebhookEvent(event: Stripe.Event) {
 
       let newPlan: 'starter' | 'solo' | 'pro' = 'starter';
       if (status === 'active' || status === 'trialing') {
-        const pLower = (priceId || '').toLowerCase();
-        if (pLower.includes('pro') || priceId === STRIPE_PRICE_PRO || priceId === 'price_1TvYnW2X0yCzQQsN930PPkgJ') {
-          newPlan = 'pro';
-        } else if (pLower.includes('solo') || priceId === STRIPE_PRICE_SOLO || priceId === 'price_1TvYmr2X0yCzQQsNrPbSS9NC') {
-          newPlan = 'solo';
+        const metaPlan = subscription.metadata?.plan as 'starter' | 'solo' | 'pro' | undefined;
+        if (metaPlan === 'pro' || metaPlan === 'solo') {
+          newPlan = metaPlan;
         } else {
-          // If price ID does not match string, check product name if available
-          newPlan = 'pro'; // default active plan fallback
+          const pLower = (priceId || '').toLowerCase();
+          if (pLower.includes('pro') || priceId === STRIPE_PRICE_PRO || priceId === 'price_1TvYnW2X0yCzQQsN930PPkgJ') {
+            newPlan = 'pro';
+          } else if (pLower.includes('solo') || priceId === STRIPE_PRICE_SOLO || priceId === 'price_1TvYmr2X0yCzQQsNrPbSS9NC') {
+            newPlan = 'solo';
+          } else {
+            // If price ID does not match string, check product name if available
+            newPlan = 'pro'; // default active plan fallback
+          }
         }
       }
 

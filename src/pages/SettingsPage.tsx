@@ -201,8 +201,18 @@ export function SettingsPage() {
       const { data, error } = await supabase.functions.invoke("stripe-checkout", {
         body: { priceId },
       });
-      if (error || !data?.url) {
-        throw new Error(error?.message || "Impossible de démarrer la session de paiement.");
+      if (error) {
+        let msg = error.message;
+        try {
+          if ((error as any).context && typeof (error as any).context.json === "function") {
+            const body = await (error as any).context.json();
+            if (body?.error) msg = body.error;
+          }
+        } catch {}
+        throw new Error(msg || "Impossible de démarrer la session de paiement.");
+      }
+      if (!data?.url) {
+        throw new Error("Impossible de démarrer la session de paiement.");
       }
       window.location.href = data.url;
     } catch (err: any) {
