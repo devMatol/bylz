@@ -315,12 +315,19 @@ export function SettingsPage() {
     setLogoError(null);
     try {
       if (file.size > 2 * 1024 * 1024) throw new Error("Le fichier ne doit pas dépasser 2 Mo.");
-      const ext = file.name.split(".").pop();
+      const ext = file.name.split(".").pop() || "png";
       const path = `${company.id}/logo.${ext}`;
-      const { error: uploadError } = await supabase.storage.from("company-assets").upload(path, file, { upsert: true });
-      if (uploadError) throw uploadError;
-      const { data: publicUrlData } = supabase.storage.from("company-assets").getPublicUrl(path);
-      const newLogoUrl = publicUrlData.publicUrl;
+      
+      let uploadRes = await supabase.storage.from("company-assets").upload(path, file, { upsert: true, contentType: file.type });
+      let bucket = "company-assets";
+      if (uploadRes.error) {
+        const fallbackRes = await supabase.storage.from("logos").upload(path, file, { upsert: true, contentType: file.type });
+        if (fallbackRes.error) throw uploadRes.error;
+        bucket = "logos";
+      }
+
+      const { data: publicUrlData } = supabase.storage.from(bucket).getPublicUrl(path);
+      const newLogoUrl = `${publicUrlData.publicUrl}?v=${Date.now()}`;
       setLogoUrl(newLogoUrl);
       await supabase.from("companies").update({ logo_url: newLogoUrl }).eq("id", company.id);
       toast("Logo mis à jour avec succès !", "success");
