@@ -25,7 +25,7 @@ import { Input } from "../ui/Input";
 import { Modal } from "../ui/Modal";
 import { supabase } from "../../lib/supabase";
 import { downloadInvoicePdf, type InvoicePdfConfig } from "../../lib/generateInvoicePdf";
-import { trackPlausibleEvent } from "../../lib/analytics";
+import { trackEvent } from "../../lib/analytics";
 
 export type PresetKey = "auto_entrepreneur" | "artisan_btp" | "freelance_service" | "commerce";
 
@@ -238,8 +238,8 @@ export function InvoiceModelConfigurator({
         },
       });
 
-      // Track Plausible event (100% RGPD, no-cookie)
-      trackPlausibleEvent("lead_modele_facture", {
+      // Track lead event
+      trackEvent("lead_modele_facture", {
         template: activePreset,
         total_ttc: Math.round(totalTtc),
       });

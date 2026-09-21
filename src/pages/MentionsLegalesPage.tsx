@@ -58,7 +58,7 @@ export function MentionsLegalesPage() {
             Bylz s'engage à protéger la vie privée de ses utilisateurs conformément au Règlement Général sur la Protection des Données (RGPD n° 2016/679) et à la loi Informatique et Libertés.
           </p>
           <p>
-            Pour la mesure d'audience, Bylz utilise <strong>Plausible Analytics</strong>, une solution souveraine respectueuse de la vie privée, sans cookie de tracking, ne collectant aucune donnée personnelle identifiable et conforme aux recommandations de la CNIL sans nécessiter de consentement préalable.
+            La navigation sur le site ne dépose aucun cookie publicitaire ou traceur invasif sur votre équipement sans votre consentement explicite.
           </p>
           <p>
             Pour plus d'informations sur la gestion de vos données et l'exercice de vos droits (accès, rectification, suppression), consultez notre <a href="/confidentialite" className="text-primary hover:underline font-semibold">Politique de Confidentialité</a> ou contactez notre délégué à la protection des données à <span className="font-mono text-text">dpo@bylz.fr</span>.
