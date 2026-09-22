@@ -182,7 +182,7 @@ const staticPages = [
   {
     path: "conformite",
     title: "Conformité Légale & Sécurité des Données | Bylz",
-    description: "Découvrez les garanties de conformité de Bylz : Loi Anti-Fraude TVA Art. 286 CGI, Norme Européenne EN 16931 Factur-X, Agrément DSP2 Banque de France et hébergement sécurisé en France.",
+    description: "Conformité légale Bylz : Factur-X certifié EN 16931, anti-fraude TVA art. 286 CGI, agrégateur bancaire DSP2 et hébergement sécurisé des données en France.",
     ogType: "website"
   },
   {
@@ -216,7 +216,7 @@ const staticPages = [
   {
     path: "outils/modele-facture-gratuit",
     title: "Modèle de Facture Gratuit 2026 : Auto-Entrepreneur, Artisan & Freelance (PDF)",
-    description: "Créez et téléchargez votre modèle de facture gratuit conforme aux obligations 2026 (Factur-X, franchise TVA art. 293 B, mentions obligatoires). Prêt en 30 secondes.",
+    description: "Créez et téléchargez votre modèle de facture conforme 2026 (Factur-X, franchise TVA art. 293 B, mentions obligatoires). Prêt en PDF en 30 secondes.",
     ogType: "website",
     jsonLd: {
       "@context": "https://schema.org",
@@ -236,28 +236,265 @@ const staticPages = [
   {
     path: "contact",
     title: "Contactez l'Équipe Bylz | Support & Assistance",
-    description: "Une question sur Bylz, la facturation électronique 2026 ou votre abonnement ? Notre équipe vous répond en moins de 24h.",
+    description: "Une question sur Bylz, la facturation électronique 2026 ou votre abonnement ? Notre équipe support vous répond rapidement par email et WhatsApp.",
     ogType: "website"
   },
   {
     path: "mentions-legales",
     title: "Mentions Légales | Bylz",
-    description: "Consultez les informations légales concernant l'éditeur et l'hébergeur du site Bylz.fr.",
+    description: "Consultez les mentions légales de la plateforme Bylz : éditeur, hébergeurs Vercel et Supabase, propriété intellectuelle et conformité réglementaire.",
     ogType: "website"
   },
   {
     path: "cgu",
     title: "Conditions Générales d'Utilisation (CGU) | Bylz",
-    description: "Découvrez les conditions générales d'utilisation régissant l'accès au site et aux services de Bylz.",
+    description: "Consultez les Conditions Générales d'Utilisation régissant les services de facturation électronique, devis et calculs automatisés de la plateforme Bylz.",
     ogType: "website"
   },
   {
     path: "confidentialite",
     title: "Politique de Confidentialité & RGPD | Bylz",
-    description: "Nous accordons une importance capitale à la sécurité et à la confidentialité de vos données personnelles. Consultez notre politique RGPD.",
+    description: "Découvrez notre politique de confidentialité et protection des données personnelles (RGPD) : sécurité, chiffrement TLS et droits d'accès sur Bylz.",
     ogType: "website"
   }
 ];
+
+function renderNav() {
+  return `
+    <header style="border-bottom: 1px solid #1e293b; background: rgba(1, 17, 66, 0.85); backdrop-filter: blur(12px); padding: 1rem 1.5rem; position: sticky; top: 0; z-index: 50;">
+      <div style="max-width: 1200px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between;">
+        <a href="/" style="display: flex; align-items: center; gap: 0.5rem; text-decoration: none; color: #fff; font-weight: 900; font-size: 1.25rem;">
+          <img src="/bylz-logo-gradient.svg" alt="Bylz" style="height: 32px;" />
+        </a>
+        <nav style="display: flex; gap: 1.5rem; font-size: 0.875rem; font-weight: 600;">
+          <a href="/fonctionnalites" style="color: #94a3b8; text-decoration: none;">Fonctionnalités</a>
+          <a href="/tarifs" style="color: #94a3b8; text-decoration: none;">Tarifs</a>
+          <a href="/conformite" style="color: #94a3b8; text-decoration: none;">Conformité 2026</a>
+          <a href="/outils/simulateur-urssaf" style="color: #94a3b8; text-decoration: none;">Simulateurs</a>
+          <a href="/blog" style="color: #94a3b8; text-decoration: none;">Blog</a>
+        </nav>
+        <div style="display: flex; gap: 0.75rem; align-items: center;">
+          <a href="/login" style="color: #94a3b8; text-decoration: none; font-size: 0.875rem; font-weight: 600;">Connexion</a>
+          <a href="/signup" style="background: #7c6fe0; color: #fff; padding: 0.5rem 1rem; border-radius: 9999px; text-decoration: none; font-size: 0.875rem; font-weight: 700;">Essai gratuit</a>
+        </div>
+      </div>
+    </header>
+  `;
+}
+
+function renderFooter() {
+  return `
+    <footer style="border-top: 1px solid #1e293b; background: #010e33; padding: 3rem 1.5rem 2rem; margin-top: 4rem; color: #94a3b8; font-size: 0.875rem;">
+      <div style="max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 2rem;">
+        <div>
+          <h3 style="color: #fff; font-weight: 700; margin-bottom: 0.75rem;">Solution Bylz</h3>
+          <p style="font-size: 0.8rem; line-height: 1.5;">La plateforme de devis, facturation électronique Factur-X et pilotage fiscal pensée pour les auto-entrepreneurs.</p>
+        </div>
+        <div>
+          <h3 style="color: #fff; font-weight: 700; margin-bottom: 0.75rem;">Produit</h3>
+          <ul style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.5rem; font-size: 0.8rem;">
+            <li><a href="/fonctionnalites" style="color: #94a3b8; text-decoration: none;">Fonctionnalités</a></li>
+            <li><a href="/tarifs" style="color: #94a3b8; text-decoration: none;">Tarifs</a></li>
+            <li><a href="/conformite" style="color: #94a3b8; text-decoration: none;">Conformité Réforme 2026</a></li>
+            <li><a href="/blog" style="color: #94a3b8; text-decoration: none;">Blog Fiscalité</a></li>
+          </ul>
+        </div>
+        <div>
+          <h3 style="color: #fff; font-weight: 700; margin-bottom: 0.75rem;">Simulateurs Gratuits</h3>
+          <ul style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.5rem; font-size: 0.8rem;">
+            <li><a href="/outils/simulateur-urssaf" style="color: #94a3b8; text-decoration: none;">Simulateur Cotisations URSSAF</a></li>
+            <li><a href="/outils/simulateur-seuil-tva" style="color: #94a3b8; text-decoration: none;">Simulateur Seuil Franchise TVA</a></li>
+            <li><a href="/outils/modele-facture-gratuit" style="color: #94a3b8; text-decoration: none;">Modèle de Facture Gratuit PDF</a></li>
+          </ul>
+        </div>
+        <div>
+          <h3 style="color: #fff; font-weight: 700; margin-bottom: 0.75rem;">Informations Légales</h3>
+          <ul style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.5rem; font-size: 0.8rem;">
+            <li><a href="/mentions-legales" style="color: #94a3b8; text-decoration: none;">Mentions Légales</a></li>
+            <li><a href="/cgu" style="color: #94a3b8; text-decoration: none;">Conditions Générales d'Utilisation</a></li>
+            <li><a href="/confidentialite" style="color: #94a3b8; text-decoration: none;">Politique de Confidentialité (RGPD)</a></li>
+            <li><a href="/contact" style="color: #94a3b8; text-decoration: none;">Contact & Support</a></li>
+          </ul>
+        </div>
+      </div>
+      <div style="max-width: 1200px; margin: 2rem auto 0; padding-top: 1.5rem; border-top: 1px solid #1e293b; text-align: center; font-size: 0.75rem;">
+        © ${new Date().getFullYear()} Bylz Technologies. Tous droits réservés. Hébergé en France / UE.
+      </div>
+    </footer>
+  `;
+}
+
+function renderPageBody(routePath, meta) {
+  const nav = renderNav();
+  const footer = renderFooter();
+
+  if (routePath === "") {
+    // Home
+    return `
+      <div style="min-height: 100vh; background: #011142; color: #f8fafc; font-family: Inter, system-ui, sans-serif;">
+        ${nav}
+        <main style="max-width: 1200px; margin: 0 auto; padding: 4rem 1.5rem;">
+          <section style="text-align: center; max-width: 800px; margin: 0 auto 5rem;">
+            <span style="display: inline-block; padding: 0.35rem 1rem; border-radius: 9999px; background: rgba(124, 111, 224, 0.15); border: 1px solid rgba(124, 111, 224, 0.3); color: #a59bf0; font-size: 0.8rem; font-weight: 800; margin-bottom: 1.5rem;">
+              Prêt pour la Réforme Facturation Électronique 2026
+            </span>
+            <h1 style="font-size: 3rem; line-height: 1.1; font-weight: 900; margin-bottom: 1.5rem; color: #ffffff;">
+              Vos factures. Votre fiscalité. <span style="color: #7c6fe0;">Tout en un.</span>
+            </h1>
+            <p style="font-size: 1.15rem; color: #94a3b8; line-height: 1.6; margin-bottom: 2rem;">
+              Créez des factures conformes 2026 (Factur-X), suivez votre CA en temps réel et anticipez vos cotisations URSSAF en 2 minutes par jour.
+            </p>
+            <div style="display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap;">
+              <a href="/signup" style="background: #7c6fe0; color: #fff; padding: 0.85rem 2rem; border-radius: 9999px; font-weight: 800; text-decoration: none; font-size: 1rem;">
+                Commencer gratuitement (sans carte bancaire)
+              </a>
+              <a href="/tarifs" style="border: 1px solid #334155; color: #fff; padding: 0.85rem 1.5rem; border-radius: 9999px; font-weight: 700; text-decoration: none; font-size: 1rem;">
+                Voir les tarifs
+              </a>
+            </div>
+          </section>
+
+          <section style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 2rem; margin-bottom: 5rem;">
+            <div style="background: #010e33; border: 1px solid #1e293b; border-radius: 1rem; padding: 2rem;">
+              <h2 style="font-size: 1.25rem; font-weight: 800; margin-bottom: 0.75rem; color: #fff;">100% Conforme Factur-X 2026</h2>
+              <p style="color: #94a3b8; font-size: 0.9rem; line-height: 1.5;">Générez vos factures au format hybride officiel avec métadonnées XML certifiées et télétransmission DGFiP automatisée.</p>
+            </div>
+            <div style="background: #010e33; border: 1px solid #1e293b; border-radius: 1rem; padding: 2rem;">
+              <h2 style="font-size: 1.25rem; font-weight: 800; margin-bottom: 0.75rem; color: #fff;">Pilotage URSSAF & TVA en direct</h2>
+              <p style="color: #94a3b8; font-size: 0.9rem; line-height: 1.5;">Calcul au centime près de vos cotisations sociales (BNC, BIC) et alertes en direct à l'approche des plafonds de TVA.</p>
+            </div>
+            <div style="background: #010e33; border: 1px solid #1e293b; border-radius: 1rem; padding: 2rem;">
+              <h2 style="font-size: 1.25rem; font-weight: 800; margin-bottom: 0.75rem; color: #fff;">Pilote IA WhatsApp & Rapprochement Bancaire</h2>
+              <p style="color: #94a3b8; font-size: 0.9rem; line-height: 1.5;">Commandez vos devis et factures par simple message ou vocal sur WhatsApp et synchronisez vos comptes bancaires en toute sécurité.</p>
+            </div>
+          </section>
+
+          <section style="background: #010e33; border: 1px solid #1e293b; border-radius: 1.5rem; padding: 3rem; text-align: center;">
+            <h2 style="font-size: 2rem; font-weight: 800; margin-bottom: 1rem; color: #fff;">Passez à la vitesse supérieure dès aujourd'hui</h2>
+            <p style="color: #94a3b8; margin-bottom: 2rem; max-width: 600px; margin-left: auto; margin-right: auto;">Rejoignez les auto-entrepreneurs qui sécurisent leur gestion fiscale et automatisent leurs devis et factures avec Bylz.</p>
+            <a href="/signup" style="background: #7c6fe0; color: #fff; padding: 0.85rem 2rem; border-radius: 9999px; font-weight: 800; text-decoration: none; font-size: 1rem; display: inline-block;">
+              Créer mon compte gratuit
+            </a>
+          </section>
+        </main>
+        ${footer}
+      </div>
+    `;
+  }
+
+  if (routePath === "tarifs") {
+    return `
+      <div style="min-height: 100vh; background: #011142; color: #f8fafc; font-family: Inter, system-ui, sans-serif;">
+        ${nav}
+        <main style="max-width: 1200px; margin: 0 auto; padding: 4rem 1.5rem;">
+          <header style="text-align: center; margin-bottom: 4rem;">
+            <h1 style="font-size: 2.75rem; font-weight: 900; margin-bottom: 1rem; color: #fff;">Tarifs Simples & Transparents</h1>
+            <p style="font-size: 1.15rem; color: #94a3b8; max-width: 650px; margin: 0 auto;">Tout ce dont votre micro-entreprise a besoin pour être conforme 2026, sans frais cachés ni engagement.</p>
+          </header>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; margin-bottom: 4rem;">
+            <div style="background: #010e33; border: 1px solid #1e293b; border-radius: 1.25rem; padding: 2.5rem;">
+              <h2 style="font-size: 1.5rem; font-weight: 800; color: #fff; margin-bottom: 0.5rem;">Starter</h2>
+              <p style="font-size: 2rem; font-weight: 900; color: #7c6fe0; margin-bottom: 1.5rem;">0 € <span style="font-size: 0.9rem; color: #94a3b8; font-weight: 400;">/ toujours gratuit</span></p>
+              <ul style="list-style: none; padding: 0; margin-bottom: 2rem; display: flex; flex-direction: column; gap: 0.75rem; font-size: 0.9rem; color: #cbd5e1;">
+                <li>✓ Jusqu'à 3 factures par mois</li>
+                <li>✓ Devis & Factures conformes Factur-X</li>
+                <li>✓ Téléchargement PDF certifié</li>
+                <li>✓ Sans carte bancaire requise</li>
+              </ul>
+              <a href="/signup" style="display: block; text-align: center; border: 1px solid #334155; color: #fff; padding: 0.75rem 1rem; border-radius: 9999px; text-decoration: none; font-weight: 700;">Commencer</a>
+            </div>
+            <div style="background: #010e33; border: 2px solid #7c6fe0; border-radius: 1.25rem; padding: 2.5rem; position: relative;">
+              <span style="position: absolute; top: -12px; right: 24px; background: #7c6fe0; color: #fff; font-size: 0.75rem; font-weight: 800; padding: 0.25rem 0.75rem; border-radius: 9999px;">LE PLUS POPULAIRE</span>
+              <h2 style="font-size: 1.5rem; font-weight: 800; color: #fff; margin-bottom: 0.5rem;">Solo</h2>
+              <p style="font-size: 2rem; font-weight: 900; color: #7c6fe0; margin-bottom: 1.5rem;">50 € <span style="font-size: 0.9rem; color: #94a3b8; font-weight: 400;">/ an (soit 4,17 €/mois)</span></p>
+              <ul style="list-style: none; padding: 0; margin-bottom: 2rem; display: flex; flex-direction: column; gap: 0.75rem; font-size: 0.9rem; color: #cbd5e1;">
+                <li>✓ Factures et devis illimités</li>
+                <li>✓ Conforme Réforme Factur-X 2026</li>
+                <li>✓ Tableau de bord fiscal & calcul URSSAF</li>
+                <li>✓ Suivi des plafonds de TVA en direct</li>
+                <li>✓ Relances automatiques d'impayés</li>
+              </ul>
+              <a href="/signup" style="display: block; text-align: center; background: #7c6fe0; color: #fff; padding: 0.75rem 1rem; border-radius: 9999px; text-decoration: none; font-weight: 800;">Essai 14 jours offerts</a>
+            </div>
+            <div style="background: #010e33; border: 1px solid #1e293b; border-radius: 1.25rem; padding: 2.5rem;">
+              <h2 style="font-size: 1.5rem; font-weight: 800; color: #fff; margin-bottom: 0.5rem;">Pro</h2>
+              <p style="font-size: 2rem; font-weight: 900; color: #7c6fe0; margin-bottom: 1.5rem;">80 € <span style="font-size: 0.9rem; color: #94a3b8; font-weight: 400;">/ an (soit 6,67 €/mois)</span></p>
+              <ul style="list-style: none; padding: 0; margin-bottom: 2rem; display: flex; flex-direction: column; gap: 0.75rem; font-size: 0.9rem; color: #cbd5e1;">
+                <li>✓ Tout le forfait Solo en illimité</li>
+                <li>✓ Pilote IA & Assistant vocal sur WhatsApp</li>
+                <li>✓ Synchronisation bancaire DSP2</li>
+                <li>✓ Paiement en ligne Stripe Connect</li>
+                <li>✓ Support prioritaire 7j/7</li>
+              </ul>
+              <a href="/signup" style="display: block; text-align: center; border: 1px solid #334155; color: #fff; padding: 0.75rem 1rem; border-radius: 9999px; text-decoration: none; font-weight: 700;">Essai 14 jours offerts</a>
+            </div>
+          </div>
+        </main>
+        ${footer}
+      </div>
+    `;
+  }
+
+  // Generic static page fallback with H1
+  return `
+    <div style="min-height: 100vh; background: #011142; color: #f8fafc; font-family: Inter, system-ui, sans-serif;">
+      ${nav}
+      <main style="max-width: 900px; margin: 0 auto; padding: 4rem 1.5rem;">
+        <h1 style="font-size: 2.5rem; font-weight: 900; margin-bottom: 1.5rem; color: #fff;">${meta.title.split(" | ")[0].split(" — ")[0]}</h1>
+        <p style="font-size: 1.1rem; color: #94a3b8; line-height: 1.6; margin-bottom: 3rem;">${meta.description}</p>
+        <div style="line-height: 1.7; color: #cbd5e1; font-size: 1rem;">
+          <p>Pour en savoir plus et découvrir la plateforme de facturation Factur-X Bylz, créez votre compte gratuitement en moins de 2 minutes.</p>
+          <div style="margin-top: 2rem;">
+            <a href="/signup" style="background: #7c6fe0; color: #fff; padding: 0.75rem 1.5rem; border-radius: 9999px; text-decoration: none; font-weight: 700; display: inline-block;">Découvrir Bylz Gratuitement</a>
+          </div>
+        </div>
+      </main>
+      ${footer}
+    </div>
+  `;
+}
+
+function renderBlogBody(post) {
+  const nav = renderNav();
+  const footer = renderFooter();
+
+  return `
+    <div style="min-height: 100vh; background: #011142; color: #f8fafc; font-family: Inter, system-ui, sans-serif;">
+      ${nav}
+      <main style="max-width: 850px; margin: 0 auto; padding: 4rem 1.5rem;">
+        <article>
+          <header style="margin-bottom: 2.5rem; border-bottom: 1px solid #1e293b; padding-bottom: 2rem;">
+            <a href="/blog" style="color: #7c6fe0; text-decoration: none; font-size: 0.875rem; font-weight: 700; display: inline-block; margin-bottom: 1rem;">← Retour au blog</a>
+            <div style="margin-bottom: 1rem;">
+              <span style="background: rgba(124, 111, 224, 0.15); color: #a59bf0; font-size: 0.75rem; font-weight: 800; padding: 0.25rem 0.75rem; border-radius: 9999px;">${post.category || "Fiscalité & Facturation"}</span>
+            </div>
+            <h1 style="font-size: 2.5rem; line-height: 1.2; font-weight: 900; color: #fff; margin-bottom: 1rem;">
+              ${post.title}
+            </h1>
+            <div style="display: flex; gap: 1rem; color: #94a3b8; font-size: 0.85rem; font-weight: 500;">
+              <span>Auteur : <strong style="color: #fff;">${post.author || "Équipe Fiscale Bylz"}</strong></span>
+              <span>•</span>
+              <span>${post.date ? post.date.slice(0, 10) : "2026"}</span>
+              <span>•</span>
+              <span>${post.readTime || "5 min de lecture"}</span>
+            </div>
+          </header>
+          <div style="line-height: 1.8; color: #cbd5e1; font-size: 1.05rem;" class="blog-content">
+            ${post.content || `<p>${post.excerpt}</p>`}
+          </div>
+          <div style="margin-top: 4rem; padding: 2.5rem; background: #010e33; border: 1px solid #1e293b; border-radius: 1.25rem; text-align: center;">
+            <h2 style="font-size: 1.5rem; font-weight: 800; color: #fff; margin-bottom: 0.75rem;">Mettez vos factures aux normes 2026 avec Bylz</h2>
+            <p style="color: #94a3b8; font-size: 0.95rem; margin-bottom: 1.5rem; max-width: 550px; margin-left: auto; margin-right: auto;">Générez vos factures au format officiel Factur-X et pilotez vos cotisations sociales en direct.</p>
+            <a href="/signup" style="background: #7c6fe0; color: #fff; padding: 0.75rem 1.75rem; border-radius: 9999px; text-decoration: none; font-weight: 800; font-size: 0.95rem; display: inline-block;">
+              Tester gratuitement sans carte bancaire
+            </a>
+          </div>
+        </article>
+      </main>
+      ${footer}
+    </div>
+  `;
+}
 
 async function prerender() {
   console.log("Starting SEO prerendering...");
@@ -314,6 +551,12 @@ async function prerender() {
 
     // Inject SEO tags into head
     html = html.replace("</head>", `${seoTags}\n  </head>`);
+
+    // Inject rich static HTML body into root for crawlers and bots!
+    const bodyContent = meta.bodyHtml || renderPageBody(routePath, meta);
+    if (bodyContent) {
+      html = html.replace('<div id="root"></div>', `<div id="root">${bodyContent}</div>`);
+    }
 
     // Target path in dist/
     const targetDir = path.join(distDir, routePath);
@@ -402,6 +645,7 @@ async function prerender() {
       ogType: "article",
       ogImage: post.coverImageUrl || DEFAULT_OG_IMAGE,
       jsonLd: schema,
+      bodyHtml: renderBlogBody(post),
     });
   }
 
