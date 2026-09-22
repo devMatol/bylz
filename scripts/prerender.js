@@ -507,7 +507,9 @@ async function prerender() {
     process.exit(1);
   }
 
-  const templateHtml = fs.readFileSync(templatePath, "utf8");
+  const rawHtml = fs.readFileSync(templatePath, "utf8");
+  // Always normalize templateHtml so <div id="root"> is cleanly empty for every route
+  const templateHtml = rawHtml.replace(/<div id="root">[\s\S]*?<\/div>/i, '<div id="root"></div>');
 
   // Helper to generate a pre-rendered HTML file
   const generateFile = (routePath, meta) => {
@@ -555,7 +557,7 @@ async function prerender() {
     // Inject rich static HTML body into root for crawlers and bots!
     const bodyContent = meta.bodyHtml || renderPageBody(routePath, meta);
     if (bodyContent) {
-      html = html.replace('<div id="root"></div>', `<div id="root">${bodyContent}</div>`);
+      html = html.replace(/<div id="root">[\s\S]*?<\/div>/i, `<div id="root">${bodyContent}</div>`);
     }
 
     // Target path in dist/
