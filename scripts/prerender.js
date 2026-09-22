@@ -566,6 +566,13 @@ async function prerender() {
     const targetFile = routePath === "" ? templatePath : path.join(targetDir, "index.html");
 
     fs.writeFileSync(targetFile, html, "utf8");
+
+    if (routePath !== "") {
+      const cleanHtmlFile = path.join(distDir, `${routePath}.html`);
+      fs.mkdirSync(path.dirname(cleanHtmlFile), { recursive: true });
+      fs.writeFileSync(cleanHtmlFile, html, "utf8");
+    }
+
     console.log(`Prerendered: /${routePath}`);
   };
 

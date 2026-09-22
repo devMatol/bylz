@@ -7,25 +7,57 @@
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Bylz — Facturation Factur-X & Pilotage Fiscal | Auto-Entrepreneurs</title>
-    <link rel="manifest" href="/manifest.json" />
-    <meta name="theme-color" content="#011142" />
-    <meta name="mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <meta name="apple-mobile-web-app-title" content="Bylz" />
-    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
-      rel="stylesheet"
-    />
-    <meta property="og:image" content="https://bylz.fr/og-image.png">
-    <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:image" content="https://bylz.fr/og-image.png">
-</head>
+    <meta name="description" content="Créez des factures conformes 2026 (Factur-X), suivez votre CA et anticipez vos cotisations URSSAF & impôts en 2 min/jour. Essai gratuit sans carte bancaire." />
+    <link rel="canonical" href="https://bylz.fr/" />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Bylz — Facturation Factur-X & Pilotage Fiscal | Auto-Entrepreneurs" />
+    <meta property="og:description" content="Créez des factures conformes 2026 (Factur-X), suivez votre CA et anticipez vos cotisations URSSAF & impôts en 2 min/jour. Essai gratuit sans carte bancaire." />
+    <meta property="og:url" content="https://bylz.fr/" />
+    <meta property="og:site_name" content="Bylz" />
+    <meta property="og:image" content="https://bylz.fr/og-image.png" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Bylz — Facturation Factur-X & Pilotage Fiscal | Auto-Entrepreneurs" />
+    <meta name="twitter:description" content="Créez des factures conformes 2026 (Factur-X), suivez votre CA et anticipez vos cotisations URSSAF & impôts en 2 min/jour. Essai gratuit sans carte bancaire." />
+    <meta name="twitter:image" content="https://bylz.fr/og-image.png" />
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "Bylz",
+        "applicationCategory": "BusinessApplication",
+        "operatingSystem": "Web",
+        "offers": {
+          "@type": "Offer",
+          "price": "0.00",
+          "priceCurrency": "EUR"
+        }
+      }
+    </script>
+  </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <header style="border-bottom: 1px solid #1e293b; background: rgba(1, 17, 66, 0.85); padding: 1rem 1.5rem;">
+        <nav style="max-width: 1200px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between;">
+          <a href="/" style="color: #fff; font-weight: 900; font-size: 1.25rem; text-decoration: none;">Bylz</a>
+          <div style="display: flex; gap: 1.5rem; font-size: 0.875rem;">
+            <a href="/fonctionnalites" style="color: #94a3b8; text-decoration: none;">Fonctionnalités</a>
+            <a href="/tarifs" style="color: #94a3b8; text-decoration: none;">Tarifs</a>
+            <a href="/conformite" style="color: #94a3b8; text-decoration: none;">Conformité 2026</a>
+            <a href="/outils/simulateur-urssaf" style="color: #94a3b8; text-decoration: none;">Simulateurs</a>
+            <a href="/blog" style="color: #94a3b8; text-decoration: none;">Blog</a>
+          </div>
+        </nav>
+      </header>
+      <main style="max-width: 1200px; margin: 0 auto; padding: 4rem 1.5rem; text-align: center;">
+        <h1 style="font-size: 2.75rem; font-weight: 900; color: #fff; margin-bottom: 1.5rem;">
+          Vos factures. Votre fiscalité. Tout en un.
+        </h1>
+        <p style="font-size: 1.15rem; color: #94a3b8; max-width: 700px; margin: 0 auto 2rem; line-height: 1.6;">
+          Créez des factures conformes 2026 (Factur-X), suivez votre CA en direct et anticipez vos cotisations URSSAF et impôts en 2 minutes par jour.
+        </p>
+      </main>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

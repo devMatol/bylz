@@ -9,8 +9,17 @@ import { fetchBlogPostBySlug, incrementBlogPostViews } from "../lib/api";
 import { sanitizeHtml } from "../lib/sanitizeHtml";
 import { InvoiceModelConfigurator } from "../components/tools/InvoiceModelConfigurator";
 
+const SLUG_REDIRECTS: Record<string, string> = {
+  "franchise-en-base-de-tva-2026": "/blog/franchise-tva-2026-seuils-et-regles",
+  "calcul-cotisations-urssaf-bnc-2026": "/blog/calcul-cotisations-urssaf-bnc-bic",
+};
+
 export function BlogPostPage() {
   const { slug } = useParams<{ slug: string }>();
+
+  if (slug && SLUG_REDIRECTS[slug]) {
+    return <Navigate to={SLUG_REDIRECTS[slug]} replace />;
+  }
   const [article, setArticle] = useState<{
     id?: string;
     slug: string;

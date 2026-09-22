@@ -1,0 +1,21 @@
+﻿[build]
+  command = "npm run build"
+  publish = "dist"
+
+[[redirects]]
+  from = "/blog/franchise-en-base-de-tva-2026"
+  to = "/blog/franchise-tva-2026-seuils-et-regles"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/blog/calcul-cotisations-urssaf-bnc-2026"
+  to = "/blog/calcul-cotisations-urssaf-bnc-bic"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+  force = false
