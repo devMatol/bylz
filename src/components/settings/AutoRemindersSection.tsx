@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { Clock, Plus, Trash2, Edit3, Eye, ShieldCheck, Zap, AlertCircle, CheckCircle2 } from "lucide-react";
+import { Clock, Plus, Trash2, Edit3, Eye, ShieldCheck, Zap, AlertCircle, CheckCircle2, Lock } from "lucide-react";
 import { Card } from "../ui/Card";
 import { Button } from "../ui/Button";
 import { Input } from "../ui/Input";
@@ -36,7 +36,16 @@ export function AutoRemindersSection() {
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewRule, setPreviewRule] = useState<ReminderRule | null>(null);
 
-  const canUseAutoReminders = canUseFeature(profile?.plan, "reminders");
+  const isTestingStarter = profile?.plan === "starter";
+  const canUseAutoReminders =
+    !isTestingStarter &&
+    (profile?.plan === "solo" ||
+      profile?.plan === "pro" ||
+      (profile?.plan as string) === "unlimited" ||
+      (profile?.plan as string) === "admin" ||
+      (profile?.is_admin === true && profile?.plan !== "starter") ||
+      profile?.admin_role === "super_admin" ||
+      canUseFeature(profile?.plan, "reminders"));
 
   const loadRules = useCallback(async () => {
     if (!company) return;
@@ -88,6 +97,10 @@ export function AutoRemindersSection() {
   };
 
   const handleToggleRule = async (rule: ReminderRule) => {
+    if (!canUseAutoReminders) {
+      setUpgradeModalOpen(true);
+      return;
+    }
     if (!company) return;
     try {
       const updated = await saveReminderRule(company.id, {
@@ -111,6 +124,10 @@ export function AutoRemindersSection() {
   };
 
   const handleDeleteRule = async (ruleId: string) => {
+    if (!canUseAutoReminders) {
+      setUpgradeModalOpen(true);
+      return;
+    }
     if (!company) return;
     try {
       await deleteReminderRule(company.id, ruleId);
@@ -175,20 +192,30 @@ export function AutoRemindersSection() {
         </div>
 
         <div className="flex items-center gap-3">
-          <span className="text-xs font-bold text-muted">
-            {masterEnabled ? "Activé" : "Suspendu"}
+          <span className={`text-xs font-bold ${canUseAutoReminders ? "text-muted" : "text-amber-500 flex items-center gap-1.5"}`}>
+            {!canUseAutoReminders ? (
+              <>
+                <Lock className="w-3.5 h-3.5 text-amber-500" />
+                Inactif (Plan Solo requis)
+              </>
+            ) : masterEnabled ? (
+              "Activé"
+            ) : (
+              "Suspendu"
+            )}
           </span>
           <button
             type="button"
             onClick={handleMasterToggle}
             disabled={savingMaster}
-            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-              masterEnabled ? "bg-primary" : "bg-surface-hover border border-border"
+            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors cursor-pointer ${
+              canUseAutoReminders && masterEnabled ? "bg-primary" : "bg-surface-hover border border-border"
             }`}
+            title={!canUseAutoReminders ? "Débloquer avec le plan Solo ou Pro" : masterEnabled ? "Suspendre" : "Activer"}
           >
             <span
               className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                masterEnabled ? "translate-x-6" : "translate-x-1"
+                canUseAutoReminders && masterEnabled ? "translate-x-6" : "translate-x-1"
               }`}
             />
           </button>
@@ -197,13 +224,18 @@ export function AutoRemindersSection() {
 
       {/* Solo+ Feature Lock Banner if Starter */}
       {!canUseAutoReminders && (
-        <div className="p-4 rounded-xl border border-primary/30 bg-primary/5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <div className="flex items-center space-x-3">
-            <Zap className="w-5 h-5 text-primary animate-pulse flex-shrink-0" />
+        <div className="p-4 sm:p-5 rounded-2xl border border-amber-500/30 bg-amber-500/10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="flex items-center space-x-3.5">
+            <div className="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center flex-shrink-0">
+              <Lock className="w-5 h-5" />
+            </div>
             <div>
-              <p className="font-bold text-sm text-text">Fonctionnalité disponible avec les plans Solo & Pro</p>
-              <p className="text-xs text-muted">
-                Automatisez vos relances d'impayés et gagnez jusqu'à 15 jours de trésorerie sans effort.
+              <p className="font-bold text-sm text-text flex items-center gap-2">
+                Les relances automatiques sont inactives sur votre forfait Starter
+                <span className="px-2 py-0.5 text-[10px] font-extrabold bg-amber-500/20 text-amber-400 rounded-md border border-amber-500/30">SOLO ⚡</span>
+              </p>
+              <p className="text-xs text-muted mt-0.5">
+                Passez au plan Solo ou Pro pour que Bylz envoie automatiquement vos relances d'impayés et encaisse plus vite votre trésorerie.
               </p>
             </div>
           </div>
@@ -212,9 +244,9 @@ export function AutoRemindersSection() {
             variant="primary"
             size="sm"
             onClick={() => setUpgradeModalOpen(true)}
-            className="bylz-glow-cta text-xs font-bold whitespace-nowrap"
+            className="bylz-glow-cta text-xs font-bold whitespace-nowrap bg-amber-500 hover:bg-amber-600 text-slate-950 border-0 cursor-pointer"
           >
-            Débloquer les relances
+            Débloquer les relances (Plan Solo)
           </Button>
         </div>
       )}
@@ -222,16 +254,27 @@ export function AutoRemindersSection() {
       {/* Rules List */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h4 className="text-xs font-bold text-muted uppercase tracking-wider">
-            Échéancier des Relances ({rules.length})
+          <h4 className="text-xs font-bold text-muted uppercase tracking-wider flex items-center gap-2">
+            <span>Échéancier des Relances ({rules.length})</span>
+            {!canUseAutoReminders && (
+              <span className="px-2 py-0.5 text-[10px] font-extrabold bg-amber-500/10 text-amber-400 border border-amber-500/20 rounded-md">
+                Aperçu (Inactif)
+              </span>
+            )}
           </h4>
           <Button
             type="button"
             variant="outline"
             size="sm"
-            leftIcon={<Plus className="w-3.5 h-3.5" />}
-            onClick={() => handleOpenEdit()}
-            className="text-xs"
+            leftIcon={canUseAutoReminders ? <Plus className="w-3.5 h-3.5" /> : <Lock className="w-3.5 h-3.5 text-amber-500" />}
+            onClick={() => {
+              if (!canUseAutoReminders) {
+                setUpgradeModalOpen(true);
+                return;
+              }
+              handleOpenEdit();
+            }}
+            className="text-xs cursor-pointer"
           >
             Ajouter une échéance de relance
           </Button>
@@ -247,21 +290,24 @@ export function AutoRemindersSection() {
           <div className="space-y-2.5">
             {rules.map((rule) => {
               const toneInfo = toneLabels[rule.tone];
+              const isRuleActive = canUseAutoReminders && rule.enabled && masterEnabled;
               return (
                 <div
                   key={rule.id}
                   className={`p-4 rounded-card border transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
-                    rule.enabled && masterEnabled
+                    isRuleActive
                       ? "bg-surface-hover/30 border-border"
-                      : "bg-surface-hover/10 border-border/40 opacity-60"
+                      : "bg-surface-hover/10 border-border/40 opacity-75"
                   }`}
                 >
                   <div className="flex items-center space-x-3">
-                    <div className="w-9 h-9 rounded-xl bg-primary/10 text-primary font-black text-xs flex items-center justify-center flex-shrink-0">
+                    <div className={`w-9 h-9 rounded-xl font-black text-xs flex items-center justify-center flex-shrink-0 ${
+                      isRuleActive ? "bg-primary/10 text-primary" : "bg-muted/20 text-muted"
+                    }`}>
                       J+{rule.delay_days}
                     </div>
                     <div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
                         <span className="font-extrabold text-sm text-text">
                           Relance à J+{rule.delay_days}
                         </span>
@@ -270,6 +316,11 @@ export function AutoRemindersSection() {
                         >
                           {toneInfo.label}
                         </span>
+                        {!canUseAutoReminders && (
+                          <span className="text-[10px] font-semibold text-amber-500 bg-amber-500/10 border border-amber-500/20 px-1.5 py-0.5 rounded flex items-center gap-1">
+                            <Lock className="w-2.5 h-2.5" /> Verrouillé
+                          </span>
+                        )}
                         {rule.custom_subject && (
                           <span className="text-[10px] font-semibold text-muted bg-surface border border-border px-1.5 py-0.5 rounded">
                             Personnalisé
@@ -277,7 +328,9 @@ export function AutoRemindersSection() {
                         )}
                       </div>
                       <p className="text-xs text-muted mt-0.5">
-                        Envoyée automatiquement {rule.delay_days} jours après l'échéance de la facture.
+                        {canUseAutoReminders
+                          ? `Envoyée automatiquement ${rule.delay_days} jours après l'échéance de la facture.`
+                          : `Sera envoyée automatiquement ${rule.delay_days} jours après l'échéance une fois le plan Solo activé.`}
                       </p>
                     </div>
                   </div>
@@ -289,40 +342,58 @@ export function AutoRemindersSection() {
                         setPreviewRule(rule);
                         setPreviewOpen(true);
                       }}
-                      className="p-2 rounded-lg bg-surface hover:bg-surface-hover text-muted hover:text-text border border-border transition-colors"
+                      className="p-2 rounded-lg bg-surface hover:bg-surface-hover text-muted hover:text-text border border-border transition-colors cursor-pointer"
                       title="Aperçu du mail"
                     >
                       <Eye className="w-4 h-4" />
                     </button>
                     <button
                       type="button"
-                      onClick={() => handleOpenEdit(rule)}
-                      className="p-2 rounded-lg bg-surface hover:bg-surface-hover text-muted hover:text-text border border-border transition-colors"
-                      title="Modifier la règle"
+                      onClick={() => {
+                        if (!canUseAutoReminders) {
+                          setUpgradeModalOpen(true);
+                          return;
+                        }
+                        handleOpenEdit(rule);
+                      }}
+                      className="p-2 rounded-lg bg-surface hover:bg-surface-hover text-muted hover:text-text border border-border transition-colors cursor-pointer"
+                      title={!canUseAutoReminders ? "Plan Solo requis" : "Modifier la règle"}
                     >
                       <Edit3 className="w-4 h-4" />
                     </button>
                     {!rule.id.startsWith("def-") && (
                       <button
                         type="button"
-                        onClick={() => handleDeleteRule(rule.id)}
-                        className="p-2 rounded-lg bg-surface hover:bg-surface-hover text-muted hover:text-danger border border-border transition-colors"
-                        title="Supprimer"
+                        onClick={() => {
+                          if (!canUseAutoReminders) {
+                            setUpgradeModalOpen(true);
+                            return;
+                          }
+                          handleDeleteRule(rule.id);
+                        }}
+                        className="p-2 rounded-lg bg-surface hover:bg-surface-hover text-muted hover:text-danger border border-border transition-colors cursor-pointer"
+                        title={!canUseAutoReminders ? "Plan Solo requis" : "Supprimer"}
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
                     )}
                     <button
                       type="button"
-                      onClick={() => handleToggleRule(rule)}
-                      className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ml-1 ${
-                        rule.enabled ? "bg-primary" : "bg-surface-hover border border-border"
+                      onClick={() => {
+                        if (!canUseAutoReminders) {
+                          setUpgradeModalOpen(true);
+                          return;
+                        }
+                        handleToggleRule(rule);
+                      }}
+                      className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ml-1 cursor-pointer ${
+                        isRuleActive ? "bg-primary" : "bg-surface-hover border border-border"
                       }`}
-                      title={rule.enabled ? "Désactiver" : "Activer"}
+                      title={!canUseAutoReminders ? "Activer avec le Plan Solo" : rule.enabled ? "Désactiver" : "Activer"}
                     >
                       <span
                         className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${
-                          rule.enabled ? "translate-x-5" : "translate-x-1"
+                          isRuleActive ? "translate-x-5" : "translate-x-1"
                         }`}
                       />
                     </button>

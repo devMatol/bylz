@@ -121,7 +121,7 @@ Deno.serve(async (req: Request) => {
     try {
       const { data, error: invErr } = await adminClient
         .from("invoices")
-        .select("*, company:companies(*), client:clients(*)")
+        .select("*, company:companies(*, owner:profiles!user_id(*)), client:clients(*)")
         .in("status", ["pending", "late"])
         .eq("type", "invoice");
       
@@ -146,6 +146,22 @@ Deno.serve(async (req: Request) => {
 
       // Skip if company master toggle is disabled
       if (company && company.auto_reminders_enabled === false) {
+        continue;
+      }
+
+      // Check owner plan: solo, pro, unlimited, admin are allowed; starter is blocked
+      const ownerPlan = company?.owner?.plan || "starter";
+      const isOwnerTestingStarter = ownerPlan === "starter";
+      const canUseReminders = !isOwnerTestingStarter && (
+        ownerPlan === "solo" ||
+        ownerPlan === "pro" ||
+        ownerPlan === "unlimited" ||
+        ownerPlan === "admin" ||
+        company?.owner?.is_admin === true ||
+        company?.owner?.admin_role === "super_admin"
+      );
+
+      if (!canUseReminders) {
         continue;
       }
 
