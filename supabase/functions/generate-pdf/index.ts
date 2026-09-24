@@ -41,11 +41,9 @@ function hexToRgb(hex: string): { r: number; g: number; b: number } {
 }
 
 function formatEUR(n: number): string {
-  return new Intl.NumberFormat("fr-FR", {
-    style: "currency",
-    currency: "EUR",
-    minimumFractionDigits: 2,
-  }).format(n);
+  const parts = Number(n || 0).toFixed(2).split(".");
+  const intPart = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+  return `${intPart},${parts[1]} €`;
 }
 
 function formatDateFR(iso: string): string {
@@ -58,6 +56,52 @@ function formatDateFR(iso: string): string {
   } catch {
     return iso;
   }
+}
+
+function sanitizePdfText(str: string | null | undefined, font?: any): string {
+  if (!str) return "";
+  let clean = String(str)
+    .replace(/\u202f/g, " ")
+    .replace(/\u00a0/g, " ")
+    .replace(/[\u200B-\u200D\uFEFF]/g, "")
+    .replace(/—/g, "-")
+    .replace(/–/g, "-")
+    .replace(/…/g, "...")
+    .replace(/[«»]/g, '"')
+    .replace(/[’‘]/g, "'")
+    .replace(/•/g, "-");
+
+  if (font) {
+    let result = "";
+    for (let i = 0; i < clean.length; i++) {
+      const char = clean[i];
+      try {
+        font.encodeText(char);
+        result += char;
+      } catch {
+        const decomposed = char.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+        try {
+          font.encodeText(decomposed);
+          result += decomposed;
+        } catch {
+          result += " ";
+        }
+      }
+    }
+    return result;
+  }
+  return clean;
+}
+
+function safeDrawText(page: any, text: string, options: any, font: any) {
+  const f = font || options.font;
+  const safeStr = sanitizePdfText(text, f);
+  page.drawText(safeStr, { ...options, font: f });
+}
+
+function safeWidthOfText(font: any, text: string, size: number): number {
+  const safeStr = sanitizePdfText(text, font);
+  return font.widthOfTextAtSize(safeStr, size);
 }
 
 Deno.serve(async (req: Request) => {
@@ -88,14 +132,29 @@ Deno.serve(async (req: Request) => {
     const jwt = authHeader.replace(/^Bearer\s+/i, "").trim();
     let authUserId: string | null = null;
     if (jwt && jwt !== anonKey) {
-      const { data: userData } = await createClient(supabaseUrl, anonKey).auth.getUser(jwt);
-      authUserId = userData?.user?.id ?? null;
+      try {
+        const authClient = createClient(supabaseUrl, anonKey, {
+          global: { headers: { Authorization: `Bearer ${jwt}` } },
+        });
+        const { data: userData } = await authClient.auth.getUser();
+        authUserId = userData?.user?.id ?? null;
+      } catch {
+        // fallback
+      }
+      if (!authUserId) {
+        try {
+          const { data: userData } = await createClient(supabaseUrl, anonKey).auth.getUser(jwt);
+          authUserId = userData?.user?.id ?? null;
+        } catch {
+          // fallback
+        }
+      }
     }
 
     const table = document_type === "quote" ? "quotes" : "invoices";
     const lineTable = document_type === "quote" ? "quote_lines" : "invoice_lines";
 
-    // fetch document (RLS enforces ownership)
+    // fetch document
     const { data: doc, error: docErr } = await userClient
       .from(table)
       .select("*")
@@ -118,16 +177,27 @@ Deno.serve(async (req: Request) => {
         .eq("id", doc.company_id)
         .eq("user_id", authUserId)
         .maybeSingle();
-      authorized = !!ownerCompany;
+      if (ownerCompany) {
+        authorized = true;
+      } else {
+        const { data: prof } = await userClient
+          .from("profiles")
+          .select("is_admin")
+          .eq("id", authUserId)
+          .maybeSingle();
+        if (prof?.is_admin) {
+          authorized = true;
+        }
+      }
     }
 
-    if (!authorized && typeof public_token === "string" && public_token.length >= 20) {
+    if (!authorized && typeof public_token === "string" && public_token.length >= 10) {
       authorized = doc.public_token === public_token || doc.id === public_token;
     }
 
     if (!authorized) {
-      return new Response(JSON.stringify({ error: "Document introuvable" }), {
-        status: 404,
+      return new Response(JSON.stringify({ error: "Accès non autorisé au document" }), {
+        status: 403,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
@@ -189,15 +259,15 @@ Deno.serve(async (req: Request) => {
       }
     }
 
-    const displayName = company.commercial_name || company.legal_name;
-    page.drawText(displayName || "", { x: 50, y, size: 12, font: fontBold, color: black });
+    const displayName = company?.commercial_name || company?.legal_name || "Entreprise";
+    safeDrawText(page, displayName, { x: 50, y, size: 12, color: black }, fontBold);
     y -= 16;
-    if (company.address) {
-      page.drawText(company.address.slice(0, 60), { x: 50, y, size: 9, font, color: gray });
+    if (company?.address) {
+      safeDrawText(page, company.address.slice(0, 60), { x: 50, y, size: 9, color: gray }, font);
       y -= 12;
     }
-    if (company.siret) {
-      page.drawText(`SIRET ${company.siret}`, { x: 50, y, size: 9, font, color: gray });
+    if (company?.siret) {
+      safeDrawText(page, `SIRET ${company.siret}`, { x: 50, y, size: 9, color: gray }, font);
       y -= 12;
     }
 
@@ -206,128 +276,126 @@ Deno.serve(async (req: Request) => {
       : document_type === "quote"
       ? "DEVIS"
       : "FACTURE";
-    const number = doc.number && doc.number.startsWith("DRAFT-") ? "Brouillon" : doc.number;
-    const titleWidth = fontBold.widthOfTextAtSize(title, 20);
-    page.drawText(title, {
+    const number = doc.number && doc.number.startsWith("DRAFT-") ? "Brouillon" : (doc.number || "Document");
+    const titleWidth = safeWidthOfText(fontBold, title, 20);
+    safeDrawText(page, title, {
       x: width - 50 - titleWidth,
       y: height - 50,
       size: 20,
-      font: fontBold,
       color: accentRgb,
-    });
-    const numWidth = font.widthOfTextAtSize(number, 11);
-    page.drawText(number, {
+    }, fontBold);
+
+    const numWidth = safeWidthOfText(fontBold, number, 11);
+    safeDrawText(page, number, {
       x: width - 50 - numWidth,
       y: height - 70,
       size: 11,
-      font: fontBold,
       color: black,
-    });
+    }, fontBold);
+
     const issueLine = `Émise le ${formatDateFR(doc.issue_date)}`;
-    const issueWidth = font.widthOfTextAtSize(issueLine, 9);
-    page.drawText(issueLine, {
+    const issueWidth = safeWidthOfText(font, issueLine, 9);
+    safeDrawText(page, issueLine, {
       x: width - 50 - issueWidth,
       y: height - 85,
       size: 9,
-      font,
       color: gray,
-    });
+    }, font);
+
     if (document_type === "invoice" && doc.due_date) {
       const dueLine = `Échéance ${formatDateFR(doc.due_date)}`;
-      const dueWidth = font.widthOfTextAtSize(dueLine, 9);
-      page.drawText(dueLine, {
+      const dueWidth = safeWidthOfText(font, dueLine, 9);
+      safeDrawText(page, dueLine, {
         x: width - 50 - dueWidth,
         y: height - 98,
         size: 9,
-        font,
         color: gray,
-      });
+      }, font);
     }
     if (document_type === "quote" && doc.validity_date) {
       const vLine = `Valide jusqu'au ${formatDateFR(doc.validity_date)}`;
-      const vWidth = font.widthOfTextAtSize(vLine, 9);
-      page.drawText(vLine, {
+      const vWidth = safeWidthOfText(font, vLine, 9);
+      safeDrawText(page, vLine, {
         x: width - 50 - vWidth,
         y: height - 98,
         size: 9,
-        font,
         color: gray,
-      });
+      }, font);
     }
 
     // Client block
     y = height - 150;
-    page.drawText("FACTURÉ À", { x: 50, y, size: 8, font: fontBold, color: gray });
+    safeDrawText(page, "FACTURÉ À", { x: 50, y, size: 8, color: gray }, fontBold);
     y -= 16;
-    page.drawText(client?.name || "—", { x: 50, y, size: 11, font: fontBold, color: black });
+    safeDrawText(page, client?.name || "—", { x: 50, y, size: 11, color: black }, fontBold);
     y -= 14;
     if (client?.address) {
       const addrLines = (client.address as string).split("\n").slice(0, 3);
       for (const line of addrLines) {
-        page.drawText(line.slice(0, 60), { x: 50, y, size: 9, font, color: gray });
+        safeDrawText(page, line.slice(0, 60), { x: 50, y, size: 9, color: gray }, font);
         y -= 12;
       }
     }
     if (client?.siret) {
-      page.drawText(`SIRET ${client.siret}`, { x: 50, y, size: 9, font, color: gray });
+      safeDrawText(page, `SIRET ${client.siret}`, { x: 50, y, size: 9, color: gray }, font);
       y -= 12;
     }
     if (client?.email) {
-      page.drawText(client.email, { x: 50, y, size: 9, font, color: gray });
+      safeDrawText(page, client.email, { x: 50, y, size: 9, color: gray }, font);
       y -= 12;
     }
 
     // Lines table
     y = height - 280;
     const colX = { desc: 50, qty: 360, pu: 420, total: 510 };
-    page.drawText("Description", { x: colX.desc, y, size: 9, font: fontBold, color: gray });
-    page.drawText("Qté", { x: colX.qty, y, size: 9, font: fontBold, color: gray });
-    page.drawText("P.U. HT", { x: colX.pu, y, size: 9, font: fontBold, color: gray });
-    page.drawText("Total HT", { x: colX.total, y, size: 9, font: fontBold, color: gray });
+    safeDrawText(page, "Description", { x: colX.desc, y, size: 9, color: gray }, fontBold);
+    safeDrawText(page, "Qté", { x: colX.qty, y, size: 9, color: gray }, fontBold);
+    safeDrawText(page, "P.U. HT", { x: colX.pu, y, size: 9, color: gray }, fontBold);
+    safeDrawText(page, "Total HT", { x: colX.total, y, size: 9, color: gray }, fontBold);
     y -= 6;
     page.drawLine({ start: { x: 50, y }, end: { x: width - 50, y }, thickness: 0.5, color: lightGray });
     y -= 16;
 
     for (const l of (lines || []) as LineRow[]) {
       const lineTotal = Number(l.quantity) * Number(l.unit_price);
-      page.drawText((l.description || "").slice(0, 45), {
-        x: colX.desc, y, size: 9, font, color: black,
-      });
+      safeDrawText(page, (l.description || "").slice(0, 45), {
+        x: colX.desc, y, size: 9, color: black,
+      }, font);
       const qtyStr = String(Number(l.quantity));
-      page.drawText(qtyStr, {
-        x: colX.qty + 20 - font.widthOfTextAtSize(qtyStr, 9) / 2, y, size: 9, font, color: black,
-      });
+      safeDrawText(page, qtyStr, {
+        x: colX.qty + 20 - safeWidthOfText(font, qtyStr, 9) / 2, y, size: 9, color: black,
+      }, font);
       const puStr = formatEUR(Number(l.unit_price));
-      page.drawText(puStr, {
-        x: colX.pu + 60 - font.widthOfTextAtSize(puStr, 9), y, size: 9, font, color: black,
-      });
+      safeDrawText(page, puStr, {
+        x: colX.pu + 60 - safeWidthOfText(font, puStr, 9), y, size: 9, color: black,
+      }, font);
       const totStr = formatEUR(lineTotal);
-      page.drawText(totStr, {
-        x: colX.total + 35 - font.widthOfTextAtSize(totStr, 9), y, size: 9, font: fontBold, color: black,
-      });
+      safeDrawText(page, totStr, {
+        x: colX.total + 35 - safeWidthOfText(fontBold, totStr, 9), y, size: 9, color: black,
+      }, fontBold);
       y -= 18;
     }
 
     // Totals
     y -= 20;
-    const isFranchise = company.vat_regime === "franchise";
-    const totalHt = Number(doc.total_ht);
-    const totalVat = Number(doc.total_vat);
-    const totalTtc = Number(doc.total_ttc);
+    const isFranchise = company?.vat_regime === "franchise";
+    const totalHt = Number(doc.total_ht || 0);
+    const totalVat = Number(doc.total_vat || 0);
+    const totalTtc = Number(doc.total_ttc || 0);
 
     const drawTotalLine = (label: string, value: string, bold = false) => {
       const f = bold ? fontBold : font;
-      page.drawText(label, { x: 350, y, size: 10, font: f, color: black });
-      const w = f.widthOfTextAtSize(value, 10);
-      page.drawText(value, { x: width - 50 - w, y, size: 10, font: f, color: black });
+      safeDrawText(page, label, { x: 350, y, size: 10, color: black }, f);
+      const w = safeWidthOfText(f, value, 10);
+      safeDrawText(page, value, { x: width - 50 - w, y, size: 10, color: black }, f);
       y -= 16;
     };
 
     drawTotalLine("Total HT", formatEUR(totalHt));
     if (isFranchise) {
-      page.drawText("TVA non applicable — Art. 293 B du CGI", {
-        x: 350, y, size: 8, font, color: gray,
-      });
+      safeDrawText(page, "TVA non applicable — Art. 293 B du CGI", {
+        x: 350, y, size: 8, color: gray,
+      }, font);
       y -= 14;
     } else {
       drawTotalLine("TVA", formatEUR(totalVat));
@@ -335,39 +403,38 @@ Deno.serve(async (req: Request) => {
     page.drawLine({ start: { x: 350, y }, end: { x: width - 50, y }, thickness: 0.5, color: lightGray });
     y -= 6;
     const ttcStr = formatEUR(totalTtc);
-    page.drawText("Total TTC", { x: 350, y, size: 12, font: fontBold, color: black });
-    const ttcW = fontBold.widthOfTextAtSize(ttcStr, 14);
-    page.drawText(ttcStr, { x: width - 50 - ttcW, y, size: 14, font: fontBold, color: accentRgb });
+    safeDrawText(page, "Total TTC", { x: 350, y, size: 12, color: black }, fontBold);
+    const ttcW = safeWidthOfText(fontBold, ttcStr, 14);
+    safeDrawText(page, ttcStr, { x: width - 50 - ttcW, y, size: 14, color: accentRgb }, fontBold);
     y -= 30;
 
     // Note
     if (doc.note) {
-      page.drawText("Note", { x: 50, y, size: 8, font: fontBold, color: gray });
+      safeDrawText(page, "Note", { x: 50, y, size: 8, color: gray }, fontBold);
       y -= 12;
       const noteLines = (doc.note as string).split("\n").slice(0, 5);
       for (const nl of noteLines) {
-        page.drawText(nl.slice(0, 80), { x: 50, y, size: 9, font, color: gray });
+        safeDrawText(page, nl.slice(0, 80), { x: 50, y, size: 9, color: gray }, font);
         y -= 12;
       }
       y -= 10;
     }
 
     // Footer
-    if (company.invoice_footer) {
+    if (company?.invoice_footer) {
       y = 120;
       page.drawLine({ start: { x: 50, y }, end: { x: width - 50, y }, thickness: 0.5, color: lightGray });
       y -= 14;
       const footerLines = (company.invoice_footer as string).split("\n").slice(0, 6);
       for (const fl of footerLines) {
-        page.drawText(fl.slice(0, 90), { x: 50, y, size: 8, font, color: gray });
+        safeDrawText(page, fl.slice(0, 90), { x: 50, y, size: 8, color: gray }, font);
         y -= 10;
       }
     }
 
     if (isFranchise) {
-      page.drawText("Auto-entrepreneur — TVA non applicable, art. 293 B du CGI", {
-        x: 50, y: 40, size: 7, font, color: gray,
-      });
+      safeDrawText(page, "Auto-entrepreneur — TVA non applicable, art. 293 B du CGI", {
+        x: 50, y: 40, size: 7, color: gray }, font);
     }
 
     const pdfBytes = await pdfDoc.save();
@@ -376,7 +443,8 @@ Deno.serve(async (req: Request) => {
     const adminClient = createClient(supabaseUrl, serviceKey, {
       global: { headers: { Authorization: `Bearer ${serviceKey}` } },
     });
-    const fileName = `${doc.company_id}/${document_type}-${number}.pdf`;
+    const safeDocNumber = String(number).replace(/[^a-zA-Z0-9_-]/g, "_");
+    const fileName = `${doc.company_id}/${document_type}-${safeDocNumber}.pdf`;
     const { error: upErr } = await adminClient.storage
       .from("documents")
       .upload(fileName, pdfBytes, {
@@ -394,10 +462,10 @@ Deno.serve(async (req: Request) => {
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
-  } catch (err) {
+  } catch (err: any) {
     console.error("generate-pdf error:", err);
     return new Response(
-      JSON.stringify({ error: "Erreur interne" }),
+      JSON.stringify({ error: err?.message || "Erreur interne", stack: err?.stack }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
