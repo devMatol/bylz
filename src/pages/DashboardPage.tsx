@@ -33,6 +33,7 @@ import { formatAmount, cn } from "../lib/utils";
 import { formatDateLong, todayISO, safeFormatDate } from "../lib/date";
 import { canUseFeature } from "../lib/planLimits";
 import { UpgradeModal } from "../components/shared/UpgradeModal";
+import { LockedFeatureOverlay } from "../components/shared/LockedFeatureOverlay";
 import { FloatingActionButton } from "../components/ui/FloatingActionButton";
 import { Sparkles, Lock } from "lucide-react";
 
@@ -569,34 +570,13 @@ export function DashboardPage() {
           {/* Centered Upgrade Overlay for Starter */}
           {isBlurred && (
             <div className="absolute inset-0 z-20 flex items-start sm:items-center justify-center pt-6 sm:pt-0 p-4">
-              <div className="bg-surface/95 backdrop-blur-md border border-accent/40 rounded-card p-6 sm:p-8 max-w-md w-full text-center shadow-2xl space-y-4 bylz-glow-accent">
-                {/* Icon */}
-                <div className="w-14 h-14 rounded-2xl bg-amber-500 flex items-center justify-center mx-auto shadow-lg">
-                  <Lock className="w-7 h-7 text-white" />
-                </div>
-                {/* Title */}
-                <h3 className="text-xl font-bold text-text">
-                  Débloquez votre pilotage fiscal
-                </h3>
-                {/* Description */}
-                <p className="text-sm text-muted leading-relaxed">
-                  Suivez votre CA, vos plafonds micro-entrepreneur, vos cotisations URSSAF et vos indicateurs financiers en temps réel.
-                </p>
-                {/* CTA */}
-                <div className="pt-2 space-y-2">
-                  <button
-                    type="button"
-                    onClick={() => setUpgradeModalOpen(true)}
-                    className="w-full h-11 px-6 rounded-pill bg-amber-500 hover:bg-amber-600 active:bg-amber-700 text-white font-bold text-sm transition-colors shadow-md flex items-center justify-center gap-2"
-                  >
-                    <Sparkles className="w-4 h-4 flex-shrink-0" />
-                    <span>Passer au plan Solo (9 € / mois)</span>
-                  </button>
-                  <p className="text-xs text-muted">
-                    Essai gratuit 14 jours · Sans engagement
-                  </p>
-                </div>
-              </div>
+              <LockedFeatureOverlay
+                planBadge="PLAN SOLO ⚡"
+                title="Débloquez votre Pilotage Fiscal & URSSAF"
+                description="Suivez votre chiffre d'affaires, vos plafonds micro-entrepreneur, vos cotisations URSSAF et vos indicateurs financiers en temps réel."
+                buttonText="Débloquer le Plan Solo (14 jours offerts)"
+                onUnlock={() => setUpgradeModalOpen(true)}
+              />
             </div>
           )}
 
