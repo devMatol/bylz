@@ -128,6 +128,7 @@ Deno.serve(async (req: Request) => {
   let textContent = "";
   let messageType = "text";
   let isTwilio = false;
+  let isWebClient = false;
   let base64Audio = "";
   let audioMimeType = "audio/ogg";
   let metaPhoneNumberId = "";
@@ -235,6 +236,7 @@ Deno.serve(async (req: Request) => {
       let entry: any = null;
       let message: any = null;
       if (body.is_web_client) {
+        isWebClient = true;
         textContent = body.text || body.message || "";
         fromPhone = "web_client";
       } else {
@@ -250,18 +252,34 @@ Deno.serve(async (req: Request) => {
     }
 
     // ---------------------------------------------------------------------------
-    // COMPANY LOOKUP FROM PHONE NUMBER (WITH FALLBACK TO FIRST COMPANY)
+    // COMPANY LOOKUP FROM BODY.COMPANY_ID OR PHONE NUMBER (WITH FALLBACK)
     // ---------------------------------------------------------------------------
-      const digits9 = fromPhone.replace(/\D/g, "").slice(-9);
-      dbg(`Recherche entreprise pour tel: ${fromPhone} (digits9=${digits9})`);
+      let company: any = null;
 
-      const { data: matchedCompany } = await adminClient
-        .from("companies")
-        .select("*, owner:profiles!user_id(*)")
-        .ilike("phone", `%${digits9}%`)
-        .maybeSingle();
+      if (body?.company_id) {
+        const { data: compById } = await adminClient
+          .from("companies")
+          .select("*, owner:profiles!user_id(*)")
+          .eq("id", body.company_id)
+          .maybeSingle();
+        company = compById;
+        dbg(`Entreprise via body.company_id: ${company?.legal_name || "Aucune"} (id=${company?.id || "aucun"})`);
+      }
 
-      let company: any = matchedCompany;
+      if (!company && fromPhone && fromPhone !== "web_client") {
+        const digits9 = fromPhone.replace(/\D/g, "").slice(-9);
+        dbg(`Recherche entreprise pour tel: ${fromPhone} (digits9=${digits9})`);
+
+        if (digits9.length >= 8) {
+          const { data: matchedCompany } = await adminClient
+            .from("companies")
+            .select("*, owner:profiles!user_id(*)")
+            .ilike("phone", `%${digits9}%`)
+            .maybeSingle();
+          company = matchedCompany;
+        }
+      }
+
       if (!company) {
         const { data: fallbackCompanies } = await adminClient
           .from("companies")
@@ -273,7 +291,7 @@ Deno.serve(async (req: Request) => {
       dbg(`Entreprise trouvee: ${company?.legal_name || "Aucune"} (id=${company?.id || "aucun"})`);
 
       if (!company) {
-        replyText = `👋 *Bonjour !* Votre numéro WhatsApp (${fromPhone}) n'est pas encore associé à un compte d'entreprise sur Bylz.\n\nConnectez-vous sur https://bylz.fr pour associer votre numéro !`;
+        replyText = `👋 *Bonjour !* Votre compte n'est pas encore associé à une entreprise sur Bylz.\n\nConnectez-vous sur https://bylz.fr pour configurer votre entreprise !`;
         return;
       }
 
@@ -1417,7 +1435,7 @@ Sinon, réponds de manière concise, précise et amicale en français sur WhatsA
       });
     }
 
-    if (!isWebClient && fromPhone) {
+    if (!isWebClient && fromPhone && fromPhone !== "web_client") {
       const phoneNumberId = metaPhoneNumberId || "1344246648768355";
       const validMetaToken = "EAANpHbOHsisBSZAcVQzSmgmBid5hI5rOMNM2W0nmGah9MMWiA6GbcH1PHZCp13hJNgvJvkGQLSPsgebnEPyot3P7ZC77mwrc2eeApBCfgRIZC0vvSVuerQhT5bQvLLQI6EVSlhyazZBS1hZAzpykfZB2F7Nk5yX8ZBJM2bHfFxAX7pXLrq0hIvRPknA9tyTlNgZDZD";
       await sendMetaWhatsAppMessage(phoneNumberId, fromPhone, finalReply, validMetaToken);
@@ -1440,7 +1458,7 @@ Sinon, réponds de manière concise, précise et amicale en français sur WhatsA
     // const debugSummary = "\n\n------------------\n🛠️ *DIAGNOSTIC EN DIRECT* :\n" + (debugLogs || []).map(l => "• " + l).join("\n");
     const errReply = `🤖 *Une petite erreur est survenue lors du traitement.*\n\nPouvez-vous reformuler ou répéter votre demande ?`;
 
-    if (fromPhone) {
+    if (!isWebClient && fromPhone && fromPhone !== "web_client") {
       try {
         const validMetaToken = "EAANpHbOHsisBSZAcVQzSmgmBid5hI5rOMNM2W0nmGah9MMWiA6GbcH1PHZCp13hJNgvJvkGQLSPsgebnEPyot3P7ZC77mwrc2eeApBCfgRIZC0vvSVuerQhT5bQvLLQI6EVSlhyazZBS1hZAzpykfZB2F7Nk5yX8ZBJM2bHfFxAX7pXLrq0hIvRPknA9tyTlNgZDZD";
         await sendMetaWhatsAppMessage(metaPhoneNumberId || "1344246648768355", fromPhone, errReply, validMetaToken);
