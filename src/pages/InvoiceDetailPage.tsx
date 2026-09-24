@@ -51,7 +51,7 @@ import { PaTimeline } from "../components/documents/PaTimeline";
 
 export function InvoiceDetailPage() {
   const { id } = useParams();
-  const { company, profile } = useAuth();
+  const { company, profile, user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [data, setData] = useState<{
@@ -164,6 +164,9 @@ export function InvoiceDetailPage() {
           invoiceNumber: invoice.number,
           amountTtc: Number(invoice.total_ttc),
           companyName: company?.commercial_name || company?.legal_name || "Entreprise",
+          vendorEmail: user?.email || undefined,
+          logoUrl: company?.logo_url || undefined,
+          documentId: invoice.id,
         });
       }
       setPayOpen(false);

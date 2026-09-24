@@ -16,6 +16,9 @@ export interface EmailDispatchOptions {
     | "milestone"
     | "support";
   documentId?: string;
+  companyName?: string;
+  replyToEmail?: string;
+  logoUrl?: string;
 }
 
 export async function dispatchEmail(options: EmailDispatchOptions): Promise<{ success: boolean; resend_id?: string; error?: string }> {
@@ -27,6 +30,9 @@ export async function dispatchEmail(options: EmailDispatchOptions): Promise<{ su
         body: options.body,
         document_type: options.documentType,
         document_id: options.documentId || "none",
+        company_name: options.companyName,
+        reply_to_email: options.replyToEmail,
+        logo_url: options.logoUrl,
       },
     });
 
@@ -106,6 +112,9 @@ export async function sendPaymentReceiptEmail(options: {
   invoiceNumber: string;
   amountTtc: number;
   companyName: string;
+  vendorEmail?: string;
+  logoUrl?: string;
+  documentId?: string;
 }) {
   const subject = `Reçu de paiement : Facture N° ${options.invoiceNumber} (${options.companyName})`;
   const body = `Bonjour ${options.clientName},
@@ -122,6 +131,10 @@ ${options.companyName}`;
     subject,
     body,
     documentType: "payment_receipt",
+    documentId: options.documentId,
+    companyName: options.companyName,
+    replyToEmail: options.vendorEmail,
+    logoUrl: options.logoUrl,
   });
 }
 

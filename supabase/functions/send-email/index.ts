@@ -380,7 +380,16 @@ Deno.serve(async (req: Request) => {
       userEmail = userData.user.email || userEmail;
     }
 
-    const { to, subject, body, document_type, document_id } = await req.json();
+    const {
+      to,
+      subject,
+      body,
+      document_type,
+      document_id,
+      company_name,
+      reply_to_email,
+      logo_url,
+    } = await req.json();
     if (!to || !subject || !body) {
       return new Response(JSON.stringify({ error: "Paramètres manquants (to, subject, body)" }), {
         status: 400,
@@ -473,7 +482,7 @@ Deno.serve(async (req: Request) => {
     }
 
     // Fetch custom logo from system_settings or default
-    let customLogoUrl = "https://bylz.fr/logo.png";
+    let customLogoUrl = "https://bylz.fr/bylz-logo-1024x1024.png";
     try {
       const { data: logoSetting } = await serviceClient
         .from("system_settings")
@@ -511,7 +520,7 @@ Deno.serve(async (req: Request) => {
       }
     };
 
-    // Generic Lifecycle & Support Email Branch (without document PDF rendering)
+    // Generic Lifecycle, Payment Receipt & Support Email Branch (without document PDF rendering)
     if (
       document_type === "support" ||
       document_type === "welcome" ||
@@ -519,18 +528,69 @@ Deno.serve(async (req: Request) => {
       document_type === "vat_threshold" ||
       document_type === "trial_ending" ||
       document_type === "milestone" ||
+      document_type === "payment_receipt" ||
+      document_type === "quote_signed" ||
       !document_id ||
       document_id === "none"
     ) {
       const isUrssaf = document_type === "urssaf_reminder";
       const isVat = document_type === "vat_threshold";
-      const badgeText = isUrssaf
-        ? "URSSAF & Fiscalité"
-        : isVat
-        ? "Alerte Seuil TVA"
-        : document_type === "trial_ending"
-        ? "Abonnement Pro"
-        : "Support & Système";
+      const isPaymentReceipt = document_type === "payment_receipt";
+      const isQuoteSigned = document_type === "quote_signed";
+      const isTrial = document_type === "trial_ending";
+      const isWelcome = document_type === "welcome";
+
+      let badgeText = "Notification";
+      let badgeBg = "rgba(99, 102, 241, 0.15)";
+      let badgeColor = "#818cf8";
+      let badgeBorder = "rgba(99, 102, 241, 0.3)";
+
+      if (isPaymentReceipt) {
+        badgeText = "Reçu de paiement";
+        badgeBg = "rgba(16, 185, 129, 0.15)";
+        badgeColor = "#34d399";
+        badgeBorder = "rgba(16, 185, 129, 0.3)";
+      } else if (isQuoteSigned) {
+        badgeText = "Devis signé";
+        badgeBg = "rgba(16, 185, 129, 0.15)";
+        badgeColor = "#34d399";
+        badgeBorder = "rgba(16, 185, 129, 0.3)";
+      } else if (isUrssaf) {
+        badgeText = "URSSAF & Fiscalité";
+        badgeBg = "rgba(245, 158, 11, 0.15)";
+        badgeColor = "#fbbf24";
+        badgeBorder = "rgba(245, 158, 11, 0.3)";
+      } else if (isVat) {
+        badgeText = "Alerte Seuil TVA";
+        badgeBg = "rgba(239, 68, 68, 0.15)";
+        badgeColor = "#f87171";
+        badgeBorder = "rgba(239, 68, 68, 0.3)";
+      } else if (isTrial) {
+        badgeText = "Abonnement Pro";
+        badgeBg = "rgba(168, 85, 247, 0.15)";
+        badgeColor = "#c084fc";
+        badgeBorder = "rgba(168, 85, 247, 0.3)";
+      } else if (isWelcome) {
+        badgeText = "Bienvenue sur Bylz";
+        badgeBg = "rgba(99, 102, 241, 0.15)";
+        badgeColor = "#818cf8";
+        badgeBorder = "rgba(99, 102, 241, 0.3)";
+      } else if (document_type === "support") {
+        badgeText = "Support Bylz";
+        badgeBg = "rgba(239, 68, 68, 0.15)";
+        badgeColor = "#f87171";
+        badgeBorder = "rgba(239, 68, 68, 0.3)";
+      }
+
+      const emailLogo = logo_url || customLogoUrl;
+      const senderFrom = (isPaymentReceipt || isQuoteSigned) && company_name
+        ? `${company_name} via Bylz <no-reply@bylz.fr>`
+        : `Bylz <no-reply@bylz.fr>`;
+      const emailReplyTo = reply_to_email || userEmail || "support@bylz.fr";
+
+      const footerText = isPaymentReceipt
+        ? `Reçu délivré par <strong>${escapeHtml(company_name || "votre prestataire")}</strong>. Pour toute question, vous pouvez répondre directement à cet email.`
+        : `Besoin d'aide ? Rendez-vous sur <a href="https://bylz.fr" style="color: #818cf8; text-decoration: none; font-weight: 700;">bylz.fr</a>.`;
 
       const htmlContent = `<!DOCTYPE html>
 <html>
@@ -541,8 +601,8 @@ Deno.serve(async (req: Request) => {
       <td align="center">
         <div style="max-width: 580px; background: #0f172a; border-radius: 16px; border: 1px solid #1e293b; padding: 32px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); text-align: left;">
           <div style="margin-bottom: 24px; display: flex; align-items: center; justify-content: space-between;">
-            <img src="${customLogoUrl}" alt="Bylz" style="height: 36px; max-width: 160px; object-fit: contain;" />
-            <span style="background: rgba(225, 29, 72, 0.2); color: #fb7185; font-size: 10px; font-weight: 800; padding: 4px 10px; border-radius: 9999px; border: 1px solid rgba(225, 29, 72, 0.4); text-transform: uppercase;">
+            <img src="${emailLogo}" alt="Bylz" style="height: 36px; max-width: 160px; object-fit: contain; border-radius: 6px;" />
+            <span style="background: ${badgeBg}; color: ${badgeColor}; font-size: 10px; font-weight: 800; padding: 4px 10px; border-radius: 9999px; border: 1px solid ${badgeBorder}; text-transform: uppercase;">
               ${badgeText}
             </span>
           </div>
@@ -552,7 +612,7 @@ Deno.serve(async (req: Request) => {
           <div style="background: #1e293b; border-radius: 12px; border: 1px solid #334155; padding: 20px; color: #e2e8f0; font-size: 14px; line-height: 1.6; white-space: pre-wrap; margin-bottom: 24px;">${safeBodyHtml}</div>
 
           <div style="border-top: 1px solid #1e293b; padding-top: 20px; font-size: 12px; color: #94a3b8; text-align: center;">
-            Besoin d'aide supplémentaire ? Rendez-vous sur <a href="https://bylz.fr" style="color: #fb7185; text-decoration: none; font-weight: 700;">bylz.fr</a>.
+            ${footerText}
           </div>
         </div>
       </td>
@@ -568,12 +628,12 @@ Deno.serve(async (req: Request) => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          from: `Bylz <no-reply@bylz.fr>`,
+          from: senderFrom,
           to: recipients,
           subject: safeSubject,
           text: safeBodyText,
           html: htmlContent,
-          reply_to: "support@bylz.fr",
+          reply_to: emailReplyTo,
         }),
       });
 
