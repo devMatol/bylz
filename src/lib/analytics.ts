@@ -1,11 +1,20 @@
 /**
- * Analytics Event Helper (Stub / Extensible)
+ * Analytics Event Helper (GA4 / Gtag integration)
  */
 
+declare global {
+  interface Window {
+    dataLayer?: any[];
+    gtag?: (...args: any[]) => void;
+  }
+}
+
 export function trackEvent(
-  _eventName: string,
-  _props?: Record<string, string | number | boolean>
+  eventName: string,
+  props?: Record<string, string | number | boolean>
 ): void {
-  // Custom analytics tracking hook
+  if (typeof window !== "undefined" && typeof window.gtag === "function") {
+    window.gtag("event", eventName, props);
+  }
 }
 
