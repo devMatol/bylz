@@ -400,13 +400,14 @@ Deno.serve(async (req: Request) => {
     } else {
       drawTotalLine("TVA", formatEUR(totalVat));
     }
+    y -= 4;
     page.drawLine({ start: { x: 350, y }, end: { x: width - 50, y }, thickness: 0.5, color: lightGray });
-    y -= 6;
+    y -= 18;
     const ttcStr = formatEUR(totalTtc);
     safeDrawText(page, "Total TTC", { x: 350, y, size: 12, color: black }, fontBold);
     const ttcW = safeWidthOfText(fontBold, ttcStr, 14);
     safeDrawText(page, ttcStr, { x: width - 50 - ttcW, y, size: 14, color: accentRgb }, fontBold);
-    y -= 30;
+    y -= 26;
 
     // Note
     if (doc.note) {

@@ -194,6 +194,69 @@ async function renderPdf(
     y -= 18;
   }
 
+  // Totals
+  y -= 20;
+  const isFranchise = company?.vat_regime === "franchise";
+  const totalHt = Number(doc.total_ht || 0);
+  const totalVat = Number(doc.total_vat || 0);
+  const totalTtc = Number(doc.total_ttc || 0);
+
+  const drawTotalLine = (label: string, value: string, bold = false) => {
+    const f = bold ? fontBold : font;
+    safeDrawText(page, label, { x: 350, y, size: 10, font: f, color: black });
+    const w = f.widthOfTextAtSize(sanitizePdfText(value), 10);
+    safeDrawText(page, value, { x: width - 50 - w, y, size: 10, font: f, color: black });
+    y -= 16;
+  };
+
+  drawTotalLine("Total HT", formatEUR(totalHt));
+  if (isFranchise) {
+    safeDrawText(page, "TVA non applicable - Art. 293 B du CGI", {
+      x: 350, y, size: 8, font, color: gray,
+    });
+    y -= 14;
+  } else {
+    drawTotalLine("TVA", formatEUR(totalVat));
+  }
+  y -= 4;
+  page.drawLine({ start: { x: 350, y }, end: { x: width - 50, y }, thickness: 0.5, color: lightGray });
+  y -= 18;
+  const ttcStr = formatEUR(totalTtc);
+  safeDrawText(page, "Total TTC", { x: 350, y, size: 12, font: fontBold, color: black });
+  const ttcW = fontBold.widthOfTextAtSize(sanitizePdfText(ttcStr), 14);
+  safeDrawText(page, ttcStr, { x: width - 50 - ttcW, y, size: 14, font: fontBold, color: accentRgb });
+  y -= 26;
+
+  // Note
+  if (doc.note) {
+    safeDrawText(page, "Note", { x: 50, y, size: 8, font: fontBold, color: gray });
+    y -= 12;
+    const noteLines = (doc.note as string).split("\n").slice(0, 5);
+    for (const nl of noteLines) {
+      safeDrawText(page, nl.slice(0, 80), { x: 50, y, size: 9, font, color: gray });
+      y -= 12;
+    }
+    y -= 10;
+  }
+
+  // Footer
+  if (company?.invoice_footer) {
+    y = 120;
+    page.drawLine({ start: { x: 50, y }, end: { x: width - 50, y }, thickness: 0.5, color: lightGray });
+    y -= 14;
+    const footerLines = (company.invoice_footer as string).split("\n").slice(0, 6);
+    for (const fl of footerLines) {
+      safeDrawText(page, fl.slice(0, 90), { x: 50, y, size: 8, font, color: gray });
+      y -= 10;
+    }
+  }
+
+  if (isFranchise) {
+    safeDrawText(page, "Auto-entrepreneur - TVA non applicable, art. 293 B du CGI", {
+      x: 50, y: 40, size: 7, font, color: gray,
+    });
+  }
+
   const bytes = await pdfDoc.save();
   return { bytes, number, doc, company, client };
 }
