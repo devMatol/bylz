@@ -1,4 +1,4 @@
-﻿INSERT INTO storage.buckets (id, name, public, allowed_mime_types, file_size_limit)
+INSERT INTO storage.buckets (id, name, public, allowed_mime_types, file_size_limit)
 VALUES 
   ('logos', 'logos', true, ARRAY['image/png', 'image/jpeg', 'image/jpg', 'image/svg+xml', 'image/webp'], 5242880),
   ('company-assets', 'company-assets', true, ARRAY['image/png', 'image/jpeg', 'image/jpg', 'image/svg+xml', 'image/webp'], 5242880)
