@@ -295,13 +295,46 @@ export function SettingsPage() {
     }
     setSearchingSiret(true);
     try {
-      const { data, error } = await supabase.functions.invoke("lookup-siret", {
+      let resultData: { legal_name?: string; address?: string } | null = null;
+
+      // 1. Appel Edge Function siret-lookup
+      const { data, error } = await supabase.functions.invoke("siret-lookup", {
         body: { siret: rawSiret },
       });
-      if (error || !data) throw new Error(error?.message || "SIRET introuvable");
-      if (data.legal_name) setLegalName(data.legal_name);
-      if (data.address) setAddress(data.address);
-      toast("Informations de l'entreprise récupérées depuis l'INSEE !", "success");
+
+      if (!error && data && (data.legal_name || data.address)) {
+        resultData = data;
+      } else {
+        // 2. Fallback direct API Recherche Entreprises gouv
+        const govRes = await fetch(
+          `https://recherche-entreprises.api.gouv.fr/search?q=${rawSiret}&page=1&per_page=1`
+        );
+        if (govRes.ok) {
+          const govJson = await govRes.json();
+          const firstResult = govJson?.results?.[0];
+          if (firstResult) {
+            const etab = firstResult.matching_etablissements?.[0] || firstResult.siege || {};
+            resultData = {
+              legal_name: firstResult.nom_complet || firstResult.nom_raison_sociale,
+              address: etab.adresse || etab.adresse_complete || `${etab.code_postal || ""} ${etab.libelle_commune || ""}`.trim(),
+            };
+          }
+        }
+      }
+
+      if (!resultData) {
+        throw new Error(error?.message || "SIRET introuvable dans le registre officiel.");
+      }
+
+      if (resultData.legal_name === "[NON-DIFFUSIBLE]") {
+        toast("Votre statut est enregistré comme 'Non diffusable' auprès de l'INSEE. Veuillez saisir vos coordonnées manuellement.", "info");
+      } else {
+        if (resultData.legal_name) setLegalName(resultData.legal_name);
+        if (resultData.address && resultData.address !== "[NON-DIFFUSIBLE]") {
+          setAddress(resultData.address);
+        }
+        toast("Informations de l'entreprise récupérées depuis l'INSEE !", "success");
+      }
     } catch (err: any) {
       toast(err.message || "Erreur lors de la recherche SIRET", "danger");
     } finally {
