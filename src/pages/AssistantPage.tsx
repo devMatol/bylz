@@ -55,12 +55,14 @@ export function AssistantPage() {
   const [loading, setLoading] = useState(false);
   const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
 
+  const isTestingLowerPlan = profile?.plan === "starter" || profile?.plan === "solo";
   const isPro =
-    profile?.is_admin === true ||
-    profile?.admin_role === "super_admin" ||
-    profile?.plan === "pro" ||
-    (profile?.plan as string) === "unlimited" ||
-    (profile?.plan as string) === "admin";
+    !isTestingLowerPlan &&
+    (profile?.plan === "pro" ||
+      (profile?.plan as string) === "unlimited" ||
+      (profile?.plan as string) === "admin" ||
+      profile?.is_admin === true ||
+      profile?.admin_role === "super_admin");
 
   const handleSend = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
@@ -166,7 +168,31 @@ export function AssistantPage() {
           </div>
 
           {/* Chat Messages Log */}
-          <div className="flex-1 p-4 overflow-y-auto space-y-4 bg-bg/40">
+          <div className="flex-1 p-4 overflow-y-auto space-y-4 bg-bg/40 relative">
+            {!isPro && (
+              <div className="absolute inset-0 z-10 backdrop-blur-sm bg-slate-950/80 flex flex-col items-center justify-center p-6 text-center animate-in fade-in duration-200">
+                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-500/20 to-amber-600/10 border border-amber-500/30 flex items-center justify-center text-amber-400 mb-4 shadow-xl shadow-amber-500/10">
+                  <Sparkles className="w-7 h-7" />
+                </div>
+                <span className="px-3 py-1 text-[11px] font-black tracking-wide uppercase bg-amber-500/20 text-amber-300 border border-amber-500/40 rounded-full mb-3">
+                  Réservé au Plan PRO ⚡
+                </span>
+                <h3 className="text-lg font-bold text-white mb-2">
+                  Débloquez l'Assistant Bylz Copilot IA
+                </h3>
+                <p className="text-xs sm:text-sm text-slate-300 max-w-md mb-6 leading-relaxed">
+                  Générez vos factures et devis par message ou note vocale, calculez vos cotisations URSSAF et pilotez votre activité 24/7 sur le web et WhatsApp.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setUpgradeModalOpen(true)}
+                  className="px-6 py-3 bg-gradient-to-r from-amber-500 via-amber-600 to-amber-500 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-black text-sm rounded-xl transition-all shadow-xl shadow-amber-500/20 cursor-pointer active:scale-95 flex items-center gap-2"
+                >
+                  <Sparkles className="w-4 h-4" />
+                  Passer au Plan PRO ⚡
+                </button>
+              </div>
+            )}
             {messages.map((m, idx) => (
               <div
                 key={idx}
@@ -207,22 +233,29 @@ export function AssistantPage() {
           <form onSubmit={handleSend} className="p-3.5 bg-slate-950/90 border-t border-slate-800 flex items-center gap-2.5">
             <button
               type="button"
-              onClick={() => alert("🎙️ Dictée vocale active sur WhatsApp ! Transmettez directement vos notes vocales.")}
+              onClick={() => {
+                if (!isPro) {
+                  setUpgradeModalOpen(true);
+                  return;
+                }
+                alert("🎙️ Dictée vocale active sur WhatsApp ! Transmettez directement vos notes vocales.");
+              }}
               title="Dictée Vocale"
-              className="p-2.5 text-emerald-400 hover:text-emerald-300 hover:bg-emerald-500/10 rounded-xl transition-all border border-emerald-500/20 shadow-xs"
+              className="p-2.5 text-emerald-400 hover:text-emerald-300 hover:bg-emerald-500/10 rounded-xl transition-all border border-emerald-500/20 shadow-xs cursor-pointer"
             >
               <Mic className="w-5 h-5" />
             </button>
             <input
               type="text"
               value={input}
+              disabled={!isPro || loading}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="Posez une question ou dictez : 'Créer une facture de 400€ pour Client X'..."
-              className="flex-1 bg-slate-900/90 text-slate-100 placeholder:text-slate-400 border border-slate-700/80 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/30 rounded-xl px-4 py-2.5 text-xs sm:text-sm outline-none transition-all shadow-inner font-medium"
+              placeholder={!isPro ? "Fonctionnalité réservée aux membres du Plan PRO ⚡" : "Posez une question ou dictez : 'Créer une facture de 400€ pour Client X'..."}
+              className="flex-1 bg-slate-900/90 text-slate-100 placeholder:text-slate-400 border border-slate-700/80 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/30 rounded-xl px-4 py-2.5 text-xs sm:text-sm outline-none transition-all shadow-inner font-medium disabled:opacity-50 disabled:cursor-not-allowed"
             />
             <button
               type="submit"
-              disabled={!input.trim() || loading}
+              disabled={!isPro || !input.trim() || loading}
               className="px-5 py-2.5 bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-500 hover:from-emerald-500 hover:to-teal-500 text-white rounded-xl text-xs sm:text-sm font-black flex items-center gap-2 transition-all shadow-lg shadow-emerald-950/40 disabled:opacity-40 disabled:pointer-events-none active:scale-95 border border-emerald-400/30 cursor-pointer"
             >
               <span>Envoyer</span>
@@ -259,22 +292,34 @@ export function AssistantPage() {
                   type="text"
                   placeholder="+33 6 12 34 56 78"
                   value={phoneInput}
+                  disabled={!isPro}
                   onChange={(e) => setPhoneInput(e.target.value)}
-                  className="w-full bg-surface text-text font-mono text-xs px-3 py-2 rounded-lg border border-border focus:border-emerald-500 outline-none"
+                  className="w-full bg-surface text-text font-mono text-xs px-3 py-2 rounded-lg border border-border focus:border-emerald-500 outline-none disabled:opacity-60"
                 />
               </div>
             </div>
 
             <div className="space-y-2">
-              <button
-                type="button"
-                onClick={handleActivateWhatsApp}
-                disabled={savingPhone}
-                className="w-full py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl flex items-center justify-center gap-2 transition-all shadow-xs cursor-pointer disabled:opacity-50"
-              >
-                <Phone className="w-4 h-4" />
-                {savingPhone ? "Activation..." : "Activer & Ouvrir le Pilote WhatsApp"}
-              </button>
+              {!isPro ? (
+                <button
+                  type="button"
+                  onClick={() => setUpgradeModalOpen(true)}
+                  className="w-full py-2.5 px-4 bg-gradient-to-r from-amber-500 via-amber-600 to-amber-500 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-black text-xs rounded-xl flex items-center justify-center gap-2 transition-all shadow-md cursor-pointer"
+                >
+                  <Sparkles className="w-4 h-4" />
+                  Débloquer WhatsApp Copilot (Plan PRO ⚡)
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={handleActivateWhatsApp}
+                  disabled={savingPhone}
+                  className="w-full py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl flex items-center justify-center gap-2 transition-all shadow-xs cursor-pointer disabled:opacity-50"
+                >
+                  <Phone className="w-4 h-4" />
+                  {savingPhone ? "Activation..." : "Activer & Ouvrir le Pilote WhatsApp"}
+                </button>
+              )}
               <Link
                 to="/settings"
                 className="w-full py-2 px-4 bg-muted hover:bg-muted/80 text-text font-medium text-xs rounded-xl flex items-center justify-center gap-1.5 transition-colors border border-border"
@@ -308,7 +353,7 @@ export function AssistantPage() {
       <UpgradeModal
         open={upgradeModalOpen}
         onClose={() => setUpgradeModalOpen(false)}
-        feature="paymentLinks"
+        feature="aiCopilot"
       />
     </PageContainer>
   );

@@ -17,7 +17,7 @@ import { BillingToggle } from "./BillingToggle";
 export interface UpgradeModalProps {
   open: boolean;
   onClose: () => void;
-  feature?: "invoices" | "clients" | "fiscalDashboard" | "reminders" | "exports" | "paymentLinks" | "multiCompany";
+  feature?: "invoices" | "clients" | "fiscalDashboard" | "reminders" | "exports" | "paymentLinks" | "multiCompany" | "aiCopilot";
   title?: string;
   benefit?: string;
   targetPlan?: "solo" | "pro";
@@ -68,6 +68,12 @@ const FEATURE_CONFIG: Record<
     benefit: "Gérez plusieurs activités micro-entrepreneur sous un même compte Pro.",
     targetPlan: "pro",
     hookTemplate: (name) => `Gérez plusieurs activités pour ${name}`,
+  },
+  aiCopilot: {
+    title: "Assistant IA Bylz Copilot (Web & WhatsApp)",
+    benefit: "Générez vos factures et devis à la voix, pilotez votre fiscalité et vos cotisations URSSAF 24/7 avec l'IA.",
+    targetPlan: "pro",
+    hookTemplate: (name) => `Activez l'Assistant IA Copilot pour ${name}`,
   },
 };
 

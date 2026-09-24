@@ -23,12 +23,14 @@ export function GlobalAiCopilotWidget() {
 
   if (dismissed) return null;
 
+  const isTestingLowerPlan = profile?.plan === "starter" || profile?.plan === "solo";
   const isPro =
-    profile?.is_admin === true ||
-    profile?.admin_role === "super_admin" ||
-    profile?.plan === "pro" ||
-    (profile?.plan as string) === "unlimited" ||
-    (profile?.plan as string) === "admin";
+    !isTestingLowerPlan &&
+    (profile?.plan === "pro" ||
+      (profile?.plan as string) === "unlimited" ||
+      (profile?.plan as string) === "admin" ||
+      profile?.is_admin === true ||
+      profile?.admin_role === "super_admin");
 
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -75,8 +77,14 @@ export function GlobalAiCopilotWidget() {
       {/* Floating Toggle Button (Desktop only - hidden on mobile) */}
       <div className="hidden md:flex fixed bottom-6 right-6 z-40 items-center gap-1.5">
         <button
-          onClick={() => setOpen(!open)}
-          className="px-3.5 py-2.5 bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-500 text-white rounded-2xl shadow-xl shadow-emerald-600/20 hover:scale-105 active:scale-95 transition-all flex items-center gap-2 font-black text-xs border border-emerald-400/30 bylz-glow-accent"
+          onClick={() => {
+            if (!isPro) {
+              setUpgradeModalOpen(true);
+              return;
+            }
+            setOpen(!open);
+          }}
+          className="px-3.5 py-2.5 bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-500 text-white rounded-2xl shadow-xl shadow-emerald-600/20 hover:scale-105 active:scale-95 transition-all flex items-center gap-2 font-black text-xs border border-emerald-400/30 bylz-glow-accent cursor-pointer"
           title="Ouvrir l'Assistant IA Bylz Copilot"
         >
           <Bot className="w-5 h-5 text-white" />
@@ -173,7 +181,7 @@ export function GlobalAiCopilotWidget() {
       <UpgradeModal
         open={upgradeModalOpen}
         onClose={() => setUpgradeModalOpen(false)}
-        feature="paymentLinks"
+        feature="aiCopilot"
       />
     </>
   );
