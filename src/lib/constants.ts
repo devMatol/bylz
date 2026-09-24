@@ -30,7 +30,7 @@ export const NAV_ITEMS: NavItem[] = [
   { label: "Livre des recettes", path: "/livre-recettes", icon: BookMarked },
   { label: "Clients", path: "/clients", icon: Users },
   { label: "Catalogue", path: "/catalog", icon: BookOpen },
-  { label: "Déclarations", path: "/urssaf", icon: Landmark },
+  { label: "Déclarations", path: "/urssaf", icon: Landmark, requiredPlan: "solo", badge: "SOLO" },
   { label: "Paramètres", path: "/settings", icon: Settings },
 ];
 
