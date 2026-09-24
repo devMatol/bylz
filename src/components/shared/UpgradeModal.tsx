@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Sparkles, Check, Loader2, ShieldCheck, Zap } from "lucide-react";
+import { Sparkles, Check, Loader2, ShieldCheck, X } from "lucide-react";
 import { Modal } from "../ui/Modal";
 import { Button } from "../ui/Button";
 import {
@@ -11,7 +11,6 @@ import {
 } from "../../lib/constants";
 import { supabase } from "../../lib/supabase";
 import { useToast } from "../ui/Toast";
-import { useAuth } from "../../contexts/AuthContext";
 import { BillingToggle } from "./BillingToggle";
 
 export interface UpgradeModalProps {
@@ -25,55 +24,101 @@ export interface UpgradeModalProps {
 
 const FEATURE_CONFIG: Record<
   string,
-  { title: string; benefit: string; targetPlan: "solo" | "pro"; hookTemplate: (name: string) => string }
+  {
+    badge: string;
+    title: string;
+    description: string;
+    targetPlan: "solo" | "pro";
+    highlights: string[];
+  }
 > = {
   invoices: {
+    badge: "Plan Solo ⚡",
     title: "Facturation & Devis illimités",
-    benefit: "Émettez autant de devis et factures conformes Factur-X que nécessaire pour développer votre activité.",
+    description: "Émettez autant de devis et factures conformes Factur-X que nécessaire pour développer votre activité en toute sérénité.",
     targetPlan: "solo",
-    hookTemplate: (name) => `Développez ${name} sans limite de facturation`,
+    highlights: [
+      "Factures et devis illimités conformes Factur-X 2026",
+      "Numérotation légale & mentions obligatoires automatiques",
+      "Exports comptables et livre des recettes certifiés",
+    ],
   },
   clients: {
+    badge: "Plan Solo ⚡",
     title: "Répertoire clients illimité",
-    benefit: "Gérez l'ensemble de vos clients avec recherche SIRET automatique et suivi des impayés.",
+    description: "Gérez l'ensemble de vos clients sans restriction avec recherche automatique SIRET et suivi des impayés.",
     targetPlan: "solo",
-    hookTemplate: (name) => `Gérez tous les clients de ${name} sans restriction`,
+    highlights: [
+      "Fiches clients et contacts illimités",
+      "Auto-complétion des données d'entreprise via l'INSEE",
+      "Suivi personnalisé des délais et états de paiement",
+    ],
   },
   fiscalDashboard: {
+    badge: "Plan Solo ⚡",
     title: "Pilotage fiscal & URSSAF en temps réel",
-    benefit: "Suivez votre Chiffre d'Affaires, vos plafonds de TVA et anticipez exactement vos cotisations URSSAF.",
+    description: "Suivez votre Chiffre d'Affaires, vos seuils de TVA et anticipez exactement vos cotisations URSSAF au centime près.",
     targetPlan: "solo",
-    hookTemplate: (name) => `Pilotez la rentabilité et l'URSSAF de ${name}`,
+    highlights: [
+      "Calcul automatique et prévisionnel de vos cotisations URSSAF",
+      "Alertes proactives sur les seuils de franchise en base de TVA",
+      "Tableau de bord de rentabilité et graphiques de progression",
+    ],
   },
   reminders: {
-    title: "Relances automatiques par e-mail",
-    benefit: "Ne courez plus après vos paiements : Bylz relance automatiquement vos clients en retard avec diplomatie.",
+    badge: "Plan Solo ⚡",
+    title: "Relances automatiques des impayés",
+    description: "Ne courez plus après vos règlements : Bylz relance automatiquement vos factures en retard avec diplomatie et fermeté.",
     targetPlan: "solo",
-    hookTemplate: (name) => `Sécurisez la trésorerie de ${name}`,
+    highlights: [
+      "Relances programmées et graduées (J+7 amical, J+14 ferme, J+30 formel)",
+      "Modèles d'e-mails professionnels personnalisables",
+      "Intégration automatique de l'indemnité forfaitaire de 40 € B2B",
+    ],
   },
   exports: {
+    badge: "Plan Solo ⚡",
     title: "Exports comptables certifiés",
-    benefit: "Exportez vos bilans et registres d'achats/ventes en un clic pour votre comptable ou votre déclaration.",
+    description: "Exportez vos bilans et registres d'achats/ventes en un clic pour votre comptable ou votre déclaration fiscale.",
     targetPlan: "solo",
-    hookTemplate: (name) => `Simplifiez la comptabilité de ${name}`,
+    highlights: [
+      "Livre des recettes et registre des achats conformes",
+      "Exports universels CSV, Excel et format FEC",
+      "Synthèse TVA prête pour votre déclaration",
+    ],
   },
   paymentLinks: {
+    badge: "Plan Pro ⚡",
     title: "Paiement en ligne par carte bancaire",
-    benefit: "Permettez à vos clients de régler leurs factures en ligne en 1 clic directement avec Stripe Connect.",
+    description: "Permettez à vos clients de régler leurs factures en ligne en 1 clic directement avec Stripe Connect.",
     targetPlan: "pro",
-    hookTemplate: (name) => `Faites payer vos clients par carte pour ${name}`,
+    highlights: [
+      "Bouton de paiement sécurisé par CB intégré aux factures",
+      "Fonds virés directement sur votre compte bancaire",
+      "Mise à jour instantanée du statut des factures",
+    ],
   },
   multiCompany: {
+    badge: "Plan Pro ⚡",
     title: "Gestion multi-activités",
-    benefit: "Gérez plusieurs activités micro-entrepreneur sous un même compte Pro.",
+    description: "Gérez plusieurs activités ou structures micro-entrepreneur sous un seul et même abonnement.",
     targetPlan: "pro",
-    hookTemplate: (name) => `Gérez plusieurs activités pour ${name}`,
+    highlights: [
+      "Bascule instantanée entre vos entreprises",
+      "Numéros SIRET, coordonnées et identités visuelles séparés",
+      "Plafonds fiscaux et statistiques cloisonnés",
+    ],
   },
   aiCopilot: {
-    title: "Assistant IA Bylz Copilot (Web & WhatsApp)",
-    benefit: "Générez vos factures et devis à la voix, pilotez votre fiscalité et vos cotisations URSSAF 24/7 avec l'IA.",
+    badge: "Plan Pro ⚡",
+    title: "Bylz Copilot IA (Web & WhatsApp)",
+    description: "Pilotez toute votre facturation par note vocale ou message WhatsApp : création de factures, estimation URSSAF et conseils 24/7.",
     targetPlan: "pro",
-    hookTemplate: (name) => `Activez l'Assistant IA Copilot pour ${name}`,
+    highlights: [
+      "Création de devis et factures par commande vocale WhatsApp",
+      "Calcul immédiat de cotisations et vérification de trésorerie",
+      "Assistant intelligent disponible 24h/24 et 7j/7 sur votre mobile",
+    ],
   },
 };
 
@@ -85,34 +130,13 @@ export function UpgradeModal({
   benefit: customBenefit,
   targetPlan: customTargetPlan,
 }: UpgradeModalProps) {
-  const { company } = useAuth();
   const [loading, setLoading] = useState(false);
   const [billingCycle, setBillingCycle] = useState<BillingCycle>("annual");
   const { toast } = useToast();
 
   const config = FEATURE_CONFIG[feature] || FEATURE_CONFIG.invoices;
-  const companyName = company?.commercial_name || company?.legal_name || "votre entreprise";
-  const personalizedTitle = customTitle || config.hookTemplate(companyName);
-  const benefit = customBenefit || config.benefit;
   const targetPlan = customTargetPlan || config.targetPlan;
-
-  const activityLabel =
-    company?.activity_type === "freelance_bnc" || company?.activity_type === "liberal"
-      ? "Prestations de services & Conseil BNC"
-      : company?.activity_type === "artisan_bic"
-      ? "Artisanat & Services BIC"
-      : company?.activity_type === "commerce"
-      ? "Achat-revente & Commerce"
-      : "Indépendant & Freelance";
-
-  const priceLabel =
-    billingCycle === "annual"
-      ? targetPlan === "pro"
-        ? "80 € / an (6,67 €/mois)"
-        : "50 € / an (4,17 €/mois)"
-      : targetPlan === "pro"
-      ? "12,90 € / mois"
-      : "8,90 € / mois";
+  const planTitle = targetPlan === "pro" ? "Plan Pro ⚡" : "Plan Solo ⚡";
 
   const priceId =
     targetPlan === "pro"
@@ -155,57 +179,94 @@ export function UpgradeModal({
 
   return (
     <Modal open={open} onClose={onClose}>
-      <div className="text-center sm:text-left space-y-4">
-        {/* Dynamic Personalization Badge */}
-        {company?.legal_name && (
-          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-pill bg-primary/10 border border-primary/20 text-primary text-[11px] font-bold">
-            <Zap className="w-3.5 h-3.5" />
-            <span>Spécialement adapté pour {companyName} ({activityLabel})</span>
-          </div>
-        )}
-
-        <div className="flex items-start space-x-3">
-          <div className="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-500 flex items-center justify-center flex-shrink-0 mt-1">
-            <Sparkles className="w-5 h-5" />
-          </div>
-          <div>
-            <h3 className="text-xl font-bold text-text leading-snug">{personalizedTitle}</h3>
-            <span className="text-xs uppercase tracking-wider font-semibold text-amber-500">
-              Plan {targetPlan.toUpperCase()} • {priceLabel}
-            </span>
-          </div>
+      <div className="space-y-4">
+        {/* Header with badge & close */}
+        <div className="flex items-center justify-between">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-pill bg-primary/10 border border-primary/20 text-primary text-[11px] font-black tracking-wide uppercase">
+            <Sparkles className="w-3.5 h-3.5" />
+            <span>{config.badge || planTitle}</span>
+          </span>
+          <button
+            type="button"
+            onClick={onClose}
+            className="p-1.5 rounded-xl text-muted hover:text-text hover:bg-surface-hover transition-colors cursor-pointer"
+            aria-label="Fermer"
+          >
+            <X className="w-4 h-4" />
+          </button>
         </div>
 
-        <p className="text-sm text-muted leading-relaxed">{benefit}</p>
+        {/* Title & Description */}
+        <div className="space-y-1.5">
+          <h3 className="text-xl font-extrabold text-text tracking-tight">
+            {customTitle || config.title}
+          </h3>
+          <p className="text-xs sm:text-sm text-muted leading-relaxed">
+            {customBenefit || config.description}
+          </p>
+        </div>
 
-        {/* Annual / Monthly Switch */}
-        <div className="bg-surface-hover/30 p-3 rounded-card border border-border">
+        {/* Pricing Card */}
+        <div className="bg-surface-hover/40 rounded-2xl p-4 border border-border/80 space-y-3">
           <BillingToggle billingCycle={billingCycle} onChange={setBillingCycle} />
+
+          <div className="text-center pt-1">
+            <div className="flex items-baseline justify-center gap-1.5">
+              <span className="text-3xl sm:text-4xl font-black text-text tracking-tight">
+                {billingCycle === "annual"
+                  ? targetPlan === "pro" ? "6,67 €" : "4,17 €"
+                  : targetPlan === "pro" ? "12,90 €" : "8,90 €"}
+              </span>
+              <span className="text-xs font-bold text-muted uppercase">/ mois</span>
+            </div>
+            <p className="text-xs text-muted mt-1 font-medium">
+              {billingCycle === "annual"
+                ? targetPlan === "pro"
+                  ? "Facturé 80 € / an (soit 2 mois offerts)"
+                  : "Facturé 50 € / an (soit 2 mois offerts)"
+                : "Facturation mensuelle sans engagement"}
+            </p>
+          </div>
         </div>
 
-        <div className="bg-surface-elevated/50 rounded-xl p-4 border border-border/50 space-y-2">
-          <div className="flex items-center text-xs text-text space-x-2">
-            <Check className="w-4 h-4 text-emerald-500 flex-shrink-0" />
-            <span>Essai gratuit de 14 jours (sans engagement, résiliable en 1 clic)</span>
-          </div>
-          <div className="flex items-center text-xs text-text space-x-2">
-            <ShieldCheck className="w-4 h-4 text-primary flex-shrink-0" />
-            <span>Conformité Factur-X & e-reporting DGFiP 2026 garantie</span>
-          </div>
+        {/* Feature Highlights */}
+        <div className="space-y-2 py-1">
+          {config.highlights.map((item, idx) => (
+            <div key={idx} className="flex items-start gap-2.5 text-xs text-text font-medium">
+              <Check className="w-4 h-4 text-emerald-500 flex-shrink-0 mt-0.5" />
+              <span className="leading-snug">{item}</span>
+            </div>
+          ))}
         </div>
 
-        <div className="flex flex-col sm:flex-row items-center justify-end gap-3 pt-2">
-          <Button variant="ghost" onClick={onClose} disabled={loading} className="w-full sm:w-auto">
+        {/* Trial Guarantee Note */}
+        <div className="flex items-center gap-2 p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs font-semibold justify-center text-center">
+          <ShieldCheck className="w-4 h-4 flex-shrink-0" />
+          <span>Essai gratuit de 14 jours • Résiliable en 1 clic à tout moment</span>
+        </div>
+
+        {/* Action Buttons */}
+        <div className="flex flex-col-reverse sm:flex-row items-center justify-end gap-2.5 pt-2">
+          <Button
+            variant="ghost"
+            onClick={onClose}
+            disabled={loading}
+            className="w-full sm:w-auto text-xs"
+          >
             Plus tard
           </Button>
-          <Button onClick={handleUpgrade} disabled={loading} className="w-full sm:w-auto bylz-glow-cta font-bold">
+          <Button
+            onClick={handleUpgrade}
+            disabled={loading}
+            className="w-full sm:w-auto bylz-glow-cta font-black text-xs sm:text-sm py-2.5 px-5 cursor-pointer"
+          >
             {loading ? (
               <>
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Redirection...
+                Redirection vers Stripe...
               </>
             ) : (
-              `Débloquer pour ${companyName}`
+              `Commencer les 14 jours gratuits`
             )}
           </Button>
         </div>
