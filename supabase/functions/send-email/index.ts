@@ -342,6 +342,7 @@ Deno.serve(async (req: Request) => {
 
     let isServiceRole = false;
     let userId: string | null = null;
+    let userEmail: string | null = null;
 
     try {
       const parts = token.split(".");
@@ -352,6 +353,9 @@ Deno.serve(async (req: Request) => {
           isServiceRole = true;
         } else if (payload?.sub) {
           userId = payload.sub;
+          if (payload?.email) {
+            userEmail = payload.email;
+          }
         }
       }
     } catch {
@@ -365,15 +369,15 @@ Deno.serve(async (req: Request) => {
       userClient = createClient(supabaseUrl, anonKey, {
         global: { headers: { Authorization: `Bearer ${token}` } },
       });
-      if (!userId) {
-        const { data: userData, error: userErr } = await userClient.auth.getUser();
-        if (userErr || !userData?.user) {
-          return new Response(JSON.stringify({ error: "JWT invalide" }), {
-            status: 401,
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
-          });
-        }
+      const { data: userData, error: userErr } = await userClient.auth.getUser();
+      if (userErr || !userData?.user) {
+        return new Response(JSON.stringify({ error: "JWT invalide ou session expirée" }), {
+          status: 401,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
       }
+      userId = userData.user.id;
+      userEmail = userData.user.email || userEmail;
     }
 
     const { to, subject, body, document_type, document_id } = await req.json();
@@ -635,7 +639,7 @@ Deno.serve(async (req: Request) => {
             content: b64,
           },
         ],
-        reply_to: userData.user.email,
+        reply_to: company?.email || userEmail || "support@bylz.fr",
       }),
     });
 
