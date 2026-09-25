@@ -6,6 +6,7 @@ import { useAuth } from "../contexts/AuthContext";
 import { supabase } from "../lib/supabase";
 import { useToast } from "../components/ui/Toast";
 import { migrateGuestDraft } from "../lib/api";
+import { trackEvent } from "../lib/analytics";
 
 export function OnboardingPage() {
   const { user, refreshProfile } = useAuth();
@@ -91,6 +92,11 @@ export function OnboardingPage() {
     }
 
     await refreshProfile();
+    trackEvent("onboarding_completed", {
+      structure: data.structure,
+      activity_type: data.activityType,
+      is_guest: searchParams.get("guest") === "true",
+    });
     toast("Profil entreprise configuré avec succès !", "success");
 
     if (targetInvoiceId) {

@@ -9,6 +9,7 @@ import { SEO } from "../components/seo/SEO";
 import { useAuth } from "../contexts/AuthContext";
 import { signUp, signInWithGoogle } from "../lib/auth";
 import { sendWelcomeEmail } from "../lib/emailNotifier";
+import { trackSignUp } from "../lib/analytics";
 import { cn } from "../lib/utils";
 
 function mapAuthError(code: string | undefined): string {
@@ -69,6 +70,8 @@ export function SignupPage() {
       setLoading(false);
       return;
     }
+    // Track GA4 / Google Ads sign_up conversion
+    trackSignUp("email");
     // Send Welcome Email
     void sendWelcomeEmail(email.trim());
     await refreshProfile();
@@ -78,6 +81,8 @@ export function SignupPage() {
   const handleGoogle = async () => {
     setError(null);
     setGoogleLoading(true);
+    // Track GA4 / Google Ads sign_up conversion intent
+    trackSignUp("google");
     const redirectTo = isGuest ? `${window.location.origin}/?guest=true` : undefined;
     const { error: googleError } = await signInWithGoogle(redirectTo);
     if (googleError) {

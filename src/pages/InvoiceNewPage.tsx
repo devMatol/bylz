@@ -27,6 +27,7 @@ import {
 } from "../lib/api";
 import { todayISO, paymentTermsToDate, isValidDate } from "../lib/date";
 import { formatAmount } from "../lib/utils";
+import { trackInvoiceEmitted } from "../lib/analytics";
 import type { Client, CatalogItem, PaymentTerms } from "../types/database";
 
 export function InvoiceNewPage() {
@@ -200,6 +201,7 @@ export function InvoiceNewPage() {
         });
       }
       const emitted = await emitInvoice(company.id, invoiceId);
+      trackInvoiceEmitted(emitted.id, emitted.total_ttc || 0);
       toast(`Facture émise : ${emitted.number}`, "success");
       navigate(`/invoices/${emitted.id}`);
     } catch (err) {

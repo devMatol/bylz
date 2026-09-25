@@ -12,6 +12,7 @@ import {
 import { supabase } from "../../lib/supabase";
 import { useToast } from "../ui/Toast";
 import { BillingToggle } from "./BillingToggle";
+import { trackBeginCheckout } from "../../lib/analytics";
 
 export interface UpgradeModalProps {
   open: boolean;
@@ -148,6 +149,10 @@ export function UpgradeModal({
       : STRIPE_PRICE_SOLO_MONTHLY;
 
   const handleUpgrade = async () => {
+    const planValue = targetPlan === "pro"
+      ? (billingCycle === "annual" ? 80 : 12.9)
+      : (billingCycle === "annual" ? 50 : 8.9);
+    trackBeginCheckout(targetPlan, billingCycle, planValue);
     setLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke("stripe-checkout", {

@@ -54,6 +54,7 @@ import { PushNotificationToggle } from "../components/pwa/PushNotificationToggle
 import { WhatsAppCopilotSection } from "../components/settings/WhatsAppCopilotSection";
 import { canUseFeature, type FeatureKey } from "../lib/planLimits";
 import { ACCENT_COLORS } from "../lib/onboarding";
+import { trackBeginCheckout, trackPurchase } from "../lib/analytics";
 
 interface ConnectStatus {
   hasAccount: boolean;
@@ -181,6 +182,19 @@ export function SettingsPage() {
     fetchConnectStatus();
   }, [fetchConnectStatus]);
 
+  useEffect(() => {
+    if (searchParams.get("checkout") === "success") {
+      const plan = profile?.plan === "pro" ? "pro" : "solo";
+      const value = plan === "pro" ? 80 : 50;
+      trackPurchase(plan, value);
+      toast("Félicitations ! Votre abonnement est activé. Bienvenue sur Bylz !", "success");
+      void refreshProfile();
+      const newParams = new URLSearchParams(searchParams);
+      newParams.delete("checkout");
+      setSearchParams(newParams, { replace: true });
+    }
+  }, [searchParams, profile?.plan, refreshProfile, setSearchParams, toast]);
+
   const handleOpenPortal = async () => {
     setLoadingPortal(true);
     try {
@@ -196,6 +210,13 @@ export function SettingsPage() {
   };
 
   const handleCheckout = async (priceId: string) => {
+    const isPro = priceId.includes("PRO") || priceId.includes("pro");
+    const isAnnual = priceId.includes("ANNUAL") || priceId.includes("annual");
+    const plan = isPro ? "pro" : "solo";
+    const cycle = isAnnual ? "annual" : "monthly";
+    const value = isPro ? (isAnnual ? 80 : 12.9) : (isAnnual ? 50 : 8.9);
+    trackBeginCheckout(plan, cycle, value);
+
     setLoadingCheckout(priceId);
     try {
       const { data, error } = await supabase.functions.invoke("stripe-checkout", {

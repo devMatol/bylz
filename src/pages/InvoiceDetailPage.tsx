@@ -40,6 +40,7 @@ import {
 } from "../lib/api";
 import { formatDateLong, todayISO, isValidDate } from "../lib/date";
 import { formatAmount, cn } from "../lib/utils";
+import { trackInvoiceEmitted } from "../lib/analytics";
 import { parseISO, differenceInCalendarDays } from "date-fns";
 import { fr } from "date-fns/locale";
 import { format } from "date-fns";
@@ -240,6 +241,7 @@ export function InvoiceDetailPage() {
     setBusy(true);
     try {
       const emitted = await emitInvoice(company.id, invoice.id);
+      trackInvoiceEmitted(emitted.id, Number(emitted.total_ttc) || 0);
       toast(`${isCreditNote ? "Avoir" : "Facture"} émis${isCreditNote ? "" : "e"} : ${emitted.number}`, "success");
       if (client?.email) {
         try {
