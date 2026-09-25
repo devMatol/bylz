@@ -108,9 +108,9 @@ const staticPages = [
         "applicationCategory": "BusinessApplication",
         "operatingSystem": "Web",
         "offers": [
-          { "@type": "Offer", "price": "0.00", "priceCurrency": "EUR", "name": "Starter" },
-          { "@type": "Offer", "price": "8.90", "priceCurrency": "EUR", "name": "Solo" },
-          { "@type": "Offer", "price": "12.90", "priceCurrency": "EUR", "name": "Pro" }
+          { "@type": "Offer", "price": "0.00", "priceCurrency": "EUR", "name": "Starter", "availability": "https://schema.org/InStock" },
+          { "@type": "Offer", "price": "8.90", "priceCurrency": "EUR", "name": "Solo", "availability": "https://schema.org/InStock" },
+          { "@type": "Offer", "price": "12.90", "priceCurrency": "EUR", "name": "Pro", "availability": "https://schema.org/InStock" }
         ]
       },
       {
@@ -152,24 +152,51 @@ const staticPages = [
     jsonLd: [
       {
         "@context": "https://schema.org",
-        "@type": "Product",
+        "@type": "SoftwareApplication",
         "name": "Bylz Starter",
+        "applicationCategory": "BusinessApplication",
+        "operatingSystem": "Web",
         "description": "Plan gratuit de démarrage pour créer des factures conformes Factur-X.",
-        "offers": { "@type": "Offer", "price": "0.00", "priceCurrency": "EUR" }
+        "offers": {
+          "@type": "Offer",
+          "price": "0.00",
+          "priceCurrency": "EUR",
+          "availability": "https://schema.org/InStock",
+          "priceValidUntil": "2026-12-31",
+          "url": "https://bylz.fr/tarifs"
+        }
       },
       {
         "@context": "https://schema.org",
-        "@type": "Product",
+        "@type": "SoftwareApplication",
         "name": "Bylz Solo",
+        "applicationCategory": "BusinessApplication",
+        "operatingSystem": "Web",
         "description": "Plan complet pour indépendant avec facturation illimitée et pilotage fiscal.",
-        "offers": { "@type": "Offer", "price": "8.90", "priceCurrency": "EUR" }
+        "offers": {
+          "@type": "Offer",
+          "price": "8.90",
+          "priceCurrency": "EUR",
+          "availability": "https://schema.org/InStock",
+          "priceValidUntil": "2026-12-31",
+          "url": "https://bylz.fr/tarifs"
+        }
       },
       {
         "@context": "https://schema.org",
-        "@type": "Product",
+        "@type": "SoftwareApplication",
         "name": "Bylz Pro",
+        "applicationCategory": "BusinessApplication",
+        "operatingSystem": "Web",
         "description": "Plan premium avec paiement en ligne Stripe Connect et télétransmission DGFiP.",
-        "offers": { "@type": "Offer", "price": "12.90", "priceCurrency": "EUR" }
+        "offers": {
+          "@type": "Offer",
+          "price": "12.90",
+          "priceCurrency": "EUR",
+          "availability": "https://schema.org/InStock",
+          "priceValidUntil": "2026-12-31",
+          "url": "https://bylz.fr/tarifs"
+        }
       }
     ]
   },
@@ -196,7 +223,12 @@ const staticPages = [
       "name": "Simulateur Cotisations URSSAF 2026 | Bylz",
       "applicationCategory": "FinanceApplication",
       "operatingSystem": "Web",
-      "offers": { "@type": "Offer", "price": "0.00", "priceCurrency": "EUR" }
+      "offers": {
+        "@type": "Offer",
+        "price": "0.00",
+        "priceCurrency": "EUR",
+        "availability": "https://schema.org/InStock"
+      }
     }
   },
   {
@@ -210,7 +242,12 @@ const staticPages = [
       "name": "Simulateur Seuil de Franchise de TVA 2026 | Bylz",
       "applicationCategory": "FinanceApplication",
       "operatingSystem": "Web",
-      "offers": { "@type": "Offer", "price": "0.00", "priceCurrency": "EUR" }
+      "offers": {
+        "@type": "Offer",
+        "price": "0.00",
+        "priceCurrency": "EUR",
+        "availability": "https://schema.org/InStock"
+      }
     }
   },
   {
@@ -224,7 +261,12 @@ const staticPages = [
       "name": "Générateur de Modèle de Facture Gratuit Conforme 2026 | Bylz",
       "applicationCategory": "BusinessApplication",
       "operatingSystem": "Web",
-      "offers": { "@type": "Offer", "price": "0.00", "priceCurrency": "EUR" }
+      "offers": {
+        "@type": "Offer",
+        "price": "0.00",
+        "priceCurrency": "EUR",
+        "availability": "https://schema.org/InStock"
+      }
     }
   },
   {

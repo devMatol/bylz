@@ -31,6 +31,7 @@ export function SimulateurTvaPage() {
       "@type": "Offer",
       price: "0",
       priceCurrency: "EUR",
+      availability: "https://schema.org/InStock",
     },
   };
 

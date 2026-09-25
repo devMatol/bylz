@@ -32,6 +32,7 @@ export function ModeleFacturePage() {
       "@type": "Offer",
       price: "0",
       priceCurrency: "EUR",
+      availability: "https://schema.org/InStock",
     },
   };
 
