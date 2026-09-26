@@ -186,7 +186,7 @@ export function InvoiceDetailPage() {
       const cn = await createCreditNote(company.id, invoice.id);
       if (cnMode === "total") {
         const emitted = await emitInvoice(company.id, cn.id);
-        toast(`Avoir créé et émis : ${emitted.number}`, "success");
+        toast(`Avoir créé et validé : ${emitted.number}`, "success");
         if (client?.email) {
           try {
             const amount = formatAmount(Number(emitted.total_ttc));
@@ -202,7 +202,7 @@ export function InvoiceDetailPage() {
         setCnOpen(false);
         void load();
       } else {
-        toast("Avoir créé (brouillon) : modifiez les lignes puis émettez", "success");
+        toast("Avoir créé (brouillon) : modifiez les lignes puis validez", "success");
         setCnOpen(false);
         navigate(`/invoices/new?id=${cn.id}`);
       }
@@ -242,7 +242,7 @@ export function InvoiceDetailPage() {
     try {
       const emitted = await emitInvoice(company.id, invoice.id);
       trackInvoiceEmitted(emitted.id, Number(emitted.total_ttc) || 0);
-      toast(`${isCreditNote ? "Avoir" : "Facture"} émis${isCreditNote ? "" : "e"} : ${emitted.number}`, "success");
+      toast(`${isCreditNote ? "Avoir" : "Facture"} validé${isCreditNote ? "" : "e"} : ${emitted.number}`, "success");
       if (client?.email) {
         try {
           const amount = formatAmount(Number(emitted.total_ttc));
@@ -310,8 +310,8 @@ export function InvoiceDetailPage() {
       loading={busy}
       className="w-full"
     >
-      <span className="hidden sm:inline">{isCreditNote ? "Émettre l'avoir" : "Émettre la facture"}</span>
-      <span className="sm:hidden">Émettre</span>
+      <span className="hidden sm:inline">{isCreditNote ? "Valider l'avoir" : "Valider la facture"}</span>
+      <span className="sm:hidden">Valider</span>
     </Button>
   ) : isPendingOrLate && !isCreditNote ? (
     <Button
@@ -384,7 +384,7 @@ export function InvoiceDetailPage() {
               <StatusBadge status={invoice.status} />
             </div>
             <div className="flex flex-col gap-2 text-sm">
-              <Row label="Émise le" value={formatDateLong(invoice.issue_date)} />
+              <Row label="Validée le" value={formatDateLong(invoice.issue_date)} />
               <Row label="Échéance" value={formatDateLong(invoice.due_date)} />
               {invoice.paid_at && (
                 <Row label="Payée le" value={formatDateLong(invoice.paid_at)} />
@@ -735,8 +735,8 @@ export function InvoiceDetailPage() {
             </div>
             <p className="text-xs text-muted">
               {cnMode === "total"
-                ? "Toutes les lignes seront copiées avec des montants négatifs, puis l'avoir sera émis automatiquement."
-                : "Un brouillon sera créé avec des montants négatifs. Vous pourrez ajuster les lignes avant émission."}
+                ? "Toutes les lignes seront copiées avec des montants négatifs, puis l'avoir sera validé automatiquement."
+                : "Un brouillon sera créé avec des montants négatifs. Vous pourrez ajuster les lignes avant validation."}
             </p>
           </div>
           <div className="flex justify-end gap-2">
@@ -744,7 +744,7 @@ export function InvoiceDetailPage() {
               Annuler
             </Button>
             <Button type="button" variant="primary" onClick={handleCreditNote} loading={busy}>
-              {cnMode === "total" ? "Créer et émettre" : "Créer le brouillon"}
+              {cnMode === "total" ? "Créer et valider" : "Créer le brouillon"}
             </Button>
           </div>
         </div>

@@ -143,7 +143,7 @@ export function PricingPage() {
                   </div>
                 </div>
                 <p className="text-xs text-muted leading-relaxed border-t border-border pt-4 font-normal">
-                  Le plan idéal pour tester Bylz et émettre vos premières factures légales gratuitement.
+                  Le plan idéal pour tester Bylz et valider vos premières factures légales gratuitement.
                 </p>
                 <ul className="space-y-2 text-xs text-muted font-medium pt-2">
                   <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-emerald-500" /> Jusqu'à 3 factures / mois</li>

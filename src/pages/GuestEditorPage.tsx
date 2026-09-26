@@ -654,8 +654,8 @@ export function GuestEditorPageContent() {
                     onClick={() => openWall("emit_invoice")}
                     className={canEmit ? "bylz-glow-primary" : ""}
                   >
-                    <span className="hidden sm:inline">Émettre ma facture</span>
-                    <span className="sm:hidden">Émettre</span>
+                    <span className="hidden sm:inline">Valider ma facture</span>
+                    <span className="sm:hidden">Valider</span>
                   </Button>
                 </div>
               </div>
@@ -696,7 +696,7 @@ export function GuestEditorPageContent() {
               openWall("emit_invoice");
             }}
           >
-            Émettre ma facture
+            Valider ma facture
           </Button>
         </div>
       </PreviewModal>
@@ -715,7 +715,7 @@ export function GuestEditorPageContent() {
             <p className="text-sm text-muted">
               {wallTriggerReason === "locked_feature"
                 ? "Créez votre compte gratuit en 10 secondes pour débloquer toutes les fonctionnalités."
-                : "Créez votre compte gratuit pour l'émettre et la conserver."}
+                : "Créez votre compte gratuit pour la valider et la conserver."}
             </p>
           </div>
 

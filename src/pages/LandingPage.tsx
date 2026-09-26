@@ -389,7 +389,7 @@ export function LandingPage() {
                   <div className="p-3 rounded-lg bg-surface border border-emerald-500/20 text-text space-y-1">
                     <p className="font-bold text-emerald-400">🤖 Bylz Copilot :</p>
                     <p>📄 Brouillon de facture prêt pour validation (Client X • 400.00 € TTC).</p>
-                    <p className="text-[10px] text-muted">Répondez OUI pour émettre avec son N° officiel FAC-2026-008.</p>
+                    <p className="text-[10px] text-muted">Répondez OUI pour valider avec son N° officiel FAC-2026-008.</p>
                   </div>
                 </div>
 

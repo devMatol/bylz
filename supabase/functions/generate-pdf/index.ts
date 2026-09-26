@@ -293,7 +293,7 @@ Deno.serve(async (req: Request) => {
       color: black,
     }, fontBold);
 
-    const issueLine = `Émise le ${formatDateFR(doc.issue_date)}`;
+    const issueLine = `Validée le ${formatDateFR(doc.issue_date)}`;
     const issueWidth = safeWidthOfText(font, issueLine, 9);
     safeDrawText(page, issueLine, {
       x: width - 50 - issueWidth,

@@ -202,7 +202,7 @@ export function InvoiceNewPage() {
       }
       const emitted = await emitInvoice(company.id, invoiceId);
       trackInvoiceEmitted(emitted.id, emitted.total_ttc || 0);
-      toast(`Facture émise : ${emitted.number}`, "success");
+      toast(`Facture validée : ${emitted.number}`, "success");
       navigate(`/invoices/${emitted.id}`);
     } catch (err) {
       toast(err instanceof Error ? err.message : "Erreur", "danger");
@@ -469,9 +469,9 @@ export function InvoiceNewPage() {
             onClick={() => setEmitOpen(true)}
           >
             <span className="hidden sm:inline">
-              {isCreditNote ? "Émettre l'avoir" : "Émettre la facture"}
+              {isCreditNote ? "Valider l'avoir" : "Valider la facture"}
             </span>
-            <span className="sm:hidden">Émettre</span>
+            <span className="sm:hidden">Valider</span>
           </Button>
         </div>
       </div>
@@ -521,9 +521,9 @@ export function InvoiceNewPage() {
         open={emitOpen}
         onClose={() => setEmitOpen(false)}
         onConfirm={handleEmit}
-        title="Émettre la facture"
-        message="Une fois émise, cette facture ne pourra plus être modifiée. Un avoir sera nécessaire pour toute correction."
-        confirmLabel="Émettre"
+        title="Valider la facture"
+        message="Une fois validée, cette facture ne pourra plus être modifiée. Un avoir sera nécessaire pour toute correction."
+        confirmLabel="Valider"
         danger={false}
       />
       <ConfirmModal

@@ -68,7 +68,7 @@ export function FeaturesPage() {
         "Entrez simplement le numéro SIRET d'une entreprise client. Bylz interroge les bases officielles pour remplir instantanément la raison sociale et l'adresse.",
       bullets: [
         "Fiches clients B2B et B2C détaillées",
-        "Historique complet des factures émises par client",
+        "Historique complet des factures validées par client",
         "Statistiques d'encaissement et délai moyen de paiement",
       ],
     },

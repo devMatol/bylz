@@ -41,7 +41,7 @@ export function HeroInvoiceMockup() {
             </div>
             <div>
               <p className="font-black text-text text-sm sm:text-base tracking-tight">FACTURE N° FAC-2026-089</p>
-              <p className="text-[11px] sm:text-xs text-muted font-medium">Émise le 22 Juillet 2026</p>
+              <p className="text-[11px] sm:text-xs text-muted font-medium">Validée le 22 Juillet 2026</p>
             </div>
           </div>
           <span className="inline-flex items-center px-3 py-1.5 rounded-pill text-xs font-bold bg-success/15 text-success border border-success/30 shadow-sm">

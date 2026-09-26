@@ -192,7 +192,7 @@ export function InvoicesPage() {
                 : "border-transparent text-muted hover:text-text hover:border-border/30"
             )}
           >
-            <span>Factures émises</span>
+            <span>Factures validées</span>
             <span className={cn(
               "text-[10px] px-1.5 py-0.5 rounded-full font-bold",
               activeTab === "sales"
@@ -376,7 +376,7 @@ export function InvoicesPage() {
                     <tr>
                       <th className="text-left p-3 font-semibold">{activeTab === "sales" ? "Client" : "Fournisseur"}</th>
                       <th className="text-left p-3 font-semibold whitespace-nowrap">Numéro</th>
-                      <th className="text-left p-3 font-semibold whitespace-nowrap">{activeTab === "sales" ? "Émise" : "Reçue le"}</th>
+                      <th className="text-left p-3 font-semibold whitespace-nowrap">{activeTab === "sales" ? "Validée le" : "Reçue le"}</th>
                       <th className="text-left p-3 font-semibold whitespace-nowrap">Échéance</th>
                       <th className="text-right p-3 font-semibold whitespace-nowrap">Montant</th>
                       <th className="text-left p-3 font-semibold">Statut</th>

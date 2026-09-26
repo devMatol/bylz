@@ -133,7 +133,7 @@ export async function generateInvoicePdfBytes(cfg: InvoicePdfConfig): Promise<Ui
     color: black,
   });
 
-  const issueLine = `Émise le ${formatDateFR(cfg.issueDate || new Date().toISOString())}`;
+  const issueLine = `Validée le ${formatDateFR(cfg.issueDate || new Date().toISOString())}`;
   const issueWidth = font.widthOfTextAtSize(issueLine, 9);
   page.drawText(issueLine, {
     x: width - 50 - issueWidth,

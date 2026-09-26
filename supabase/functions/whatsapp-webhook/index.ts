@@ -563,7 +563,7 @@ Deno.serve(async (req: Request) => {
           }
 
           replyText = `📄 *Brouillon de facture de ${amount.toFixed(2)} € créé pour ${clientName} !*\n\n` +
-            `• Répondez **"OUI"** (ou **"VALIDER"**) par texte pour émettre la facture avec son numéro officiel.\n` +
+            `• Répondez **"OUI"** (ou **"VALIDER"**) par texte pour valider la facture avec son numéro officiel.\n` +
             `• Répondez **"NON"** (ou **"ANNULER"**) par texte pour supprimer ce brouillon.\n` +
             `• Ou indiquez vos corrections (ex: *"Mets 600€"*).`;
         } else if (isCaQuery) {
@@ -595,7 +595,7 @@ Deno.serve(async (req: Request) => {
             .limit(5);
 
           if (!invoices || invoices.length === 0) {
-            replyText = `📑 Vous n'avez encore aucune facture émise sur Bylz.\n\nDictez *"Créer une facture de 500€ pour Client X"* pour générer votre première facture !`;
+            replyText = `📑 Vous n'avez encore aucune facture validée sur Bylz.\n\nDictez *"Créer une facture de 500€ pour Client X"* pour générer votre première facture !`;
           } else {
             const listStr = invoices.map((i) => {
               const cName = (i as any).client?.name || "Client";
@@ -664,7 +664,7 @@ Deno.serve(async (req: Request) => {
               `👤 *Client* : ${rawClient}\n` +
               `💰 *Montant TTC* : ${activeAmount} €\n\n` +
               `⚠️ *Validation requise :*\n` +
-              `• Répondez **"OUI"** (ou **"VALIDER"**) pour émettre cette facture avec son numéro officiel.\n` +
+              `• Répondez **"OUI"** (ou **"VALIDER"**) pour valider cette facture avec son numéro officiel.\n` +
               `• Ou indiquez d'autres corrections (ex: *"Mets 600€"*, *"Prestation site web"*).\n` +
               `• Répondez **"NON"** pour annuler.`;
           }
@@ -697,7 +697,7 @@ Deno.serve(async (req: Request) => {
               `💰 *Montant TTC* : ${activeAmount} €\n` +
               `📝 *Prestation* : ${newDesc}\n\n` +
               `⚠️ *Validation requise :*\n` +
-              `• Répondez **"OUI"** pour émettre cette facture.\n` +
+              `• Répondez **"OUI"** pour valider cette facture.\n` +
               `• Répondez **"NON"** pour annuler.`;
           }
         }
@@ -745,7 +745,7 @@ Deno.serve(async (req: Request) => {
               `💰 *Montant TTC* : ${newAmount.toFixed(2)} €\n` +
               `📝 *Prestation* : ${desc}\n\n` +
               `⚠️ *Validation requise :*\n` +
-              `• Répondez **"OUI"** (ou **"VALIDER"**) pour émettre cette facture avec son numéro officiel.\n` +
+              `• Répondez **"OUI"** (ou **"VALIDER"**) pour valider cette facture avec son numéro officiel.\n` +
               `• Ou indiquez d'autres corrections (ex: *"Mets 600€"*).\n` +
               `• Répondez **"NON"** pour annuler.`;
           }
@@ -759,7 +759,7 @@ Deno.serve(async (req: Request) => {
             .eq("company_id", company.id)
             .eq("status", "draft");
 
-          replyText = `❌ *Création annulée.* Le brouillon de facture a été supprimé sans émettre de numéro officiel.`;
+          replyText = `❌ *Création annulée.* Le brouillon de facture a été supprimé sans valider de numéro officiel.`;
         } else if (isConfirmation) {
           if (!targetDraft) {
             const { data: d1 } = await adminClient
@@ -828,8 +828,8 @@ Deno.serve(async (req: Request) => {
               `💰 *Montant TTC* : ${Number(targetDraft.total_ttc).toFixed(2)} €\n` +
               `📝 *Prestation* : ${desc}\n\n` +
               `🔒 *Statut* : **Brouillon modifiable**\n` +
-              `_Pour respecter la conformité légale, complétez l'adresse et le SIRET du client sur votre tableau de bord avant d'émettre le numéro officiel._\n\n` +
-              `👉 *Finaliser et émettre votre facture en 1 clic* :\n` +
+              `_Pour respecter la conformité légale, complétez l'adresse et le SIRET du client sur votre tableau de bord avant de valider le numéro officiel._\n\n` +
+              `👉 *Finaliser et valider votre facture en 1 clic* :\n` +
               `https://bylz.fr/invoices`;
           } else {
             replyText = `ℹ️ Aucun brouillon de facture en attente de validation.\n\nDictez *"Créer une facture de 500€ pour Client X"* pour générer un brouillon !`;
@@ -1061,7 +1061,7 @@ Sinon, réponds de manière concise, précise et amicale en français sur WhatsA
                     .delete()
                     .eq("id", targetDraft.id);
 
-                  replyText = `❌ *Création annulée.* Le brouillon de facture a été supprimé sans émettre de numéro officiel.`;
+                  replyText = `❌ *Création annulée.* Le brouillon de facture a été supprimé sans valider de numéro officiel.`;
                 } else {
                   replyText = `ℹ️ Aucun brouillon de facture en attente d'annulation.`;
                 }
@@ -1115,8 +1115,8 @@ Sinon, réponds de manière concise, précise et amicale en français sur WhatsA
                   `💰 *Montant TTC* : ${Number(targetDraft.total_ttc).toFixed(2)} €\n` +
                   `📝 *Prestation* : ${desc}\n\n` +
                   `🔒 *Statut* : **Brouillon modifiable**\n` +
-                  `_Pour respecter la conformité légale, complétez l'adresse et le SIRET du client sur votre tableau de bord avant d'émettre le numéro officiel._\n\n` +
-                  `👉 *Finaliser et émettre votre facture en 1 clic* :\n` +
+                  `_Pour respecter la conformité légale, complétez l'adresse et le SIRET du client sur votre tableau de bord avant de valider le numéro officiel._\n\n` +
+                  `👉 *Finaliser et valider votre facture en 1 clic* :\n` +
                   `https://bylz.fr/invoices`;
                 }
 
@@ -1238,7 +1238,7 @@ Sinon, réponds de manière concise, précise et amicale en français sur WhatsA
                       `💰 *Montant TTC* : ${amount.toFixed(2)} €\n` +
                       `📝 *Prestation* : ${description}\n\n` +
                       `⚠️ *Validation requise :*\n` +
-                      `• Répondez **"OUI"** pour émettre cette facture avec son numéro officiel.\n` +
+                      `• Répondez **"OUI"** pour valider cette facture avec son numéro officiel.\n` +
                       `• Ou indiquez d'autres corrections (ex: *"Mets 600€"*).\n` +
                       `• Répondez **"NON"** pour annuler.`;
                   } else {
@@ -1292,7 +1292,7 @@ Sinon, réponds de manière concise, précise et amicale en français sur WhatsA
                       `💰 *Montant TTC* : ${amount.toFixed(2)} €\n` +
                       `📝 *Prestation* : ${description}\n\n` +
                       `⚠️ *Validation requise :*\n` +
-                      `• Répondez **"OUI"** (ou **"VALIDER"**) pour émettre cette facture avec son numéro officiel.\n` +
+                      `• Répondez **"OUI"** (ou **"VALIDER"**) pour valider cette facture avec son numéro officiel.\n` +
                       `• Ou indiquez vos corrections (ex: *"Mets 1200€"*).\n` +
                       `• Répondez **"NON"** pour annuler.`;
                   }
@@ -1302,7 +1302,7 @@ Sinon, réponds de manière concise, précise et amicale en français sur WhatsA
               if (!replyText && rawAiReply) {
                 // Filter out raw JSON strings from being sent to WhatsApp user
                 if (rawAiReply.trim().startsWith("{") && rawAiReply.trim().endsWith("}")) {
-                  replyText = `📄 *Brouillon de facture prêt pour validation*\n\n• Répondez **"OUI"** pour valider et émettre la facture.\n• Répondez **"NON"** pour annuler.`;
+                  replyText = `📄 *Brouillon de facture prêt pour validation*\n\n• Répondez **"OUI"** pour valider la facture.\n• Répondez **"NON"** pour annuler.`;
                 } else {
                   replyText = rawAiReply;
                 }
@@ -1390,7 +1390,7 @@ Sinon, réponds de manière concise, précise et amicale en français sur WhatsA
                   `💰 *Montant TTC* : ${amount.toFixed(2)} €\n` +
                   `📝 *Prestation* : ${description}\n\n` +
                   `⚠️ *Validation requise :*\n` +
-                  `• Répondez **"OUI"** (ou **"VALIDER"**) pour émettre cette facture avec son numéro officiel.\n` +
+                  `• Répondez **"OUI"** (ou **"VALIDER"**) pour valider cette facture avec son numéro officiel.\n` +
                   `• Ou indiquez vos corrections (ex: *"Mets 500€"*).\n` +
                   `• Répondez **"NON"** (ou **"ANNULER"**) pour supprimer ce brouillon.`;
               } else if (fallbackInsErr) {

@@ -115,7 +115,7 @@ export function DocumentPreview({
             </p>
           )}
           <p className="text-xs text-gray-400 mt-2 whitespace-nowrap">
-            Émise le {formatDateLong(issueDate)}
+            Validée le {formatDateLong(issueDate)}
           </p>
           {documentType === "invoice" && dueDate && (
             <p className="text-xs text-gray-400 whitespace-nowrap">

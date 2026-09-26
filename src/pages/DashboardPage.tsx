@@ -471,7 +471,7 @@ export function DashboardPage() {
                     ))}
                   </div>
                 ) : (data?.recentInvoices || []).length === 0 ? (
-                  <p className="text-sm text-muted text-center py-8">Aucune facture émise</p>
+                  <p className="text-sm text-muted text-center py-8">Aucune facture validée</p>
                 ) : (
                   <div className="flex flex-col">
                     {(data?.recentInvoices || []).map((inv) => (
