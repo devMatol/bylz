@@ -56,14 +56,14 @@ export function PaTimeline({ invoice, isB2b, onRefresh }: PaTimelineProps) {
           (typeof res?.error === "string" && res.error) ||
           (typeof res?.message === "string" && res.message) ||
           (typeof error?.message === "string" && error.message) ||
-          "Échec de la transmission à la plateforme PA.";
+          "Échec de l'envoi à la facturation électronique.";
         toast(errorMsg, "warning");
       } else {
-        toast("Facture transmise avec succès à FactPulse !", "success");
+        toast("Facture envoyée avec succès à la facturation électronique !", "success");
       }
       if (onRefresh) onRefresh();
     } catch (e: any) {
-      toast(e.message || "Erreur lors de la transmission.", "danger");
+      toast(e.message || "Erreur lors de l'envoi à la facturation électronique.", "danger");
     } finally {
       setSubmitting(false);
     }
@@ -112,7 +112,7 @@ export function PaTimeline({ invoice, isB2b, onRefresh }: PaTimelineProps) {
       <div className="flex items-center justify-between">
         <h4 className="text-xs font-extrabold uppercase tracking-wider text-text flex items-center gap-1.5">
           <Send className="w-3.5 h-3.5 text-primary" />
-          <span>Transmission PDP FactPulse</span>
+          <span>Envoyé à la facturation électronique</span>
         </h4>
         {factpulseRef && (
           <span className="text-[10px] font-mono text-muted bg-surface-hover px-1.5 py-0.5 rounded border border-border">
@@ -200,7 +200,7 @@ export function PaTimeline({ invoice, isB2b, onRefresh }: PaTimelineProps) {
                 className="w-full justify-center bylz-glow-cta text-xs font-bold py-2"
               >
                 <Send className="w-3.5 h-3.5 mr-1.5" />
-                Transmettre à FactPulse PDP
+                Envoyer à la facturation électronique
               </Button>
             </div>
           )}
