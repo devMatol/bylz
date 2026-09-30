@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, Navigate, useLocation } from "react-router-dom";
+import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
 import {
   Sparkles,
   ArrowRight,
@@ -27,6 +27,7 @@ import { useAuth } from "../contexts/AuthContext";
 
 export function LandingPage() {
   const { user, profile, loading } = useAuth();
+  const navigate = useNavigate();
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
   const forcePublic = searchParams.get("public") === "true";
@@ -41,10 +42,39 @@ export function LandingPage() {
   const [demoDescription, setDemoDescription] = useState("Développement Web Frontend - Application Mobile");
   const [demoTjm, setDemoTjm] = useState(550);
   const [demoDays, setDemoDays] = useState(10);
+  const [demoHasVat, setDemoHasVat] = useState(false);
 
   const demoMontantHt = demoTjm * demoDays;
-  const demoTva = demoMontantHt * 0.2;
+  const demoTva = demoHasVat ? demoMontantHt * 0.2 : 0;
   const demoTotalTtc = demoMontantHt + demoTva;
+
+  const handleFinalizeInvoice = () => {
+    const today = new Date().toISOString().slice(0, 10);
+    const dueDate = new Date(Date.now() + 30 * 86400000).toISOString().slice(0, 10);
+    const guestDraft = {
+      clientName: "",
+      clientEmail: "",
+      clientType: "b2b",
+      lines: [
+        {
+          description: demoDescription,
+          quantity: demoDays,
+          unitPrice: demoTjm,
+          nature: "service",
+        },
+      ],
+      issueDate: today,
+      dueDate: dueDate,
+      paymentTerms: "30d",
+      note: demoHasVat ? "" : "TVA non applicable, art. 293 B du CGI",
+    };
+    try {
+      localStorage.setItem("bylz-guest-draft", JSON.stringify(guestDraft));
+    } catch (e) {
+      console.error("Failed to save draft to localStorage:", e);
+    }
+    navigate("/essai?tab=invoice&prefill=true");
+  };
 
   if (!loading && user && !forcePublic) {
     const isStarter = profile?.plan === "starter";
@@ -290,8 +320,8 @@ export function LandingPage() {
                     <div className="divide-y divide-slate-800/60 text-xs">
                       <div className="py-2.5 flex items-center justify-between gap-4">
                         <div>
-                          <p className="font-bold text-white">Alan SAS</p>
-                          <p className="text-[11px] text-slate-400 font-mono">FAC-2024-0012</p>
+                          <p className="font-bold text-white">Studio Apex SAS</p>
+                          <p className="text-[11px] text-slate-400 font-mono">FAC-2026-0012</p>
                         </div>
                         <div className="flex items-center gap-3">
                           <span className="font-mono font-bold text-white">3,200.00 €</span>
@@ -302,8 +332,8 @@ export function LandingPage() {
                       </div>
                       <div className="py-2.5 flex items-center justify-between gap-4">
                         <div>
-                          <p className="font-bold text-white">Pennylane SAS</p>
-                          <p className="text-[11px] text-slate-400 font-mono">FAC-2024-0011</p>
+                          <p className="font-bold text-white">Nexus Digital SARL</p>
+                          <p className="text-[11px] text-slate-400 font-mono">FAC-2026-0011</p>
                         </div>
                         <div className="flex items-center gap-3">
                           <span className="font-mono font-bold text-white">1,500.00 €</span>
@@ -314,8 +344,8 @@ export function LandingPage() {
                       </div>
                       <div className="py-2.5 flex items-center justify-between gap-4">
                         <div>
-                          <p className="font-bold text-white">Swile SA</p>
-                          <p className="text-[11px] text-slate-400 font-mono">FAC-2024-0010</p>
+                          <p className="font-bold text-white">Aura Conseil SAS</p>
+                          <p className="text-[11px] text-slate-400 font-mono">FAC-2026-0010</p>
                         </div>
                         <div className="flex items-center gap-3">
                           <span className="font-mono font-bold text-white">4,800.00 €</span>
@@ -666,40 +696,82 @@ export function LandingPage() {
                         />
                       </div>
                     </div>
+                    <div className="pt-1">
+                      <label className="block text-slate-400 font-bold mb-1.5">
+                        Régime de TVA
+                      </label>
+                      <div className="grid grid-cols-2 gap-2 p-1 rounded-xl bg-slate-900 border border-slate-700/80">
+                        <button
+                          type="button"
+                          onClick={() => setDemoHasVat(false)}
+                          className={`py-2 px-3 rounded-lg text-xs font-bold transition-all ${
+                            !demoHasVat
+                              ? "bg-blue-600 text-white shadow-md shadow-blue-600/30"
+                              : "text-slate-400 hover:text-white"
+                          }`}
+                        >
+                          Franchise en base (0%)
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setDemoHasVat(true)}
+                          className={`py-2 px-3 rounded-lg text-xs font-bold transition-all ${
+                            demoHasVat
+                              ? "bg-blue-600 text-white shadow-md shadow-blue-600/30"
+                              : "text-slate-400 hover:text-white"
+                          }`}
+                        >
+                          TVA standard (20%)
+                        </button>
+                      </div>
+                    </div>
                   </div>
 
                   {/* Calculations Preview */}
                   <div className="p-4 rounded-xl bg-slate-900/80 border border-slate-800 space-y-2 text-xs">
                     <div className="flex items-center justify-between text-slate-400">
-                      <span>Montant H.T. ({demoDays} jours)</span>
+                      <span>Montant H.T. ({demoDays} {demoDays > 1 ? "jours" : "jour"})</span>
                       <span className="font-mono font-bold text-white">
                         {demoMontantHt.toLocaleString("fr-FR", { minimumFractionDigits: 2 })} €
                       </span>
                     </div>
-                    <div className="flex items-center justify-between text-slate-400">
-                      <span>TVA (20%)</span>
-                      <span className="font-mono font-bold text-white">
-                        {demoTva.toLocaleString("fr-FR", { minimumFractionDigits: 2 })} €
-                      </span>
-                    </div>
+                    {demoHasVat ? (
+                      <div className="flex items-center justify-between text-slate-400">
+                        <span>TVA (20%)</span>
+                        <span className="font-mono font-bold text-white">
+                          {demoTva.toLocaleString("fr-FR", { minimumFractionDigits: 2 })} €
+                        </span>
+                      </div>
+                    ) : (
+                      <div className="flex items-center justify-between text-slate-400">
+                        <span>TVA (Franchise art. 293 B)</span>
+                        <span className="font-mono font-bold text-emerald-400">
+                          0,00 € (Non applicable)
+                        </span>
+                      </div>
+                    )}
                     <div className="pt-2 border-t border-slate-800 flex items-center justify-between">
                       <span className="font-bold text-white">Total TTC</span>
                       <span className="font-mono text-lg font-black text-blue-400">
                         {demoTotalTtc.toLocaleString("fr-FR", { minimumFractionDigits: 2 })} €
                       </span>
                     </div>
+                    {!demoHasVat && (
+                      <p className="text-[10px] text-slate-500 italic pt-1 text-right">
+                        « TVA non applicable, art. 293 B du CGI »
+                      </p>
+                    )}
                   </div>
 
                   {/* Action CTA */}
-                  <Link to="/essai" className="block w-full">
-                    <Button
-                      variant="primary"
-                      className="w-full py-3.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm shadow-lg shadow-blue-600/30 justify-center"
-                    >
-                      <span>Télécharger le PDF certifié</span>
-                      <ArrowRight className="w-4 h-4 ml-2" />
-                    </Button>
-                  </Link>
+                  <Button
+                    type="button"
+                    onClick={handleFinalizeInvoice}
+                    variant="primary"
+                    className="w-full py-3.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm shadow-lg shadow-blue-600/30 justify-center"
+                  >
+                    <span>Finaliser ma facture →</span>
+                  </Button>
                 </div>
               </div>
             </div>
@@ -932,7 +1004,7 @@ export function LandingPage() {
               </Link>
             </div>
             <p className="text-xs text-slate-500 font-medium">
-              Essai gratuit de 14 jours, sans carte bancaire
+              Gratuit pour toujours jusqu'à 3 factures/mois, sans carte bancaire
             </p>
           </div>
         </section>

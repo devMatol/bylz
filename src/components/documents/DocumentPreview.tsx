@@ -153,7 +153,7 @@ export function DocumentPreview({
 
       {/* Lines table */}
       <div className="px-6 overflow-x-auto">
-        <table className="w-full text-sm min-w-[480px]">
+        <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-gray-200 text-left text-xs text-gray-500">
               <th className="py-2 font-semibold">Description</th>

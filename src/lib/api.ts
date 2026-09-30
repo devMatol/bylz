@@ -1147,29 +1147,25 @@ export async function fetchPayments(
 
 // ---------- Fiscal constants ----------
 
-export const VAT_THRESHOLDS = {
-  service: 36800,
-  goods: 91900,
-};
-export const MICRO_THRESHOLDS = {
-  service: 77700,
-  goods: 188700,
-};
+import {
+  VAT_THRESHOLDS,
+  MICRO_THRESHOLDS,
+  URSSAF_RATES,
+  abattementFor,
+  urssafRateFor,
+  computeTaxableBenefit,
+  computeUrssafContributions,
+} from "./fiscalConfig";
 
-const URSSAF_RATES: Record<ActivityType, { rate: number; abattement: number }> = {
-  freelance_bnc: { rate: 0.212, abattement: 0.34 },
-  liberal: { rate: 0.212, abattement: 0.34 },
-  artisan_bic: { rate: 0.212, abattement: 0.50 },
-  commerce: { rate: 0.123, abattement: 0.71 },
+export {
+  VAT_THRESHOLDS,
+  MICRO_THRESHOLDS,
+  URSSAF_RATES,
+  abattementFor,
+  urssafRateFor,
+  computeTaxableBenefit,
+  computeUrssafContributions,
 };
-
-export function abattementFor(activityType: ActivityType): number {
-  return URSSAF_RATES[activityType]?.abattement ?? 0.34;
-}
-
-export function urssafRateFor(activityType: ActivityType): number {
-  return URSSAF_RATES[activityType]?.rate ?? 0.212;
-}
 
 // ---------- Dashboard ----------
 
@@ -1765,14 +1761,16 @@ export async function migrateGuestDraft(companyId: string): Promise<string | nul
 
   try {
     const draft = JSON.parse(stored);
-    if (!draft || !draft.clientName) return null;
+    if (!draft || (!draft.clientName && (!draft.lines || draft.lines.length === 0))) return null;
+
+    const clientName = draft.clientName?.trim() || "Client (Brouillon démo)";
 
     // Create client
     const { data: client, error: clientErr } = await supabase
       .from("clients")
       .insert({
         company_id: companyId,
-        name: draft.clientName,
+        name: clientName,
         type: draft.clientType || "b2b",
         email: draft.clientEmail || null,
       })

@@ -80,7 +80,8 @@ export function OnboardingPage() {
     }
 
     let targetInvoiceId: string | null = null;
-    if (searchParams.get("guest") === "true" && companyId) {
+    const hasGuestDraft = searchParams.get("guest") === "true" || !!localStorage.getItem("bylz-guest-draft");
+    if (hasGuestDraft && companyId) {
       try {
         const invoiceId = await migrateGuestDraft(companyId);
         if (invoiceId) {

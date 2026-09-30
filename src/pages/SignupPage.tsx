@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { Eye, EyeOff, Mail, Lock } from "lucide-react";
+import { Eye, EyeOff, Mail, Lock, FileText } from "lucide-react";
 import { AuthLayout } from "../components/auth/AuthLayout";
 import { GoogleIcon } from "../components/auth/GoogleIcon";
 import { Button } from "../components/ui/Button";
@@ -10,7 +10,7 @@ import { useAuth } from "../contexts/AuthContext";
 import { signUp, signInWithGoogle } from "../lib/auth";
 import { sendWelcomeEmail } from "../lib/emailNotifier";
 import { trackSignUp } from "../lib/analytics";
-import { cn } from "../lib/utils";
+import { cn, formatAmount } from "../lib/utils";
 
 function mapAuthError(code: string | undefined): string {
   if (!code) return "Une erreur est survenue. Réessayez.";
@@ -56,6 +56,24 @@ export function SignupPage() {
 
   const isGuest = new URLSearchParams(window.location.search).get("guest") === "true";
 
+  const [draftTotal] = useState<number | null>(() => {
+    try {
+      const stored = localStorage.getItem("bylz-guest-draft");
+      if (!stored) return null;
+      const parsed = JSON.parse(stored);
+      if (parsed && Array.isArray(parsed.lines) && parsed.lines.length > 0) {
+        const total = parsed.lines.reduce(
+          (sum: number, l: any) => sum + (Number(l.quantity) || 0) * (Number(l.unitPrice) || 0),
+          0
+        );
+        return total > 0 ? total : null;
+      }
+    } catch {
+      return null;
+    }
+    return null;
+  });
+
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -83,7 +101,7 @@ export function SignupPage() {
     setGoogleLoading(true);
     // Track GA4 / Google Ads sign_up conversion intent
     trackSignUp("google");
-    const redirectTo = isGuest ? `${window.location.origin}/?guest=true` : undefined;
+    const redirectTo = `${window.location.origin}/onboarding?guest=true`;
     const { error: googleError } = await signInWithGoogle(redirectTo);
     if (googleError) {
       setError(mapAuthError(googleError.code));
@@ -94,7 +112,7 @@ export function SignupPage() {
   return (
     <AuthLayout
       title="Créez votre espace Bylz"
-      subtitle="Gratuit (sans carte bancaire)"
+      subtitle="Gratuit pour toujours jusqu'à 3 factures/mois, sans carte bancaire"
       footer={
         <p>
           Déjà un compte ?{" "}
@@ -108,6 +126,16 @@ export function SignupPage() {
       }
     >
       <SEO title="Créer un compte | Bylz" noindex />
+
+      {draftTotal !== null && (
+        <div className="mb-5 p-3.5 rounded-xl bg-blue-500/10 border border-blue-500/30 flex items-start gap-2.5 text-xs text-blue-300">
+          <FileText className="w-4 h-4 text-blue-400 shrink-0 mt-0.5" />
+          <span className="leading-relaxed">
+            Votre facture de <strong className="text-white font-mono font-bold">{formatAmount(draftTotal)}</strong> vous attend. Elle sera importée dans votre espace.
+          </span>
+        </div>
+      )}
+
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         <Input
           label="Email"
@@ -167,8 +195,16 @@ export function SignupPage() {
         </Button>
       </form>
 
-      <p className="text-xs text-muted text-center mt-3">
-        En créant un compte vous acceptez nos CGU.
+      <p className="text-xs text-muted text-center mt-3 leading-relaxed">
+        En créant un compte, vous acceptez nos{" "}
+        <Link to="/cgu" target="_blank" className="text-primary hover:underline font-medium">
+          CGU
+        </Link>{" "}
+        et notre{" "}
+        <Link to="/confidentialite" target="_blank" className="text-primary hover:underline font-medium">
+          politique de confidentialité
+        </Link>
+        .
       </p>
 
       <div className="flex items-center gap-3 my-4">

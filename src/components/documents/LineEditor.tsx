@@ -41,8 +41,8 @@ export function LineEditor({ lines, onChange, catalog, allowNegativePrice = fals
 
   return (
     <div className="flex flex-col">
-      {/* Header row (desktop only, ≥1024px) */}
-      <div className="hidden lg:grid w-full grid-cols-[20px_minmax(180px,1fr)_64px_100px_80px_96px_28px] gap-2 px-1 pb-2 text-xs font-semibold text-muted uppercase tracking-wide" style={{ letterSpacing: "0.04em" }}>
+      {/* Header row (desktop xl only, ≥1280px) */}
+      <div className="hidden xl:grid w-full grid-cols-[18px_minmax(120px,1fr)_56px_84px_72px_80px_24px] gap-2 px-1 pb-2 text-xs font-semibold text-muted uppercase tracking-wide" style={{ letterSpacing: "0.04em" }}>
         <span />
         <span>Description</span>
         <span className="text-center">Qté</span>
@@ -148,8 +148,8 @@ function LineRow({
 
   return (
     <>
-      {/* Desktop: single-row grid (≥1024px) */}
-      <div className="hidden lg:grid w-full grid-cols-[20px_minmax(180px,1fr)_64px_100px_80px_96px_28px] gap-2 items-center py-4 border-t border-border">
+      {/* Desktop: single-row grid (≥1280px) */}
+      <div className="hidden xl:grid w-full grid-cols-[18px_minmax(120px,1fr)_56px_84px_72px_80px_24px] gap-2 items-center py-4 border-t border-border">
         {/* Drag handle */}
         <div className="flex flex-col items-center gap-0.5">
           <button
@@ -267,8 +267,8 @@ function LineRow({
         </button>
       </div>
 
-      {/* Mobile: card layout (<1024px) */}
-      <div className="lg:hidden border-t border-border py-4 flex flex-col gap-3">
+      {/* Mobile & Tablet: card layout (<1280px) */}
+      <div className="xl:hidden border-t border-border py-4 flex flex-col gap-3">
         <div ref={comboMobileRef} className="relative">
           <div className="relative">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted pointer-events-none" />

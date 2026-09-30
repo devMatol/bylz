@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import {
   LayoutDashboard,
   Receipt,
@@ -49,6 +49,7 @@ type GuestTab = "dashboard" | "invoice";
 export function GuestEditorPageContent() {
   const { draft, updateDraft } = useGuestDraft();
   const navigate = useNavigate();
+  const location = useLocation();
   const [activeTab, setActiveTab] = useState<GuestTab>("dashboard");
   const [mobileView, setMobileView] = useState<"form" | "preview">("form");
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
@@ -56,6 +57,31 @@ export function GuestEditorPageContent() {
   const [wallOpen, setWallOpen] = useState(false);
   const [lockedFeatureName, setLockedFeatureName] = useState<string>("cette fonctionnalité");
   const [wallTriggerReason, setWallTriggerReason] = useState<"locked_feature" | "emit_invoice">("emit_invoice");
+
+  // Handle query params (?tab=invoice & ?prefill=true)
+  useEffect(() => {
+    const searchParams = new URLSearchParams(location.search);
+    const tabParam = searchParams.get("tab");
+    const prefillParam = searchParams.get("prefill");
+    if (tabParam === "invoice" || prefillParam === "true") {
+      setActiveTab("invoice");
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      try {
+        const stored = localStorage.getItem("bylz-guest-draft");
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          if (parsed && Array.isArray(parsed.lines) && parsed.lines.length > 0) {
+            updateDraft({
+              lines: parsed.lines,
+              note: parsed.note !== undefined ? parsed.note : draft?.note,
+            });
+          }
+        }
+      } catch (err) {
+        console.error("Failed to sync draft in /essai:", err);
+      }
+    }
+  }, [location.search]);
 
   // Recompute due date when issue date or terms change
   useEffect(() => {
@@ -108,16 +134,18 @@ export function GuestEditorPageContent() {
     created_at: new Date().toISOString(),
   };
 
+  const hasCustomClient = !!(draft?.clientName && draft.clientName.trim().length > 0 && draft.clientName.trim() !== "Acme Studio SARL");
+
   const mockClient: Client = {
     id: "guest-client",
     company_id: "guest-company",
     name: draft?.clientName || "Acme Studio SARL",
     type: draft?.clientType || "b2b",
-    siren: "803245912",
-    siret: "803 245 912 00024",
-    vat_number: "FR34803245912",
-    email: draft?.clientEmail || "comptabilite@acme.fr",
-    address: "42 avenue des Champs-Élysées, 75008 Paris",
+    siren: hasCustomClient ? "" : "803245912",
+    siret: hasCustomClient ? "" : "803 245 912 00024",
+    vat_number: hasCustomClient ? "" : "FR34803245912",
+    email: draft?.clientEmail || (hasCustomClient ? "" : "comptabilite@acme.fr"),
+    address: hasCustomClient ? "" : "42 avenue des Champs-Élysées, 75008 Paris",
     archived_at: null,
     created_at: new Date().toISOString(),
   };
@@ -318,8 +346,8 @@ export function GuestEditorPageContent() {
                     <span className="text-[11px] font-bold uppercase tracking-wider">Bénéfice fiscal</span>
                     <Wallet className="w-3.5 h-3.5 text-accent" />
                   </div>
-                  <div className="text-xl sm:text-2xl font-black text-text font-mono">3 357,50 €</div>
-                  <p className="text-[10px] text-muted">Abattement 21% (BNC)</p>
+                  <div className="text-xl sm:text-2xl font-black text-text font-mono">2 805,00 €</div>
+                  <p className="text-[10px] text-muted">Abattement 34% (BNC)</p>
                   <p className="text-[10px] text-muted">Revenu imposable</p>
                 </Card>
 
@@ -328,9 +356,9 @@ export function GuestEditorPageContent() {
                     <span className="text-[11px] font-bold uppercase tracking-wider">Cotisations URSSAF</span>
                     <Landmark className="w-3.5 h-3.5 text-amber-400" />
                   </div>
-                  <div className="text-xl sm:text-2xl font-black text-text font-mono">896,75 €</div>
+                  <div className="text-xl sm:text-2xl font-black text-text font-mono">981,75 €</div>
                   <div className="text-[10px] text-amber-400 font-bold">Échéance: 30 nov. 2026</div>
-                  <p className="text-[10px] text-muted">Taux réel 21.1%</p>
+                  <p className="text-[10px] text-muted">Taux légal 2026 : 23,1%</p>
                 </Card>
 
                 <Card className="p-4 space-y-1.5 bg-surface border-border">
@@ -338,7 +366,7 @@ export function GuestEditorPageContent() {
                     <span className="text-[11px] font-bold uppercase tracking-wider">Net estimé</span>
                     <Receipt className="w-3.5 h-3.5 text-emerald-400" />
                   </div>
-                  <div className="text-xl sm:text-2xl font-black text-emerald-400 font-mono">2 984,20 €</div>
+                  <div className="text-xl sm:text-2xl font-black text-emerald-400 font-mono">2 959,70 €</div>
                   <p className="text-[10px] text-muted">Après cotisations et IR</p>
                   <p className="text-[10px] text-slate-500 font-mono">TMI estimé : 11%</p>
                 </Card>
@@ -475,10 +503,10 @@ export function GuestEditorPageContent() {
                     <tbody className="divide-y divide-border">
                       <tr className="hover:bg-surface-hover transition-colors">
                         <td className="py-3 px-3 font-mono font-bold text-text">FAC-2026-003</td>
-                        <td className="py-3 px-3 font-semibold text-text">Alan SAS</td>
+                        <td className="py-3 px-3 font-semibold text-text">Studio Apex SAS</td>
+                        <td className="py-3 px-3 text-muted">02 mai 2026</td>
                         <td className="py-3 px-3 text-muted">15 mai 2026</td>
-                        <td className="py-3 px-3 text-muted">30 mai 2026</td>
-                        <td className="py-3 px-3 font-mono font-bold text-text text-right">3 200,00 €</td>
+                        <td className="py-3 px-3 font-mono font-bold text-text text-right">2 750,00 €</td>
                         <td className="py-3 px-3 text-center">
                           <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
                             Validée · Payée
@@ -487,25 +515,25 @@ export function GuestEditorPageContent() {
                       </tr>
                       <tr className="hover:bg-surface-hover transition-colors">
                         <td className="py-3 px-3 font-mono font-bold text-text">FAC-2026-002</td>
-                        <td className="py-3 px-3 font-semibold text-text">Pennylane SAS</td>
-                        <td className="py-3 px-3 text-muted">02 mai 2026</td>
-                        <td className="py-3 px-3 text-muted">01 juin 2026</td>
+                        <td className="py-3 px-3 font-semibold text-text">Nexus Digital SARL</td>
+                        <td className="py-3 px-3 text-muted">28 avr. 2026</td>
+                        <td className="py-3 px-3 text-muted">05 mai 2026</td>
                         <td className="py-3 px-3 font-mono font-bold text-text text-right">1 500,00 €</td>
                         <td className="py-3 px-3 text-center">
-                          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/15 text-amber-400 border border-amber-500/30">
-                            En attente
+                          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+                            Validée · Payée
                           </span>
                         </td>
                       </tr>
                       <tr className="hover:bg-surface-hover transition-colors">
                         <td className="py-3 px-3 font-mono font-bold text-text">FAC-2026-001</td>
-                        <td className="py-3 px-3 font-semibold text-text">Swile SA</td>
-                        <td className="py-3 px-3 text-muted">24 avr. 2026</td>
-                        <td className="py-3 px-3 text-muted">24 mai 2026</td>
-                        <td className="py-3 px-3 font-mono font-bold text-text text-right">4 800,00 €</td>
+                        <td className="py-3 px-3 font-semibold text-text">Aura Conseil SAS</td>
+                        <td className="py-3 px-3 text-muted">18 mai 2026</td>
+                        <td className="py-3 px-3 text-muted">18 juin 2026</td>
+                        <td className="py-3 px-3 font-mono font-bold text-text text-right">1 800,00 €</td>
                         <td className="py-3 px-3 text-center">
-                          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
-                            Validée · Payée
+                          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/15 text-amber-400 border border-amber-500/30">
+                            En attente
                           </span>
                         </td>
                       </tr>
@@ -744,9 +772,9 @@ export function GuestEditorPageContent() {
                   <Button
                     variant="outline"
                     size="sm"
-                    leftIcon={<Eye className="w-4 h-4" />}
+                    leftIcon={<Eye className="w-4 h-4 text-slate-300" />}
                     onClick={() => setPreviewOpen(true)}
-                    className="text-xs h-9"
+                    className="text-xs h-9 text-slate-200 bg-slate-900 border-slate-700 hover:bg-slate-800 hover:text-white font-medium"
                   >
                     Plein écran
                   </Button>
@@ -929,8 +957,8 @@ export function GuestEditorPageContent() {
           <div className="space-y-6 pt-2">
             <p className="text-sm text-muted leading-relaxed">
               {wallTriggerReason === "emit_invoice"
-                ? "Créez votre compte en 30 secondes pour télécharger le PDF officiel Factur-X, sauvegarder vos coordonnées de facturation et activer le suivi automatique."
-                : `Pour accéder à ${lockedFeatureName}, connectez-vous ou créez votre compte gratuit. Vos brouillons créés pendant la démo seront automatiquement conservés !`}
+                ? "Créez votre compte en 30 secondes pour télécharger le PDF officiel Factur-X, sauvegarder vos coordonnées de facturation et activer le suivi automatique. Gratuit pour toujours jusqu'à 3 factures/mois, sans carte bancaire."
+                : `Pour accéder à ${lockedFeatureName}, connectez-vous ou créez votre compte gratuit. Vos brouillons créés pendant la démo seront automatiquement conservés ! Gratuit pour toujours jusqu'à 3 factures/mois, sans carte bancaire.`}
             </p>
 
             <div className="p-3.5 rounded-xl bg-primary/10 border border-primary/20 space-y-1 text-xs">
@@ -952,11 +980,12 @@ export function GuestEditorPageContent() {
                 Continuer avec Google
               </Button>
 
-              <div className="relative flex items-center justify-center">
-                <div className="border-t border-border w-full" />
-                <span className="bg-surface px-3 text-[11px] font-bold text-muted uppercase tracking-wider relative">
+              <div className="relative flex items-center justify-center my-1 w-full">
+                <div className="flex-grow border-t border-border" />
+                <span className="flex-shrink mx-3 text-[11px] font-bold text-muted uppercase tracking-wider">
                   ou par email
                 </span>
+                <div className="flex-grow border-t border-border" />
               </div>
 
               <Link to="/signup?guest=true" className="block w-full">
