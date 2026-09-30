@@ -26,6 +26,12 @@ export function trackEvent(
  */
 export function trackSignUp(method: "email" | "google" = "email") {
   trackEvent("sign_up", { method });
+  // Google Ads conversion event: Inscription
+  if (typeof window !== "undefined" && typeof window.gtag === "function") {
+    window.gtag("event", "conversion", {
+      send_to: "AW-18465275177/sjQfCKe00YQdEKn69uRE",
+    });
+  }
 }
 
 /**
