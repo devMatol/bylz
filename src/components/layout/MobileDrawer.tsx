@@ -1,5 +1,5 @@
 import { type ReactNode } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import {
   X,
   Settings,
@@ -12,10 +12,18 @@ import {
   Crown,
   ChevronRight,
   Smartphone,
+  Users,
+  BookOpen,
+  BookMarked,
+  BellRing,
+  Bot,
+  Receipt,
+  FileText,
 } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
 import { Button } from "../ui/Button";
 import { triggerPwaInstallModal } from "../pwa/PwaInstallBanner";
+import { cn } from "../../lib/utils";
 
 interface MobileDrawerProps {
   isOpen: boolean;
@@ -24,6 +32,7 @@ interface MobileDrawerProps {
 
 export function MobileDrawer({ isOpen, onClose }: MobileDrawerProps) {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user, profile, company, signOut } = useAuth();
 
   if (!isOpen) return null;
@@ -64,16 +73,46 @@ export function MobileDrawer({ isOpen, onClose }: MobileDrawerProps) {
 
   const drawerLinks = [
     {
-      label: "🌐 Accueil",
-      path: "/?public=true",
-      icon: ChevronRight,
-      desc: "Page d'accueil de Bylz",
+      label: "👥 Clients",
+      path: "/clients",
+      icon: Users,
+      desc: "Répertoire et fiches de vos clients",
     },
     {
-      label: "🤖 Assistant IA Copilot",
-      path: "/assistant",
-      icon: Settings,
-      desc: "Dictée vocale, conseils & WhatsApp",
+      label: "📚 Catalogue",
+      path: "/catalog",
+      icon: BookOpen,
+      desc: "Articles, prestations et grille tarifaire",
+    },
+    {
+      label: "📄 Factures",
+      path: "/invoices",
+      icon: Receipt,
+      desc: "Historique et gestion des factures",
+    },
+    {
+      label: "📝 Devis",
+      path: "/quotes",
+      icon: FileText,
+      desc: "Création et suivi de vos devis",
+    },
+    {
+      label: "📒 Livre des recettes",
+      path: "/livre-recettes",
+      icon: BookMarked,
+      desc: "Registre chronologique des encaissements",
+    },
+    {
+      label: "📊 URSSAF & Cotisations",
+      path: "/urssaf",
+      icon: Landmark,
+      desc: "Suivi du CA & cotisations sociales",
+    },
+    {
+      label: "🔔 Relances Automatiques",
+      path: "/reminders",
+      icon: BellRing,
+      desc: "Échéanciers & relances de factures",
     },
     ...(isMatthias
       ? [
@@ -86,22 +125,10 @@ export function MobileDrawer({ isOpen, onClose }: MobileDrawerProps) {
         ]
       : []),
     {
-      label: "🔔 Relances Automatiques",
-      path: "/reminders",
-      icon: Settings,
-      desc: "Échéanciers & relances de factures",
-    },
-    {
-      label: "📄 Factures & Devis",
-      path: "/invoices",
-      icon: Package,
-      desc: "Gestion de vos documents commerciaux",
-    },
-    {
-      label: "📊 URSSAF & Cotisations",
-      path: "/urssaf",
-      icon: Landmark,
-      desc: "Suivi du CA & cotisations sociales",
+      label: "🤖 Assistant IA Copilot",
+      path: "/assistant",
+      icon: Bot,
+      desc: "Dictée vocale, conseils & WhatsApp",
     },
     {
       label: "⚙️ Paramètres du compte",
@@ -114,6 +141,12 @@ export function MobileDrawer({ isOpen, onClose }: MobileDrawerProps) {
       path: "/contact",
       icon: LifeBuoy,
       desc: "Contacter l'équipe Bylz",
+    },
+    {
+      label: "🌐 Accueil",
+      path: "/?public=true",
+      icon: ChevronRight,
+      desc: "Page d'accueil de Bylz",
     },
   ];
 
@@ -203,25 +236,55 @@ export function MobileDrawer({ isOpen, onClose }: MobileDrawerProps) {
             </p>
             {drawerLinks.map((item) => {
               const Icon = item.icon;
+              const isActive =
+                item.path === "/"
+                  ? location.pathname === "/"
+                  : item.path === "/?public=true"
+                  ? location.pathname === "/" && location.search.includes("public=true")
+                  : location.pathname === item.path ||
+                    (item.path !== "/" && !item.path.includes("?") && location.pathname.startsWith(item.path));
+
               return (
                 <Link
                   key={item.path}
                   to={item.path}
                   onClick={onClose}
-                  className="flex items-center justify-between p-3 rounded-xl hover:bg-surface-hover transition-colors group"
+                  className={cn(
+                    "flex items-center justify-between p-3 rounded-xl transition-colors group",
+                    isActive
+                      ? "bg-primary/10 border border-primary/25 text-primary"
+                      : "hover:bg-surface-hover"
+                  )}
                 >
                   <div className="flex items-center space-x-3">
-                    <div className="p-2 rounded-lg bg-surface border border-border/60 text-muted group-hover:text-primary group-hover:border-primary/40 transition-colors">
+                    <div
+                      className={cn(
+                        "p-2 rounded-lg transition-colors",
+                        isActive
+                          ? "bg-primary/20 text-primary border border-primary/30"
+                          : "bg-surface border border-border/60 text-muted group-hover:text-primary group-hover:border-primary/40"
+                      )}
+                    >
                       <Icon className="w-4 h-4" />
                     </div>
                     <div>
-                      <p className="text-xs font-bold text-text group-hover:text-primary transition-colors">
+                      <p
+                        className={cn(
+                          "text-xs font-bold transition-colors",
+                          isActive ? "text-primary" : "text-text group-hover:text-primary"
+                        )}
+                      >
                         {item.label}
                       </p>
                       <p className="text-[10px] text-muted">{item.desc}</p>
                     </div>
                   </div>
-                  <ChevronRight className="w-4 h-4 text-muted group-hover:text-text transition-colors" />
+                  <ChevronRight
+                    className={cn(
+                      "w-4 h-4 transition-colors",
+                      isActive ? "text-primary" : "text-muted group-hover:text-text"
+                    )}
+                  />
                 </Link>
               );
             })}

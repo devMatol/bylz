@@ -63,7 +63,7 @@ export function BottomNav() {
           className="flex flex-col items-center justify-center gap-0.5 flex-1 h-full text-[11px] font-semibold text-muted hover:text-text transition-colors"
         >
           <Menu className="w-5 h-5" />
-          <span className="truncate max-w-full">Plus</span>
+          <span className="truncate max-w-full">Menu</span>
         </button>
       </nav>
 
