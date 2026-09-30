@@ -5,6 +5,7 @@ import { useAuth } from "../../contexts/AuthContext";
 import { cn } from "../../lib/utils";
 
 import { Logo } from "../shared/Logo";
+import { PendingVerificationBanner } from "../auth/PendingVerificationBanner";
 
 interface OnboardingLayoutProps {
   step: 1 | 2 | 3;
@@ -60,8 +61,10 @@ export function OnboardingLayout({ step, onBack, wide = false, children }: Onboa
   }
 
   return (
-    <div className="min-h-screen bg-bg flex flex-col items-center justify-center p-4 py-10">
-      <div className={cn("w-full transition-[max-width] duration-500 ease-in-out", wide ? "max-w-[960px]" : "max-w-[560px]")}>
+    <div className="min-h-screen bg-bg flex flex-col">
+      <PendingVerificationBanner />
+      <div className="flex-1 flex flex-col items-center justify-center p-4 py-10">
+        <div className={cn("w-full transition-[max-width] duration-500 ease-in-out", wide ? "max-w-[960px]" : "max-w-[560px]")}>
         <div
           className={cn(
             "sticky top-0 z-50 -mx-4 px-4 pt-2 pb-3 mb-4 bg-bg/80 backdrop-blur-md transition-shadow duration-200",
@@ -116,6 +119,7 @@ export function OnboardingLayout({ step, onBack, wide = false, children }: Onboa
           )}
           {children}
         </div>
+      </div>
       </div>
     </div>
   );

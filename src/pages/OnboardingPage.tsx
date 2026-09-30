@@ -39,6 +39,7 @@ export function OnboardingPage() {
       vat_regime: data.vatRegime,
       structure: data.structure,
       default_payment_terms: "30d" as const,
+      phone: (user.user_metadata?.phone as string) || null,
     };
     // Update if company already exists for user, otherwise insert
     const { data: existingComps } = await supabase

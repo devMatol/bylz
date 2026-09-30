@@ -13,8 +13,25 @@ import type { Session, User } from "@supabase/supabase-js";
  * Supabase sends the user back to the app root after the OAuth dance.
  */
 
-export async function signUp(email: string, password: string) {
-  return supabase.auth.signUp({ email, password });
+export async function signUp(email: string, password: string, phone?: string) {
+  return supabase.auth.signUp({
+    email,
+    password,
+    options: {
+      data: phone ? { phone } : undefined,
+      emailRedirectTo: `${window.location.origin}/onboarding`,
+    },
+  });
+}
+
+export async function resendConfirmationEmail(email: string) {
+  return supabase.auth.resend({
+    type: "signup",
+    email,
+    options: {
+      emailRedirectTo: `${window.location.origin}/onboarding`,
+    },
+  });
 }
 
 export async function signIn(email: string, password: string) {

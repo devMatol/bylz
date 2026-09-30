@@ -11,6 +11,7 @@ import {
 
 import { GlobalAiCopilotWidget } from "../shared/GlobalAiCopilotWidget";
 import { registerServiceWorker } from "../../lib/pushNotifications";
+import { PendingVerificationBanner } from "../auth/PendingVerificationBanner";
 
 const routeTitles: Record<string, string> = {
   "/": "Tableau de bord",
@@ -55,6 +56,7 @@ function ShellContent() {
     <div className="min-h-screen bg-bg">
       <Sidebar />
       <div className="min-h-screen flex flex-col md:ml-[280px]">
+        <PendingVerificationBanner />
         <Topbar title={title} subtitle={header.subtitle} actions={header.actions} />
         <main className="flex-1 p-4 md:p-10 pb-36 md:pb-10">
           <Outlet />
