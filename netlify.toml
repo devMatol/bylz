@@ -2,6 +2,10 @@
   command = "npm run build"
   publish = "dist"
 
+[[edge_functions]]
+  function = "dynamic-render"
+  path = "/*"
+
 [[redirects]]
   from = "/blog/franchise-en-base-de-tva-2026"
   to = "/blog/franchise-tva-2026-seuils-et-regles"
