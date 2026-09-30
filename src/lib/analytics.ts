@@ -56,8 +56,9 @@ export function trackBeginCheckout(plan: string, billingCycle: string, value: nu
  * Standard GA4 / Google Ads: User completes a purchase / subscription
  */
 export function trackPurchase(plan: string, value: number, transactionId?: string) {
+  const txId = transactionId || `bylz_${Date.now()}`;
   trackEvent("purchase", {
-    transaction_id: transactionId || `bylz_${Date.now()}`,
+    transaction_id: txId,
     value,
     currency: "EUR",
     items: [
@@ -68,6 +69,14 @@ export function trackPurchase(plan: string, value: number, transactionId?: strin
       },
     ],
   });
+  // Google Ads conversion event: Abonnement
+  if (typeof window !== "undefined" && typeof window.gtag === "function") {
+    window.gtag("event", "ads_conversion_Abonnement_1", {
+      value,
+      currency: "EUR",
+      transaction_id: txId,
+    });
+  }
 }
 
 /**
