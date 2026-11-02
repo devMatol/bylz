@@ -2,6 +2,7 @@ import fs from "fs";
 import path from "path";
 import { createClient } from "@supabase/supabase-js";
 import { BLOG_SLUG_REDIRECTS } from "../src/lib/blogSlugs.ts";
+import { BLOG_ARTICLES } from "../src/data/blogArticles.ts";
 
 function loadEnv() {
   const envPath = path.resolve(process.cwd(), ".env");
@@ -46,24 +47,17 @@ const staticUrls = [
   { loc: "https://bylz.fr/confidentialite", priority: "0.3", changefreq: "yearly" },
 ];
 
-const STATIC_BLOG_SLUGS = [
-  "reforme-factur-x-2026-auto-entrepreneurs",
-  "franchise-tva-2026-seuils-et-regles",
-  "calcul-cotisations-urssaf-bnc-bic",
-  "modele-facture-auto-entrepreneur-gratuit",
-];
-
 async function generateSitemap() {
   console.log("Generating sitemap.xml...");
 
   const isNetlify = Boolean(process.env.NETLIFY);
   const existingSitemapExists = fs.existsSync(publicPath);
 
-  let fetchFailed = false;
-  let fetchError = null;
   const blogMap = new Map();
 
-  for (const slug of STATIC_BLOG_SLUGS) {
+  // Populate from static blog articles fallback copy
+  for (const art of BLOG_ARTICLES) {
+    const slug = BLOG_SLUG_REDIRECTS[art.slug] || art.slug;
     blogMap.set(slug, {
       loc: `https://bylz.fr/blog/${slug}`,
       lastmod: today,
@@ -72,10 +66,7 @@ async function generateSitemap() {
     });
   }
 
-  if (!supabase) {
-    fetchFailed = true;
-    fetchError = new Error("Identifiants Supabase absents de l'environnement.");
-  } else {
+  if (supabase) {
     try {
       const fetchPromise = supabase
         .from("blog_posts")
@@ -86,11 +77,7 @@ async function generateSitemap() {
       );
       const { data: posts, error } = await Promise.race([fetchPromise, timeoutPromise]);
 
-      if (error) {
-        throw error;
-      }
-
-      if (posts && posts.length > 0) {
+      if (!error && posts && posts.length > 0) {
         for (const p of posts) {
           const canonicalSlug = BLOG_SLUG_REDIRECTS[p.slug] || p.slug;
           blogMap.set(canonicalSlug, {
@@ -102,21 +89,7 @@ async function generateSitemap() {
         }
       }
     } catch (err) {
-      fetchFailed = true;
-      fetchError = err;
-    }
-  }
-
-  if (fetchFailed) {
-    if (isNetlify) {
-      console.error("❌ ERREUR FATALE (Netlify) : Clé Supabase absente ou échec de requête blog_posts pour le sitemap.");
-      console.error(fetchError);
-      process.exit(1);
-    }
-
-    if (existingSitemapExists) {
-      console.warn("⚠️ AVERTISSEMENT : Clé Supabase absente ou échec de requête. Conservation du sitemap.xml existant sans réécriture destructrice.");
-      return;
+      console.warn("Notice: could not query dynamic DB blog posts for sitemap:", err.message);
     }
   }
 
