@@ -15,6 +15,8 @@ export interface PlanPricing {
   annualMonthlyEquivFormatted: string;
   discountBadgePercent: number;
   vatMention: string;
+  annualSavings: number;
+  annualSavingsFormatted: string;
 }
 
 export interface PlanData {
@@ -57,12 +59,13 @@ export const PLANS_DATA: Record<"starter" | "solo" | "pro", PlanData> = {
       annualMonthlyEquivFormatted: "0 €",
       discountBadgePercent: 0,
       vatMention: VAT_MENTION_FRANCHISE,
+      annualSavings: 0,
+      annualSavingsFormatted: "0 €",
     },
     features: [
       "Jusqu'à 3 factures et devis par mois",
       "Jusqu'à 3 clients actifs",
       "Export PDF avec mentions légales essentielles",
-      "Facturation électronique en préparation",
       "Sans engagement, sans carte bancaire",
     ],
   },
@@ -77,8 +80,10 @@ export const PLANS_DATA: Record<"starter" | "solo" | "pro", PlanData> = {
       monthlyPrice: 8.9,
       annualMonthlyEquiv: 4.17,
       annualMonthlyEquivFormatted: "4,17 €",
-      discountBadgePercent: 53, // (8.90 * 12 - 50) / (8.90 * 12) = 53.18%
+      discountBadgePercent: 53,
       vatMention: VAT_MENTION_FRANCHISE,
+      annualSavings: 56.8,
+      annualSavingsFormatted: "56,80 €",
     },
     features: [
       "Factures & Devis illimités",
@@ -88,7 +93,6 @@ export const PLANS_DATA: Record<"starter" | "solo" | "pro", PlanData> = {
       "Alertes seuils de franchise de TVA (37 500 € / 85 000 €)",
       "Relances automatiques des factures par e-mail",
       "Livre chronologique des recettes & export CSV",
-      "Facturation électronique en préparation",
       "Réponse sous 24 h ouvrées, du lundi au vendredi",
     ],
   },
@@ -101,15 +105,16 @@ export const PLANS_DATA: Record<"starter" | "solo" | "pro", PlanData> = {
       monthlyPrice: 12.9,
       annualMonthlyEquiv: 6.67,
       annualMonthlyEquivFormatted: "6,67 €",
-      discountBadgePercent: 48, // (12.90 * 12 - 80) / (12.90 * 12) = 48.32%
+      discountBadgePercent: 48,
       vatMention: VAT_MENTION_FRANCHISE,
+      annualSavings: 74.8,
+      annualSavingsFormatted: "74,80 €",
     },
     features: [
       "Toutes les fonctionnalités Solo incluses",
       "Paiement en ligne par carte (Stripe Connect)",
       "Multi-entreprises sous un seul compte",
       "Assistant IA de facturation (Web & WhatsApp)",
-      "Facturation électronique en préparation",
       "Réponse sous 24 h ouvrées, du lundi au vendredi",
     ],
   },

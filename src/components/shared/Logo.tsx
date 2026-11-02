@@ -39,7 +39,7 @@ export function Logo({
     <Link
       to={to}
       onClick={onClick}
-      className={`inline-flex items-center gap-3 group focus:outline-none select-none ${className}`}
+      className={`inline-flex items-center gap-3 group focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 dark:focus-visible:outline-primary rounded-lg select-none ${className}`}
     >
       <img
         src={logoSrc}

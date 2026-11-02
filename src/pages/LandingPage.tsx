@@ -28,6 +28,8 @@ import {
   Sparkles,
 } from "lucide-react";
 import { SEO } from "../components/seo/SEO";
+import { PLANS_DATA } from "../lib/plansData";
+import { FAQS_LIST } from "../data/faqData";
 import { MarketingNavbar } from "../components/marketing/MarketingNavbar";
 import { MarketingFooter } from "../components/marketing/MarketingFooter";
 import { BillingToggle } from "../components/shared/BillingToggle";
@@ -274,10 +276,6 @@ export function LandingPage() {
                     <ShieldCheck className="w-4 h-4 text-blue-700 flex-shrink-0" />
                     <span>Facturation électronique 2026 : voir les règles officielles</span>
                   </Link>
-                  <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-50 border border-emerald-300 text-emerald-900 text-xs font-bold">
-                    <MessageSquare className="w-4 h-4 text-emerald-700 flex-shrink-0" />
-                    <span>Assistant IA intégré utilisable depuis WhatsApp</span>
-                  </div>
                 </div>
 
                 {/* Titre percutant H1 optimisé SEO */}
@@ -317,17 +315,24 @@ export function LandingPage() {
                 {/* Boutons d'action */}
                 <div className="pt-2 flex flex-col sm:flex-row items-stretch sm:items-center gap-3.5">
                   {user ? (
-                    <Link to="/dashboard">
+                    <Link to="/dashboard" className="w-full sm:w-auto">
                       <button className={`${btnPrimary} py-3.5 px-8 text-base w-full sm:w-auto`}>
                         Accéder à mon tableau de bord
                       </button>
                     </Link>
                   ) : (
-                    <Link to="/essai">
-                      <button className={`${btnPrimary} py-3.5 px-8 text-base w-full sm:w-auto`}>
-                        Commencer gratuitement
-                      </button>
-                    </Link>
+                    <>
+                      <Link to="/essai" className="w-full sm:w-auto">
+                        <button className={`${btnPrimary} py-3.5 px-8 text-base w-full sm:w-auto`}>
+                          Commencer gratuitement
+                        </button>
+                      </Link>
+                      <Link to="/tarifs" className="w-full sm:w-auto">
+                        <button className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl border border-slate-300 bg-white text-slate-800 text-base font-bold hover:bg-slate-50 hover:text-slate-900 transition-colors shadow-sm">
+                          Consulter les tarifs
+                        </button>
+                      </Link>
+                    </>
                   )}
                 </div>
 
@@ -338,9 +343,6 @@ export function LandingPage() {
                   </span>
                   <span className="flex items-center gap-1.5">
                     <Lock className="w-4 h-4 text-slate-700" /> Base de données hébergée en Europe
-                  </span>
-                  <span className="flex items-center gap-1.5">
-                    <FileCheck className="w-4 h-4 text-blue-700" /> Facturation électronique en préparation
                   </span>
                 </div>
               </div>
@@ -955,11 +957,8 @@ export function LandingPage() {
 
               {/* 2. Solo (Formule Recommandée) */}
               <div className="p-7 rounded-2xl bg-blue-50/50 border-2 border-blue-600 flex flex-col justify-between space-y-6 text-left relative shadow-md">
-                <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-blue-700 text-white text-[11px] font-black uppercase tracking-wider shadow-sm flex items-center gap-1.5">
-                  <span>RECOMMANDÉ FREELANCES</span>
-                  {billingCycle === "annual" && (
-                    <span className="bg-white/20 px-1.5 py-0.5 rounded text-[10px]">-53%</span>
-                  )}
+                <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 px-4 py-1.5 rounded-full bg-blue-700 text-white text-xs font-black uppercase tracking-wider shadow-sm flex items-center gap-1.5">
+                  <span>★ {PLANS_DATA.solo.badge}</span>
                 </div>
 
                 <div className="space-y-4">
@@ -973,13 +972,13 @@ export function LandingPage() {
                   <div>
                     <div className="flex items-baseline gap-1">
                       <span className="text-4xl font-extrabold text-blue-700 font-mono">
-                        {billingCycle === "annual" ? "4,17 €" : "8,90 €"}
+                        {billingCycle === "annual" ? "50 €" : "8,90 €"}
                       </span>
-                      <span className="text-xs text-slate-700 font-medium">/mois</span>
+                      <span className="text-xs text-slate-700 font-medium">/ {billingCycle === "annual" ? "an" : "mois"}</span>
                     </div>
                     {billingCycle === "annual" ? (
-                      <p className="text-[11px] font-bold text-emerald-700 mt-1">
-                        Soit 50 € / an (TVA non applicable, art. 293 B du CGI)
+                      <p className="text-xs font-bold text-emerald-700 mt-1">
+                        (soit {PLANS_DATA.solo.pricing.annualMonthlyEquivFormatted} / mois • {PLANS_DATA.solo.pricing.annualSavingsFormatted} d'économie)
                       </p>
                     ) : (
                       <p className="text-[11px] text-slate-600 mt-1">
@@ -1024,7 +1023,7 @@ export function LandingPage() {
 
                 <Link to={`/signup?plan=solo&billing=${billingCycle}`} className="block w-full pt-2">
                   <button className={`${btnPrimary} w-full py-3.5 text-base`}>
-                    Choisir la formule Solo (14 jours offerts)
+                    Commencer gratuitement
                   </button>
                 </Link>
               </div>
@@ -1092,7 +1091,7 @@ export function LandingPage() {
 
                 <Link to={`/signup?plan=pro&billing=${billingCycle}`} className="block w-full pt-2">
                   <button className={`${btnPrimary} w-full py-3`}>
-                    Choisir la formule Pro (14 jours offerts)
+                    Commencer gratuitement
                   </button>
                 </Link>
               </div>
@@ -1125,8 +1124,11 @@ export function LandingPage() {
                   >
                     <button
                       type="button"
+                      id={`faq-question-${idx}`}
+                      aria-expanded={isOpen}
+                      aria-controls={`faq-answer-${idx}`}
                       onClick={() => setOpenFaqIndex(isOpen ? null : idx)}
-                      className="w-full text-left px-5 py-4 flex items-center justify-between gap-3 font-bold text-slate-900 text-sm hover:text-blue-700 transition-colors"
+                      className="w-full text-left px-5 py-4 flex items-center justify-between gap-3 font-bold text-slate-900 text-sm hover:text-blue-700 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 rounded-lg"
                     >
                       <span>{faq.q}</span>
                       <ChevronDown
@@ -1136,7 +1138,12 @@ export function LandingPage() {
                       />
                     </button>
                     {isOpen && (
-                      <div className="px-5 pb-5 pt-1 text-xs text-slate-700 leading-relaxed font-normal border-t border-slate-100">
+                      <div
+                        id={`faq-answer-${idx}`}
+                        role="region"
+                        aria-labelledby={`faq-question-${idx}`}
+                        className="px-5 pb-5 pt-1 text-xs text-slate-700 leading-relaxed font-normal border-t border-slate-100"
+                      >
                         {faq.a}
                       </div>
                     )}

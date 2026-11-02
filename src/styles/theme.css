@@ -6,14 +6,14 @@
   --border: #25325c;
   --text: #ffffff;
   --text-muted: #8e9bbf;
-  --primary: #6e7cf0;
-  --primary-hover: #5b69e0;
+  --primary: #4856df;
+  --primary-hover: #3b48c4;
   --brand-navy: #011142;
   --accent: #ced7fd;
   --success: #10b981;
   --warning: #f59e0b;
   --danger: #ef4444;
-  --glow-primary: rgba(110, 124, 240, 0.22);
+  --glow-primary: rgba(72, 86, 223, 0.22);
   --glow-accent: rgba(206, 215, 253, 0.18);
   --radius: 8px;
   --radius-card: 12px;
@@ -99,12 +99,14 @@ label {
   color: var(--text);
 }
 
-input:focus,
-button:focus,
-select:focus,
-textarea:focus,
-a:focus {
-  outline: 2px solid var(--accent);
+:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+[data-theme="light"] :focus-visible,
+.bg-white :focus-visible {
+  outline: 2px solid #1d4ed8;
   outline-offset: 2px;
 }
 
