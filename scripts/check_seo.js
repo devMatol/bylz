@@ -245,7 +245,7 @@ if (!fs.existsSync(distSitemapPath)) {
   }
 }
 
-// 8. Verify no forbidden compliance claims in src/ (outside comments) and dist/**/*.html
+// 8. Verify no forbidden compliance claims in src/, scripts/prerender.js and dist/**/*.html
 const forbiddenClaims = [
   'Factur-X Valide',
   'Norme EN 16931',
@@ -265,6 +265,16 @@ const forbiddenClaims = [
   'légalement conformes',
 ];
 
+const forbiddenPatterns = [
+  /certifi[ée]e?s?\s+Factur-X/i,
+  /conformes?\s+(au\s+format\s+)?Factur-X/i,
+  /g[ée]n[ée]ration\s+native/i,
+  /format\s+Factur-X\s+natif/i,
+  /Bylz[^.<]{0,80}garantit/i,
+  /garantit[^.<]{0,60}(conformit[ée]|int[ée]grit[ée]|authenticit[ée])/i,
+  /\d+(?:,\d+)?\s*€\s*par\s*(?:facture|mention)/i,
+];
+
 function stripCodeComments(sourceText) {
   const scanner = ts.createScanner(ts.ScriptTarget.Latest, false, ts.LanguageVariant.JSX, sourceText);
   let out = '';
@@ -278,6 +288,22 @@ function stripCodeComments(sourceText) {
   return out.replace(/\{\/\*[\s\S]*?\*\/\}/g, '');
 }
 
+function checkContent(filePath, content) {
+  for (const forbidden of forbiddenClaims) {
+    if (content.includes(forbidden)) {
+      console.error(`❌ Allégation interdite trouvée ("${forbidden}") : ${filePath}`);
+      errorCount++;
+    }
+  }
+  for (const pattern of forbiddenPatterns) {
+    const match = content.match(pattern);
+    if (match) {
+      console.error(`❌ Motif interdit détecté (${pattern} => "${match[0]}") : ${filePath}`);
+      errorCount++;
+    }
+  }
+}
+
 function scanSrcFilesForForbiddenClaims(dir) {
   if (!fs.existsSync(dir)) return;
   const entries = fs.readdirSync(dir, { withFileTypes: true });
@@ -287,12 +313,7 @@ function scanSrcFilesForForbiddenClaims(dir) {
       scanSrcFilesForForbiddenClaims(fullPath);
     } else if (entry.isFile() && /\.(tsx?|jsx?)$/.test(entry.name)) {
       const content = stripCodeComments(fs.readFileSync(fullPath, 'utf8'));
-      for (const forbidden of forbiddenClaims) {
-        if (content.includes(forbidden)) {
-          console.error(`❌ Allégation interdite trouvée ("${forbidden}") dans le code source : ${fullPath}`);
-          errorCount++;
-        }
-      }
+      checkContent(fullPath, content);
     }
   }
 }
@@ -306,19 +327,22 @@ function scanHtmlFilesForForbiddenClaims(dir) {
       scanHtmlFilesForForbiddenClaims(fullPath);
     } else if (entry.isFile() && entry.name.endsWith('.html')) {
       const content = fs.readFileSync(fullPath, 'utf8');
-      for (const forbidden of forbiddenClaims) {
-        if (content.includes(forbidden)) {
-          console.error(`❌ Allégation interdite trouvée ("${forbidden}") dans le HTML : ${fullPath}`);
-          errorCount++;
-        }
-      }
+      checkContent(fullPath, content);
     }
   }
 }
 
 scanSrcFilesForForbiddenClaims(path.resolve('src'));
+
+// Scan scripts/prerender.js as well
+const prerenderScriptPath = path.resolve('scripts/prerender.js');
+if (fs.existsSync(prerenderScriptPath)) {
+  const content = stripCodeComments(fs.readFileSync(prerenderScriptPath, 'utf8'));
+  checkContent(prerenderScriptPath, content);
+}
+
 scanHtmlFilesForForbiddenClaims(distDir);
-console.log('✅ Aucune allégation interdite ("Factur-X Valide", "Norme EN 16931", "E-Reporting DGFiP", "Inviolable", "inviolabilité", "vous garantit", "certifiée Factur-X") dans src/ (hors commentaires) ni dans dist/**/*.html');
+console.log('✅ Aucune allégation ni motif interdit dans src/, scripts/prerender.js ni dans dist/**/*.html');
 
 if (errorCount > 0) {
   console.error(`\n❌ Contrôle SEO/Métadonnées échoué avec ${errorCount} erreur(s).`);

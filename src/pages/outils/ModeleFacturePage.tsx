@@ -53,7 +53,7 @@ export function ModeleFacturePage() {
         name: "Pourquoi abandonner les modèles de facture sur Word ou Excel en 2026 ?",
         acceptedAnswer: {
           "@type": "Answer",
-          text: "Les fichiers Excel et Word présentent des risques majeurs : erreurs de formules de calcul, numérotation discontinue (passible de 15 € d'amende par facture) et surtout incompatibilité avec le format Factur-X imposé par la réforme de la facturation électronique 2026.",
+          text: "Les fichiers Excel et Word présentent des risques majeurs : erreurs de formules de calcul, numérotation discontinue (passible de sanctions légales prévues par le Code général des impôts, consultables sur impots.gouv.fr) et surtout incompatibilité avec le format Factur-X imposé par la réforme de la facturation électronique 2026.",
         },
       },
       {
@@ -131,7 +131,7 @@ export function ModeleFacturePage() {
                 <ul className="space-y-3 text-xs text-muted">
                   <li className="flex items-start gap-2">
                     <span className="text-danger font-bold">✕</span>
-                    <span><strong>Numérotation manuelle à risque :</strong> Un doublon ou un trou dans vos numéros de facture est passible d'une amende de 15 € par mention erronée par l'administration fiscale.</span>
+                    <span><strong>Numérotation manuelle à risque :</strong> Un doublon ou un trou dans vos numéros de facture est passible de sanctions prévues par l'administration fiscale (consultables sur impots.gouv.fr).</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="text-danger font-bold">✕</span>

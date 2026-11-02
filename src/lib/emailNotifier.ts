@@ -61,7 +61,7 @@ Bienvenue sur Bylz, la plateforme de facturation et conformité conçue spécifi
 Voici vos 3 étapes pour démarrer en toute sérénité :
 1. Renseignez votre SIRET et vos informations dans les Paramètres.
 2. Créez votre première fiche Client.
-3. Émettez votre premier Devis ou Facture conforme Factur-X en moins de 2 minutes !
+3. Émettez votre premier devis ou facture PDF avec mentions légales en moins de 2 minutes !
 
 Une question ? Notre équipe support est disponible à tout moment.
 

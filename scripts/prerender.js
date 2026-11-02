@@ -829,12 +829,8 @@ async function prerender() {
   fs.writeFileSync(appShellPath, templateHtml, "utf8");
   console.log("Created pristine SPA app shell: dist/app.html");
 
-  // 2. Aggregate all blog articles (Static default articles + Dynamic DB articles)
+  // 2. Aggregate all blog articles (Remote DB first, static fallback copy second)
   const allArticlesMap = new Map();
-
-  for (const art of STATIC_BLOG_ARTICLES) {
-    allArticlesMap.set(art.slug, art);
-  }
 
   if (supabase) {
     try {
@@ -850,8 +846,7 @@ async function prerender() {
       if (posts && posts.length > 0) {
         for (const p of posts) {
           const canonicalSlug = BLOG_SLUG_REDIRECTS[p.slug] || p.slug;
-          if (!allArticlesMap.has(canonicalSlug)) {
-            allArticlesMap.set(canonicalSlug, {
+          allArticlesMap.set(canonicalSlug, {
             slug: canonicalSlug,
             title: p.title,
             excerpt: p.excerpt || p.meta_description || "Article sur le blog de Bylz.",
@@ -860,12 +855,18 @@ async function prerender() {
             author: p.author || "Équipe Bylz",
             date: p.published_at || new Date().toISOString(),
             coverImageUrl: p.cover_image_url || DEFAULT_OG_IMAGE,
-            });
-          }
+          });
         }
       }
     } catch (err) {
       console.warn("Notice: could not query dynamic DB blog posts for prerender:", err);
+    }
+  }
+
+  // Fallback to static articles for any article not found in remote DB
+  for (const art of STATIC_BLOG_ARTICLES) {
+    if (!allArticlesMap.has(art.slug)) {
+      allArticlesMap.set(art.slug, art);
     }
   }
 
