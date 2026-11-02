@@ -52,10 +52,10 @@ const staticUrls = [
 async function generateSitemap() {
   console.log("Generating sitemap.xml...");
 
-  const isNetlifyProduction = (process.env.NETLIFY === 'true' || process.env.NETLIFY === true) && process.env.CONTEXT === 'production';
+  const isStrictSupabase = process.env.STRICT_SUPABASE_BUILD === 'true' || process.env.STRICT_SUPABASE_BUILD === true;
 
-  if (isNetlifyProduction && (!supabaseUrl || !anonKey || supabaseUrl.includes("placeholder"))) {
-    console.error("FATAL [generate_sitemap]: En contexte de production Netlify (CONTEXT=production), les variables VITE_SUPABASE_URL et VITE_SUPABASE_ANON_KEY sont obligatoires.");
+  if (isStrictSupabase && (!supabaseUrl || !anonKey || supabaseUrl.includes("placeholder"))) {
+    console.error("FATAL [generate_sitemap]: STRICT_SUPABASE_BUILD=true mais les variables VITE_SUPABASE_URL et VITE_SUPABASE_ANON_KEY sont manquantes.");
     process.exit(1);
   }
 
@@ -99,18 +99,20 @@ async function generateSitemap() {
             changefreq: "monthly",
           });
         }
-      } else if (isNetlifyProduction) {
-        console.error("FATAL [generate_sitemap]: En contexte de production Netlify (CONTEXT=production), la table blog_posts n'a renvoyé aucun article publié.");
+      } else if (isStrictSupabase) {
+        console.error("FATAL [generate_sitemap]: STRICT_SUPABASE_BUILD=true mais la table blog_posts n'a renvoyé aucun article publié.");
         process.exit(1);
+      } else {
+        console.warn("AVERTISSEMENT [generate_sitemap]: La table blog_posts n'a renvoyé aucun article publié. Repli sur src/data/blogArticles.ts.");
       }
     } catch (err) {
-      if (isNetlifyProduction) {
-        console.error("FATAL [generate_sitemap]: En contexte de production Netlify (CONTEXT=production), la requête sur la table blog_posts a échoué :", err.message);
+      if (isStrictSupabase) {
+        console.error("FATAL [generate_sitemap]: STRICT_SUPABASE_BUILD=true mais la requête sur la table blog_posts a échoué :", err.message);
         process.exit(1);
       }
       console.warn("AVERTISSEMENT [generate_sitemap]: Impossible de joindre la base distante (" + (process.env.CONTEXT || 'local') + "). Repli sur src/data/blogArticles.ts :", err.message);
     }
-  } else if (!isNetlifyProduction) {
+  } else {
     console.warn("AVERTISSEMENT [generate_sitemap]: Supabase non configuré en contexte (" + (process.env.CONTEXT || 'local') + "). Repli sur la copie statique src/data/blogArticles.ts.");
   }
 
