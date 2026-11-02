@@ -172,7 +172,7 @@ export function generateAiArticle(options: {
   const isTva = kwLower.includes("tva") || kwLower.includes("franchise") || kwLower.includes("293");
   const isFacturX = kwLower.includes("factur-x") || kwLower.includes("facturx") || kwLower.includes("reforme") || kwLower.includes("2026");
   const isUrssaf = kwLower.includes("urssaf") || kwLower.includes("cotisation") || kwLower.includes("bnc") || kwLower.includes("bic");
-  const isQuote = kwLower.includes("devis") || kwLower.includes("signature") || kwLower.includes("eidas");
+  const isQuote = kwLower.includes("devis") || kwLower.includes("signature");
   const isUnpaid = kwLower.includes("impay") || kwLower.includes("relance") || kwLower.includes("recouvrement");
 
   // Dynamic Title
@@ -196,7 +196,7 @@ export function generateAiArticle(options: {
   let section1 = "";
   if (isFacturX) {
     section1 = `
-<p>La réforme de la facturation électronique 2026 impose l'abandon définitif des factures sous simple format Word ou Excel non certifié pour les transactions B2B en France. Le format <strong>Factur-X</strong> combine un document PDF lisible à l'œil humain et des métadonnées XML structurées directement interprétables par les Plateformes de Dématérialisation Partenaires (PDP) et le Portail Public de Facturation (PPF).</p>
+<p>La réforme de la facturation électronique 2026 prépare le passage progressif aux formats structurés pour les transactions B2B en France. Le format <strong>Factur-X</strong> combine un document PDF lisible à l'œil humain et des métadonnées XML structurées directement interprétables par les Plateformes de Dématérialisation Partenaires (PDP) et le Portail Public de Facturation (PPF).</p>
 <p>Pour les micro-entrepreneurs, l'enjeu principal consiste à émettre des factures comportant l'ensemble des lignes d'en-tête et des identifiants (SIRET, Numéro de TVA ou mention d'exonération, code acheteur) sans alourdir le processus quotidien de gestion.</p>`;
   } else if (isTva) {
     section1 = `
@@ -209,7 +209,7 @@ export function generateAiArticle(options: {
   } else {
     section1 = `
 <p>En tant qu'indépendant ou micro-entrepreneur, la gestion de <strong>"${topic}"</strong> constitue un pilier central pour sécuriser vos revenus et garantir la conformité de votre activité face à l'administration fiscale et à vos clients.</p>
-<p>Face à la complexification du cadre légal en 2026, adopter des processus automatisés et certifiés permet de réduire les risques d'erreurs d'écriture et de concentrer 100% de votre temps sur le développement de votre chiffre d'affaires.</p>`;
+<p>Face à la complexification du cadre légal en 2026, adopter des processus automatisés permet de réduire les risques d'erreurs d'écriture et de concentrer 100% de votre temps sur le développement de votre chiffre d'affaires.</p>`;
   }
 
   // Specialized section 2 (Practical Steps & Rules)
@@ -228,7 +228,7 @@ export function generateAiArticle(options: {
 
 <div class="my-6 p-4 rounded-xl bg-slate-900 border border-slate-800 text-slate-200">
   <p class="font-bold text-sm text-brand-primary">✍️ Le saviez-vous ?</p>
-  <p class="text-xs text-slate-400 mt-1">La signature électronique intégrée dans Bylz bénéficie du niveau de certification eIDAS. Elle horodate et scelle le document PDF pour garantir sa valeur probante devant un tribunal en cas de litige.</p>
+  <p class="text-xs text-slate-400 mt-1">La signature électronique intégrée dans Bylz facilite l'accord client. Elle horodate le document PDF pour sécuriser les échanges contractuels.</p>
 </div>`;
   } else if (isUnpaid) {
     section2 = `
@@ -259,7 +259,7 @@ ${section1}
 
 <div class="my-6 p-5 rounded-xl bg-brand-primary/10 border border-brand-primary/30 text-brand-primary">
   <p class="font-bold text-sm">💡 L'astuce Bylz pour auto-entrepreneurs :</p>
-  <p class="text-xs text-text mt-1">Ne perdez plus votre temps à calculer vos totaux ou vérifier vos mentions légales à la main. <strong>Bylz</strong> génère vos devis et factures conformes Factur-X 2026 en moins de 60 secondes.</p>
+  <p class="text-xs text-text mt-1">Ne perdez plus votre temps à calculer vos totaux ou vérifier vos mentions légales à la main. <strong>Bylz</strong> génère vos devis et factures PDF avec mentions obligatoires en moins de 60 secondes.</p>
 </div>
 
 ${section2}
@@ -283,7 +283,7 @@ ${section2}
     </tr>
     <tr>
       <td class="p-3 font-semibold text-text">Émission & Signature</td>
-      <td class="p-3 text-muted">Génération Factur-X & signature en ligne eIDAS</td>
+      <td class="p-3 text-muted">Facturation PDF et signature en ligne</td>
       <td class="p-3 text-brand-primary font-bold">Bylz Pro Portal</td>
     </tr>
     <tr>

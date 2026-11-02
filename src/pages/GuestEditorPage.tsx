@@ -552,7 +552,7 @@ export function GuestEditorPageContent() {
                 <div>
                   <h1 className="text-2xl font-black text-text tracking-tight">Nouvelle Facture</h1>
                   <p className="text-xs sm:text-sm text-muted">
-                    Format certifié Factur-X avec mentions légales automatiques
+                    Format Factur-X avec mentions légales automatiques
                   </p>
                 </div>
 

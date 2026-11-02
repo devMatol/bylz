@@ -112,7 +112,7 @@ export function PaTimeline({ invoice, isB2b, onRefresh }: PaTimelineProps) {
       <div className="flex items-center justify-between">
         <h4 className="text-xs font-extrabold uppercase tracking-wider text-text flex items-center gap-1.5">
           <Send className="w-3.5 h-3.5 text-primary" />
-          <span>Envoyé à la facturation électronique</span>
+          <span>Facturation électronique</span>
         </h4>
         {factpulseRef && (
           <span className="text-[10px] font-mono text-muted bg-surface-hover px-1.5 py-0.5 rounded border border-border">
@@ -127,9 +127,9 @@ export function PaTimeline({ invoice, isB2b, onRefresh }: PaTimelineProps) {
           <div className="flex items-start space-x-2">
             <AlertTriangle className="w-4 h-4 text-rose-400 flex-shrink-0 mt-0.5" />
             <div>
-              <p className="font-bold text-rose-200">Facture rejetée par le destinataire</p>
+              <p className="font-bold text-rose-200">Facture rejetée</p>
               <p className="text-rose-300/80 mt-1 leading-relaxed">
-                Motif : {invoice.pa_rejection_reason || "Rejeté sur le réseau PDP FactPulse"}
+                Motif : {invoice.pa_rejection_reason || "Rejeté sur le réseau PDP / AFNOR"}
               </p>
             </div>
           </div>
@@ -143,7 +143,7 @@ export function PaTimeline({ invoice, isB2b, onRefresh }: PaTimelineProps) {
             className="w-full justify-center bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold py-2"
           >
             <RefreshCw className="w-3.5 h-3.5 mr-1.5" />
-            Corriger et réémettre (Brouillon)
+            Corriger et réémettre
           </Button>
         </div>
       ) : (

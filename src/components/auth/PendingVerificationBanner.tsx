@@ -74,7 +74,7 @@ export function PendingVerificationBanner({ className = "" }: { className?: stri
           </p>
           <p className="text-amber-200/90 text-xs sm:text-[13px] leading-snug">
             Un email de confirmation a été envoyé à{" "}
-            <strong className="text-white underline">{user?.email}</strong>. Cliquez sur le lien pour valider votre compte et garantir la conformité de vos factures.
+            <strong className="text-white underline">{user?.email}</strong>. Cliquez sur le lien pour valider votre compte et accéder à toutes les fonctionnalités.
           </p>
           {resendSuccess && (
             <p className="text-[11px] sm:text-xs text-emerald-400 font-semibold flex items-center gap-1 mt-1">

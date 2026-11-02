@@ -36,12 +36,12 @@ const FEATURE_CONFIG: Record<
   invoices: {
     badge: "Plan Solo ⚡",
     title: "Facturation & Devis illimités",
-    description: "Émettez autant de devis et factures conformes Factur-X que nécessaire pour développer votre activité en toute sérénité.",
+    description: "Émettez autant de devis et factures PDF avec mentions légales que nécessaire pour développer votre activité.",
     targetPlan: "solo",
     highlights: [
-      "Factures et devis illimités conformes Factur-X 2026",
+      "Factures et devis PDF illimités avec mentions légales essentielles",
       "Numérotation légale & mentions obligatoires automatiques",
-      "Exports comptables et livre des recettes certifiés",
+      "Exports comptables et livre des recettes",
     ],
   },
   clients: {
@@ -79,12 +79,12 @@ const FEATURE_CONFIG: Record<
   },
   exports: {
     badge: "Plan Solo ⚡",
-    title: "Exports comptables certifiés",
+    title: "Exports comptables",
     description: "Exportez vos bilans et registres d'achats/ventes en un clic pour votre comptable ou votre déclaration fiscale.",
     targetPlan: "solo",
     highlights: [
-      "Livre des recettes et registre des achats conformes",
-      "Exports universels CSV, Excel et format FEC",
+      "Livre des recettes et registre des achats",
+      "Exports universels au format CSV",
       "Synthèse TVA prête pour votre déclaration",
     ],
   },

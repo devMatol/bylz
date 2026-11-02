@@ -479,7 +479,7 @@ export function AutoRemindersSection() {
             </label>
             <textarea
               rows={5}
-              placeholder="Laissez vide pour utiliser le modèle automatique conforme Bylz..."
+              placeholder="Laissez vide pour utiliser le modèle automatique par défaut..."
               value={editingRule?.custom_body || ""}
               onChange={(e) =>
                 setEditingRule((prev) => ({

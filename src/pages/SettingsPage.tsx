@@ -581,7 +581,7 @@ export function SettingsPage() {
               <div className="flex items-start sm:items-center gap-2.5 p-3.5 rounded-xl bg-primary/10 border border-primary/20 text-xs text-primary font-medium">
                 <Sparkles className="w-4 h-4 flex-shrink-0 mt-0.5 sm:mt-0 text-primary" />
                 <span>
-                  <strong>Inclus dans tous les plans (Starter, Solo et Pro) :</strong> Votre logo et votre couleur d'accentuation sont appliqués automatiquement sur tous vos devis, factures et fichiers PDF Factur-X conformes 2026.
+                  <strong>Inclus dans tous les plans (Starter, Solo et Pro) :</strong> Votre logo et votre couleur d'accentuation sont appliqués automatiquement sur tous vos devis, factures et fichiers PDF avec mentions légales.
                 </span>
               </div>
 
@@ -909,7 +909,7 @@ export function SettingsPage() {
         {/* TAB 5: CONFORMITÉ & RELANCES */}
         {activeTab === "compliance" && (
           <div className="space-y-6 animate-in fade-in duration-200">
-            <FeatureLockWrapper feature="exports" title="Conformité DGFiP 2026 & E-invoicing" description="Déclarations réglementaires et télétransmission Factur-X.">
+            <FeatureLockWrapper feature="exports" title="Facturation électronique & Suivi réglementaire" description="Suivi de conformité et intégration de la facturation électronique 2026.">
               <ComplianceSection />
             </FeatureLockWrapper>
 

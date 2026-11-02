@@ -850,7 +850,8 @@ async function prerender() {
       if (posts && posts.length > 0) {
         for (const p of posts) {
           const canonicalSlug = BLOG_SLUG_REDIRECTS[p.slug] || p.slug;
-          allArticlesMap.set(canonicalSlug, {
+          if (!allArticlesMap.has(canonicalSlug)) {
+            allArticlesMap.set(canonicalSlug, {
             slug: canonicalSlug,
             title: p.title,
             excerpt: p.excerpt || p.meta_description || "Article sur le blog de Bylz.",
@@ -859,7 +860,8 @@ async function prerender() {
             author: p.author || "Équipe Bylz",
             date: p.published_at || new Date().toISOString(),
             coverImageUrl: p.cover_image_url || DEFAULT_OG_IMAGE,
-          });
+            });
+          }
         }
       }
     } catch (err) {

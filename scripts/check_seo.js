@@ -1,3 +1,4 @@
+import ts from 'typescript';
 import fs from 'node:fs';
 import path from 'node:path';
 import { SEO_METADATA } from '../src/lib/seoMeta.ts';
@@ -253,27 +254,29 @@ const forbiddenClaims = [
   'inviolabilité',
   'vous garantit',
   'certifiée Factur-X',
+  'Certifié',
+  'Garantie légale',
+  'Norme EN 16931-1 Active',
+  'valeur probante',
+  'niveau de certification eIDAS',
+  'conformes Factur-X',
+  'certification eIDAS',
+  'E-Reporting certifiée',
+  'légalement conformes',
 ];
 
-function stripCodeComments(code) {
-  return code
-    .replace(/\/\*[\s\S]*?\*\//g, '')
-    .replace(/\/\/.*$/gm, '')
-    .replace(/\{\/\*[\s\S]*?\*\/\}/g, '');
+function stripCodeComments(sourceText) {
+  const scanner = ts.createScanner(ts.ScriptTarget.Latest, false, ts.LanguageVariant.JSX, sourceText);
+  let out = '';
+  let token = scanner.scan();
+  while (token !== ts.SyntaxKind.EndOfFileToken) {
+    if (token !== ts.SyntaxKind.SingleLineCommentTrivia && token !== ts.SyntaxKind.MultiLineCommentTrivia) {
+      out += scanner.getTokenText();
+    }
+    token = scanner.scan();
+  }
+  return out.replace(/\{\/\*[\s\S]*?\*\/\}/g, '');
 }
-
-// Fichiers applicatifs figes au HASH_PROD (isoles de la branche vitrine)
-const legacyAppFilesPinnedAtHashProd = new Set([
-  'api.ts',
-  'ComplianceSection.tsx',
-  'SettingsPage.tsx',
-  'InvoicesPage.tsx',
-  'PaTimeline.tsx',
-  'ClientModal.tsx',
-  'StatusBadge.tsx',
-  'database.ts',
-  'constants.ts',
-]);
 
 function scanSrcFilesForForbiddenClaims(dir) {
   if (!fs.existsSync(dir)) return;
@@ -283,7 +286,6 @@ function scanSrcFilesForForbiddenClaims(dir) {
     if (entry.isDirectory()) {
       scanSrcFilesForForbiddenClaims(fullPath);
     } else if (entry.isFile() && /\.(tsx?|jsx?)$/.test(entry.name)) {
-      if (legacyAppFilesPinnedAtHashProd.has(entry.name)) continue;
       const content = stripCodeComments(fs.readFileSync(fullPath, 'utf8'));
       for (const forbidden of forbiddenClaims) {
         if (content.includes(forbidden)) {

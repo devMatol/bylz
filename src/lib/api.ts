@@ -660,7 +660,7 @@ export async function seedInboundFactpulseInvoice(companyId: string): Promise<st
       total_ht: 1200.0,
       total_vat: 240.0,
       total_ttc: 1440.0,
-      note: "Facture fournisseur certifiée Factur-X reçue automatiquement via le réseau PDP FactPulse (Émetteur: PENNYLANE / QONTO SAS - SIRET 842 918 201 00019)",
+      note: "Facture fournisseur au format PDF reçue automatiquement via le réseau PDP FactPulse (Émetteur: PENNYLANE / QONTO SAS - SIRET 842 918 201 00019)",
     })
     .select("id")
     .single();
@@ -670,7 +670,7 @@ export async function seedInboundFactpulseInvoice(companyId: string): Promise<st
   // 3. Insert Invoice Line
   await supabase.from("invoice_lines").insert({
     invoice_id: inv.id,
-    description: "Prestation cloud & intégration PDP Factur-X certifiée (Réseau Électronique B2B)",
+    description: "Prestation cloud & intégration PDP (Réseau Électronique B2B)",
     quantity: 1,
     unit_price: 1200.0,
     nature: "service",
