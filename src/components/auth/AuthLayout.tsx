@@ -32,7 +32,7 @@ export function AuthLayout({ title, subtitle, children, footer, className }: Aut
           )}
         >
           <div className="text-center mb-6">
-            <h2 className="text-xl font-bold text-text mb-1">{title}</h2>
+            <h1 className="text-xl font-bold text-text mb-1">{title}</h1>
             <p className="text-sm text-muted">{subtitle}</p>
           </div>
           {children}

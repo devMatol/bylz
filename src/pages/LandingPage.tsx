@@ -1,26 +1,35 @@
 import { useState } from "react";
 import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
 import {
-  Sparkles,
-  ArrowRight,
   ShieldCheck,
   CheckCircle2,
   ChevronDown,
   FileText,
   Calculator,
-  MessageCircle,
   TrendingUp,
-  AlertTriangle,
-  Lightbulb,
-  Clock,
-  Send,
+  Lock,
+  Building2,
+  FileCheck,
+  Receipt,
+  Layers,
+  Check,
+  ArrowRight,
   Zap,
+  Code,
+  Palette,
+  Briefcase,
+  Wrench,
+  GraduationCap,
+  ShoppingBag,
+  X,
+  Clock,
+  MessageSquare,
+  Bot,
+  Sparkles,
 } from "lucide-react";
 import { SEO } from "../components/seo/SEO";
 import { MarketingNavbar } from "../components/marketing/MarketingNavbar";
 import { MarketingFooter } from "../components/marketing/MarketingFooter";
-import { TrustBadgesRow } from "../components/marketing/TrustBadgesRow";
-import { Button } from "../components/ui/Button";
 import { BillingToggle } from "../components/shared/BillingToggle";
 import { type BillingCycle } from "../lib/constants";
 import { useAuth } from "../contexts/AuthContext";
@@ -35,106 +44,145 @@ export function LandingPage() {
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(0);
   const [billingCycle, setBillingCycle] = useState<BillingCycle>("annual");
 
-  // State for AI Copilot section interactive selector
-  const [activeAiTab, setActiveAiTab] = useState<number>(0);
-
-  // State for Live Demo interactive box
-  const [demoDescription, setDemoDescription] = useState("Développement Web Frontend - Application Mobile");
-  const [demoTjm, setDemoTjm] = useState(550);
-  const [demoDays, setDemoDays] = useState(10);
-  const [demoHasVat, setDemoHasVat] = useState(false);
-
-  const demoMontantHt = demoTjm * demoDays;
-  const demoTva = demoHasVat ? demoMontantHt * 0.2 : 0;
-  const demoTotalTtc = demoMontantHt + demoTva;
-
-  const handleFinalizeInvoice = () => {
-    const today = new Date().toISOString().slice(0, 10);
-    const dueDate = new Date(Date.now() + 30 * 86400000).toISOString().slice(0, 10);
-    const guestDraft = {
-      clientName: "",
-      clientEmail: "",
-      clientType: "b2b",
-      lines: [
-        {
-          description: demoDescription,
-          quantity: demoDays,
-          unitPrice: demoTjm,
-          nature: "service",
-        },
-      ],
-      issueDate: today,
-      dueDate: dueDate,
-      paymentTerms: "30d",
-      note: demoHasVat ? "" : "TVA non applicable, art. 293 B du CGI",
-    };
-    try {
-      localStorage.setItem("bylz-guest-draft", JSON.stringify(guestDraft));
-    } catch (e) {
-      console.error("Failed to save draft to localStorage:", e);
-    }
-    navigate("/essai?tab=invoice&prefill=true");
-  };
-
   if (!loading && user && !forcePublic) {
     const isStarter = profile?.plan === "starter";
     const defaultPath = isStarter ? "/invoices" : "/dashboard";
     return <Navigate to={defaultPath} replace />;
   }
 
-  const faqs = [
+  const workflowSteps = [
     {
-      q: "Bylz est-il conforme à la réforme de facturation 2026 ?",
-      a: "Oui, Bylz est conçu dès le départ pour respecter les nouvelles normes de facturation électronique obligatoires en France, notamment le format structuré Factur-X et les télétransmissions réglementaires vers l'administration fiscale.",
+      num: "1",
+      title: "Créez vos devis",
+      desc: "Édition en 1 minute, prestations enregistrées et conversion en facture d'un simple clic dès l'accord client.",
     },
     {
-      q: "Comment fonctionne le calcul des cotisations URSSAF ?",
-      a: "Bylz applique automatiquement les taux de cotisations selon votre type d'activité (services BNC/BIC, vente de marchandises) et votre statut pour vous donner une estimation exacte et en temps réel de vos futures échéances.",
+      num: "2",
+      title: "Facturez simplement",
+      desc: "Factures PDF avec mentions légales obligatoires. Format structuré en cours de préparation pour la réforme 2026.",
     },
     {
-      q: "Puis-je importer mes anciennes factures ?",
-      a: "Tout à fait ! Bylz dispose d'un outil d'import intelligent qui extrait automatiquement les données de vos anciennes factures PDF ou fichiers Excel pour que vous puissiez démarrer sans repartir de zéro.",
+      num: "3",
+      title: "Suivez vos encaissements",
+      desc: "Statut des règlements en direct, relances types en 1 clic et synchronisation de trésorerie.",
     },
     {
-      q: "Y a-t-il un engagement de durée ?",
-      a: "Aucun. Toutes nos offres sont 100% sans engagement. Vous pouvez suspendre, changer de forfait ou résilier votre abonnement à tout moment d'un simple clic depuis votre espace.",
-    },
-    {
-      q: "Mes données sont-elles hébergées en France ?",
-      a: "Oui, la totalité de vos données et factures sont chiffrées et hébergées exclusivement sur des serveurs sécurisés situés en France, dans le strict respect des normes européennes RGPD.",
+      num: "4",
+      title: "Déclarez l'URSSAF",
+      desc: "Calcul au centime près selon votre taux officiel selon votre activité (vente, services ou libéral) et rappel automatique des échéances.",
     },
   ];
 
-  const aiFeatures = [
+  const featuresList = [
     {
-      id: "01",
-      title: "Prévisions de trésorerie",
-      tag: "Trésor",
-      tagColor: "bg-blue-500/10 text-blue-400 border-blue-500/20",
-      description: "Visualisez votre solde futur calculé à partir de vos encaissements récurrents et de vos dates d'échéances prévues.",
+      title: "Factures & Devis avec mentions obligatoires",
+      desc: "Personnalisation complète avec votre logo et couleurs. Toutes les mentions légales obligatoires sont insérées automatiquement.",
+      icon: FileText,
     },
     {
-      id: "02",
-      title: "Optimisation fiscale intelligente",
-      tag: "Recommandé",
-      tagColor: "bg-amber-500/10 text-amber-400 border-amber-500/20",
-      description: "Sachez exactement quand votre plafond de franchise de TVA approche et optimisez vos charges déductibles intelligemment.",
+      title: "Suivi de la Franchise de TVA",
+      desc: "Jauge de progression en temps réel vers le plafond légal 2026 (37 500 € en services, 85 000 € en vente) pour anticiper le passage à la TVA sans mauvaise surprise.",
+      icon: TrendingUp,
     },
     {
-      id: "03",
-      title: "Anticipation proactive URSSAF",
-      tag: "Alerte",
-      tagColor: "bg-rose-500/10 text-rose-400 border-rose-500/20",
-      description: "Fini les mauvaises surprises. L'IA estime votre prochaine déclaration et vous rappelle les échéances clés à l'avance.",
+      title: "Calcul URSSAF & Abattement fiscal",
+      desc: "Application automatique de l'abattement forfaitaire (34% en BNC, 50% en BIC) pour estimer précisément votre revenu net imposable.",
+      icon: Calculator,
     },
     {
-      id: "04",
-      title: "Analyse des tendances clients",
-      tag: null,
-      tagColor: "",
-      description: "Identifiez vos meilleurs contributeurs de revenus et anticipez les retards récurrents avant d'émettre vos relances.",
+      title: "Livre chronologique des recettes",
+      desc: "Livre chronologique des recettes, exportable en CSV pour vos déclarations.",
+      icon: Layers,
+    },
+    {
+      title: "Annuaire SIRET & Gestion clients",
+      desc: "Remplissage instantané des informations de vos clients grâce à la connexion directe avec la base légale de l'INSEE.",
+      icon: Building2,
+    },
+    {
+      title: "Livre des recettes & Exports CSV",
+      desc: "Suivez vos encaissements et exportez facilement vos données et votre livre des recettes au format CSV.",
+      icon: Receipt,
     },
   ];
+
+  const personas = [
+    {
+      role: "Développeurs & Tech",
+      icon: Code,
+      highlight: "Gestion au TJM",
+      details: "Facturation mensuelle récurrente, calcul de la franchise TVA et exports comptables en direct.",
+    },
+    {
+      role: "Designers & Créatifs",
+      icon: Palette,
+      highlight: "Acomptes & Devis",
+      details: "Cession de droits d'auteur, acomptes à la commande et modèles de devis soignés.",
+    },
+    {
+      role: "Consultants & Coachs",
+      icon: Briefcase,
+      highlight: "Facturation B2B",
+      details: "Mentions contractuelles spécifiques, délais de paiement 30/60 jours et suivi des relances.",
+    },
+    {
+      role: "Artisans & BTP",
+      icon: Wrench,
+      highlight: "Mentions Décennales",
+      details: "Attestation d'assurance obligatoire et gestion de l'autoliquidation de sous-traitance.",
+    },
+    {
+      role: "Formateurs & Enseignants",
+      icon: GraduationCap,
+      highlight: "Exonération TVA",
+      details: "Application de l'article 261 du CGI et numéro de déclaration d'activité DREETS.",
+    },
+    {
+      role: "Vente & E-commerce",
+      icon: ShoppingBag,
+      highlight: "Régime BIC 71%",
+      details: "Livre des recettes doublé du registre des achats avec abattement fiscal adapté.",
+    },
+  ];
+
+  const faqs = [
+    {
+      q: "Comment Bylz prépare la facturation électronique ?",
+      a: "Bylz intègre aujourd'hui les mentions légales essentielles sur vos factures PDF. Le format électronique structuré Factur-X est actuellement en cours de préparation.",
+    },
+    {
+      q: "Puis-je utiliser Bylz gratuitement ?",
+      a: "Absolument. Notre formule gratuite est permanente jusqu'à 3 factures par mois. Vous n'avez pas besoin de renseigner de carte bancaire pour démarrer.",
+    },
+    {
+      q: "Comment fonctionne le calcul des cotisations URSSAF ?",
+      a: "Bylz applique les barèmes officiels 2026 selon la nature de votre activité (services BNC, prestations BIC ou vente) pour calculer votre charge sociale réelle au centime près.",
+    },
+    {
+      q: "Où sont hébergées mes données ?",
+      a: "Votre base de données et vos factures sont hébergées en Europe chez Supabase (infrastructure AWS), avec sauvegardes quotidiennes.",
+    },
+    {
+      q: "Puis-je importer mes anciennes factures ?",
+      a: "Tout à fait. Bylz dispose d'un outil d'import qui analyse vos anciens fichiers PDF ou tableurs pour reconstituer votre historique sans repartir de zéro.",
+    },
+    {
+      q: "Que se passe-t-il si je dépasse le seuil de franchise de TVA ?",
+      a: "Une alerte vous prévient dès que vous approchez des seuils légaux 2026 (37 500 € en services, 85 000 € en vente). L'application vous guide ensuite pour basculer facilement en facturation avec TVA sans risque de pénalité fiscale.",
+    },
+    {
+      q: "Y a-t-il un engagement de durée ?",
+      a: "Aucun. Toutes nos offres payantes sont sans engagement. Vous pouvez changer de formule ou résilier à tout moment d'un simple clic depuis vos paramètres.",
+    },
+    {
+      q: "Mes factures sont-elles valables en cas de contrôle fiscal ?",
+      a: "Oui. Bylz génère des pièces avec numérotation chronologique séquentielle sans rupture et tient votre livre chronologique des recettes.",
+    },
+  ];
+
+  // Primary Button unified styling class
+  const btnPrimary =
+    "inline-flex items-center justify-center font-bold text-sm text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-sm transition-colors";
 
   // Schemas JSON-LD
   const softwareSchema = {
@@ -143,10 +191,36 @@ export function LandingPage() {
     name: "Bylz",
     applicationCategory: "BusinessApplication",
     operatingSystem: "Web",
+    description:
+      "Logiciel de facturation PDF et de gestion des cotisations URSSAF pour auto-entrepreneurs et micro-entreprises.",
     offers: [
-      { "@type": "Offer", price: "0.00", priceCurrency: "EUR", name: "Gratuit" },
-      { "@type": "Offer", price: "4.17", priceCurrency: "EUR", name: "Solo" },
-      { "@type": "Offer", price: "6.67", priceCurrency: "EUR", name: "Pro" },
+      {
+        "@type": "Offer",
+        name: "Starter",
+        price: "0.00",
+        priceCurrency: "EUR",
+        availability: "https://schema.org/InStock",
+        priceValidUntil: "2026-12-31",
+        url: "https://bylz.fr/tarifs",
+      },
+      {
+        "@type": "Offer",
+        name: "Solo",
+        price: billingCycle === "annual" ? "4.17" : "8.90",
+        priceCurrency: "EUR",
+        availability: "https://schema.org/InStock",
+        priceValidUntil: "2026-12-31",
+        url: "https://bylz.fr/tarifs",
+      },
+      {
+        "@type": "Offer",
+        name: "Pro",
+        price: billingCycle === "annual" ? "6.67" : "12.90",
+        priceCurrency: "EUR",
+        availability: "https://schema.org/InStock",
+        priceValidUntil: "2026-12-31",
+        url: "https://bylz.fr/tarifs",
+      },
     ],
   };
 
@@ -172,359 +246,186 @@ export function LandingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#070913] text-slate-100 selection:bg-blue-600/30 selection:text-blue-300 relative overflow-x-hidden font-sans">
+    <div className="min-h-screen bg-white text-slate-900 selection:bg-blue-600/20 selection:text-blue-900 relative overflow-x-hidden font-sans">
       <SEO
-        title="Bylz — Facturation Factur-X & Pilotage Fiscal | Auto-Entrepreneurs"
-        description="Créez des factures conformes 2026 (Factur-X), suivez votre CA et anticipez vos cotisations URSSAF & impôts en 2 min/jour. Essai gratuit sans carte bancaire."
+        title="Bylz : Facturation & Gestion Micro-Entreprise"
+        description="Créez des factures PDF avec les mentions légales essentielles, suivez votre CA et anticipez vos cotisations URSSAF & impôts en toute rigueur. Gratuit jusqu'à 3 factures par mois."
         canonical="/"
         jsonLd={[softwareSchema, organizationSchema, faqSchema]}
       />
 
-      {/* Ambient background glow layers */}
-      <div className="fixed inset-0 pointer-events-none z-0">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[600px] bg-gradient-to-b from-blue-600/15 via-indigo-600/5 to-transparent blur-[140px] rounded-full" />
-        <div className="absolute top-[1600px] left-1/4 w-[600px] h-[500px] bg-blue-500/10 blur-[130px] rounded-full" />
-        <div className="absolute bottom-[800px] right-1/4 w-[700px] h-[500px] bg-indigo-500/10 blur-[140px] rounded-full" />
-      </div>
-
-      <MarketingNavbar />
+      <MarketingNavbar theme="light" />
 
       <main className="relative z-10">
         {/* ========================================================= */}
-        {/* 1. HERO SECTION (Aéré, centré et vendeur) */}
+        {/* 1. HERO SECTION                                           */}
         {/* ========================================================= */}
-        <section className="pt-32 pb-20 md:pt-44 md:pb-28 text-center px-4 sm:px-6 lg:px-8">
-          <div className="max-w-5xl mx-auto space-y-7">
-            {/* Pill Badge */}
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-950/70 border border-blue-500/30 text-blue-400 text-xs font-semibold backdrop-blur-md shadow-lg shadow-blue-950/40">
-              <span className="w-2 h-2 rounded-full bg-blue-400 animate-pulse" />
-              <span>Prêt pour la Réforme Facturation Électronique 2026</span>
-            </div>
-
-            {/* Main Headline */}
-            <h1 className="text-4xl sm:text-6xl lg:text-7xl font-black tracking-tight text-white leading-[1.1] max-w-4xl mx-auto">
-              Vos factures. Votre{" "}
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-indigo-400 to-blue-500">
-                fiscalité
-              </span>
-              . Tout en un.
-            </h1>
-
-            {/* Subtitle */}
-            <p className="text-base sm:text-lg md:text-xl text-slate-400 max-w-2xl mx-auto font-normal leading-relaxed">
-              La plateforme de facturation française conçue spécialement pour les indépendants et TPE. Simplifiez vos devis, anticipez vos cotisations URSSAF et pilotez votre activité en toute sérénité.
-            </p>
-
-            {/* Actions / CTA Buttons */}
-            <div className="pt-3 flex flex-col sm:flex-row items-center justify-center gap-4">
-              {user ? (
-                <Link to="/dashboard" className="w-full sm:w-auto">
-                  <Button
-                    variant="primary"
-                    size="lg"
-                    className="w-full sm:w-auto text-base py-4 px-8 font-extrabold rounded-full bg-blue-600 hover:bg-blue-500 text-white shadow-xl shadow-blue-600/30 transition-all hover:scale-[1.02]"
+        <section className="pt-32 pb-16 md:pt-40 md:pb-24 bg-gradient-to-b from-slate-50 via-white to-white border-b border-slate-200 px-4 sm:px-6 lg:px-8">
+          <div className="max-w-7xl mx-auto">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center">
+              {/* Left Column : Valeur, arguments et CTA */}
+              <div className="lg:col-span-7 space-y-6 text-left">
+                {/* Badges Réforme 2026 & Assistant IA */}
+                <div className="flex flex-wrap items-center gap-2.5">
+                  <Link
+                    to="/facturation-electronique"
+                    className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-50 border border-blue-200 text-blue-800 text-xs font-bold hover:bg-blue-100 transition-colors"
                   >
-                    <span>🚀 Accéder à mon Tableau de bord</span>
-                    <ArrowRight className="w-5 h-5 ml-2" />
-                  </Button>
-                </Link>
-              ) : (
-                <Link to="/essai" className="w-full sm:w-auto">
-                  <Button
-                    variant="primary"
-                    size="lg"
-                    className="w-full sm:w-auto text-base py-4 px-8 font-extrabold rounded-full bg-blue-600 hover:bg-blue-500 text-white shadow-xl shadow-blue-600/30 transition-all hover:scale-[1.02]"
-                  >
-                    <span>Commencer gratuitement</span>
-                  </Button>
-                </Link>
-              )}
-              <a
-                href="#demo"
-                className="w-full sm:w-auto inline-flex items-center justify-center px-7 py-3.5 rounded-full bg-slate-900/90 hover:bg-slate-800 text-slate-300 font-semibold text-sm border border-slate-800 transition-all"
-              >
-                Voir la démo
-              </a>
-            </div>
-
-            {/* Trust highlights */}
-            <div className="pt-2 flex flex-wrap items-center justify-center gap-6 text-xs text-slate-400 font-medium">
-              <span className="flex items-center gap-1.5">
-                <ShieldCheck className="w-4 h-4 text-emerald-400" /> Factur-X & E-Reporting DGFiP
-              </span>
-              <span className="flex items-center gap-1.5">
-                <CheckCircle2 className="w-4 h-4 text-blue-400" /> Essai gratuit sans CB
-              </span>
-              <span className="flex items-center gap-1.5">
-                🔒 Données 100% hébergées en France
-              </span>
-            </div>
-
-            {/* Hero Mockup Preview (Clean Browser Window from Figma) */}
-            <div className="pt-8">
-              <div className="max-w-4xl mx-auto rounded-2xl bg-[#0b101d]/90 border border-slate-800/90 shadow-2xl shadow-blue-950/40 overflow-hidden backdrop-blur-xl text-left">
-                {/* Browser Top Chrome */}
-                <div className="px-5 py-3.5 border-b border-slate-800/80 flex items-center justify-between bg-[#080d19]">
-                  <div className="flex items-center gap-2">
-                    <span className="w-3 h-3 rounded-full bg-rose-500/80 inline-block" />
-                    <span className="w-3 h-3 rounded-full bg-amber-500/80 inline-block" />
-                    <span className="w-3 h-3 rounded-full bg-emerald-500/80 inline-block" />
+                    <ShieldCheck className="w-4 h-4 text-blue-700 flex-shrink-0" />
+                    <span>Facturation électronique 2026 : voir les règles officielles</span>
+                  </Link>
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-50 border border-emerald-300 text-emerald-900 text-xs font-bold">
+                    <MessageSquare className="w-4 h-4 text-emerald-700 flex-shrink-0" />
+                    <span>Assistant IA intégré utilisable depuis WhatsApp</span>
                   </div>
-                  <div className="px-4 py-1 rounded-full bg-slate-900/90 border border-slate-800 text-[11px] text-slate-400 font-mono">
-                    app.bylz.fr/tableau-de-bord
-                  </div>
-                  <div className="w-12" />
                 </div>
 
-                {/* Dashboard Body Mockup */}
-                <div className="p-6 sm:p-8 space-y-6">
-                  {/* Top Stats Cards */}
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="p-4 rounded-xl bg-slate-900/80 border border-slate-800">
-                      <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
-                        Chiffre d'affaires (Q1)
-                      </p>
-                      <p className="text-2xl sm:text-3xl font-black text-blue-400 font-mono mt-1">
-                        14,250.00 €
-                      </p>
-                    </div>
-                    <div className="p-4 rounded-xl bg-slate-900/80 border border-slate-800">
-                      <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
-                        Cotisations estimées
-                      </p>
-                      <p className="text-2xl sm:text-3xl font-black text-white font-mono mt-1">
-                        3,135.00 €
-                      </p>
-                    </div>
-                    <div className="p-4 rounded-xl bg-slate-900/80 border border-slate-800 space-y-2">
-                      <div className="flex items-center justify-between text-[11px]">
-                        <span className="font-bold text-slate-300">Prévisionnel URSSAF</span>
-                        <span className="font-semibold text-emerald-400">Taux 22%</span>
-                      </div>
-                      <div className="flex items-baseline justify-between text-xs">
-                        <span className="text-slate-400">Reste à payer</span>
-                        <span className="font-bold text-white font-mono">1,240.00 €</span>
-                      </div>
-                      <div className="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
-                        <div className="bg-gradient-to-r from-blue-500 to-indigo-500 h-full w-[65%]" />
-                      </div>
-                      <p className="text-[10px] text-slate-400">Échéance mensuelle le 30/11</p>
-                    </div>
-                  </div>
+                {/* Titre percutant H1 optimisé SEO */}
+                <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-slate-900 leading-[1.15]">
+                  Facturation & gestion pour les{" "}
+                  <span className="text-blue-700">indépendants</span>.
+                </h1>
 
-                  {/* Last Invoices Table */}
-                  <div className="rounded-xl bg-slate-900/60 border border-slate-800/80 p-4 space-y-3">
-                    <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider">
-                      Dernières Factures
-                    </h4>
-                    <div className="divide-y divide-slate-800/60 text-xs">
-                      <div className="py-2.5 flex items-center justify-between gap-4">
-                        <div>
-                          <p className="font-bold text-white">Studio Apex SAS</p>
-                          <p className="text-[11px] text-slate-400 font-mono">FAC-2026-0012</p>
-                        </div>
-                        <div className="flex items-center gap-3">
-                          <span className="font-mono font-bold text-white">3,200.00 €</span>
-                          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
-                            Payée
-                          </span>
-                        </div>
-                      </div>
-                      <div className="py-2.5 flex items-center justify-between gap-4">
-                        <div>
-                          <p className="font-bold text-white">Nexus Digital SARL</p>
-                          <p className="text-[11px] text-slate-400 font-mono">FAC-2026-0011</p>
-                        </div>
-                        <div className="flex items-center gap-3">
-                          <span className="font-mono font-bold text-white">1,500.00 €</span>
-                          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/15 text-amber-400 border border-amber-500/30">
-                            En attente
-                          </span>
-                        </div>
-                      </div>
-                      <div className="py-2.5 flex items-center justify-between gap-4">
-                        <div>
-                          <p className="font-bold text-white">Aura Conseil SAS</p>
-                          <p className="text-[11px] text-slate-400 font-mono">FAC-2026-0010</p>
-                        </div>
-                        <div className="flex items-center gap-3">
-                          <span className="font-mono font-bold text-white">4,800.00 €</span>
-                          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
-                            Payée
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+                {/* 4 Promesses claires à cocher */}
+                <ul className="space-y-3 pt-1 text-slate-800 text-sm sm:text-base font-medium">
+                  <li className="flex items-center gap-3">
+                    <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center flex-shrink-0">
+                      <Check className="w-3.5 h-3.5 stroke-[3]" />
+                    </span>
+                    <span>Factures PDF avec <strong>les mentions légales essentielles</strong></span>
+                  </li>
+                  <li className="flex items-center gap-3">
+                    <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center flex-shrink-0">
+                      <Check className="w-3.5 h-3.5 stroke-[3]" />
+                    </span>
+                    <span>Calcul automatique de vos <strong>cotisations URSSAF</strong> et abattement fiscal</span>
+                  </li>
+                  <li className="flex items-center gap-3">
+                    <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center flex-shrink-0">
+                      <Check className="w-3.5 h-3.5 stroke-[3]" />
+                    </span>
+                    <span>Suivi en direct du <strong>seuil de TVA</strong> (Franchise Art. 293 B du CGI)</span>
+                  </li>
+                  <li className="flex items-center gap-3">
+                    <span className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-800 flex items-center justify-center flex-shrink-0">
+                      <Sparkles className="w-3.5 h-3.5 stroke-[2.5]" />
+                    </span>
+                    <span><strong>Assistant IA intégré utilisable depuis WhatsApp</strong> pour créer vos devis, facturer et calculer votre URSSAF</span>
+                  </li>
+                </ul>
+
+                {/* Boutons d'action */}
+                <div className="pt-2 flex flex-col sm:flex-row items-stretch sm:items-center gap-3.5">
+                  {user ? (
+                    <Link to="/dashboard">
+                      <button className={`${btnPrimary} py-3.5 px-8 text-base w-full sm:w-auto`}>
+                        Accéder à mon tableau de bord
+                      </button>
+                    </Link>
+                  ) : (
+                    <Link to="/essai">
+                      <button className={`${btnPrimary} py-3.5 px-8 text-base w-full sm:w-auto`}>
+                        Commencer gratuitement
+                      </button>
+                    </Link>
+                  )}
+                </div>
+
+                {/* Garanties objectives */}
+                <div className="pt-4 flex flex-wrap items-center gap-y-2 gap-x-5 text-xs text-slate-700 font-semibold border-t border-slate-200">
+                  <span className="flex items-center gap-1.5">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-700" /> Gratuit jusqu'à 3 factures/mois
+                  </span>
+                  <span className="flex items-center gap-1.5">
+                    <Lock className="w-4 h-4 text-slate-700" /> Base de données hébergée en Europe
+                  </span>
+                  <span className="flex items-center gap-1.5">
+                    <FileCheck className="w-4 h-4 text-blue-700" /> Facturation électronique en préparation
+                  </span>
                 </div>
               </div>
-            </div>
-          </div>
-        </section>
 
-        {/* ========================================================= */}
-        {/* 2. SECTION BYLZ COPILOT IA (Un cerveau IA pour piloter)   */}
-        {/* ========================================================= */}
-        <section className="py-24 border-t border-slate-800/80 relative">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-14 items-center">
-              {/* Left Column: Heading + 4 Stacked Interactive Feature Items */}
-              <div className="lg:col-span-6 space-y-6">
-                <div className="inline-flex items-center gap-2 text-xs font-black tracking-wider text-blue-400 uppercase">
-                  <Sparkles className="w-4 h-4 text-blue-400" />
-                  <span>BYLZ COPILOT IA</span>
-                </div>
+              {/* Right Column : Aperçu Visuel Produit Fidèle */}
+              <div className="lg:col-span-5">
+                <div className="relative mx-auto max-w-lg lg:max-w-none">
+                  {/* Carte Principale : Dashboard d'activité */}
+                  <div className="rounded-2xl bg-white border border-slate-200 shadow-xl overflow-hidden">
+                    <div className="px-5 py-3.5 border-b border-slate-200 flex items-center justify-between bg-slate-50">
+                      <div className="flex items-center gap-2">
+                        <span className="w-2.5 h-2.5 rounded-full bg-blue-700 inline-block" />
+                        <span className="font-bold text-xs text-slate-900">Bylz : Pilotage Micro-Entreprise</span>
+                      </div>
+                      <span className="text-[11px] font-bold text-emerald-800 bg-emerald-100/70 px-2 py-0.5 rounded border border-emerald-300">
+                        Exercice 2026
+                      </span>
+                    </div>
 
-                <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white tracking-tight leading-tight">
-                  Un cerveau IA pour piloter votre activité
-                </h2>
+                    <div className="p-5 space-y-4 text-left">
+                      {/* Metric Row */}
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200">
+                          <p className="text-[11px] font-semibold text-slate-600">Chiffre d'affaires Q4</p>
+                          <p className="text-xl font-bold text-slate-900 font-mono mt-0.5">14 250,00 €</p>
+                          <p className="text-[11px] text-emerald-700 font-semibold mt-1">+15% vs Q3</p>
+                        </div>
+                        <div className="p-3.5 rounded-xl bg-blue-50/70 border border-blue-200">
+                          <p className="text-[11px] font-semibold text-blue-900">Part URSSAF estimée</p>
+                          <p className="text-xl font-bold text-blue-900 font-mono mt-0.5">3 648,00 €</p>
+                          <p className="text-[11px] text-blue-800 font-semibold mt-1">Taux officiel 25,6 % (BNC SSI)</p>
+                        </div>
+                      </div>
 
-                <p className="text-slate-400 text-base leading-relaxed font-normal">
-                  Bylz analyse en temps réel vos flux de facturation, échéances fiscales et historiques pour générer de la visibilité et vous suggérer les meilleures décisions.
-                </p>
+                      {/* Jauge TVA */}
+                      <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
+                        <div className="flex justify-between items-center text-xs">
+                          <span className="font-bold text-slate-800">Seuil de Franchise TVA (Services)</span>
+                          <span className="font-mono text-slate-700 text-xs font-semibold">31 400 / 37 500 €</span>
+                        </div>
+                        <div className="w-full bg-slate-200 h-2.5 rounded-full overflow-hidden">
+                          <div className="bg-blue-600 h-full w-[83.7%]" />
+                        </div>
+                        <p className="text-[11px] text-slate-600 font-medium">
+                          Marge restante de 6 100 € avant assujettissement
+                        </p>
+                      </div>
 
-                {/* 4 Interactive Feature Selector Cards */}
-                <div className="space-y-3 pt-2">
-                  {aiFeatures.map((feat, idx) => {
-                    const isSelected = activeAiTab === idx;
-                    return (
-                      <div
-                        key={idx}
-                        onClick={() => setActiveAiTab(idx)}
-                        className={`p-4 rounded-xl border transition-all cursor-pointer ${
-                          isSelected
-                            ? "bg-[#0d1424] border-blue-500/50 shadow-lg shadow-blue-950/30"
-                            : "bg-slate-900/40 border-slate-800/70 hover:border-slate-700 hover:bg-slate-900/70"
-                        }`}
-                      >
-                        <div className="flex items-center justify-between gap-3">
-                          <div className="flex items-center gap-3">
-                            <span className="text-xs font-mono font-bold text-slate-400">
-                              {feat.id}
-                            </span>
-                            <h3 className="font-bold text-sm sm:text-base text-white">
-                              {feat.title}
-                            </h3>
+                      {/* Assistant IA Copilot row avec mention WhatsApp */}
+                      <div className="p-3 rounded-xl border border-emerald-300 bg-emerald-50/70 flex items-center justify-between">
+                        <div className="flex items-center gap-2.5">
+                          <div className="w-8 h-8 rounded-lg bg-emerald-600 text-white flex items-center justify-center flex-shrink-0 shadow-sm">
+                            <MessageSquare className="w-4 h-4" />
                           </div>
-                          {feat.tag && (
-                            <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${feat.tagColor}`}>
-                              {feat.tag}
-                            </span>
-                          )}
+                          <div>
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-xs font-bold text-slate-900">Assistant IA Bylz</span>
+                              <span className="text-[10px] font-bold text-emerald-800 bg-emerald-100 px-1.5 py-0.2 rounded border border-emerald-300">
+                                WhatsApp & Web
+                              </span>
+                            </div>
+                            <p className="text-[11px] text-slate-700 font-medium">
+                              « Facture envoyée et URSSAF calculé à 25,6 % »
+                            </p>
+                          </div>
                         </div>
-                        <p className="text-xs text-slate-400 mt-2 font-normal leading-relaxed pl-7">
-                          {feat.description}
-                        </p>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Right Column: AI Mockup with Curve Chart & Live Alerts */}
-              <div className="lg:col-span-6">
-                <div className="rounded-2xl bg-[#0b101e] border border-slate-800/90 shadow-2xl shadow-blue-950/30 overflow-hidden backdrop-blur-xl">
-                  {/* Mockup Header */}
-                  <div className="px-5 py-3 border-b border-slate-800/80 flex items-center justify-between bg-[#080d19] text-xs">
-                    <div className="flex items-center gap-2">
-                      <span className="w-2.5 h-2.5 rounded-full bg-rose-500/80" />
-                      <span className="w-2.5 h-2.5 rounded-full bg-amber-500/80" />
-                      <span className="w-2.5 h-2.5 rounded-full bg-emerald-500/80" />
-                      <span className="ml-2 text-slate-400 font-mono text-[11px]">
-                        bylz.app/dashboard/intelligence
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-1.5 text-[11px] font-semibold text-emerald-400">
-                      <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                      <span>Bylz Copilot Connecté</span>
-                    </div>
-                  </div>
-
-                  {/* Mockup Inner Body */}
-                  <div className="p-6 space-y-6">
-                    {/* Forecasting Chart Header */}
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-xs text-slate-400 font-medium">
-                          Trésorerie Prévisionnelle (Avril)
-                        </p>
-                        <p className="text-xl sm:text-2xl font-black text-white font-mono mt-0.5">
-                          +12 400 €{" "}
-                          <span className="text-xs font-bold text-emerald-400 font-sans">
-                            (+18.4% vs mars)
-                          </span>
-                        </p>
-                      </div>
-                      <span className="px-3 py-1 rounded-full text-[11px] font-bold bg-slate-900 border border-slate-800 text-slate-300">
-                        Vue 30 jours
-                      </span>
-                    </div>
-
-                    {/* Smooth SVG Curve Chart */}
-                    <div className="relative h-32 w-full pt-2">
-                      <svg className="w-full h-full overflow-visible" viewBox="0 0 400 100" preserveAspectRatio="none">
-                        <defs>
-                          <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.35" />
-                            <stop offset="100%" stopColor="#3b82f6" stopOpacity="0.0" />
-                          </linearGradient>
-                        </defs>
-                        {/* Area */}
-                        <path
-                          d="M 0,80 Q 80,60 160,65 T 280,35 T 400,20 L 400,100 L 0,100 Z"
-                          fill="url(#chartGradient)"
-                        />
-                        {/* Line */}
-                        <path
-                          d="M 0,80 Q 80,60 160,65 T 280,35 T 400,20"
-                          fill="none"
-                          stroke="#3b82f6"
-                          strokeWidth="3"
-                          strokeLinecap="round"
-                        />
-                        {/* Active Point */}
-                        <circle cx="330" cy="27" r="5" fill="#ffffff" stroke="#3b82f6" strokeWidth="3" />
-                      </svg>
-                    </div>
-
-                    {/* Stat Badges Grid */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      <div className="p-3.5 rounded-xl bg-slate-900/80 border border-slate-800 space-y-1.5">
-                        <div className="flex items-center justify-between text-[11px]">
-                          <span className="font-bold text-slate-300">Cotisation URSSAF</span>
-                          <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/15 text-amber-400 border border-amber-500/30">
-                            Échéance le 30
-                          </span>
-                        </div>
-                        <p className="text-lg font-black text-white font-mono">2 430 € estimés</p>
-                        <p className="text-[10px] text-slate-400">Calculé sur vos encaissements réels</p>
+                        <span className="text-[11px] font-bold text-emerald-800 whitespace-nowrap pl-2">
+                          Sur WhatsApp
+                        </span>
                       </div>
 
-                      <div className="p-3.5 rounded-xl bg-slate-900/80 border border-slate-800 space-y-1.5">
-                        <div className="flex items-center justify-between text-[11px]">
-                          <span className="font-bold text-slate-300">Retards de Paiement</span>
-                          <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-500/15 text-rose-400 border border-rose-500/30">
-                            2 En retard
-                          </span>
+                      {/* Facture Factur-X prête */}
+                      <div className="p-3.5 rounded-xl border border-slate-200 bg-white flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="w-9 h-9 rounded-lg bg-blue-100 text-blue-800 flex items-center justify-center font-bold text-xs">
+                            PDF/A
+                          </div>
+                          <div>
+                            <p className="text-xs font-bold text-slate-900">FAC-2026-0012</p>
+                            <p className="text-[11px] text-slate-600 font-medium">Facture PDF</p>
+                          </div>
                         </div>
-                        <div className="flex items-center justify-between">
-                          <p className="text-lg font-black text-white font-mono">4 150 €</p>
-                          <span className="px-2.5 py-1 rounded-md text-[10px] font-bold bg-blue-600 text-white cursor-pointer hover:bg-blue-500 transition-colors">
-                            Relancer
-                          </span>
-                        </div>
-                        <p className="text-[10px] text-slate-400">Acme Corp & Pixel Studio</p>
-                      </div>
-                    </div>
-
-                    {/* Smart Suggestion Banner */}
-                    <div className="p-3.5 rounded-xl bg-blue-950/40 border border-blue-500/30 flex items-start gap-3">
-                      <Lightbulb className="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" />
-                      <div className="text-xs">
-                        <p className="font-bold text-blue-300">Conseil Optimisation Bylz</p>
-                        <p className="text-slate-300 text-[11px] mt-0.5 leading-relaxed">
-                          Vos charges actuelles justifient un passage imminent au régime réel. Simuler le gain fiscal (approx. +1 200 € / an).
-                        </p>
+                        <span className="px-2.5 py-0.5 rounded text-[11px] font-bold bg-emerald-100/70 text-emerald-800 border border-emerald-300">
+                          Payée : 3 200 €
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -535,394 +436,663 @@ export function LandingPage() {
         </section>
 
         {/* ========================================================= */}
-        {/* 3. KEY FEATURES ("Pilotez votre activité sans maux de tête") */}
+        {/* 2. BANDEAU DE RÉASSURANCE & LABELS LÉGAUX                  */}
         {/* ========================================================= */}
-        <section className="py-24 border-t border-slate-800/80 bg-[#060811]">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-16">
-            {/* Header */}
-            <div className="text-center max-w-3xl mx-auto space-y-4">
-              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-950/60 border border-blue-500/30 text-blue-400 text-xs font-semibold">
-                <span className="w-1.5 h-1.5 rounded-full bg-blue-400" />
-                <span>Fonctionnalités Clés</span>
-              </div>
-              <h2 className="text-3xl sm:text-5xl font-black text-white tracking-tight">
-                Pilotez votre activité sans maux de tête
+        <section className="py-6 bg-slate-100 border-b border-slate-200">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-8 text-xs font-bold text-slate-800">
+              <Link to="/conformite" className="flex items-center gap-2 hover:text-blue-700 transition-colors" title="Facturation électronique en préparation">
+                <ShieldCheck className="w-4 h-4 text-emerald-700" />
+                <span>Facturation électronique en préparation</span>
+              </Link>
+              <Link to="/outils/modele-facture-gratuit" className="flex items-center gap-2 hover:text-blue-700 transition-colors" title="Modèle de facture">
+                <FileCheck className="w-4 h-4 text-blue-700" />
+                <span>Livre chronologique des recettes, exportable en CSV</span>
+              </Link>
+              <Link to="/conformite" className="flex items-center gap-2 hover:text-blue-700 transition-colors" title="Sécurité et hébergement en Europe">
+                <Lock className="w-4 h-4 text-slate-700" />
+                <span>Base de données hébergée en Europe</span>
+              </Link>
+              <Link to="/outils/simulateur-urssaf" className="flex items-center gap-2 hover:text-blue-700 transition-colors" title="Simulateur de cotisations URSSAF 2026">
+                <CheckCircle2 className="w-4 h-4 text-emerald-700" />
+                <span>Taux de cotisations 2026 à jour</span>
+              </Link>
+            </div>
+          </div>
+        </section>
+
+        {/* ========================================================= */}
+        {/* 3. WORKFLOW : DU DEVIS À L'URSSAF                         */}
+        {/* ========================================================= */}
+        <section className="py-20 bg-white">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
+            <div className="text-center max-w-3xl mx-auto space-y-3">
+              <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
+                Du devis à la déclaration URSSAF, tout est connecté
               </h2>
-              <p className="text-slate-400 text-base sm:text-lg font-normal leading-relaxed">
-                Plus qu'un simple outil de facturation, un véritable assistant de gestion pour optimiser votre trésorerie au quotidien.
+              <p className="text-slate-700 text-base sm:text-lg">
+                Moins de double saisie, moins de calculs à la main pour votre gestion au quotidien.
               </p>
             </div>
 
-            {/* 3 Large Clean Feature Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              {/* Card 1 */}
-              <div className="p-8 rounded-2xl bg-[#0b101e]/80 border border-slate-800 hover:border-blue-500/40 transition-all duration-300 space-y-5 shadow-xl hover:-translate-y-1">
-                <div className="w-12 h-12 rounded-xl bg-blue-600/15 border border-blue-500/30 flex items-center justify-center text-blue-400">
-                  <FileText className="w-6 h-6" />
+            {/* 4 Colonnes horizontales numérotées */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {workflowSteps.map((step) => (
+                <div
+                  key={step.num}
+                  className="p-6 rounded-xl bg-slate-50 border border-slate-200 space-y-3 text-left hover:border-blue-400 transition-colors"
+                >
+                  <div className="w-8 h-8 rounded-lg bg-blue-700 text-white font-bold text-sm flex items-center justify-center">
+                    {step.num}
+                  </div>
+                  <h3 className="font-bold text-base text-slate-900">{step.title}</h3>
+                  <p className="text-xs text-slate-700 leading-relaxed font-normal">{step.desc}</p>
                 </div>
-                <h3 className="text-xl font-bold text-white">
-                  Personnalisation Facture & Devis CFE
-                </h3>
-                <p className="text-sm text-slate-400 leading-relaxed font-normal">
-                  Créez des documents professionnels à votre image en quelques secondes. Personnalisez les couleurs, le logo et les conditions de règlement en toute simplicité.
+              ))}
+            </div>
+
+            <div className="text-center pt-2">
+              <Link to="/essai">
+                <button className={`${btnPrimary} py-3 px-6 text-sm`}>
+                  Créer ma première facture en 2 minutes
+                </button>
+              </Link>
+            </div>
+          </div>
+        </section>
+
+        {/* ========================================================= */}
+        {/* 4. BANDEAU DE RUPTURE SOMBRE : RÉFORME 2026               */}
+        {/* ========================================================= */}
+        <section className="py-20 bg-[#011142] text-white">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
+              {/* Colonne gauche : Explications réforme */}
+              <div className="lg:col-span-6 space-y-5 text-left">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-900/60 text-blue-200 text-xs font-bold border border-blue-400/40">
+                  <ShieldCheck className="w-4 h-4 text-blue-300" />
+                  <span>Obligation Légale 2026</span>
+                </div>
+                <h2 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight leading-tight">
+                  Bylz est déjà prêt pour la facturation électronique obligatoire
+                </h2>
+                <p className="text-slate-200 text-sm sm:text-base leading-relaxed">
+                  Bylz intègre les mentions légales obligatoires sur vos factures PDF et prépare l'intégration de la facturation électronique structurée pour les échanges inter-entreprises.
                 </p>
+                <div className="pt-2">
+                  <Link
+                    to="/conformite"
+                    className="inline-flex items-center gap-2 text-sm font-bold text-blue-300 hover:text-white transition-colors"
+                  >
+                    <span>Comprendre la réforme et les obligations de votre statut</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </Link>
+                </div>
               </div>
 
-              {/* Card 2 */}
-              <div className="p-8 rounded-2xl bg-[#0b101e]/80 border border-slate-800 hover:border-blue-500/40 transition-all duration-300 space-y-5 shadow-xl hover:-translate-y-1">
-                <div className="w-12 h-12 rounded-xl bg-blue-600/15 border border-blue-500/30 flex items-center justify-center text-blue-400">
-                  <Calculator className="w-6 h-6" />
+              {/* Colonne droite : 3 Cartes de conformité vérifiées */}
+              <div className="lg:col-span-6 space-y-3">
+                <div className="p-4 rounded-xl bg-white/10 border border-white/15 flex items-start gap-3.5">
+                  <div className="w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <Check className="w-4 h-4 stroke-[2.5]" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-sm text-white">Facturation électronique en préparation</h3>
+                    <p className="text-xs text-slate-200 mt-0.5">
+                      Factures PDF avec mentions légales obligatoires ; format structuré hybride en cours de préparation pour la réforme.
+                    </p>
+                  </div>
                 </div>
-                <h3 className="text-xl font-bold text-white">
-                  Pilotage Réel & Cotisations URSSAF
-                </h3>
-                <p className="text-sm text-slate-400 leading-relaxed font-normal">
-                  Sachez exactement combien vous devez mettre de côté chaque mois. Notre algorithme calcule vos cotisations sociales en fonction de votre statut (Auto-entrepreneur, SASU).
-                </p>
-              </div>
 
-              {/* Card 3 */}
-              <div className="p-8 rounded-2xl bg-[#0b101e]/80 border border-slate-800 hover:border-blue-500/40 transition-all duration-300 space-y-5 shadow-xl hover:-translate-y-1">
-                <div className="w-12 h-12 rounded-xl bg-blue-600/15 border border-blue-500/30 flex items-center justify-center text-blue-400">
-                  <MessageCircle className="w-6 h-6" />
+                <div className="p-4 rounded-xl bg-white/10 border border-white/15 flex items-start gap-3.5">
+                  <div className="w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <Check className="w-4 h-4 stroke-[2.5]" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-sm text-white">Livre des recettes & Exports comptables</h3>
+                    <p className="text-xs text-slate-200 mt-0.5">
+                      Exportez vos données de facturation et votre livre des recettes au format CSV en un clic.
+                    </p>
+                  </div>
                 </div>
-                <h3 className="text-xl font-bold text-white">
-                  Assistant IA WhatsApp & Synchro
-                </h3>
-                <p className="text-sm text-slate-400 leading-relaxed font-normal">
-                  Générez des factures en dictant un simple message vocal sur WhatsApp. Bylz s'occupe de la mise en forme et de la synchro bancaire en temps réel.
-                </p>
+
+                <div className="p-4 rounded-xl bg-white/10 border border-white/15 flex items-start gap-3.5">
+                  <div className="w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <Check className="w-4 h-4 stroke-[2.5]" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-sm text-white">Conservation de vos documents</h3>
+                    <p className="text-xs text-slate-200 mt-0.5">
+                      Stockage sécurisé sur une base de données chiffrée en Europe avec sauvegardes régulières.
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
         </section>
 
         {/* ========================================================= */}
-        {/* 4. LIVE INTERACTIVE DEMO (Testez la création en 1 clic)   */}
+        {/* 5. FONCTIONNALITÉS : TOUT CE DONT VOUS AVEZ BESOIN        */}
         {/* ========================================================= */}
-        <section id="demo" className="py-24 border-t border-slate-800/80 relative">
+        <section className="py-20 bg-slate-50 border-b border-slate-200">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-14 items-center">
-              {/* Left Column: Demo Explanation */}
-              <div className="lg:col-span-6 space-y-6">
-                <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-950/60 border border-blue-500/30 text-blue-400 text-xs font-semibold">
-                  <span className="w-1.5 h-1.5 rounded-full bg-blue-400" />
-                  <span>Démo Interactive</span>
-                </div>
-
-                <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white tracking-tight leading-tight">
-                  Testez la création de facture en 1 clic en direct
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
+              {/* Titre ancré à gauche */}
+              <div className="lg:col-span-4 space-y-4 text-left">
+                <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight leading-tight">
+                  Tout ce dont vous avez besoin pour gérer votre activité
                 </h2>
-
-                <p className="text-slate-400 text-base leading-relaxed font-normal">
-                  Pas besoin de créer un compte pour voir la magie opérer. Modifiez la description de la prestation ou changez le montant de la prestation directement sur la droite pour générer instantanément votre facture certifiée Factur-X.
+                <p className="text-slate-700 text-sm leading-relaxed">
+                  Bylz regroupe les outils essentiels à la gestion d'un indépendant, sans fonctions superflues qui alourdissent votre quotidien.
                 </p>
-
-                {/* Bullets with shields */}
-                <div className="space-y-4 pt-2">
-                  <div className="flex items-start gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-blue-500/15 border border-blue-500/30 flex items-center justify-center text-blue-400 flex-shrink-0 mt-0.5">
-                      <ShieldCheck className="w-4 h-4" />
-                    </div>
-                    <div>
-                      <h4 className="font-bold text-sm text-white">Génération Factur-X instantanée</h4>
-                      <p className="text-xs text-slate-400 mt-0.5">Prête pour le dépôt sur le portail public de facturation.</p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-start gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400 flex-shrink-0 mt-0.5">
-                      <CheckCircle2 className="w-4 h-4" />
-                    </div>
-                    <div>
-                      <h4 className="font-bold text-sm text-white">Estimation Urssaf automatique</h4>
-                      <p className="text-xs text-slate-400 mt-0.5">La part de vos cotisations calculée au centime près.</p>
-                    </div>
-                  </div>
+                <div className="pt-2 hidden lg:block">
+                  <Link to="/essai">
+                    <button className={`${btnPrimary} py-2.5 px-5 text-sm`}>
+                      Démarrer gratuitement
+                    </button>
+                  </Link>
                 </div>
               </div>
 
-              {/* Right Column: Live Interactive Invoice Editor Box */}
-              <div className="lg:col-span-6">
-                <div className="rounded-2xl bg-[#0b101e] border border-slate-800/90 p-6 sm:p-8 space-y-6 shadow-2xl shadow-blue-950/40">
-                  <div className="flex items-center justify-between pb-4 border-b border-slate-800">
-                    <h3 className="font-bold text-base text-white">Éditeur de facture</h3>
-                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-600/20 text-blue-400 border border-blue-500/30">
-                      Factur-X
+              {/* Grille 2 colonnes de fonctionnalités détaillées à droite */}
+              <div className="lg:col-span-8 grid grid-cols-1 sm:grid-cols-2 gap-6">
+                {featuresList.map((f, i) => {
+                  const Icon = f.icon;
+                  return (
+                    <div
+                      key={i}
+                      className="p-5 rounded-xl bg-white border border-slate-200 shadow-sm space-y-2.5 text-left"
+                    >
+                      <div className="w-9 h-9 rounded-lg bg-blue-100 text-blue-800 flex items-center justify-center">
+                        <Icon className="w-5 h-5" />
+                      </div>
+                      <h3 className="font-bold text-base text-slate-900">{f.title}</h3>
+                      <p className="text-xs text-slate-700 leading-relaxed font-normal">{f.desc}</p>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ========================================================= */}
+        {/* 6. COMPARATIF & IMPACT : BYLZ VS TABLEURS (STYLE ABBY / INDY) */}
+        {/* ========================================================= */}
+        <section id="comparatif" className="py-20 bg-white border-b border-slate-200">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-16">
+            {/* Titre de section */}
+            <div className="text-center max-w-3xl mx-auto space-y-4">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-200 text-blue-800 text-xs font-bold">
+                <ShieldCheck className="w-3.5 h-3.5 text-blue-700" />
+                <span>Pourquoi quitter les tableurs traditionnels</span>
+              </div>
+              <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight leading-tight">
+                Fini les dimanches soirs passés sur vos factures
+              </h2>
+              <p className="text-slate-700 text-base sm:text-lg">
+                La gestion d'une micro-entreprise ne devrait pas être une source de stress fiscal.
+                Découvrez ce qui change concrètement au quotidien.
+              </p>
+            </div>
+
+            {/* 3 Métriques d'impact (Inspiré Abby & Indy) */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="p-6 rounded-2xl bg-slate-50 border border-slate-200 text-left space-y-2">
+                <div className="w-10 h-10 rounded-xl bg-blue-100 text-blue-800 flex items-center justify-center font-bold">
+                  <Clock className="w-5 h-5 text-blue-700" />
+                </div>
+                <p className="text-xl font-black text-slate-900 tracking-tight">Moins de saisie</p>
+                <p className="text-xs font-bold text-slate-800">Moins de calculs à la main</p>
+                <p className="text-xs text-slate-600 leading-relaxed">
+                  Devis transformés en factures en un clic, relances automatiques et synchronisation de vos justificatifs.
+                </p>
+              </div>
+
+              <div className="p-6 rounded-2xl bg-slate-50 border border-slate-200 text-left space-y-2">
+                <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold">
+                  <Calculator className="w-5 h-5 text-emerald-700" />
+                </div>
+                <p className="text-xl font-black text-slate-900 tracking-tight">Zéro surprise</p>
+                <p className="text-xs font-bold text-slate-800">Sur vos cotisations URSSAF & TVA</p>
+                <p className="text-xs text-slate-600 leading-relaxed">
+                  Vos charges sociales sont estimées dès l'encaissement avec alertes de seuils en direct.
+                </p>
+              </div>
+
+              <div className="p-6 rounded-2xl bg-slate-50 border border-slate-200 text-left space-y-2">
+                <div className="w-10 h-10 rounded-xl bg-blue-100 text-blue-800 flex items-center justify-center font-bold">
+                  <FileCheck className="w-5 h-5 text-blue-700" />
+                </div>
+                <p className="text-xl font-black text-slate-900 tracking-tight">Facturation claire</p>
+                <p className="text-xs font-bold text-slate-800">Mentions légales obligatoires incluses</p>
+                <p className="text-xs text-slate-600 leading-relaxed">
+                  Génération de factures PDF propres avec les mentions indispensables (EI, franchise TVA, pénalités).
+                </p>
+              </div>
+            </div>
+
+            {/* Tableau comparatif côte à côte : Tableur vs Bylz (Inspiré Indy) */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-stretch">
+              {/* Colonne Tableurs / Ancienne méthode */}
+              <div className="p-7 sm:p-8 rounded-2xl bg-slate-50 border border-slate-200 text-left flex flex-col justify-between">
+                <div className="space-y-6">
+                  <div className="flex items-center justify-between pb-4 border-b border-slate-200">
+                    <div>
+                      <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                        Méthode traditionnelle
+                      </span>
+                      <h3 className="text-xl font-bold text-slate-900 mt-1">Excel, Word ou papier</h3>
+                    </div>
+                    <span className="px-3 py-1 rounded-full text-xs font-bold bg-slate-200 text-slate-700">
+                      Dépassé en 2026
                     </span>
                   </div>
 
-                  {/* Form fields */}
-                  <div className="space-y-4 text-xs">
-                    <div>
-                      <label className="block text-slate-400 font-bold mb-1.5">
-                        Description de la prestation
-                      </label>
-                      <input
-                        type="text"
-                        value={demoDescription}
-                        onChange={(e) => setDemoDescription(e.target.value)}
-                        className="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-slate-700/80 text-white font-medium focus:outline-none focus:border-blue-500 transition-colors"
-                      />
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <label className="block text-slate-400 font-bold mb-1.5">
-                          Tarif Journalier (TJM)
-                        </label>
-                        <div className="relative">
-                          <input
-                            type="number"
-                            value={demoTjm}
-                            onChange={(e) => setDemoTjm(Number(e.target.value) || 0)}
-                            className="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-slate-700/80 text-white font-mono font-bold focus:outline-none focus:border-blue-500 transition-colors"
-                          />
-                          <span className="absolute right-3 top-2.5 text-slate-500 font-bold text-[11px]">
-                            €/j
-                          </span>
-                        </div>
+                  <ul className="space-y-4 text-xs sm:text-sm text-slate-700">
+                    <li className="flex items-start gap-3">
+                      <div className="w-5 h-5 rounded-full bg-rose-100 text-rose-700 flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <X className="w-3.5 h-3.5 stroke-[3]" />
                       </div>
-
-                      <div>
-                        <label className="block text-slate-400 font-bold mb-1.5">
-                          Jours travaillés
-                        </label>
-                        <input
-                          type="number"
-                          value={demoDays}
-                          onChange={(e) => setDemoDays(Number(e.target.value) || 0)}
-                          className="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-slate-700/80 text-white font-mono font-bold focus:outline-none focus:border-blue-500 transition-colors"
-                        />
-                      </div>
-                    </div>
-                    <div className="pt-1">
-                      <label className="block text-slate-400 font-bold mb-1.5">
-                        Régime de TVA
-                      </label>
-                      <div className="grid grid-cols-2 gap-2 p-1 rounded-xl bg-slate-900 border border-slate-700/80">
-                        <button
-                          type="button"
-                          onClick={() => setDemoHasVat(false)}
-                          className={`py-2 px-3 rounded-lg text-xs font-bold transition-all ${
-                            !demoHasVat
-                              ? "bg-blue-600 text-white shadow-md shadow-blue-600/30"
-                              : "text-slate-400 hover:text-white"
-                          }`}
-                        >
-                          Franchise en base (0%)
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setDemoHasVat(true)}
-                          className={`py-2 px-3 rounded-lg text-xs font-bold transition-all ${
-                            demoHasVat
-                              ? "bg-blue-600 text-white shadow-md shadow-blue-600/30"
-                              : "text-slate-400 hover:text-white"
-                          }`}
-                        >
-                          TVA standard (20%)
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Calculations Preview */}
-                  <div className="p-4 rounded-xl bg-slate-900/80 border border-slate-800 space-y-2 text-xs">
-                    <div className="flex items-center justify-between text-slate-400">
-                      <span>Montant H.T. ({demoDays} {demoDays > 1 ? "jours" : "jour"})</span>
-                      <span className="font-mono font-bold text-white">
-                        {demoMontantHt.toLocaleString("fr-FR", { minimumFractionDigits: 2 })} €
+                      <span>
+                        <strong className="text-slate-900 font-semibold">Format non structuré :</strong> les PDF simples et tableurs ne respectent pas les exigences attendues pour la facturation électronique.
                       </span>
-                    </div>
-                    {demoHasVat ? (
-                      <div className="flex items-center justify-between text-slate-400">
-                        <span>TVA (20%)</span>
-                        <span className="font-mono font-bold text-white">
-                          {demoTva.toLocaleString("fr-FR", { minimumFractionDigits: 2 })} €
-                        </span>
+                    </li>
+                    <li className="flex items-start gap-3">
+                      <div className="w-5 h-5 rounded-full bg-rose-100 text-rose-700 flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <X className="w-3.5 h-3.5 stroke-[3]" />
                       </div>
-                    ) : (
-                      <div className="flex items-center justify-between text-slate-400">
-                        <span>TVA (Franchise art. 293 B)</span>
-                        <span className="font-mono font-bold text-emerald-400">
-                          0,00 € (Non applicable)
-                        </span>
-                      </div>
-                    )}
-                    <div className="pt-2 border-t border-slate-800 flex items-center justify-between">
-                      <span className="font-bold text-white">Total TTC</span>
-                      <span className="font-mono text-lg font-black text-blue-400">
-                        {demoTotalTtc.toLocaleString("fr-FR", { minimumFractionDigits: 2 })} €
+                      <span>
+                        <strong className="text-slate-900 font-semibold">Calculs URSSAF manuels :</strong> formules complexes à ajuster soi-même selon les taux révisés chaque année.
                       </span>
-                    </div>
-                    {!demoHasVat && (
-                      <p className="text-[10px] text-slate-500 italic pt-1 text-right">
-                        « TVA non applicable, art. 293 B du CGI »
-                      </p>
-                    )}
-                  </div>
-
-                  {/* Action CTA */}
-                  <Button
-                    type="button"
-                    onClick={handleFinalizeInvoice}
-                    variant="primary"
-                    className="w-full py-3.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm shadow-lg shadow-blue-600/30 justify-center"
-                  >
-                    <span>Finaliser ma facture →</span>
-                  </Button>
+                    </li>
+                    <li className="flex items-start gap-3">
+                      <div className="w-5 h-5 rounded-full bg-rose-100 text-rose-700 flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <X className="w-3.5 h-3.5 stroke-[3]" />
+                      </div>
+                      <span>
+                        <strong className="text-slate-900 font-semibold">Aucun suivi des seuils de TVA :</strong> risque d'assujettissement imprévu et de rattrapage fiscal en cas de dépassement.
+                      </span>
+                    </li>
+                    <li className="flex items-start gap-3">
+                      <div className="w-5 h-5 rounded-full bg-rose-100 text-rose-700 flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <X className="w-3.5 h-3.5 stroke-[3]" />
+                      </div>
+                      <span>
+                        <strong className="text-slate-900 font-semibold">Livre des recettes fastidieux :</strong> obligation légale de tenir un registre chronologique des encaissements, pénible à la main.
+                      </span>
+                    </li>
+                    <li className="flex items-start gap-3">
+                      <div className="w-5 h-5 rounded-full bg-rose-100 text-rose-700 flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <X className="w-3.5 h-3.5 stroke-[3]" />
+                      </div>
+                      <span>
+                        <strong className="text-slate-900 font-semibold">Heures perdues :</strong> double saisie des devis, factures et exports récapitulatifs pour la déclaration.
+                      </span>
+                    </li>
+                  </ul>
                 </div>
+              </div>
+
+              {/* Colonne Bylz / Moderne */}
+              <div className="p-7 sm:p-8 rounded-2xl bg-blue-50/50 border-2 border-blue-600 text-left flex flex-col justify-between shadow-lg relative">
+                <div className="space-y-6">
+                  <div className="flex items-center justify-between pb-4 border-b border-blue-200">
+                    <div>
+                      <span className="text-xs font-bold text-blue-700 uppercase tracking-wider">
+                        Gestion moderne
+                      </span>
+                      <h3 className="text-xl font-bold text-slate-900 mt-1">Avec Bylz</h3>
+                    </div>
+                    <span className="px-3 py-1 rounded-full text-xs font-bold bg-blue-600 text-white">
+                      Recommandé
+                    </span>
+                  </div>
+
+                  <ul className="space-y-4 text-xs sm:text-sm text-slate-800">
+                    <li className="flex items-start gap-3">
+                      <div className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-800 flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <Check className="w-3.5 h-3.5 stroke-[3]" />
+                      </div>
+                      <span>
+                        <Link to="/conformite" className="text-slate-900 font-semibold hover:text-blue-700 underline decoration-slate-300">
+                          Facturation instantanée :
+                        </Link>{" "}
+                        génération de factures PDF avec mentions légales obligatoires ; format structuré en préparation pour 2026.
+                      </span>
+                    </li>
+                    <li className="flex items-start gap-3">
+                      <div className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-800 flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <Check className="w-3.5 h-3.5 stroke-[3]" />
+                      </div>
+                      <span>
+                        <Link to="/outils/simulateur-urssaf" className="text-slate-900 font-semibold hover:text-blue-700 underline decoration-slate-300">
+                          Cotisations calculées en direct :
+                        </Link>{" "}
+                        barèmes officiels 2026 appliqués automatiquement selon votre catégorie d'activité.
+                      </span>
+                    </li>
+                    <li className="flex items-start gap-3">
+                      <div className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-800 flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <Check className="w-3.5 h-3.5 stroke-[3]" />
+                      </div>
+                      <span>
+                        <Link to="/outils/simulateur-seuil-tva" className="text-slate-900 font-semibold hover:text-blue-700 underline decoration-slate-300">
+                          Jauge de TVA & alertes proactives :
+                        </Link>{" "}
+                        suivi en temps réel de votre progression vers le seuil de franchise (Art. 293 B).
+                      </span>
+                    </li>
+                    <li className="flex items-start gap-3">
+                      <div className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-800 flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <Check className="w-3.5 h-3.5 stroke-[3]" />
+                      </div>
+                      <span>
+                        <Link to="/conformite" className="text-slate-900 font-semibold hover:text-blue-700 underline decoration-slate-300">
+                          Livre des recettes :
+                        </Link>{" "}
+                        tient votre livre chronologique des recettes, exportable en CSV.
+                      </span>
+                    </li>
+                    <li className="flex items-start gap-3">
+                      <div className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-800 flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <Check className="w-3.5 h-3.5 stroke-[3]" />
+                      </div>
+                      <span>
+                        <strong className="text-slate-900 font-semibold">Simplicité en 1 clic :</strong> conversion de devis, numérotation séquentielle automatique et export PDF immédiat.
+                      </span>
+                    </li>
+                  </ul>
+                </div>
+
+                <div className="pt-6 mt-6 border-t border-blue-200">
+                  <Link to="/essai" className="block">
+                    <button className={`${btnPrimary} w-full py-3.5 text-sm`}>
+                      Créer mon compte gratuitement
+                    </button>
+                  </Link>
+                  <p className="text-[11px] text-center text-slate-600 font-medium mt-2">
+                    Gratuit jusqu'à 3 factures/mois : Sans carte bancaire : Sans engagement
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Encart Assistance & Support humain (Inspiré Abby & Indy) */}
+            <div className="p-6 sm:p-8 rounded-2xl bg-slate-50 border border-slate-200 flex flex-col md:flex-row items-center justify-between gap-6 text-left">
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 rounded-xl bg-blue-100 text-blue-800 flex items-center justify-center flex-shrink-0">
+                  <MessageSquare className="w-6 h-6 text-blue-700" />
+                </div>
+                <div className="space-y-1">
+                  <h3 className="text-base font-bold text-slate-900">
+                    Un doute sur vos cotisations ou vos factures ?
+                  </h3>
+                  <p className="text-xs sm:text-sm text-slate-700 max-w-2xl leading-relaxed">
+                    Une question ? Écrivez-nous, nous répondons du lundi au vendredi.
+                  </p>
+                </div>
+              </div>
+              <div className="flex-shrink-0 w-full md:w-auto">
+                <Link to="/contact">
+                  <button className="w-full md:w-auto px-5 py-2.5 rounded-lg border-2 border-blue-600 text-blue-700 hover:bg-blue-50 font-bold text-xs transition-colors">
+                    Poser une question
+                  </button>
+                </Link>
               </div>
             </div>
           </div>
         </section>
 
         {/* ========================================================= */}
-        {/* 5. PRICING SECTION ("Des tarifs simples, transparents")  */}
+        {/* 7. QUEL QUE SOIT VOTRE STATUT, BYLZ S'ADAPTE             */}
         {/* ========================================================= */}
-        <section id="tarifs" className="py-28 border-t border-slate-800/80 bg-[#060811]">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-14">
-            {/* Header */}
-            <div className="text-center max-w-3xl mx-auto space-y-4">
-              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-950/60 border border-blue-500/30 text-blue-400 text-xs font-semibold">
-                <span className="w-1.5 h-1.5 rounded-full bg-blue-400" />
-                <span>Tarifs Simplifiés</span>
-              </div>
-              <h2 className="text-3xl sm:text-5xl font-black text-white tracking-tight">
-                Des tarifs simples, transparents et sans surprise
+        <section className="py-20 bg-slate-50 border-b border-slate-200">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
+            <div className="text-center max-w-3xl mx-auto space-y-3">
+              <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
+                Quel que soit votre statut, Bylz s'adapte
               </h2>
-              <p className="text-slate-400 text-base sm:text-lg font-normal leading-relaxed">
-                Commencez gratuitement. Évoluez quand votre activité grandit. Résiliable ou modifiable à tout moment, sans engagement.
+              <p className="text-slate-700 text-sm sm:text-base">
+                Chaque métier indépendant possède ses propres contraintes juridiques et fiscales. Bylz applique les règles adaptées à votre activité.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {personas.map((p, i) => {
+                const Icon = p.icon;
+                return (
+                  <div
+                    key={i}
+                    className="p-6 rounded-xl bg-white border border-slate-200 shadow-sm space-y-3 text-left"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="w-9 h-9 rounded-lg bg-blue-100 text-blue-800 flex items-center justify-center">
+                        <Icon className="w-5 h-5" />
+                      </div>
+                      <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-800 border border-slate-300">
+                        {p.highlight}
+                      </span>
+                    </div>
+                    <h3 className="font-bold text-base text-slate-900">{p.role}</h3>
+                    <p className="text-xs text-slate-700 leading-relaxed font-normal">{p.details}</p>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+
+        {/* ========================================================= */}
+        {/* 8. GRILLE TARIFAIRE (3 Offres Réelles : Starter, Solo, Pro) */}
+        {/* ========================================================= */}
+        <section id="tarifs" className="py-24 bg-white border-b border-slate-200">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
+            <div className="text-center max-w-3xl mx-auto space-y-4">
+              <h2 className="text-3xl sm:text-5xl font-extrabold text-slate-900 tracking-tight">
+                Des tarifs simples et transparents
+              </h2>
+              <p className="text-slate-700 text-base sm:text-lg">
+                Démarrez sans carte bancaire sur le plan gratuit permanent. Évoluez quand votre activité grandit. Résiliable à tout moment.
               </p>
 
-              {/* Annual / Monthly Toggle */}
               <div className="pt-2 flex justify-center">
                 <BillingToggle billingCycle={billingCycle} onChange={setBillingCycle} />
               </div>
             </div>
 
-            {/* 3 Pricing Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch">
-              {/* Card 1: Gratuit */}
-              <div className="p-8 rounded-2xl bg-[#0b101e] border border-slate-800 flex flex-col justify-between space-y-6">
+            {/* 3 Colonnes Tarifaires Réelles */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch max-w-5xl mx-auto">
+              {/* 1. Starter (Gratuit) */}
+              <div className="p-7 rounded-2xl bg-white border border-slate-200 flex flex-col justify-between space-y-6 text-left shadow-sm">
                 <div className="space-y-4">
-                  <h3 className="text-xl font-bold text-white">Gratuit</h3>
-                  <div className="flex items-baseline gap-1">
-                    <span className="text-4xl font-black text-white font-mono">0€</span>
-                    <span className="text-xs text-slate-400">/mois</span>
+                  <div>
+                    <h3 className="text-xl font-bold text-slate-900">Starter</h3>
+                    <p className="text-xs text-slate-600 font-medium mt-0.5">
+                      Pour lancer votre activité en toute conformité
+                    </p>
                   </div>
-                  <p className="text-xs text-slate-400 leading-relaxed">
-                    Pour tester et lancer votre activité en toute sérénité.
-                  </p>
-                  <hr className="border-slate-800" />
-                  <ul className="space-y-3 text-xs text-slate-300 font-medium">
+
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-4xl font-extrabold text-slate-900 font-mono">0 €</span>
+                    <span className="text-xs text-slate-600 font-medium">/mois</span>
+                  </div>
+                  <p className="text-[11px] text-slate-500">TVA non applicable, art. 293 B du CGI</p>
+
+                  <hr className="border-slate-100" />
+
+                  <ul className="space-y-3 text-xs text-slate-800 font-medium">
                     <li className="flex items-center gap-2.5">
-                      <CheckCircle2 className="w-4 h-4 text-emerald-400 flex-shrink-0" />
-                      <span>Jusqu'à 3 factures / mois</span>
+                      <Check className="w-4 h-4 text-blue-700 flex-shrink-0" />
+                      <span>Jusqu'à 3 factures par mois</span>
                     </li>
                     <li className="flex items-center gap-2.5">
-                      <CheckCircle2 className="w-4 h-4 text-emerald-400 flex-shrink-0" />
-                      <span>Modèles de base</span>
+                      <Check className="w-4 h-4 text-blue-700 flex-shrink-0" />
+                      <span>Jusqu'à 3 clients actifs</span>
                     </li>
                     <li className="flex items-center gap-2.5">
-                      <CheckCircle2 className="w-4 h-4 text-emerald-400 flex-shrink-0" />
-                      <span>Export PDF standard</span>
+                      <Check className="w-4 h-4 text-blue-700 flex-shrink-0" />
+                      <span>Export PDF avec mentions légales essentielles</span>
                     </li>
                     <li className="flex items-center gap-2.5">
-                      <CheckCircle2 className="w-4 h-4 text-emerald-400 flex-shrink-0" />
-                      <span>Calcul prévisionnel URSSAF</span>
+                      <Check className="w-4 h-4 text-blue-700 flex-shrink-0" />
+                      <span>Recherche SIRET automatique client</span>
+                    </li>
+                    <li className="flex items-center gap-2.5">
+                      <Check className="w-4 h-4 text-blue-700 flex-shrink-0" />
+                      <span>Sans engagement, sans carte bancaire</span>
                     </li>
                   </ul>
                 </div>
-                <Link to="/signup?plan=starter" className="block w-full pt-4">
-                  <button className="w-full py-3 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700/80 text-white font-bold text-xs transition-colors">
+
+                <Link to="/signup?plan=starter" className="block w-full pt-2">
+                  <button className={`${btnPrimary} w-full py-3`}>
                     Commencer gratuitement
                   </button>
                 </Link>
               </div>
 
-              {/* Card 2: Solo / Pro (Highlight & Recommandé) */}
-              <div className="relative p-8 rounded-2xl bg-[#0e162b] border-2 border-blue-500 shadow-2xl shadow-blue-500/20 flex flex-col justify-between space-y-6 scale-[1.02]">
-                <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-blue-600 text-white text-[10px] font-black uppercase tracking-wider shadow-md">
-                  RECOMMANDÉ
+              {/* 2. Solo (Formule Recommandée) */}
+              <div className="p-7 rounded-2xl bg-blue-50/50 border-2 border-blue-600 flex flex-col justify-between space-y-6 text-left relative shadow-md">
+                <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-blue-700 text-white text-[11px] font-black uppercase tracking-wider shadow-sm flex items-center gap-1.5">
+                  <span>RECOMMANDÉ FREELANCES</span>
+                  {billingCycle === "annual" && (
+                    <span className="bg-white/20 px-1.5 py-0.5 rounded text-[10px]">-53%</span>
+                  )}
                 </div>
+
                 <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-xl font-bold text-white">Solo</h3>
+                  <div>
+                    <h3 className="text-xl font-bold text-slate-900">Solo</h3>
+                    <p className="text-xs text-slate-700 font-medium mt-0.5">
+                      Facturation illimitée et pilotage fiscal complet
+                    </p>
                   </div>
-                  <div className="flex items-baseline gap-1">
-                    <span className="text-4xl font-black text-blue-400 font-mono">
-                      {billingCycle === "annual" ? "4,17€" : "8,90€"}
-                    </span>
-                    <span className="text-xs text-slate-400">/mois</span>
+
+                  <div>
+                    <div className="flex items-baseline gap-1">
+                      <span className="text-4xl font-extrabold text-blue-700 font-mono">
+                        {billingCycle === "annual" ? "4,17 €" : "8,90 €"}
+                      </span>
+                      <span className="text-xs text-slate-700 font-medium">/mois</span>
+                    </div>
+                    {billingCycle === "annual" ? (
+                      <p className="text-[11px] font-bold text-emerald-700 mt-1">
+                        Soit 50 € / an (TVA non applicable, art. 293 B du CGI)
+                      </p>
+                    ) : (
+                      <p className="text-[11px] text-slate-600 mt-1">
+                        Facturé 8,90 € / mois sans engagement
+                      </p>
+                    )}
                   </div>
-                  <p className="text-xs text-slate-400 leading-relaxed">
-                    Le plan parfait pour les freelances et indépendants actifs.
-                  </p>
-                  <hr className="border-slate-800" />
-                  <ul className="space-y-3 text-xs text-slate-200 font-medium">
+
+                  <hr className="border-blue-200" />
+
+                  <ul className="space-y-3 text-xs text-slate-900 font-medium">
                     <li className="flex items-center gap-2.5">
-                      <CheckCircle2 className="w-4 h-4 text-blue-400 flex-shrink-0" />
-                      <span>Factures & Devis illimités</span>
+                      <Check className="w-4 h-4 text-blue-700 flex-shrink-0" />
+                      <span><strong>Factures & Devis illimités</strong></span>
                     </li>
                     <li className="flex items-center gap-2.5">
-                      <CheckCircle2 className="w-4 h-4 text-blue-400 flex-shrink-0" />
-                      <span>Personnalisation avancée</span>
+                      <Check className="w-4 h-4 text-blue-700 flex-shrink-0" />
+                      <span>Clients et catalogue illimités</span>
                     </li>
                     <li className="flex items-center gap-2.5">
-                      <CheckCircle2 className="w-4 h-4 text-blue-400 flex-shrink-0" />
-                      <span>Génération Factur-X certifiée</span>
+                      <Check className="w-4 h-4 text-blue-700 flex-shrink-0" />
+                      <span>Tableau de bord fiscal & seuils de TVA en temps réel</span>
                     </li>
                     <li className="flex items-center gap-2.5">
-                      <CheckCircle2 className="w-4 h-4 text-blue-400 flex-shrink-0" />
-                      <span>Support prioritaire 7j/7</span>
+                      <Check className="w-4 h-4 text-blue-700 flex-shrink-0" />
+                      <span>Calcul des cotisations URSSAF</span>
+                    </li>
+                    <li className="flex items-center gap-2.5">
+                      <Check className="w-4 h-4 text-blue-700 flex-shrink-0" />
+                      <span>Livre des recettes chronologique & export CSV</span>
+                    </li>
+                    <li className="flex items-center gap-2.5">
+                      <Check className="w-4 h-4 text-blue-700 flex-shrink-0" />
+                      <span>Relances automatiques des impayés par e-mail</span>
+                    </li>
+                    <li className="flex items-center gap-2.5">
+                      <Check className="w-4 h-4 text-blue-700 flex-shrink-0" />
+                      <span>Réponse sous 24 h ouvrées, du lundi au vendredi</span>
                     </li>
                   </ul>
                 </div>
-                <Link to={`/signup?plan=solo&billing=${billingCycle}`} className="block w-full pt-4">
-                  <button className="w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs shadow-lg shadow-blue-600/30 transition-all">
-                    Choisir ce forfait
+
+                <Link to={`/signup?plan=solo&billing=${billingCycle}`} className="block w-full pt-2">
+                  <button className={`${btnPrimary} w-full py-3.5 text-base`}>
+                    Choisir la formule Solo (14 jours offerts)
                   </button>
                 </Link>
               </div>
 
-              {/* Card 3: Pro / Business */}
-              <div className="p-8 rounded-2xl bg-[#0b101e] border border-slate-800 flex flex-col justify-between space-y-6">
+              {/* 3. Pro */}
+              <div className="p-7 rounded-2xl bg-white border border-slate-200 flex flex-col justify-between space-y-6 text-left shadow-sm">
                 <div className="space-y-4">
-                  <h3 className="text-xl font-bold text-white">Pro</h3>
-                  <div className="flex items-baseline gap-1">
-                    <span className="text-4xl font-black text-white font-mono">
-                      {billingCycle === "annual" ? "6,67€" : "12,90€"}
-                    </span>
-                    <span className="text-xs text-slate-400">/mois</span>
+                  <div>
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-xl font-bold text-slate-900">Pro</h3>
+                      {billingCycle === "annual" && (
+                        <span className="bg-indigo-50 text-indigo-700 font-bold text-[11px] px-2 py-0.5 rounded-full border border-indigo-200">
+                          -48%
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-xs text-slate-600 font-medium mt-0.5">
+                      Paiement en ligne par carte et pilotage multi-entreprises
+                    </p>
                   </div>
-                  <p className="text-xs text-slate-400 leading-relaxed">
-                    Pour les petites entreprises et structures en forte croissance.
-                  </p>
-                  <hr className="border-slate-800" />
-                  <ul className="space-y-3 text-xs text-slate-300 font-medium">
+
+                  <div>
+                    <div className="flex items-baseline gap-1">
+                      <span className="text-4xl font-extrabold text-slate-900 font-mono">
+                        {billingCycle === "annual" ? "6,67 €" : "12,90 €"}
+                      </span>
+                      <span className="text-xs text-slate-600 font-medium">/mois</span>
+                    </div>
+                    {billingCycle === "annual" ? (
+                      <p className="text-[11px] font-bold text-emerald-700 mt-1">
+                        Soit 80 € / an (TVA non applicable, art. 293 B du CGI)
+                      </p>
+                    ) : (
+                      <p className="text-[11px] text-slate-600 mt-1">
+                        Facturé 12,90 € / mois sans engagement
+                      </p>
+                    )}
+                  </div>
+
+                  <hr className="border-slate-100" />
+
+                  <ul className="space-y-3 text-xs text-slate-800 font-medium">
                     <li className="flex items-center gap-2.5">
-                      <CheckCircle2 className="w-4 h-4 text-emerald-400 flex-shrink-0" />
-                      <span>Tout le plan Solo inclus</span>
+                      <Check className="w-4 h-4 text-blue-700 flex-shrink-0" />
+                      <span><strong>Toutes les fonctionnalités Solo incluses</strong></span>
                     </li>
                     <li className="flex items-center gap-2.5">
-                      <CheckCircle2 className="w-4 h-4 text-emerald-400 flex-shrink-0" />
-                      <span>Intégration WhatsApp IA</span>
+                      <Check className="w-4 h-4 text-blue-700 flex-shrink-0" />
+                      <span>Paiement en ligne par carte (Stripe Connect)</span>
                     </li>
                     <li className="flex items-center gap-2.5">
-                      <CheckCircle2 className="w-4 h-4 text-emerald-400 flex-shrink-0" />
-                      <span>Accès expert-comptable</span>
+                      <Check className="w-4 h-4 text-blue-700 flex-shrink-0" />
+                      <span>Gestion multi-entreprises (plusieurs SIRET)</span>
                     </li>
                     <li className="flex items-center gap-2.5">
-                      <CheckCircle2 className="w-4 h-4 text-emerald-400 flex-shrink-0" />
-                      <span>Synchronisation bancaire</span>
+                      <Check className="w-4 h-4 text-blue-700 flex-shrink-0" />
+                      <span>Assistant IA de facturation & WhatsApp</span>
+                    </li>
+                    <li className="flex items-center gap-2.5">
+                      <Check className="w-4 h-4 text-blue-700 flex-shrink-0" />
+                      <span>Réponse sous 24 h ouvrées, du lundi au vendredi</span>
                     </li>
                   </ul>
                 </div>
-                <Link to={`/signup?plan=pro&billing=${billingCycle}`} className="block w-full pt-4">
-                  <button className="w-full py-3 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700/80 text-white font-bold text-xs transition-colors">
-                    Choisir ce forfait
+
+                <Link to={`/signup?plan=pro&billing=${billingCycle}`} className="block w-full pt-2">
+                  <button className={`${btnPrimary} w-full py-3`}>
+                    Choisir la formule Pro (14 jours offerts)
                   </button>
                 </Link>
               </div>
@@ -931,41 +1101,42 @@ export function LandingPage() {
         </section>
 
         {/* ========================================================= */}
-        {/* 6. FAQ SECTION (Accordion design)                         */}
+        {/* 9. FAQ EN 2 COLONNES                                      */}
         {/* ========================================================= */}
-        <section id="faq" className="py-24 border-t border-slate-800/80">
-          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
-            <div className="text-center space-y-3">
-              <h2 className="text-3xl sm:text-5xl font-black text-white tracking-tight">
-                Foire aux Questions (FAQ)
+        <section id="faq" className="py-20 bg-slate-50">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
+            <div className="text-center max-w-3xl mx-auto space-y-3">
+              <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
+                Foire aux Questions
               </h2>
-              <p className="text-sm sm:text-base text-slate-400 font-medium">
+              <p className="text-sm sm:text-base text-slate-700">
                 Tout ce que vous devez savoir pour démarrer sereinement sur Bylz.
               </p>
             </div>
 
-            <div className="space-y-4">
+            {/* 2 Colonnes de FAQ */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-left">
               {faqs.map((faq, idx) => {
                 const isOpen = openFaqIndex === idx;
                 return (
                   <div
                     key={idx}
-                    className="rounded-2xl bg-[#0b101e] border border-slate-800 hover:border-slate-700 overflow-hidden transition-all"
+                    className="rounded-xl bg-white border border-slate-200 overflow-hidden shadow-sm"
                   >
                     <button
                       type="button"
                       onClick={() => setOpenFaqIndex(isOpen ? null : idx)}
-                      className="w-full text-left px-6 py-5 flex items-center justify-between gap-4 font-bold text-white text-base hover:text-blue-400 transition-colors"
+                      className="w-full text-left px-5 py-4 flex items-center justify-between gap-3 font-bold text-slate-900 text-sm hover:text-blue-700 transition-colors"
                     >
                       <span>{faq.q}</span>
                       <ChevronDown
-                        className={`w-5 h-5 text-slate-400 flex-shrink-0 transition-transform duration-300 ${
-                          isOpen ? "rotate-180 text-blue-400" : ""
+                        className={`w-4 h-4 text-slate-700 flex-shrink-0 transition-transform duration-200 ${
+                          isOpen ? "rotate-180 text-blue-700" : ""
                         }`}
                       />
                     </button>
                     {isOpen && (
-                      <div className="px-6 pb-6 pt-2 text-sm text-slate-400 leading-relaxed font-normal border-t border-slate-800/60">
+                      <div className="px-5 pb-5 pt-1 text-xs text-slate-700 leading-relaxed font-normal border-t border-slate-100">
                         {faq.a}
                       </div>
                     )}
@@ -977,34 +1148,25 @@ export function LandingPage() {
         </section>
 
         {/* ========================================================= */}
-        {/* TRUST BADGES ROW (Avis clients & Certifications)          */}
+        {/* 10. BANNIÈRE FINALE CTA                                   */}
         {/* ========================================================= */}
-        <section className="py-12 border-t border-slate-800/80 bg-[#060811]">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <TrustBadgesRow />
-          </div>
-        </section>
-
-        {/* ========================================================= */}
-        {/* 7. FINAL CALL TO ACTION (Airy, centered, high converting) */}
-        {/* ========================================================= */}
-        <section className="py-28 text-center relative overflow-hidden border-t border-slate-800/80">
-          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6 relative z-10">
-            <h2 className="text-3xl sm:text-5xl font-black text-white tracking-tight">
-              Prêt à simplifier votre vie d'entrepreneur ?
+        <section className="py-20 px-4 sm:px-6 lg:px-8 bg-white">
+          <div className="max-w-5xl mx-auto rounded-3xl bg-[#011142] text-white p-10 sm:p-14 text-center space-y-6 shadow-xl border border-blue-900/40">
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight">
+              Prêt à simplifier votre activité ?
             </h2>
-            <p className="text-base sm:text-lg text-slate-400 max-w-2xl mx-auto font-normal leading-relaxed">
-              Rejoignez des milliers de professionnels français qui récoltent le fruit de leur travail sans s'encombrer de la paperasse.
+            <p className="text-slate-200 text-base sm:text-lg max-w-xl mx-auto leading-relaxed font-medium">
+              Créez votre première facture PDF en 2 minutes. Sans carte bancaire et sans engagement.
             </p>
-            <div className="pt-4">
+            <div className="pt-2">
               <Link to="/essai">
-                <button className="px-9 py-4 text-base font-extrabold rounded-full bg-blue-600 hover:bg-blue-500 text-white shadow-xl shadow-blue-600/30 transition-all hover:scale-[1.03]">
+                <button className={`${btnPrimary} py-3.5 px-8 text-sm`}>
                   Créer mon compte gratuitement
                 </button>
               </Link>
             </div>
-            <p className="text-xs text-slate-500 font-medium">
-              Gratuit pour toujours jusqu'à 3 factures/mois, sans carte bancaire
+            <p className="text-xs text-slate-400 font-medium">
+              Gratuit pour toujours jusqu'à 3 factures/mois
             </p>
           </div>
         </section>

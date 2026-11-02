@@ -7,6 +7,7 @@ import { MarketingFooter } from "../components/marketing/MarketingFooter";
 import { BLOG_ARTICLES } from "../data/blogArticles";
 import { fetchPublishedBlogPosts } from "../lib/api";
 import type { BlogPost } from "../types/database";
+import { getCanonicalBlogSlug } from "../lib/blogSlugs";
 
 export function BlogListPage() {
   const [articles, setArticles] = useState<
@@ -21,30 +22,33 @@ export function BlogListPage() {
       setLoading(true);
       try {
         const dbPosts = await fetchPublishedBlogPosts();
-        if (dbPosts.length > 0) {
-          const mapped = dbPosts.map((p) => ({
-            slug: p.slug,
-            title: p.title,
-            excerpt: p.excerpt,
-            date: p.published_at
-              ? new Intl.DateTimeFormat("fr-FR", { day: "numeric", month: "long", year: "numeric" }).format(new Date(p.published_at))
-              : "Récemment",
-            readTime: p.read_time,
-            category: p.category,
-          }));
-          setArticles(mapped);
-        } else {
-          setArticles(
-            BLOG_ARTICLES.map((a) => ({
-              slug: a.slug,
-              title: a.title,
-              excerpt: a.excerpt,
-              date: a.date,
-              readTime: a.readTime,
-              category: a.category,
-            }))
-          );
+        const mapped = dbPosts.map((p) => ({
+          slug: getCanonicalBlogSlug(p.slug),
+          title: p.title,
+          excerpt: p.excerpt,
+          date: p.published_at
+            ? new Intl.DateTimeFormat("fr-FR", { day: "numeric", month: "long", year: "numeric" }).format(new Date(p.published_at))
+            : "Récemment",
+          readTime: p.read_time,
+          category: p.category,
+        }));
+
+        const staticList = BLOG_ARTICLES.map((a) => ({
+          slug: a.slug,
+          title: a.title,
+          excerpt: a.excerpt,
+          date: a.date,
+          readTime: a.readTime,
+          category: a.category,
+        }));
+
+        const combined = [...mapped];
+        for (const s of staticList) {
+          if (!combined.some((item) => item.slug === s.slug)) {
+            combined.push(s);
+          }
         }
+        setArticles(combined);
       } catch {
         setArticles(
           BLOG_ARTICLES.map((a) => ({
@@ -119,7 +123,7 @@ export function BlogListPage() {
                   key={cat}
                   type="button"
                   onClick={() => setSelectedCategory(cat)}
-                  className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition-all ${
+                  className={`px-3.5 py-2 min-h-[44px] inline-flex items-center justify-center rounded-full text-xs font-bold transition-all ${
                     selectedCategory === cat
                       ? "bg-brand-primary text-white shadow-sm"
                       : "bg-surface border border-border text-muted hover:text-text hover:border-brand-primary/50"
@@ -186,7 +190,7 @@ export function BlogListPage() {
 
                         <Link
                           to={`/blog/${article.slug}`}
-                          className="inline-flex items-center font-extrabold text-brand-primary hover:text-brand-primary-hover group-hover:translate-x-0.5 transition-transform"
+                          className="inline-flex items-center min-h-[44px] px-2 font-extrabold text-brand-primary hover:text-brand-primary-hover group-hover:translate-x-0.5 transition-transform"
                         >
                           Lire <ArrowRight className="w-3.5 h-3.5 ml-1" />
                         </Link>

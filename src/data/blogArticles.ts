@@ -21,8 +21,8 @@ export const BLOG_ARTICLES: BlogArticle[] = [
     category: "Législation & Conformité",
     content: `
       <h2>Qu'est-ce que la réforme de la facturation électronique 2026 ?</h2>
-      <p>À partir de 2026, la réglementation française impose l'abandon progressif des simples factures PDF transmises par e-mail au profit de factures électroniques certifiées et structurées dites <strong>Factur-X</strong>.</p>
-      <p>Cette réforme s'applique à l'ensemble des assujettis à la TVA en France, y compris les micro-entrepreneurs réalisant des prestations ou ventes B2B (Business to Business).</p>
+      <p>La réforme de la facturation électronique se déploie selon un calendrier progressif : obligation de réception pour toutes les entreprises dès le 1er septembre 2026, puis obligation d'émission au 1er septembre 2027 pour les micro-entreprises et PME (1er septembre 2026 pour les grandes entreprises et ETI).</p>
+      <p>Cette réforme concerne l'ensemble des assujettis à la TVA en France réalisant des transactions inter-entreprises (B2B).</p>
 
       <h3>Les 2 volets fondamentaux de la réforme :</h3>
       <ul>
@@ -30,8 +30,8 @@ export const BLOG_ARTICLES: BlogArticle[] = [
         <li><strong>Le E-Reporting (Transmission des données de ventes) :</strong> Transmission à l'administration fiscale des données relatives aux ventes B2C ou aux transactions internationales.</li>
       </ul>
 
-      <h3>Quelles sanctions en cas de non-conformité ?</h3>
-      <p>L'administration fiscale prévoit des amendes forfaitaires (jusqu'à 15 € par facture non conforme). Utiliser un outil compatible Factur-X comme Bylz vous garantit une conformité sans coût supplémentaire.</p>
+      <h3>Quelles sanctions en cas de non-respect ?</h3>
+      <p>Les manquements aux obligations légales de facturation font l'objet de sanctions prévues par le Code général des impôts (consultables sur impots.gouv.fr). Anticiper l'évolution des obligations réglementaires permet de sécuriser son activité.</p>
     `,
   },
   {
@@ -49,8 +49,8 @@ export const BLOG_ARTICLES: BlogArticle[] = [
 
       <h3>Les plafonds actuels de TVA :</h3>
       <ul>
-        <li><strong>Prestations de services (BNC / BIC) :</strong> Seuil de base à 39 100 € (seuil majoré à 42 500 €).</li>
-        <li><strong>Vente de marchandises (BIC) :</strong> Seuil de base à 101 000 € (seuil majoré à 110 000 €).</li>
+        <li><strong>Prestations de services (BNC / BIC) :</strong> Seuil de base à 37 500 € (seuil majoré à 41 250 €).</li>
+        <li><strong>Vente de marchandises (BIC) :</strong> Seuil de base à 85 000 € (seuil majoré à 93 500 €).</li>
       </ul>
 
       <h3>Que se passe-t-il en cas de dépassement ?</h3>
@@ -115,13 +115,13 @@ export const BLOG_ARTICLES: BlogArticle[] = [
       <h2>Pourquoi les modèles Word et Excel gratuits sont-ils déconseillés en 2026 ?</h2>
       <p>Pendant longtemps, de nombreux indépendants ont téléchargé des modèles gratuits de facture au format Excel (XLSX) ou Word (DOCX). Cependant, cette pratique présente aujourd'hui trois risques majeurs :</p>
       <ul>
-        <li><strong>Amendes fiscales pour numérotation non conforme :</strong> En modifiant manuellement des fichiers Word, le risque de créer deux factures portant le même numéro ou d'omettre une facture dans la séquence est très élevé. L'administration sanctionne ces irrégularités par une amende de 15 € par mention manquante ou inexacte.</li>
+        <li><strong>Risques de non-conformité sur la numérotation :</strong> En modifiant manuellement des fichiers Word, le risque de créer deux factures portant le même numéro ou d'omettre une facture dans la séquence est très élevé. L'administration sanctionne ces irrégularités conformément au Code général des impôts (consultable sur impots.gouv.fr).</li>
         <li><strong>Erreurs de calcul de TVA et cotisations :</strong> Une erreur de formule dans un tableur Excel peut fausser vos déclarations URSSAF trimestrielles ou mensuelles et entraîner des redressements.</li>
-        <li><strong>La réforme Factur-X et facturation électronique 2026 :</strong> Les factures au format papier ou simple PDF généré sur Word ne répondent pas aux normes de transmission électronique obligatoire. Utiliser un outil conforme comme Bylz vous garantit une transition sans stress.</li>
+        <li><strong>La réforme de la facturation électronique :</strong> Les factures au format papier ou simple fichier texte non structuré ne répondent pas aux futures obligations de dématérialisation. Adopter un outil dédié permet de structurer ses données de facturation et d'anticiper le calendrier légal.</li>
       </ul>
 
-      <h2>Générez votre facture gratuite et conforme ci-dessous</h2>
-      <p>Utilisez notre configurateur interactif ci-dessous pour remplir vos informations, personnaliser vos couleurs et télécharger gratuitement votre facture au format PDF officiel Factur-X.</p>
+      <h2>Générez votre facture ci-dessous</h2>
+      <p>Utilisez notre configurateur interactif ci-dessous pour remplir vos informations, personnaliser vos couleurs et télécharger directement votre facture au format PDF avec l'ensemble des mentions obligatoires.</p>
     `,
   },
 ];

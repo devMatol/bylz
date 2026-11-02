@@ -5,14 +5,23 @@ import { SEO } from "../../components/seo/SEO";
 import { MarketingNavbar } from "../../components/marketing/MarketingNavbar";
 import { MarketingFooter } from "../../components/marketing/MarketingFooter";
 import { TrustBadgesRow } from "../../components/marketing/TrustBadgesRow";
+import { VAT_THRESHOLDS_2026 } from "../../lib/fiscalRates";
 
 export function SimulateurTvaPage() {
-  const [ca, setCa] = useState<number>(36500);
+  const [ca, setCa] = useState<number>(34500);
   const [activity, setActivity] = useState<"service" | "vente">("service");
 
   const thresholds = {
-    service: { base: 39100, majore: 42500, label: "Prestation de Services (BNC / BIC)" },
-    vente: { base: 101000, majore: 110000, label: "Vente de Marchandises (BIC)" },
+    service: {
+      base: VAT_THRESHOLDS_2026.services.base,
+      majore: VAT_THRESHOLDS_2026.services.majore,
+      label: "Prestation de Services (BNC / BIC)",
+    },
+    vente: {
+      base: VAT_THRESHOLDS_2026.sales.base,
+      majore: VAT_THRESHOLDS_2026.sales.majore,
+      label: "Vente de Marchandises (BIC)",
+    },
   };
 
   const currentThreshold = thresholds[activity];
@@ -39,7 +48,7 @@ export function SimulateurTvaPage() {
     <div className="min-h-screen bg-bg text-text bg-grid-pattern selection:bg-brand-primary/20 selection:text-brand-primary">
       <SEO
         title="Simulateur Seuil de Franchise TVA 2026 : Plafonds Micro-Entreprise"
-        description="Calculez votre positionnement par rapport au seuil de franchise de TVA (39 100 € et 42 500 €) et découvrez quand vous devenez redevable de la TVA."
+        description="Calculez votre positionnement par rapport aux seuils 2026 de franchise de TVA (37 500 € pour les services, 85 000 € pour la vente) et découvrez quand vous devenez redevable de la TVA."
         canonical="/outils/simulateur-seuil-tva"
         jsonLd={calculatorSchema}
       />
@@ -106,7 +115,7 @@ export function SimulateurTvaPage() {
                   }`}
                 >
                   <p className="text-sm">Prestations de Services & Libéral</p>
-                  <p className="text-[11px] text-text/60 mt-1">Seuil base : 39 100 € | Seuil majoré : 42 500 €</p>
+                  <p className="text-[11px] text-text/60 mt-1">Seuil base : 37 500 € | Seuil majoré : 41 250 €</p>
                 </button>
                 <button
                   type="button"
@@ -118,7 +127,7 @@ export function SimulateurTvaPage() {
                   }`}
                 >
                   <p className="text-sm">Vente de Marchandises</p>
-                  <p className="text-[11px] text-text/60 mt-1">Seuil base : 101 000 € | Seuil majoré : 110 000 €</p>
+                  <p className="text-[11px] text-text/60 mt-1">Seuil base : 85 000 € | Seuil majoré : 93 500 €</p>
                 </button>
               </div>
             </div>

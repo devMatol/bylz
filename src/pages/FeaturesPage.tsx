@@ -24,9 +24,9 @@ export function FeaturesPage() {
       icon: FileText,
       color: "text-primary",
       bgColor: "bg-primary/10",
-      title: "Éditeur de factures conforme Factur-X",
+      title: "Éditeur de factures PDF",
       description:
-        "Générez des factures et devis légaux au format hybride Factur-X (PDF + XML structuré) répondant à la norme européenne de facturation électronique.",
+        "Générez des factures et devis professionnels en PDF intégrant les mentions légales essentielles (EI, mentions de TVA, pénalités).",
       bullets: [
         "Numérotation séquentielle automatique sans trou",
         "Mentions légales obligatoires insérées dynamiquement",
@@ -41,7 +41,7 @@ export function FeaturesPage() {
       description:
         "Consultez à tout moment votre chiffre d'affaires cumulé, votre bénéfice net estimé et le montant exact de vos cotisations sociales.",
       bullets: [
-        "Jauge visuelle d'approche du seuil de TVA (39 100 €)",
+        "Jauge visuelle d'approche du seuil de TVA 2026 (37 500 € en services, 85 000 € en vente)",
         "Calcul des cotisations URSSAF (mensuel ou trimestriel)",
         "Simulation de l'impôt selon votre Tranche Marginale d'Imposition (TMI)",
       ],
@@ -82,7 +82,7 @@ export function FeaturesPage() {
       bullets: [
         "Liens de paiement Stripe Connect intégrés aux factures",
         "Encaissement direct sur votre compte bancaire pro",
-        "Rapprochement et passage automatique en statut 'Payée'",
+        "Confirmation automatique du paiement et passage en statut 'Payée'",
       ],
     },
     {
@@ -104,7 +104,7 @@ export function FeaturesPage() {
     <div className="min-h-screen bg-bg text-text selection:bg-primary/20 selection:text-primary">
       <SEO
         title="Fonctionnalités Bylz : Facturation, TVA et Cotisations URSSAF"
-        description="Découvrez l'ensemble des fonctionnalités de Bylz : édition Factur-X, suivi des plafonds de TVA, calcul URSSAF, relances et import PDF historique."
+        description="Découvrez l'ensemble des fonctionnalités de Bylz : édition de factures PDF, suivi des plafonds de TVA, calcul URSSAF, relances et import PDF historique."
         canonical="/fonctionnalites"
       />
 

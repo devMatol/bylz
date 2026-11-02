@@ -1,16 +1,21 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Menu, X, ArrowRight, Sparkles, LayoutDashboard } from "lucide-react";
+import { Menu, X, ArrowRight, LayoutDashboard } from "lucide-react";
 import { Button } from "../ui/Button";
 import { useAuth } from "../../contexts/AuthContext";
-
 import { Logo } from "../shared/Logo";
 
-export function MarketingNavbar() {
+interface MarketingNavbarProps {
+  theme?: "light" | "dark";
+}
+
+export function MarketingNavbar({ theme }: MarketingNavbarProps) {
   const { user } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const location = useLocation();
+
+  const isLight = theme === "light" || location.pathname === "/";
 
   useEffect(() => {
     const handleScroll = () => {
@@ -40,6 +45,7 @@ export function MarketingNavbar() {
   const navLinks = [
     { label: "Fonctionnalités", path: "/fonctionnalites" },
     { label: "Conformité & Sécurité", path: "/conformite" },
+    { label: "Facturation 2026", path: "/facturation-electronique" },
     { label: "Tarifs", path: "/tarifs" },
     { label: "Blog", path: "/blog" },
     { label: "Contact", path: "/contact" },
@@ -48,8 +54,12 @@ export function MarketingNavbar() {
   return (
     <>
       <header
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-          scrolled || mobileMenuOpen
+        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-200 ${
+          isLight
+            ? scrolled || mobileMenuOpen
+              ? "bg-white/95 backdrop-blur-xl border-b border-slate-200 shadow-sm py-3.5"
+              : "bg-white/80 backdrop-blur-md border-b border-slate-100 py-4"
+            : scrolled || mobileMenuOpen
             ? "bg-surface/95 backdrop-blur-xl border-b border-border shadow-lg py-3.5"
             : "bg-transparent py-5"
         }`}
@@ -59,9 +69,24 @@ export function MarketingNavbar() {
           <Logo variant="gradient" height={32} />
 
           {/* Desktop Nav Links */}
-          <nav className="hidden md:flex items-center space-x-8">
+          <nav className="hidden md:flex items-center space-x-5 lg:space-x-7">
             {navLinks.map((link) => {
               const isActive = location.pathname === link.path;
+              if (isLight) {
+                return (
+                  <Link
+                    key={link.path}
+                    to={link.path}
+                    className={`text-sm font-semibold transition-colors ${
+                      isActive
+                        ? "text-blue-700 font-bold"
+                        : "text-slate-700 hover:text-slate-900"
+                    }`}
+                  >
+                    {link.label}
+                  </Link>
+                );
+              }
               return (
                 <Link
                   key={link.path}
@@ -80,12 +105,26 @@ export function MarketingNavbar() {
           <div className="hidden md:flex items-center space-x-3">
             {user ? (
               <Link to="/dashboard">
-                <Button variant="primary" size="sm" className="bylz-glow-cta font-bold">
+                <Button variant="primary" size="sm" className="font-bold">
                   <LayoutDashboard className="w-4 h-4 mr-1.5" />
                   Mon tableau de bord
-                  <ArrowRight className="w-4 h-4 ml-1.5" />
                 </Button>
               </Link>
+            ) : isLight ? (
+              <>
+                <Link
+                  to="/login"
+                  className="px-3.5 py-1.5 text-sm font-bold text-blue-700 hover:bg-blue-50 border-2 border-blue-600 rounded-lg transition-colors"
+                >
+                  Se connecter
+                </Link>
+                <Link
+                  to="/essai"
+                  className="px-4 py-2 text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-sm transition-colors"
+                >
+                  Essayer gratuitement
+                </Link>
+              </>
             ) : (
               <>
                 <Link to="/login">
@@ -94,8 +133,7 @@ export function MarketingNavbar() {
                   </Button>
                 </Link>
                 <Link to="/essai">
-                  <Button variant="primary" size="sm" className="bylz-glow-cta">
-                    <Sparkles className="w-4 h-4 mr-1.5 text-accent animate-pulse" />
+                  <Button variant="primary" size="sm">
                     Essayer gratuitement
                   </Button>
                 </Link>
@@ -107,13 +145,17 @@ export function MarketingNavbar() {
           <button
             type="button"
             onClick={() => setMobileMenuOpen((prev) => !prev)}
-            className="md:hidden p-2.5 rounded-card text-text hover:bg-surface-hover transition-colors focus:outline-none flex items-center justify-center min-w-[44px] min-h-[44px]"
+            className={`md:hidden p-2.5 rounded-lg transition-colors focus:outline-none flex items-center justify-center min-w-[44px] min-h-[44px] ${
+              isLight
+                ? "text-slate-800 hover:bg-slate-100"
+                : "text-text hover:bg-surface-hover"
+            }`}
             aria-label="Toggle Navigation Menu"
           >
             {mobileMenuOpen ? (
-              <X className="w-6 h-6 text-primary stroke-[2.5]" />
+              <X className={`w-6 h-6 stroke-[2.5] ${isLight ? "text-blue-700" : "text-primary"}`} />
             ) : (
-              <Menu className="w-6 h-6 text-text stroke-[2.5]" />
+              <Menu className="w-6 h-6 stroke-[2.5]" />
             )}
           </button>
         </div>
@@ -121,15 +163,21 @@ export function MarketingNavbar() {
 
       {/* Mobile Drawer Overlay Portal */}
       {mobileMenuOpen && (
-        <div className="md:hidden fixed inset-0 z-[999] bg-bg/98 backdrop-blur-2xl flex flex-col justify-between p-6 overflow-y-auto animate-in fade-in duration-200">
+        <div
+          className={`md:hidden fixed inset-0 z-[999] flex flex-col justify-between p-6 overflow-y-auto animate-in fade-in duration-200 ${
+            isLight ? "bg-white text-slate-900" : "bg-bg/98 backdrop-blur-2xl text-text"
+          }`}
+        >
           {/* Top Bar inside Overlay */}
-          <div className="flex items-center justify-between pb-6 border-b border-border">
+          <div className={`flex items-center justify-between pb-6 border-b ${isLight ? "border-slate-200" : "border-border"}`}>
             <Logo variant="gradient" height={32} onClick={() => setMobileMenuOpen(false)} />
 
             <button
               type="button"
               onClick={() => setMobileMenuOpen(false)}
-              className="p-2.5 rounded-card text-primary hover:bg-surface-hover transition-colors focus:outline-none flex items-center justify-center min-w-[44px] min-h-[44px]"
+              className={`p-2.5 rounded-lg transition-colors focus:outline-none flex items-center justify-center min-w-[44px] min-h-[44px] ${
+                isLight ? "text-slate-800 hover:bg-slate-100" : "text-primary hover:bg-surface-hover"
+              }`}
               aria-label="Fermer le menu"
             >
               <X className="w-6 h-6 stroke-[2.5]" />
@@ -145,26 +193,49 @@ export function MarketingNavbar() {
                   key={link.path}
                   to={link.path}
                   onClick={() => setMobileMenuOpen(false)}
-                  className={`text-lg font-extrabold py-3.5 px-4 border-b border-border/40 transition-colors flex items-center justify-between rounded-card ${
-                    isActive ? "text-primary bg-primary/10" : "text-text hover:text-primary hover:bg-surface-hover"
+                  className={`text-lg font-bold py-3 px-4 border-b transition-colors flex items-center justify-between rounded-lg ${
+                    isLight
+                      ? isActive
+                        ? "text-blue-700 bg-blue-50 border-blue-100"
+                        : "text-slate-800 hover:text-blue-700 hover:bg-slate-50 border-slate-100"
+                      : isActive
+                      ? "text-primary bg-primary/10 border-border/40"
+                      : "text-text hover:text-primary hover:bg-surface-hover border-border/40"
                   }`}
                 >
                   <span>{link.label}</span>
-                  <ArrowRight className="w-5 h-5 text-muted" />
+                  <ArrowRight className={`w-5 h-5 ${isLight ? "text-slate-400" : "text-muted"}`} />
                 </Link>
               );
             })}
           </nav>
 
           {/* Bottom CTAs */}
-          <div className="pt-6 pb-6 space-y-3 border-t border-border flex flex-col">
+          <div className={`pt-6 pb-6 space-y-3 border-t flex flex-col ${isLight ? "border-slate-200" : "border-border"}`}>
             {user ? (
               <Link to="/dashboard" onClick={() => setMobileMenuOpen(false)}>
-                <Button variant="primary" className="w-full justify-center bylz-glow-cta font-bold text-sm py-3.5">
+                <Button variant="primary" className="w-full justify-center font-bold text-sm py-3.5">
                   <LayoutDashboard className="w-4 h-4 mr-2" />
                   Mon tableau de bord
                 </Button>
               </Link>
+            ) : isLight ? (
+              <>
+                <Link
+                  to="/login"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="w-full text-center py-3.5 rounded-lg border-2 border-blue-600 font-bold text-blue-700 hover:bg-blue-50 text-sm transition-colors"
+                >
+                  Se connecter
+                </Link>
+                <Link
+                  to="/essai"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="w-full text-center py-3.5 rounded-lg bg-blue-600 hover:bg-blue-700 font-bold text-white text-sm shadow-sm transition-colors"
+                >
+                  Essayer gratuitement
+                </Link>
+              </>
             ) : (
               <>
                 <Link to="/login" onClick={() => setMobileMenuOpen(false)}>
@@ -173,8 +244,7 @@ export function MarketingNavbar() {
                   </Button>
                 </Link>
                 <Link to="/essai" onClick={() => setMobileMenuOpen(false)}>
-                  <Button variant="primary" className="w-full justify-center bylz-glow-cta text-sm py-3.5 font-bold">
-                    <Sparkles className="w-4 h-4 mr-2 text-accent" />
+                  <Button variant="primary" className="w-full justify-center text-sm py-3.5 font-bold">
                     Essayer gratuitement
                   </Button>
                 </Link>

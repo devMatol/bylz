@@ -60,7 +60,7 @@ export function ContactPage() {
           <div className="text-center max-w-3xl mx-auto space-y-4">
             <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-brand-primary/10 text-brand-primary text-xs font-bold">
               <Mail className="w-3.5 h-3.5" />
-              <span>À votre écoute 7j/7</span>
+              <span>Réponse sous 24 h ouvrées, du lundi au vendredi</span>
             </div>
             <h1 className="text-4xl sm:text-5xl font-black tracking-tight text-text">
               Une question ? Notre équipe est là pour vous aider
@@ -82,8 +82,8 @@ export function ContactPage() {
                       <Clock className="w-4 h-4" />
                     </div>
                     <div>
-                      <p className="font-bold text-text">Réponse sous 24h</p>
-                      <p className="text-muted">Du lundi au vendredi, réponse garantie le jour même.</p>
+                      <p className="font-bold text-text">Réponse sous 24 h ouvrées</p>
+                      <p className="text-muted">Du lundi au vendredi, réponse par e-mail.</p>
                     </div>
                   </div>
 
@@ -92,8 +92,8 @@ export function ContactPage() {
                       <ShieldCheck className="w-4 h-4" />
                     </div>
                     <div>
-                      <p className="font-bold text-text">Assistance Spécialisée</p>
-                      <p className="text-muted">Équipe experte en régimes auto-entrepreneur BNC et BIC.</p>
+                      <p className="font-bold text-text">Assistance dédiée</p>
+                      <p className="text-muted">Une question ? Écrivez-nous, nous répondons du lundi au vendredi.</p>
                     </div>
                   </div>
 

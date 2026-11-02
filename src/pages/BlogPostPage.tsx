@@ -8,17 +8,13 @@ import { BLOG_ARTICLES } from "../data/blogArticles";
 import { fetchBlogPostBySlug, incrementBlogPostViews } from "../lib/api";
 import { sanitizeHtml } from "../lib/sanitizeHtml";
 import { InvoiceModelConfigurator } from "../components/tools/InvoiceModelConfigurator";
-
-const SLUG_REDIRECTS: Record<string, string> = {
-  "franchise-en-base-de-tva-2026": "/blog/franchise-tva-2026-seuils-et-regles",
-  "calcul-cotisations-urssaf-bnc-2026": "/blog/calcul-cotisations-urssaf-bnc-bic",
-};
+import { BLOG_SLUG_REDIRECTS, getCanonicalBlogSlug, getDbBlogSlug } from "../lib/blogSlugs";
 
 export function BlogPostPage() {
   const { slug } = useParams<{ slug: string }>();
 
-  if (slug && SLUG_REDIRECTS[slug]) {
-    return <Navigate to={SLUG_REDIRECTS[slug]} replace />;
+  if (slug && BLOG_SLUG_REDIRECTS[slug]) {
+    return <Navigate to={`/blog/${BLOG_SLUG_REDIRECTS[slug]}`} replace />;
   }
   const [article, setArticle] = useState<{
     id?: string;
@@ -43,11 +39,12 @@ export function BlogPostPage() {
       if (!slug) return;
       setLoading(true);
       try {
-        const dbPost = await fetchBlogPostBySlug(slug);
+        const querySlug = getDbBlogSlug(slug);
+        const dbPost = await fetchBlogPostBySlug(querySlug);
         if (dbPost) {
           setArticle({
             id: dbPost.id,
-            slug: dbPost.slug,
+            slug: getCanonicalBlogSlug(dbPost.slug),
             title: dbPost.title,
             excerpt: dbPost.excerpt,
             category: dbPost.category,

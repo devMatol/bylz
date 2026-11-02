@@ -5,16 +5,23 @@ import { MarketingFooter } from "../components/marketing/MarketingFooter";
 export function CGUPage() {
   return (
     <div className="min-h-screen bg-bg text-text">
-      <SEO title="Conditions Générales d'Utilisation (CGU) | Bylz" canonical="/cgu" />
+      <SEO
+        title="Conditions Générales d'Utilisation (CGU) | Bylz"
+        description="Consultez les Conditions Générales d'Utilisation régissant les services de facturation électronique, devis et calculs automatisés de la plateforme Bylz."
+        canonical="/cgu"
+      />
       <MarketingNavbar />
       <main className="pt-32 pb-24 max-w-3xl mx-auto px-4 space-y-6 text-xs sm:text-sm text-muted">
         <h1 className="text-3xl font-black text-text">Conditions Générales d'Utilisation (CGU)</h1>
         <p className="text-xs text-muted">Dernière mise à jour : 21 août 2026</p>
 
         <section className="space-y-2">
-          <h2 className="text-lg font-bold text-text">1. Objet du service</h2>
+          <h2 className="text-lg font-bold text-text">1. Objet du service & Prestataire</h2>
           <p>
-            Bylz fournit une plateforme SaaS de facturation électronique (Factur-X), de devis, de calcul automatisé des cotisations sociales (URSSAF / TVA) et de rapprochement bancaire pour les indépendants, freelances et micro-entrepreneurs.
+            Le service en ligne Bylz.fr est édité et fourni par la société <strong>ARABACI HOLDING</strong>, Société par Actions Simplifiée Unipersonnelle (SASU) au capital de 1 000 €, immatriculée au RCS de Bordeaux sous le numéro 908 662 950 (SIREN 908 662 950, SIRET 908 662 950 00017), dont le siège social est situé 21 B rue Général de Castelnau, 33700 Mérignac, représentée par son représentant légal, Irfan Arabaci.
+          </p>
+          <p>
+            Bylz fournit une plateforme SaaS d'édition de factures PDF avec mentions légales obligatoires, de devis, d'aide au calcul indicatif des cotisations sociales et de suivi des seuils de franchise en base de TVA pour les indépendants et micro-entrepreneurs.
           </p>
         </section>
 

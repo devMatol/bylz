@@ -1,14 +1,28 @@
 import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
+import {
+  formatCompanyLegalName,
+  isB2BClient,
+  B2B_LEGAL_PENALTY_MENTION,
+  VAT_FRANCHISE_MENTION,
+  resolveOperationDate,
+  type LegalStructure,
+} from "./invoiceLegalMentions";
 
 export interface InvoicePdfConfig {
   companyName: string;
+  companyStructure?: LegalStructure;
+  isEI?: boolean;
   siret?: string;
   address?: string;
   clientName: string;
+  clientType?: "b2b" | "b2c";
   clientAddress?: string;
   clientSiret?: string;
+  clientSiren?: string;
+  isB2B?: boolean;
   invoiceNumber: string;
   issueDate: string;
+  operationDate?: string;
   dueDate?: string;
   lines: Array<{
     description: string;
@@ -93,7 +107,12 @@ export async function generateInvoicePdfBytes(cfg: InvoicePdfConfig): Promise<Ui
   }
 
   // Header: Company details (Left)
-  page.drawText(cfg.companyName || "Mon Entreprise", {
+  const displayName = formatCompanyLegalName(
+    cfg.companyName,
+    cfg.companyStructure ?? (cfg.isEI !== false ? "micro" : "autre")
+  );
+
+  page.drawText(displayName, {
     x: 50,
     y,
     size: 13,
@@ -143,12 +162,23 @@ export async function generateInvoicePdfBytes(cfg: InvoicePdfConfig): Promise<Ui
     color: gray,
   });
 
+  const opDate = resolveOperationDate(cfg.operationDate, cfg.issueDate);
+  const opLine = `Prestation / Vente : ${formatDateFR(opDate)}`;
+  const opWidth = font.widthOfTextAtSize(opLine, 9);
+  page.drawText(opLine, {
+    x: width - 50 - opWidth,
+    y: height - 101,
+    size: 9,
+    font,
+    color: gray,
+  });
+
   if (cfg.dueDate) {
     const dueLine = `Échéance : ${formatDateFR(cfg.dueDate)}`;
     const dueWidth = font.widthOfTextAtSize(dueLine, 9);
     page.drawText(dueLine, {
       x: width - 50 - dueWidth,
-      y: height - 102,
+      y: height - 114,
       size: 9,
       font,
       color: gray,
@@ -156,7 +186,7 @@ export async function generateInvoicePdfBytes(cfg: InvoicePdfConfig): Promise<Ui
   }
 
   // Client block
-  y = height - 145;
+  y = height - 150;
   page.drawText("FACTURÉ À", { x: 50, y, size: 8, font: fontBold, color: gray });
   y -= 15;
   page.drawText(cfg.clientName || "Nom du Client", { x: 50, y, size: 11, font: fontBold, color: black });
@@ -223,7 +253,7 @@ export async function generateInvoicePdfBytes(cfg: InvoicePdfConfig): Promise<Ui
 
   drawTotalLine("Total HT", formatEUR(totalHt));
   if (isFranchise) {
-    page.drawText("TVA non applicable — Art. 293 B du CGI", {
+    page.drawText("TVA non applicable , art. 293 B du CGI", {
       x: 350, y, size: 8, font, color: gray,
     });
     y -= 14;
@@ -240,26 +270,39 @@ export async function generateInvoicePdfBytes(cfg: InvoicePdfConfig): Promise<Ui
   y -= 26;
 
   // Footer Mentions
-  y = 120;
+  const isB2B = isB2BClient({
+    type: cfg.clientType,
+    siret: cfg.clientSiret,
+    siren: cfg.clientSiren,
+    isB2B: cfg.isB2B,
+  });
+
+  y = 125;
   page.drawLine({ start: { x: 50, y }, end: { x: width - 50, y }, thickness: 0.5, color: lightGray });
   y -= 14;
 
   if (cfg.footerNotes) {
-    const lines = cfg.footerNotes.split("\n").slice(0, 5);
+    const lines = cfg.footerNotes.split("\n").slice(0, 4);
     for (const fl of lines) {
       page.drawText(fl.slice(0, 95), { x: 50, y, size: 8, font, color: gray });
       y -= 10;
     }
   }
 
-  // Legal watermarks & Bylz note
+  // Legal watermarks & mandatory mentions
+  if (isB2B) {
+    page.drawText(B2B_LEGAL_PENALTY_MENTION, {
+      x: 50, y: 56, size: 7.5, font: fontBold, color: gray,
+    });
+  }
+
   if (isFranchise) {
-    page.drawText("Auto-entrepreneur — TVA non applicable, art. 293 B du CGI", {
+    page.drawText(VAT_FRANCHISE_MENTION, {
       x: 50, y: 44, size: 7, font, color: gray,
     });
   }
 
-  page.drawText("Document conforme 2026 généré gratuitement via Bylz (https://bylz.fr)", {
+  page.drawText("Document généré via Bylz (https://bylz.fr)", {
     x: 50, y: 32, size: 7, font, color: gray,
   });
 

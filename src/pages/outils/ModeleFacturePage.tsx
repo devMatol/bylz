@@ -25,7 +25,7 @@ export function ModeleFacturePage() {
   const toolSchema = {
     "@context": "https://schema.org",
     "@type": "WebApplication",
-    name: "Générateur de Modèle de Facture Gratuit Conforme 2026 | Bylz",
+    name: "Générateur de Modèle de Facture Gratuit | Bylz",
     applicationCategory: "BusinessApplication",
     operatingSystem: "Web",
     offers: {
@@ -79,7 +79,7 @@ export function ModeleFacturePage() {
     <div className="min-h-screen bg-bg text-text bg-grid-pattern selection:bg-brand-primary/20 selection:text-brand-primary">
       <SEO
         title="Modèle de Facture Gratuit 2026 : Auto-Entrepreneur, Artisan & Freelance (PDF)"
-        description="Créez et téléchargez votre modèle de facture gratuit conforme aux obligations 2026 (Factur-X, franchise TVA art. 293 B, mentions obligatoires). Prêt en 30 secondes."
+        description="Créez et téléchargez votre modèle de facture gratuit avec les mentions légales essentielles (franchise TVA art. 293 B, pénalités). Prêt en 30 secondes."
         canonical="/outils/modele-facture-gratuit"
         jsonLd={[toolSchema, faqSchema]}
       />
@@ -92,10 +92,10 @@ export function ModeleFacturePage() {
           <div className="text-center max-w-3xl mx-auto space-y-4">
             <div className="inline-flex items-center space-x-2 px-4 py-1.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-xs font-bold shadow-sm">
               <ShieldCheck className="w-4 h-4 text-emerald-400" />
-              <span>Conforme Réforme 2026 • Gratuit & Sans Inscription</span>
+              <span>Mentions Légales 2026 • Gratuit & Sans Inscription</span>
             </div>
             <h1 className="text-4xl sm:text-5xl font-black tracking-tight text-text leading-tight">
-              Modèle de Facture Gratuit Conforme 2026
+              Modèle de Facture Gratuit
             </h1>
             <p className="text-base text-text/80 leading-relaxed font-normal">
               Ne perdez plus de temps avec des fichiers Excel ou Word risqués. Personnalisez votre modèle de facture en 30 secondes et téléchargez immédiatement votre PDF officiel.
@@ -148,16 +148,16 @@ export function ModeleFacturePage() {
               <Card className="p-6 border-primary/30 bg-primary/5 space-y-4">
                 <div className="flex items-center gap-2 text-primary">
                   <CheckCircle2 className="w-5 h-5 flex-shrink-0" />
-                  <h3 className="font-bold text-base text-text">Les garanties d'une facture générée sur Bylz</h3>
+                  <h3 className="font-bold text-base text-text">Les atouts d'une facture générée sur Bylz</h3>
                 </div>
                 <ul className="space-y-3 text-xs text-muted">
                   <li className="flex items-start gap-2">
                     <Check className="w-4 h-4 text-emerald-500 flex-shrink-0 mt-0.5" />
-                    <span><strong>100% Conforme DGFiP 2026 :</strong> Génération hybride Factur-X avec mentions légales automatiques (art. 293 B, pénalités, décennale).</span>
+                    <span><strong>Mentions légales essentielles :</strong> Génération de factures PDF avec mentions obligatoires (art. 293 B, pénalités, décennale).</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <Check className="w-4 h-4 text-emerald-500 flex-shrink-0 mt-0.5" />
-                    <span><strong>Sécurisation juridique sans faille :</strong> Numérotation infalsifiable et chronologique garantie sans intervention manuelle.</span>
+                    <span><strong>Numérotation chronologique :</strong> Numérotation continue sans trou ni rupture manuelle.</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <Check className="w-4 h-4 text-emerald-500 flex-shrink-0 mt-0.5" />
@@ -244,7 +244,7 @@ export function ModeleFacturePage() {
               Gérez vos devis, factures et déclarations URSSAF en 1 clic
             </h2>
             <p className="text-xs sm:text-sm text-muted max-w-lg mx-auto">
-              Rejoignez les milliers d'indépendants qui gagnent 4 heures chaque mois grâce au pilotage fiscal automatisé Bylz.
+              Moins de double saisie, moins de calculs à la main grâce au pilotage fiscal automatisé Bylz.
             </p>
             <div>
               <Link to="/signup">

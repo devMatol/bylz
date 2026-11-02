@@ -27,20 +27,14 @@ interface ImportInvoiceModalProps {
   onSuccess: () => void;
 }
 
-// Dynamically load PDF.js from cdnjs
+// Dynamically load PDF.js bundled with Vite
 async function loadPdfJs(): Promise<any> {
-  if ((window as any).pdfjsLib) return (window as any).pdfjsLib;
-  return new Promise((resolve, reject) => {
-    const script = document.createElement("script");
-    script.src = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js";
-    script.onload = () => {
-      const pdfjsLib = (window as any).pdfjsLib;
-      pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
-      resolve(pdfjsLib);
-    };
-    script.onerror = reject;
-    document.head.appendChild(script);
-  });
+  const [pdfjsLib, workerModule] = await Promise.all([
+    import("pdfjs-dist"),
+    import("pdfjs-dist/build/pdf.worker.min.mjs?url"),
+  ]);
+  pdfjsLib.GlobalWorkerOptions.workerSrc = workerModule.default;
+  return pdfjsLib;
 }
 
 // Helper: Convert any French / English / ISO date string to YYYY-MM-DD
@@ -306,7 +300,7 @@ function parseFacturXXml(xmlStr: string): {
               }
             }
 
-            toast("Facture certifiée Factur-X : Données extraites avec précision 100% exacte !", "success");
+            toast("Facture Factur-X : Données extraites avec succès !", "success");
             setAnalyzing(false);
             return;
           }
@@ -315,7 +309,10 @@ function parseFacturXXml(xmlStr: string): {
         console.warn("Factur-X XML check skipped:", xmlErr);
       }
 
-      const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+      const pdf = await pdfjsLib.getDocument({
+        data: arrayBuffer,
+        isEvalSupported: false,
+      }).promise;
 
       let fullText = "";
       const textLines: string[] = [];

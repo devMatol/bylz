@@ -21,5 +21,6 @@ Disallow: /admin
 Disallow: /login
 Disallow: /signup
 Disallow: /onboarding
+Disallow: /v/
 
 Sitemap: https://bylz.fr/sitemap.xml

@@ -52,7 +52,7 @@ const PRESETS: Record<PresetKey, {
   auto_entrepreneur: {
     label: "Auto-Entrepreneur (Prestation)",
     icon: Laptop,
-    companyName: "Alexandre Dupont — Consultant Freelance",
+    companyName: "Alexandre Dupont : Consultant Freelance",
     siret: "912 345 678 00014",
     address: "14 rue des Développeurs, 75011 Paris",
     clientName: "Société Nova SAS",
@@ -68,7 +68,7 @@ const PRESETS: Record<PresetKey, {
   artisan_btp: {
     label: "Artisan & Travaux BTP",
     icon: Hammer,
-    companyName: "Rénov'Artisan — Jean Bâtiment",
+    companyName: "Rénov'Artisan : Jean Bâtiment",
     siret: "834 567 890 00021",
     address: "5 impasse des Compagnons, 69003 Lyon",
     clientName: "M. et Mme Martin",
@@ -195,6 +195,7 @@ export function InvoiceModelConfigurator({
 
   const pdfConfig: InvoicePdfConfig = {
     companyName,
+    companyStructure: activePreset === "auto_entrepreneur" || activePreset === "artisan_btp" ? "micro" : activePreset === "freelance_service" ? "sasu" : "autre",
     siret,
     address,
     clientName,
@@ -268,7 +269,7 @@ export function InvoiceModelConfigurator({
     } catch (err: any) {
       console.error("Lead submission error:", err);
       // Even if network fails, download the PDF so the user is never stuck
-      await downloadInvoicePdf(pdfConfig, "facture-conforme.pdf");
+      await downloadInvoicePdf(pdfConfig, "facture-modele.pdf");
       setLeadSuccess(true);
     } finally {
       setIsSubmitting(false);
@@ -510,12 +511,12 @@ export function InvoiceModelConfigurator({
           <div className="p-5 rounded-2xl bg-gradient-to-r from-emerald-500/15 via-teal-500/10 to-primary/15 border border-emerald-500/30 shadow-xl space-y-3">
             <div className="flex items-center justify-between">
               <span className="inline-flex items-center gap-1.5 text-xs font-extrabold text-emerald-500 uppercase tracking-wider">
-                <ShieldCheck className="w-4 h-4" /> Modèle 100% Conforme DGFiP 2026
+                <ShieldCheck className="w-4 h-4" /> Modèle avec mentions légales
               </span>
               <span className="text-xs font-mono font-black text-text">Gratuit & Sans CB</span>
             </div>
             <p className="text-xs text-muted">
-              Générez votre facture au format officiel Factur-X avec calculs automatiques et mentions légales obligatoires.
+              Générez votre facture PDF avec calculs automatiques et les mentions légales essentielles.
             </p>
             <div className="pt-1">
               <Button
@@ -533,7 +534,7 @@ export function InvoiceModelConfigurator({
           {/* Live Preview Paper Box */}
           <div className="space-y-2">
             <div className="flex items-center justify-between text-xs text-muted font-semibold px-1">
-              <span>Aperçu en direct (Format A4 conforme)</span>
+              <span>Aperçu en direct (Format A4)</span>
               <span className="text-[11px] font-mono">{lines.length} prestation{lines.length > 1 ? "s" : ""}</span>
             </div>
 
@@ -601,7 +602,7 @@ export function InvoiceModelConfigurator({
                   <span className="font-mono font-semibold">{totalHt.toFixed(2)} €</span>
                 </div>
                 {vatRegime === "franchise" ? (
-                  <p className="text-[10px] text-slate-400 italic text-right">TVA non applicable — Art. 293 B du CGI</p>
+                  <p className="text-[10px] text-slate-400 italic text-right">TVA non applicable , art. 293 B du CGI</p>
                 ) : (
                   <div className="flex justify-between text-slate-600">
                     <span>TVA ({(vatRate * 100).toFixed(0)}%)</span>
@@ -619,7 +620,7 @@ export function InvoiceModelConfigurator({
               {/* Legal Footer Preview */}
               <div className="border-t border-slate-100 pt-3 text-[9px] text-slate-400 space-y-0.5 leading-tight">
                 <p className="line-clamp-2">{footerNotes}</p>
-                <p className="text-slate-300 pt-1">Généré avec Bylz — Conforme Factur-X 2026</p>
+                <p className="text-slate-300 pt-1">Généré avec Bylz | Mentions légales essentielles</p>
               </div>
             </div>
           </div>
@@ -678,7 +679,7 @@ export function InvoiceModelConfigurator({
                   {isSubmitting ? (
                     <>
                       <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                      Génération du PDF conforme...
+                      Génération du PDF...
                     </>
                   ) : (
                     <>
@@ -690,7 +691,7 @@ export function InvoiceModelConfigurator({
               </div>
 
               <p className="text-[10px] text-center text-muted">
-                🔒 Vos informations sont confidentielles. Conformité RGPD garantie. Zéro spam.
+                🔒 Vos informations sont confidentielles. Respect de la vie privée (RGPD). Zéro spam.
               </p>
             </form>
           ) : (
@@ -702,7 +703,7 @@ export function InvoiceModelConfigurator({
               <div className="space-y-2">
                 <h3 className="text-xl font-black text-text">Facture téléchargée avec succès ! 🎉</h3>
                 <p className="text-xs text-muted max-w-sm mx-auto">
-                  Votre modèle de facture officiel Factur-X a été téléchargé sur votre appareil.
+                  Votre modèle de facture PDF a été téléchargé sur votre appareil.
                 </p>
               </div>
 

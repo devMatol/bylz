@@ -1,22 +1,62 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { TrendingUp, Calculator, ArrowRight, ShieldCheck, CheckCircle2, Sparkles, AlertCircle } from "lucide-react";
+import { TrendingUp, Calculator, ArrowRight, ShieldCheck, CheckCircle2, Sparkles, AlertCircle, Info } from "lucide-react";
 import { SEO } from "../../components/seo/SEO";
 import { MarketingNavbar } from "../../components/marketing/MarketingNavbar";
 import { MarketingFooter } from "../../components/marketing/MarketingFooter";
 import { TrustBadgesRow } from "../../components/marketing/TrustBadgesRow";
+import { URSSAF_RATES_2026, type UrssafActivityKey } from "../../lib/fiscalRates";
 
 export function SimulateurUrssafPage() {
   const [ca, setCa] = useState<number>(32000);
-  const [activity, setActivity] = useState<"bnc" | "bic_service" | "bic_vente">("bnc");
+  const [activity, setActivity] = useState<UrssafActivityKey>("bnc_ssi");
   const [acacre, setAcacre] = useState<boolean>(false);
   const [tmi, setTmi] = useState<number>(11); // 0%, 11%, 30%
 
-  // Activity rates & abattements
-  const rates = {
-    bnc: { normal: 0.231, acacre: 0.121, abattement: 0.34, label: "Professions Libérales (BNC)" },
-    bic_service: { normal: 0.212, acacre: 0.106, abattement: 0.50, label: "Prestations de Services (BIC)" },
-    bic_vente: { normal: 0.123, acacre: 0.062, abattement: 0.71, label: "Vente de Marchandises (BIC)" },
+  // Activity rates & abattements officiels 2026
+  const rates: Record<
+    UrssafActivityKey,
+    {
+      normal: number;
+      acacre: number;
+      abattement: number;
+      label: string;
+      labelPercent: string;
+      abattementLabel: string;
+    }
+  > = {
+    bnc_ssi: {
+      normal: URSSAF_RATES_2026.bnc_ssi.rate,
+      acacre: 0.128,
+      abattement: URSSAF_RATES_2026.bnc_ssi.abattement,
+      label: "BNC (SSI)",
+      labelPercent: URSSAF_RATES_2026.bnc_ssi.labelPercent,
+      abattementLabel: URSSAF_RATES_2026.bnc_ssi.abattementLabel,
+    },
+    bnc_cipav: {
+      normal: URSSAF_RATES_2026.bnc_cipav.rate,
+      acacre: 0.116,
+      abattement: URSSAF_RATES_2026.bnc_cipav.abattement,
+      label: "BNC (CIPAV)",
+      labelPercent: URSSAF_RATES_2026.bnc_cipav.labelPercent,
+      abattementLabel: URSSAF_RATES_2026.bnc_cipav.abattementLabel,
+    },
+    bic_service: {
+      normal: URSSAF_RATES_2026.bic_service.rate,
+      acacre: 0.106,
+      abattement: URSSAF_RATES_2026.bic_service.abattement,
+      label: "Prestations de Services (BIC)",
+      labelPercent: URSSAF_RATES_2026.bic_service.labelPercent,
+      abattementLabel: URSSAF_RATES_2026.bic_service.abattementLabel,
+    },
+    bic_vente: {
+      normal: URSSAF_RATES_2026.bic_vente.rate,
+      acacre: 0.062,
+      abattement: URSSAF_RATES_2026.bic_vente.abattement,
+      label: "Vente de Marchandises (BIC)",
+      labelPercent: URSSAF_RATES_2026.bic_vente.labelPercent,
+      abattementLabel: URSSAF_RATES_2026.bic_vente.abattementLabel,
+    },
   };
 
   const currentRateConfig = rates[activity];
@@ -122,7 +162,7 @@ export function SimulateurUrssafPage() {
             {/* Input 2: Activity Category */}
             <div className="space-y-2">
               <label className="text-sm font-extrabold text-text">Catégorie d'Activité</label>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                 {(Object.keys(rates) as Array<keyof typeof rates>).map((key) => (
                   <button
                     key={key}
@@ -134,13 +174,17 @@ export function SimulateurUrssafPage() {
                         : "bg-surface-hover/60 border-border text-text/80 hover:border-border/80"
                     }`}
                   >
-                    <p>{rates[key].label}</p>
+                    <p className="font-extrabold">{rates[key].label}</p>
                     <p className="text-[11px] text-text/60 font-mono mt-1">
-                      Taux : {(rates[key].normal * 100).toFixed(1)}% | Abattement : {(rates[key].abattement * 100)}%
+                      Taux : {rates[key].labelPercent} | Abattement : {rates[key].abattementLabel}
                     </p>
                   </button>
                 ))}
               </div>
+              <p className="text-xs text-text/70 flex items-start gap-1.5 p-3 rounded-xl bg-surface-hover/50 border border-border">
+                <Info className="w-4 h-4 text-brand-primary shrink-0 mt-0.5" />
+                <span>CIPAV : architectes, psychologues, ostéopathes, etc. Si vous n'êtes pas sûr, c'est écrit sur votre notification d'affiliation.</span>
+              </p>
             </div>
 
             {/* Options: ACRE & TMI */}
@@ -178,14 +222,14 @@ export function SimulateurUrssafPage() {
               
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div className="p-4 rounded-2xl bg-brand-primary/10 border border-brand-primary/30">
-                  <p className="text-xs text-text/70 font-semibold mb-1">Cotisations URSSAF ({(effectiveRate * 100).toFixed(1)}%)</p>
+                  <p className="text-xs text-text/70 font-semibold mb-1">Cotisations URSSAF ({(effectiveRate * 100).toFixed(1).replace(".", ",")} %)</p>
                   <p className="text-2xl font-black text-brand-primary font-mono">
                     {urssafAmount.toLocaleString("fr-FR")} €
                   </p>
                 </div>
 
                 <div className="p-4 rounded-2xl bg-surface-hover/80 border border-border">
-                  <p className="text-xs text-text/70 font-semibold mb-1">Impôt estimé (TMI {tmi}%)</p>
+                  <p className="text-xs text-text/70 font-semibold mb-1">Impôt estimé (TMI {tmi} %)</p>
                   <p className="text-2xl font-black text-amber-500 font-mono">
                     {estimatedTax.toLocaleString("fr-FR")} €
                   </p>

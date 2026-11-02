@@ -22,6 +22,7 @@ import { SignatureModal } from "../components/documents/SignatureModal";
 import { formatAmount } from "../lib/utils";
 import { formatDateLong } from "../lib/date";
 import { downloadPdf } from "../lib/api";
+import { SEO } from "../components/seo/SEO";
 import type { SignatureData } from "../types/database";
 
 interface PublicDocData {
@@ -185,7 +186,7 @@ export function PublicDocumentPage() {
           body: {
             to: doc.client.email,
             subject: `🎉 Signature enregistrée pour le document ${doc.number}`,
-            body: `Bonjour ${doc.client.name},\n\nVotre signature pour le document ${doc.number} a bien été enregistrée et certifiée.\n\nCordialement,\n${doc.company.commercial_name || doc.company.legal_name}`,
+            body: `Bonjour ${doc.client.name},\n\nVotre signature pour le document ${doc.number} a bien été enregistrée et horodatée.\n\nCordialement,\n${doc.company.commercial_name || doc.company.legal_name}`,
             document_type: doc.type,
             document_id: doc.id,
           },
@@ -202,6 +203,7 @@ export function PublicDocumentPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4">
+        <SEO title="Document sécurisé | Bylz" noindex={true} />
         <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin mb-4" />
         <p className="text-sm font-semibold text-muted">Chargement du document sécurisé…</p>
       </div>
@@ -211,6 +213,7 @@ export function PublicDocumentPage() {
   if (error || !doc) {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4 text-center">
+        <SEO title="Document non disponible | Bylz" noindex={true} />
         <AlertCircle className="w-12 h-12 text-rose-500 mb-3" />
         <h2 className="text-xl font-bold text-text mb-1">Document non disponible</h2>
         <p className="text-sm text-muted mb-6">{error || "Ce document n'existe pas ou a été déplacé."}</p>
@@ -226,6 +229,11 @@ export function PublicDocumentPage() {
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col items-center justify-between p-4 sm:p-8">
+      <SEO
+        title="Document sécurisé | Bylz"
+        description="Portail sécurisé de consultation et de signature de document."
+        noindex={true}
+      />
       {/* Top Banner Branding */}
       <div className="w-full max-w-4xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-800 pb-4 mb-6">
         <div className="flex items-center space-x-3">
@@ -294,7 +302,7 @@ export function PublicDocumentPage() {
             <div className="flex items-center space-x-3">
               <CheckCircle2 className="w-6 h-6 flex-shrink-0 text-emerald-400" />
               <div>
-                <p className="text-sm font-bold">Document Électroniquement Signé & Certifié</p>
+                <p className="text-sm font-bold">Document Électroniquement Signé</p>
                 <p className="text-xs text-emerald-300/80">
                   Signé par <strong>{doc.signature_data?.signer_name || "le destinataire"}</strong> le{" "}
                   {doc.signature_data?.signed_at ? formatDateLong(doc.signature_data.signed_at) : "aujourd'hui"}.
@@ -454,7 +462,7 @@ export function PublicDocumentPage() {
       {/* Footer Acquisition Banner */}
       <div className="w-full max-w-4xl text-center mt-8 space-y-2">
         <p className="text-xs text-slate-400">
-          Facturé et certifié électroniquement avec <strong className="text-white">Bylz</strong>
+          Facturé avec <strong className="text-white">Bylz</strong>
         </p>
         <Link to="/">
           <span className="inline-flex items-center space-x-1.5 text-xs text-primary hover:text-primary-hover font-semibold transition-colors">
