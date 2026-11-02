@@ -21,7 +21,9 @@ function loadEnv() {
     }
   }
 }
-loadEnv();
+if (!process.env.NETLIFY) {
+  loadEnv();
+}
 
 const supabaseUrl = process.env.VITE_SUPABASE_URL || "https://placeholder.supabase.co";
 const anonKey = process.env.VITE_SUPABASE_ANON_KEY || "";
@@ -811,6 +813,13 @@ function renderPageBody(routePath, meta, articles) {
 async function prerender() {
   console.log("Starting SEO prerendering...");
 
+  const isNetlifyProduction = (process.env.NETLIFY === 'true' || process.env.NETLIFY === true) && process.env.CONTEXT === 'production';
+
+  if (isNetlifyProduction && (!anonKey || !supabaseUrl || supabaseUrl.includes("placeholder"))) {
+    console.error("FATAL [prerender]: En contexte de production Netlify (CONTEXT=production), les variables VITE_SUPABASE_URL et VITE_SUPABASE_ANON_KEY sont obligatoires.");
+    process.exit(1);
+  }
+
   const distDir = path.join(process.cwd(), "dist");
   const templatePath = path.join(distDir, "index.html");
 
@@ -841,7 +850,11 @@ async function prerender() {
       const timeoutPromise = new Promise((_, reject) =>
         setTimeout(() => reject(new Error("Supabase query timeout")), 4000)
       );
-      const { data: posts } = await Promise.race([fetchPromise, timeoutPromise]);
+      const { data: posts, error } = await Promise.race([fetchPromise, timeoutPromise]);
+
+      if (error) {
+        throw new Error(error.message);
+      }
 
       if (posts && posts.length > 0) {
         for (const p of posts) {
@@ -857,10 +870,19 @@ async function prerender() {
             coverImageUrl: p.cover_image_url || DEFAULT_OG_IMAGE,
           });
         }
+      } else if (isNetlifyProduction) {
+        console.error("FATAL [prerender]: En contexte de production Netlify (CONTEXT=production), la table blog_posts n'a renvoyé aucun article publié.");
+        process.exit(1);
       }
     } catch (err) {
-      console.warn("Notice: could not query dynamic DB blog posts for prerender:", err);
+      if (isNetlifyProduction) {
+        console.error("FATAL [prerender]: En contexte de production Netlify (CONTEXT=production), la requête sur la table blog_posts a échoué :", err.message);
+        process.exit(1);
+      }
+      console.warn("AVERTISSEMENT [prerender]: Impossible de joindre la base distante (" + (process.env.CONTEXT || 'local') + "). Repli sur src/data/blogArticles.ts :", err.message);
     }
+  } else if (!isNetlifyProduction) {
+    console.warn("AVERTISSEMENT [prerender]: Supabase non configuré en contexte (" + (process.env.CONTEXT || 'local') + "). Repli sur la copie statique src/data/blogArticles.ts.");
   }
 
   // Fallback to static articles for any article not found in remote DB
