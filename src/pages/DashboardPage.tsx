@@ -192,7 +192,7 @@ export function DashboardPage() {
             <div>
               <p className="font-semibold text-sm">Profil de l'entreprise incomplet</p>
               <p className="text-xs opacity-90 text-muted">
-                Renseignez votre SIRET et votre adresse pour que vos factures soient légalement conformes.
+                Renseignez votre SIRET et votre adresse pour que vos factures comportent toutes les mentions obligatoires.
               </p>
             </div>
           </div>

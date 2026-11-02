@@ -8,17 +8,13 @@ import { BLOG_ARTICLES } from "../data/blogArticles";
 import { fetchBlogPostBySlug, incrementBlogPostViews } from "../lib/api";
 import { sanitizeHtml } from "../lib/sanitizeHtml";
 import { InvoiceModelConfigurator } from "../components/tools/InvoiceModelConfigurator";
-
-const SLUG_REDIRECTS: Record<string, string> = {
-  "franchise-en-base-de-tva-2026": "/blog/franchise-tva-2026-seuils-et-regles",
-  "calcul-cotisations-urssaf-bnc-2026": "/blog/calcul-cotisations-urssaf-bnc-bic",
-};
+import { BLOG_SLUG_REDIRECTS, getCanonicalBlogSlug, getDbBlogSlug } from "../lib/blogSlugs";
 
 export function BlogPostPage() {
   const { slug } = useParams<{ slug: string }>();
 
-  if (slug && SLUG_REDIRECTS[slug]) {
-    return <Navigate to={SLUG_REDIRECTS[slug]} replace />;
+  if (slug && BLOG_SLUG_REDIRECTS[slug]) {
+    return <Navigate to={`/blog/${BLOG_SLUG_REDIRECTS[slug]}`} replace />;
   }
   const [article, setArticle] = useState<{
     id?: string;
@@ -43,11 +39,12 @@ export function BlogPostPage() {
       if (!slug) return;
       setLoading(true);
       try {
-        const dbPost = await fetchBlogPostBySlug(slug);
+        const querySlug = getDbBlogSlug(slug);
+        const dbPost = await fetchBlogPostBySlug(querySlug);
         if (dbPost) {
           setArticle({
             id: dbPost.id,
-            slug: dbPost.slug,
+            slug: getCanonicalBlogSlug(dbPost.slug),
             title: dbPost.title,
             excerpt: dbPost.excerpt,
             category: dbPost.category,
@@ -262,7 +259,7 @@ export function BlogPostPage() {
                   <Sparkles className="w-3.5 h-3.5" /> Configurateur Express Embarqué
                 </span>
                 <h3 className="text-xl sm:text-2xl font-black text-text">
-                  Personnalisez et téléchargez votre modèle de facture conforme
+                  Personnalisez et téléchargez votre modèle de facture avec mentions légales
                 </h3>
                 <p className="text-xs text-muted max-w-lg mx-auto">
                   Modifiez vos coordonnées et téléchargez directement votre facture officielle en PDF gratuit.
@@ -287,13 +284,13 @@ export function BlogPostPage() {
           <div className="mt-12 bg-gradient-to-r from-brand-primary/10 via-indigo-500/10 to-brand-accent/10 border border-brand-primary/20 rounded-2xl p-6 text-center space-y-4 shadow-lg">
             <div className="inline-flex items-center space-x-1.5 text-brand-primary text-xs font-bold">
               <Sparkles className="w-4 h-4" />
-              <span>Conformité Factur-X & URSSAF 2026</span>
+              <span>Mentions légales & URSSAF 2026</span>
             </div>
             <h3 className="text-xl font-bold text-text">
               Prêt à automatiser la facturation de votre micro-entreprise ?
             </h3>
             <p className="text-xs text-muted max-w-md mx-auto">
-              Bylz prend en charge le format officiel Factur-X, la signature électronique et le suivi URSSAF en 2 minutes par jour.
+              Bylz simplifie vos factures PDF avec mentions légales obligatoires, la signature électronique et le suivi URSSAF en 2 minutes par jour.
             </p>
             <div>
               <Link

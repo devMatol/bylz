@@ -3,7 +3,6 @@ import {
   ShieldCheck,
   Lock,
   FileCheck,
-  Landmark,
   CreditCard,
   Server,
   CheckCircle2,
@@ -21,7 +20,7 @@ export function SecurityCompliancePage() {
     <div className="min-h-screen bg-bg text-text">
       <SEO
         title="Conformité Légale & Sécurité des Données | Bylz"
-        description="Découvrez les garanties de conformité de Bylz : Loi Anti-Fraude TVA Art. 286 CGI, Norme Européenne EN 16931 Factur-X, Agrément DSP2 Banque de France et hébergement sécurisé en France."
+        description="Découvrez les garanties de sécurité de Bylz : tenue du livre chronologique des recettes, paiements sécurisés Stripe et base de données hébergée en Europe."
         canonical="/conformite"
       />
       <MarketingNavbar />
@@ -30,34 +29,34 @@ export function SecurityCompliancePage() {
         {/* Hero Banner */}
         <div className="text-center space-y-4 max-w-3xl mx-auto">
           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-pill bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-xs font-bold uppercase tracking-wider">
-            <ShieldCheck className="w-4 h-4" /> 100% Conforme DGFiP & UE
+            <ShieldCheck className="w-4 h-4" /> Facturation électronique en préparation
           </span>
           <h1 className="text-3xl sm:text-5xl font-black tracking-tight text-text">
-            Sécurité, Certifications & Conformité Légale
+            Sécurité & Conformité Légale
           </h1>
           <p className="text-sm sm:text-base text-muted leading-relaxed font-medium">
-            Bylz est conçu dès l'origine pour vous garantir une sérénité totale face à la réglementation fiscale française, la loi anti-fraude à la TVA et la réforme 2026.
+            Bylz est conçu dès l'origine pour vous apporter une gestion rigoureuse face à la réglementation fiscale française, la tenue du livre des recettes et la transition vers la facturation électronique.
           </p>
         </div>
 
-        {/* 5 Pillars Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {/* 4 Pillars Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Pillar 1: Anti-Fraude TVA */}
           <Card className="p-6 space-y-4 border border-emerald-500/30 bg-surface/90 relative overflow-hidden">
             <div className="w-12 h-12 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center justify-center">
               <FileCheck className="w-6 h-6" />
             </div>
             <div>
-              <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider">Code Général des Impôts</span>
-              <h3 className="text-lg font-bold text-text mt-0.5">Loi Anti-Fraude TVA (Art. 286 CGI)</h3>
+              <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider">Livre des recettes</span>
+              <h3 className="text-lg font-bold text-text mt-0.5">Livre chronologique des recettes</h3>
               <p className="text-xs text-muted mt-2 leading-relaxed">
-                Bylz garantit les 4 conditions légales imposées par l'administration fiscale : <strong>Inviolabilité</strong>, <strong>Sécurisation</strong>, <strong>Conservation</strong> et <strong>Archivage</strong> des données de facturation.
+                Bylz enregistre chronologiquement vos encaissements et permet d'exporter à tout moment votre livre des recettes au format CSV.
               </p>
             </div>
             <ul className="text-xs text-muted space-y-1.5 pt-2 border-t border-border/50">
               <li className="flex items-center gap-2">
                 <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0" />
-                <span>Empreinte numérique cryptographique SHA-256</span>
+                <span>Données légales figées à l'émission dans le document</span>
               </li>
               <li className="flex items-center gap-2">
                 <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0" />
@@ -72,56 +71,42 @@ export function SecurityCompliancePage() {
               <ShieldCheck className="w-6 h-6" />
             </div>
             <div>
-              <span className="text-[10px] font-bold text-primary uppercase tracking-wider">Norme Européenne</span>
-              <h3 className="text-lg font-bold text-text mt-0.5">Norme EN 16931-1 (Factur-X)</h3>
+              <span className="text-[10px] font-bold text-primary uppercase tracking-wider">Évolution réglementaire</span>
+              <h3 className="text-lg font-bold text-text mt-0.5">Facturation électronique en préparation</h3>
               <p className="text-xs text-muted mt-2 leading-relaxed">
-                Chaque facture générée sur Bylz contient le fichier hybride <strong>Factur-X (PDF + XML CII)</strong> conforme aux normes de la réforme DGFiP 2026.
+                Bylz intègre aujourd'hui les mentions légales essentielles sur vos factures PDF et prépare activement l'intégration du standard Factur-X.
               </p>
             </div>
             <ul className="text-xs text-muted space-y-1.5 pt-2 border-t border-border/50">
               <li className="flex items-center gap-2">
                 <CheckCircle2 className="w-3.5 h-3.5 text-primary flex-shrink-0" />
-                <span>Format hybride lisible par l'humain et l'ordinateur</span>
+                <span>Factures PDF avec mentions légales essentielles</span>
               </li>
               <li className="flex items-center gap-2">
                 <CheckCircle2 className="w-3.5 h-3.5 text-primary flex-shrink-0" />
-                <span>Télétransmission certifiée vers le réseau PDP</span>
+                {/* TODO: Télétransmission PDP partenaire */}
+                <span>Format Factur-X en cours de préparation</span>
               </li>
             </ul>
+            <div className="pt-2 border-t border-border/50">
+              <Link
+                to="/facturation-electronique"
+                className="inline-flex items-center gap-1.5 text-xs text-primary font-bold hover:underline"
+              >
+                <span>Dossier officiel : facturation électronique 2026</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
+            </div>
           </Card>
 
-          {/* Pillar 3: Open Banking DSP2 */}
-          <Card className="p-6 space-y-4 border border-border bg-surface/90 relative overflow-hidden">
-            <div className="w-12 h-12 rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/20 flex items-center justify-center">
-              <Landmark className="w-6 h-6" />
-            </div>
-            <div>
-              <span className="text-[10px] font-bold text-amber-400 uppercase tracking-wider">Agrément Banque de France</span>
-              <h3 className="text-lg font-bold text-text mt-0.5">Open Banking DSP2 (Bridge)</h3>
-              <p className="text-xs text-muted mt-2 leading-relaxed">
-                La synchronisation bancaire est opérée via notre partenaire agréé <strong>Bridge API</strong>, établissement de paiement régulé par l'<strong>ACPR / Banque de France</strong>.
-              </p>
-            </div>
-            <ul className="text-xs text-muted space-y-1.5 pt-2 border-t border-border/50">
-              <li className="flex items-center gap-2">
-                <CheckCircle2 className="w-3.5 h-3.5 text-amber-400 flex-shrink-0" />
-                <span>Connexion sécurisée en lecture seule</span>
-              </li>
-              <li className="flex items-center gap-2">
-                <CheckCircle2 className="w-3.5 h-3.5 text-amber-400 flex-shrink-0" />
-                <span>Aucun accès aux ordres de virement</span>
-              </li>
-            </ul>
-          </Card>
-
-          {/* Pillar 4: Stripe Connect */}
+          {/* Pillar 3: Stripe Connect */}
           <Card className="p-6 space-y-4 border border-border bg-surface/90 relative overflow-hidden">
             <div className="w-12 h-12 rounded-xl bg-violet-500/10 text-violet-400 border border-violet-500/20 flex items-center justify-center">
               <CreditCard className="w-6 h-6" />
             </div>
             <div>
-              <span className="text-[10px] font-bold text-violet-400 uppercase tracking-wider">Norme PCI-DSS Level 1</span>
-              <h3 className="text-lg font-bold text-text mt-0.5">Paiements Sécurisés Stripe</h3>
+              <span className="text-[10px] font-bold text-violet-400 uppercase tracking-wider">Via Stripe (certifié PCI-DSS Level 1)</span>
+              <h3 className="text-lg font-bold text-text mt-0.5">Paiement par carte via Stripe</h3>
               <p className="text-xs text-muted mt-2 leading-relaxed">
                 Les encaissements par carte bancaire sont directement traités par Stripe Connect avec chiffrement SSL/TLS et protocole <strong>3D-Secure 2.0</strong>.
               </p>
@@ -138,16 +123,16 @@ export function SecurityCompliancePage() {
             </ul>
           </Card>
 
-          {/* Pillar 5: Hébergement Souverain */}
+          {/* Pillar 4: Base de données hébergée en Europe */}
           <Card className="p-6 space-y-4 border border-border bg-surface/90 relative overflow-hidden">
             <div className="w-12 h-12 rounded-xl bg-sky-500/10 text-sky-400 border border-sky-500/20 flex items-center justify-center">
               <Server className="w-6 h-6" />
             </div>
             <div>
-              <span className="text-[10px] font-bold text-sky-400 uppercase tracking-wider">Souveraineté & RGPD</span>
-              <h3 className="text-lg font-bold text-text mt-0.5">Hébergement Sécurisé en France</h3>
+              <span className="text-[10px] font-bold text-sky-400 uppercase tracking-wider">Europe & RGPD</span>
+              <h3 className="text-lg font-bold text-text mt-0.5">Base de données hébergée en Europe</h3>
               <p className="text-xs text-muted mt-2 leading-relaxed">
-                Vos données et documents sont hébergés sur des serveurs certifiés <strong>ISO 27001</strong> au sein de l'Union Européenne (France) avec sauvegardes quotidiennes.
+                Vos données et documents sont stockés sur une base de données PostgreSQL gérée par Supabase (datacenter situé en Union Européenne) en Europe, avec sauvegardes régulières.
               </p>
             </div>
             <ul className="text-xs text-muted space-y-1.5 pt-2 border-t border-border/50">
@@ -168,10 +153,10 @@ export function SecurityCompliancePage() {
               <Lock className="w-6 h-6" />
             </div>
             <div>
-              <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider">Attestation Utilisateur</span>
-              <h3 className="text-lg font-bold text-text mt-0.5">Attestation de Conformité</h3>
+              <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider">Tenue de registre</span>
+              <h3 className="text-lg font-bold text-text mt-0.5">Livre chronologique des recettes, exportable en CSV</h3>
               <p className="text-xs text-muted mt-2 leading-relaxed">
-                Chaque utilisateur de Bylz dispose d'une attestation individuelle certifiant la conformité du logiciel en cas de contrôle de l'administration fiscale.
+                Bylz tient automatiquement votre livre chronologique des recettes encaissées, exportable en un clic au format CSV.
               </p>
             </div>
             <div className="pt-2">

@@ -71,6 +71,9 @@ const ConfidentialitePage = lazy(() =>
 const SecurityCompliancePage = lazy(() =>
   import("./pages/SecurityCompliancePage").then((m) => ({ default: m.SecurityCompliancePage }))
 );
+const FacturationElectroniquePage = lazy(() =>
+  import("./pages/FacturationElectroniquePage").then((m) => ({ default: m.FacturationElectroniquePage }))
+);
 
 // Dedicated SEO Tools & Simulators
 const SimulateurUrssafPage = lazy(() =>
@@ -184,6 +187,14 @@ function App() {
                   }
                 />
                 <Route
+                  path="/facturation-electronique"
+                  element={
+                    <MarketingSuspense>
+                      <FacturationElectroniquePage />
+                    </MarketingSuspense>
+                  }
+                />
+                <Route
                   path="/blog"
                   element={
                     <MarketingSuspense>
@@ -248,7 +259,7 @@ function App() {
                   }
                 />
                 <Route
-                  path="/cgv"
+                  path="/cgu"
                   element={
                     <MarketingSuspense>
                       <CGUPage />
@@ -257,6 +268,7 @@ function App() {
                 />
 
                 {/* Secure Public Document View Route */}
+                <Route path="/cgv" element={<Navigate to="/cgu" replace />} />
                 <Route path="/v/:token" element={<PublicDocumentPage />} />
                 <Route
                   path="/confidentialite"

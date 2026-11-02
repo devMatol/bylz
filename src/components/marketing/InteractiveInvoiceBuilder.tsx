@@ -34,7 +34,7 @@ export function InteractiveInvoiceBuilder() {
             <FileText className="w-5 h-5" />
           </div>
           <div>
-            <h3 className="font-extrabold text-text text-sm sm:text-base">Générateur Factur-X en direct</h3>
+            <h3 className="font-extrabold text-text text-sm sm:text-base">Générateur de Factures PDF en direct</h3>
             <p className="text-xs text-muted">Ajoutez des prestations pour calculer le total instantanément</p>
           </div>
         </div>
@@ -115,7 +115,7 @@ export function InteractiveInvoiceBuilder() {
       {/* Total Box */}
       <div className="p-4 rounded-card bg-primary/10 border border-primary/30 flex items-center justify-between">
         <div>
-          <p className="text-xs font-bold text-text">Total Net à Payer (Factur-X)</p>
+          <p className="text-xs font-bold text-text">Total Net à Payer</p>
           <p className="text-[11px] text-success font-semibold">Mention 293 B du CGI appliquée</p>
         </div>
         <p className="text-2xl font-black text-primary font-mono tracking-tight">

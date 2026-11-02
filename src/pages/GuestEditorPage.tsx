@@ -476,7 +476,7 @@ export function GuestEditorPageContent() {
                 <div className="flex items-center justify-between">
                   <div>
                     <h3 className="text-sm font-bold text-text">Dernières factures</h3>
-                    <p className="text-xs text-muted">Exemples de factures émises au format conforme Factur-X</p>
+                    <p className="text-xs text-muted">Exemples de factures PDF avec mentions légales</p>
                   </div>
                   <Button
                     variant="primary"
@@ -552,7 +552,7 @@ export function GuestEditorPageContent() {
                 <div>
                   <h1 className="text-2xl font-black text-text tracking-tight">Nouvelle Facture</h1>
                   <p className="text-xs sm:text-sm text-muted">
-                    Format certifié Factur-X avec mentions légales automatiques
+                    Format Factur-X avec mentions légales automatiques
                   </p>
                 </div>
 

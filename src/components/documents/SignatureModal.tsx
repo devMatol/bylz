@@ -142,7 +142,7 @@ export function SignatureModal({
           <div>
             <h3 className="text-lg font-black text-text flex items-center gap-2">
               <ShieldCheck className="w-5 h-5 text-primary" />
-              <span>Signature Électronique Certifiée</span>
+              <span>Signature Électronique</span>
             </h3>
             <p className="text-xs text-muted mt-0.5">
               {documentType === "quote" ? "Validation du devis N°" : "Validation de la facture N°"}{" "}
@@ -225,7 +225,7 @@ export function SignatureModal({
               className="mt-0.5 rounded text-primary focus:ring-primary"
             />
             <span className="text-xs text-muted leading-relaxed">
-              J'atteste être habilité(e) à engager le destinataire et j'appose ma signature électronique conformément au règlement eIDAS.
+              J'atteste être habilité(e) à engager le destinataire et j'appose ma signature électronique conformément aux exigences légales.
             </span>
           </label>
 
@@ -246,7 +246,7 @@ export function SignatureModal({
 
           <div className="flex items-center justify-center space-x-1.5 text-[11px] text-muted/70 pt-1">
             <Lock className="w-3 h-3 text-emerald-400" />
-            <span>Signature sécurisée horodatée certifiée Bylz</span>
+            <span>Signature sécurisée horodatée Bylz</span>
           </div>
         </form>
       </div>

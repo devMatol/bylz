@@ -79,7 +79,7 @@ export function LivreRecettesSection({
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      toast("Fichier CSV certifié téléchargé avec succès", "success");
+      toast("Fichier CSV téléchargé avec succès", "success");
     } catch {
       toast("Erreur lors de l'exportation CSV", "danger");
     }
@@ -302,7 +302,7 @@ export function LivreRecettesSection({
             </ol>
 
             <div className="p-3 rounded-xl bg-primary/10 border border-primary/20 text-xs text-primary font-medium flex items-center justify-between">
-              <span>Besoin d'un récapitulatif annuel certifié ?</span>
+              <span>Besoin d'un récapitulatif annuel complet ?</span>
               <Button type="button" variant="primary" size="sm" onClick={() => exportCsv("recettes")} className="text-[11px] font-bold">
                 <Download className="w-3.5 h-3.5 mr-1" /> PDF / CSV
               </Button>

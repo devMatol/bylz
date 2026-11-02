@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { TrendingUp, AlertTriangle, CheckCircle2, ShieldAlert } from "lucide-react";
 import { Card } from "../ui/Card";
+import { getVatThresholds } from "../../lib/fiscalRates";
 
 export function InteractiveFiscalSimulator() {
   const [ca, setCa] = useState<number>(28500);
@@ -10,7 +11,7 @@ export function InteractiveFiscalSimulator() {
   const urssafAmount = Math.round(ca * urssafRate);
   const netAmount = ca - urssafAmount;
 
-  const tvaThreshold = 39100;
+  const tvaThreshold = getVatThresholds("services").base;
   const tvaPercent = Math.min(Math.round((ca / tvaThreshold) * 100), 120);
 
   const presets = [12000, 28500, 38500, 45000];
@@ -131,7 +132,7 @@ export function InteractiveFiscalSimulator() {
             ) : (
               <CheckCircle2 className="w-4 h-4 text-success" />
             )}
-            Seuil de Franchise TVA (39 100 €)
+            Seuil de Franchise TVA ({tvaThreshold.toLocaleString("fr-FR")} €)
           </span>
           <span className="font-mono font-black">{tvaPercent}%</span>
         </div>

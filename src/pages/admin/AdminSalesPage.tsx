@@ -405,7 +405,7 @@ export function AdminSalesPage() {
               <div>
                 <h3 className="font-extrabold text-white text-sm flex items-center gap-2">
                   <FileText className="w-4 h-4 text-rose-400" />
-                  <span>Leads Inbound — Modèles de Facture Téléchargés</span>
+                  <span>Leads Inbound : Modèles de Facture Téléchargés</span>
                   <span className="px-2 py-0.5 rounded-full bg-rose-500/20 border border-rose-500/30 text-rose-300 text-xs font-mono font-bold">
                     {leads.length} prospect{leads.length > 1 ? "s" : ""}
                   </span>

@@ -363,7 +363,7 @@ export function InvoiceDetailPage() {
             <div className="p-3.5 rounded-card bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs space-y-2 shadow-xs">
               <div className="flex items-center gap-2 font-bold text-emerald-200">
                 <CheckCircle2 className="w-4 h-4 text-emerald-400 flex-shrink-0" />
-                <span>Facture Certifiée Reçue via FactPulse (PDP)</span>
+                <span>Facture Reçue via FactPulse (PDP)</span>
               </div>
               <p className="text-emerald-300/80 leading-relaxed text-[11px]">
                 Facture fournisseur B2B télétransmise et vérifiée automatiquement depuis le réseau électronique Factur-X / E-Invoicing.

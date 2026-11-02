@@ -26,8 +26,8 @@ export function HeroInvoiceMockup() {
           <ShieldCheck className="w-4 h-4" />
         </div>
         <div className="pr-1 text-xs">
-          <p className="font-bold text-text">E-Reporting DGFiP</p>
-          <p className="text-[10px] text-accent font-semibold">Statut : Transmis & Certifié</p>
+          <p className="font-bold text-text">Facture PDF</p>
+          <p className="text-[10px] text-accent font-semibold">Statut : Validée</p>
         </div>
       </div>
 
@@ -45,7 +45,7 @@ export function HeroInvoiceMockup() {
             </div>
           </div>
           <span className="inline-flex items-center px-3 py-1.5 rounded-pill text-xs font-bold bg-success/15 text-success border border-success/30 shadow-sm">
-            <CheckCircle2 className="w-4 h-4 mr-1.5" /> Factur-X Valide
+            <CheckCircle2 className="w-4 h-4 mr-1.5" /> Mentions incluses
           </span>
         </div>
 
@@ -90,7 +90,7 @@ export function HeroInvoiceMockup() {
         {/* Sub-badge */}
         <div className="mt-4 pt-3.5 border-t border-border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-[11px] text-muted font-semibold">
           <span className="flex items-center gap-1.5">
-            <ShieldCheck className="w-4 h-4 text-primary flex-shrink-0" /> Transmission DGFiP automatique
+            <ShieldCheck className="w-4 h-4 text-primary flex-shrink-0" /> Mentions légales obligatoires incluses
           </span>
           <span className="flex items-center gap-1.5 font-mono text-accent font-bold">
             <Zap className="w-4 h-4 flex-shrink-0 fill-accent/20" /> Paie en 24h via Stripe

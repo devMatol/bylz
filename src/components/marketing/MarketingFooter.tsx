@@ -11,11 +11,11 @@ export function MarketingFooter() {
           <div className="md:col-span-2 space-y-4">
             <Logo variant="gradient" height={32} />
             <p className="text-xs text-text/70 max-w-sm leading-relaxed font-normal">
-              La solution intégrée de facturation conforme Factur-X et de pilotage fiscal automatisé pour les indépendants, micro-entreprises et sociétés (SASU, EURL, SAS, SARL) en France.
+              La solution intégrée de facturation PDF et de pilotage fiscal automatisé pour les indépendants, micro-entreprises et sociétés (SASU, EURL, SAS, SARL) en France.
             </p>
             <div className="flex items-center space-x-2 text-xs text-emerald-600 dark:text-emerald-400 font-bold">
               <ShieldCheck className="w-4 h-4" />
-              <span>Conforme à la réforme DGFiP 2026 & E-Reporting</span>
+              <span>Facturation électronique en préparation</span>
             </div>
           </div>
 
@@ -26,6 +26,16 @@ export function MarketingFooter() {
               <li>
                 <Link to="/fonctionnalites" className="text-text/80 hover:text-brand-primary transition-colors">
                   Fonctionnalités
+                </Link>
+              </li>
+              <li>
+                <Link to="/conformite" className="text-text/80 hover:text-brand-primary transition-colors">
+                  Conformité & Sécurité
+                </Link>
+              </li>
+              <li>
+                <Link to="/facturation-electronique" className="text-text/80 hover:text-brand-primary transition-colors font-bold text-primary">
+                  Facturation électronique 2026
                 </Link>
               </li>
               <li>
@@ -47,17 +57,17 @@ export function MarketingFooter() {
             <ul className="space-y-2 text-xs font-medium">
               <li>
                 <Link to="/outils/simulateur-urssaf" className="text-text/80 hover:text-brand-primary transition-colors font-bold">
-                  🧮 Simulateur URSSAF 2026
+                  Simulateur URSSAF 2026
                 </Link>
               </li>
               <li>
                 <Link to="/outils/simulateur-seuil-tva" className="text-text/80 hover:text-brand-primary transition-colors font-bold">
-                  📊 Calculateur Seuil TVA
+                  Calculateur Seuil TVA
                 </Link>
               </li>
               <li>
                 <Link to="/outils/modele-facture-gratuit" className="text-text/80 hover:text-brand-primary transition-colors font-bold text-emerald-500">
-                  📄 Modèle Facture Gratuit
+                  Modèle Facture Gratuit
                 </Link>
               </li>
               <li>
@@ -109,7 +119,7 @@ export function MarketingFooter() {
 
         {/* Bottom bar */}
         <div className="pt-8 flex flex-col md:flex-row items-center justify-between text-xs text-text/70 space-y-4 md:space-y-0 font-medium">
-          <p>© {new Date().getFullYear()} Bylz Technologies. Tous droits réservés.</p>
+          <p>© {new Date().getFullYear()} ARABACI HOLDING. Tous droits réservés.</p>
           <p className="flex items-center space-x-1.5">
             <span>Conçu avec</span>
             <Heart className="w-3.5 h-3.5 text-rose-500 fill-rose-500" />

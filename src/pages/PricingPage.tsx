@@ -1,6 +1,6 @@
 import { useState, Fragment } from "react";
 import { Link } from "react-router-dom";
-import { Check, X, ArrowRight, Sparkles } from "lucide-react";
+import { Check, X, Sparkles } from "lucide-react";
 import { SEO } from "../components/seo/SEO";
 import { MarketingNavbar } from "../components/marketing/MarketingNavbar";
 import { MarketingFooter } from "../components/marketing/MarketingFooter";
@@ -8,6 +8,7 @@ import { TrustBadgesRow } from "../components/marketing/TrustBadgesRow";
 import { Button } from "../components/ui/Button";
 import { BillingToggle } from "../components/shared/BillingToggle";
 import { type BillingCycle } from "../lib/constants";
+import { PLANS_DATA, FEATURE_MATRIX, VAT_MENTION_FRANCHISE } from "../lib/plansData";
 
 export function PricingPage() {
   const [billingCycle, setBillingCycle] = useState<BillingCycle>("annual");
@@ -16,10 +17,10 @@ export function PricingPage() {
     {
       "@context": "https://schema.org",
       "@type": "SoftwareApplication",
-      name: "Bylz Starter",
+      name: `Bylz ${PLANS_DATA.starter.name}`,
       applicationCategory: "BusinessApplication",
       operatingSystem: "Web",
-      description: "Plan gratuit de démarrage pour créer des factures conformes Factur-X.",
+      description: PLANS_DATA.starter.description,
       offers: {
         "@type": "Offer",
         price: "0.00",
@@ -32,13 +33,16 @@ export function PricingPage() {
     {
       "@context": "https://schema.org",
       "@type": "SoftwareApplication",
-      name: "Bylz Solo",
+      name: `Bylz ${PLANS_DATA.solo.name}`,
       applicationCategory: "BusinessApplication",
       operatingSystem: "Web",
-      description: "Plan complet pour indépendant avec facturation illimitée et pilotage fiscal.",
+      description: PLANS_DATA.solo.description,
       offers: {
         "@type": "Offer",
-        price: billingCycle === "annual" ? "50.00" : "8.90",
+        price:
+          billingCycle === "annual"
+            ? PLANS_DATA.solo.pricing.annualTotal.toFixed(2)
+            : PLANS_DATA.solo.pricing.monthlyPrice.toFixed(2),
         priceCurrency: "EUR",
         availability: "https://schema.org/InStock",
         priceValidUntil: "2026-12-31",
@@ -48,52 +52,21 @@ export function PricingPage() {
     {
       "@context": "https://schema.org",
       "@type": "SoftwareApplication",
-      name: "Bylz Pro",
+      name: `Bylz ${PLANS_DATA.pro.name}`,
       applicationCategory: "BusinessApplication",
       operatingSystem: "Web",
-      description: "Plan premium avec paiement en ligne Stripe Connect et télétransmission DGFiP.",
+      description: PLANS_DATA.pro.description,
       offers: {
         "@type": "Offer",
-        price: billingCycle === "annual" ? "80.00" : "12.90",
+        price:
+          billingCycle === "annual"
+            ? PLANS_DATA.pro.pricing.annualTotal.toFixed(2)
+            : PLANS_DATA.pro.pricing.monthlyPrice.toFixed(2),
         priceCurrency: "EUR",
         availability: "https://schema.org/InStock",
         priceValidUntil: "2026-12-31",
         url: "https://bylz.fr/tarifs",
       },
-    },
-  ];
-
-  const featureMatrix = [
-    {
-      category: "Facturation & Devis",
-      features: [
-        { name: "Factures & Devis mensuels", starter: "3 / mois", solo: "Illimités", pro: "Illimités" },
-        { name: "Nombre de clients actifs", starter: "3 max", solo: "Illimités", pro: "Illimités" },
-        { name: "Format hybride Factur-X conforme 2026", starter: true, solo: true, pro: true },
-        { name: "Recherche SIRET automatique client", starter: true, solo: true, pro: true },
-        { name: "Personnalisation du logo & couleurs", starter: true, solo: true, pro: true },
-        { name: "Avoirs & Notes de crédit", starter: true, solo: true, pro: true },
-      ],
-    },
-    {
-      category: "Pilotage Fiscal & Cotisations",
-      features: [
-        { name: "Tableau de bord fiscal en temps réel", starter: false, solo: true, pro: true },
-        { name: "Alertes seuils de franchise de TVA (39k€)", starter: false, solo: true, pro: true },
-        { name: "Calcul des cotisations URSSAF", starter: false, solo: true, pro: true },
-        { name: "Simulation de l'Impôt sur le Revenu", starter: false, solo: true, pro: true },
-        { name: "Saisie du Chiffre d'Affaires antérieur", starter: true, solo: true, pro: true },
-      ],
-    },
-    {
-      category: "Automatisations & Télétransmission",
-      features: [
-        { name: "Relances automatiques par e-mail", starter: false, solo: true, pro: true },
-        { name: "Importation de factures PDF historiques", starter: true, solo: true, pro: true },
-        { name: "Paiement en ligne Stripe Connect", starter: false, solo: false, pro: true },
-        { name: "Télétransmission directe DGFiP (E-Reporting)", starter: false, solo: false, pro: true },
-        { name: "Support client prioritaire", starter: false, solo: false, pro: true },
-      ],
     },
   ];
 
@@ -122,6 +95,9 @@ export function PricingPage() {
             <p className="text-sm sm:text-base text-muted font-medium">
               Démarrez gratuitement avec le plan Starter ou libérez tout le potentiel de votre entreprise avec 14 jours d'essai offerts.
             </p>
+            <p className="text-xs text-muted font-normal">
+              {VAT_MENTION_FRANCHISE}
+            </p>
 
             {/* Monthly / Annual Toggle */}
             <div className="pt-4">
@@ -135,21 +111,24 @@ export function PricingPage() {
             <div className="bg-surface border border-border rounded-card p-6 sm:p-8 flex flex-col justify-between card-shadow">
               <div className="space-y-6">
                 <div>
-                  <h2 className="text-2xl font-bold text-text">Starter</h2>
-                  <p className="text-xs text-muted mt-1 font-medium">Pour lancer votre activité</p>
+                  <h2 className="text-2xl font-bold text-text">{PLANS_DATA.starter.name}</h2>
+                  <p className="text-xs text-muted mt-1 font-medium">{PLANS_DATA.starter.description}</p>
                   <div className="mt-4 flex items-baseline space-x-1">
                     <span className="text-4xl font-black text-text font-mono">0 €</span>
                     <span className="text-xs text-muted">/ mois</span>
                   </div>
+                  <p className="text-[11px] text-muted mt-1">{VAT_MENTION_FRANCHISE}</p>
                 </div>
                 <p className="text-xs text-muted leading-relaxed border-t border-border pt-4 font-normal">
-                  Le plan idéal pour tester Bylz et valider vos premières factures légales gratuitement.
+                  Idéal pour démarrer votre activité en toute conformité légale.
                 </p>
                 <ul className="space-y-2 text-xs text-muted font-medium pt-2">
-                  <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-emerald-500" /> Jusqu'à 3 factures / mois</li>
-                  <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-emerald-500" /> Jusqu'à 3 clients actifs</li>
-                  <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-emerald-500" /> Logo & couleurs personnalisés</li>
-                  <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-emerald-500" /> Format Factur-X conforme 2026</li>
+                  {PLANS_DATA.starter.features.map((feat, i) => (
+                    <li key={i} className="flex items-center gap-2">
+                      <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                      <span>{feat}</span>
+                    </li>
+                  ))}
                 </ul>
               </div>
               <div className="pt-8">
@@ -163,32 +142,47 @@ export function PricingPage() {
 
             {/* Solo */}
             <div className="relative bg-surface border-2 border-primary rounded-card p-6 sm:p-8 flex flex-col justify-between bylz-glow-primary scale-100 md:scale-105 z-10">
-              <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-gradient-to-r from-primary to-accent text-white text-[11px] font-black uppercase tracking-wider px-4 py-1 rounded-pill shadow-md">
-                ★ LE PLUS POPULAIRE
+              <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-gradient-to-r from-primary to-accent text-white text-[11px] font-black uppercase tracking-wider px-4 py-1 rounded-pill shadow-md flex items-center gap-1.5">
+                <span>★ LE PLUS POPULAIRE</span>
+                {billingCycle === "annual" && (
+                  <span className="bg-white/20 px-1.5 py-0.5 rounded text-[10px]">
+                    -{PLANS_DATA.solo.pricing.discountBadgePercent}%
+                  </span>
+                )}
               </div>
               <div className="space-y-6">
                 <div>
-                  <h2 className="text-2xl font-bold text-text">Solo</h2>
-                  <p className="text-xs text-muted mt-1 font-medium">Pour les indépendants actifs</p>
+                  <h2 className="text-2xl font-bold text-text">{PLANS_DATA.solo.name}</h2>
+                  <p className="text-xs text-muted mt-1 font-medium">{PLANS_DATA.solo.description}</p>
                   <div className="mt-4 flex items-baseline space-x-1">
                     <span className="text-4xl font-black text-primary font-mono">
-                      {billingCycle === "annual" ? "4,17 €" : "8,90 €"}
+                      {billingCycle === "annual"
+                        ? `${PLANS_DATA.solo.pricing.annualMonthlyEquivFormatted} €`
+                        : `${PLANS_DATA.solo.pricing.monthlyPrice.toFixed(2).replace(".", ",")} €`}
                     </span>
-                    <span className="text-xs text-muted">/ mois TTC</span>
+                    <span className="text-xs text-muted">/ mois</span>
                   </div>
                   {billingCycle === "annual" ? (
                     <p className="text-[11px] font-bold text-emerald-500 mt-1">
-                      soit 50 € / an TTC (proratisé au mois)
+                      soit {PLANS_DATA.solo.pricing.annualTotal} € / an ({VAT_MENTION_FRANCHISE})
                     </p>
                   ) : (
                     <p className="text-[11px] font-medium text-muted mt-1">
-                      facturé 8,90 € par mois sans engagement
+                      facturé {PLANS_DATA.solo.pricing.monthlyPrice.toFixed(2).replace(".", ",")} € par mois sans engagement
                     </p>
                   )}
                 </div>
                 <p className="text-xs text-muted leading-relaxed border-t border-border pt-4 font-normal">
-                  Factures illimitées, tableau de bord fiscal en temps réel et alertes automatiques de seuils de TVA.
+                  Pour les indépendants qui veulent un suivi fiscal rigoureux et du temps libéré.
                 </p>
+                <ul className="space-y-2 text-xs text-muted font-medium pt-2">
+                  {PLANS_DATA.solo.features.map((feat, i) => (
+                    <li key={i} className="flex items-center gap-2">
+                      <Check className="w-3.5 h-3.5 text-primary shrink-0" />
+                      <span>{feat}</span>
+                    </li>
+                  ))}
+                </ul>
               </div>
               <div className="pt-8">
                 <Link to={`/signup?plan=solo&billing=${billingCycle}`} className="block w-full">
@@ -203,27 +197,44 @@ export function PricingPage() {
             <div className="bg-surface border border-border rounded-card p-6 sm:p-8 flex flex-col justify-between card-shadow">
               <div className="space-y-6">
                 <div>
-                  <h2 className="text-2xl font-bold text-text">Pro</h2>
-                  <p className="text-xs text-muted mt-1 font-medium">Pour une automatisation complète</p>
+                  <div className="flex items-center justify-between">
+                    <h2 className="text-2xl font-bold text-text">{PLANS_DATA.pro.name}</h2>
+                    {billingCycle === "annual" && (
+                      <span className="bg-accent/10 text-accent font-bold text-[11px] px-2 py-0.5 rounded-full border border-accent/20">
+                        -{PLANS_DATA.pro.pricing.discountBadgePercent}%
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs text-muted mt-1 font-medium">{PLANS_DATA.pro.description}</p>
                   <div className="mt-4 flex items-baseline space-x-1">
                     <span className="text-4xl font-black text-text font-mono">
-                      {billingCycle === "annual" ? "6,67 €" : "12,90 €"}
+                      {billingCycle === "annual"
+                        ? `${PLANS_DATA.pro.pricing.annualMonthlyEquivFormatted} €`
+                        : `${PLANS_DATA.pro.pricing.monthlyPrice.toFixed(2).replace(".", ",")} €`}
                     </span>
-                    <span className="text-xs text-muted">/ mois TTC</span>
+                    <span className="text-xs text-muted">/ mois</span>
                   </div>
                   {billingCycle === "annual" ? (
                     <p className="text-[11px] font-bold text-emerald-500 mt-1">
-                      soit 80 € / an TTC (proratisé au mois)
+                      soit {PLANS_DATA.pro.pricing.annualTotal} € / an ({VAT_MENTION_FRANCHISE})
                     </p>
                   ) : (
                     <p className="text-[11px] font-medium text-muted mt-1">
-                      facturé 12,90 € par mois sans engagement
+                      facturé {PLANS_DATA.pro.pricing.monthlyPrice.toFixed(2).replace(".", ",")} € par mois sans engagement
                     </p>
                   )}
                 </div>
                 <p className="text-xs text-muted leading-relaxed border-t border-border pt-4 font-normal">
-                  Paiement en ligne par carte via Stripe Connect et télétransmission e-reporting en 1 clic.
+                  Pour encaisser par carte, gérer plusieurs structures et piloter par IA.
                 </p>
+                <ul className="space-y-2 text-xs text-muted font-medium pt-2">
+                  {PLANS_DATA.pro.features.map((feat, i) => (
+                    <li key={i} className="flex items-center gap-2">
+                      <Check className="w-3.5 h-3.5 text-accent shrink-0" />
+                      <span>{feat}</span>
+                    </li>
+                  ))}
+                </ul>
               </div>
               <div className="pt-8">
                 <Link to={`/signup?plan=pro&billing=${billingCycle}`} className="block w-full">
@@ -254,7 +265,7 @@ export function PricingPage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border">
-                    {featureMatrix.map((cat, idx) => (
+                    {FEATURE_MATRIX.map((cat, idx) => (
                       <Fragment key={idx}>
                         <tr className="bg-surface-hover/50">
                           <td colSpan={4} className="p-3.5 font-bold text-primary uppercase text-[11px] tracking-wider">

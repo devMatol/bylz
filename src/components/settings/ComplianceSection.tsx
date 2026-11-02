@@ -87,17 +87,17 @@ export function ComplianceSection() {
         </Button>
       </div>
 
-      {/* Standards & Official Anti-Fraud TVA Certification (Art 286 CGI & EN 16931) */}
+      {/* Standards & Démarche de conformité (Art. 286 CGI & Réforme 2026) */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="p-4 rounded-card bg-surface-hover/40 border border-emerald-500/30 space-y-2">
           <p className="text-xs font-bold text-muted uppercase">Loi Anti-Fraude TVA (Art. 286 CGI)</p>
           <div className="flex items-center space-x-2">
             <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-pill bg-emerald-500/20 text-emerald-400 font-bold text-xs border border-emerald-500/30">
-              <ShieldCheck className="w-3.5 h-3.5" /> Certifié Inviolable & Conforme
+              <ShieldCheck className="w-3.5 h-3.5" /> Numérotation séquentielle continue
             </span>
           </div>
           <p className="text-[11px] text-muted leading-relaxed">
-            Garantie légale d'Inviolabilité, Sécurisation, Conservation et Archivage des factures (Loi de Finances).
+            Numérotation continue sans rupture et données légales figées dès l'émission de la facture.
           </p>
         </div>
 
@@ -105,11 +105,11 @@ export function ComplianceSection() {
           <p className="text-xs font-bold text-muted uppercase">Norme Européenne EN 16931 / Factur-X</p>
           <div className="flex items-center space-x-2">
             <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-pill bg-primary/20 text-primary font-bold text-xs border border-primary/30">
-              <ShieldCheck className="w-3.5 h-3.5" /> Norme EN 16931-1 Active
+              <ShieldCheck className="w-3.5 h-3.5" /> Factur-X en préparation
             </span>
           </div>
           <p className="text-[11px] text-muted leading-relaxed">
-            Format hybride PDF + XML CII conforme à la norme européenne de facturation électronique.
+            Factures PDF avec mentions légales obligatoires. Format structuré hybride en cours de préparation pour la norme européenne.
           </p>
         </div>
 
@@ -127,7 +127,7 @@ export function ComplianceSection() {
             )}
           </div>
           <p className="text-[11px] text-muted leading-relaxed">
-            Télétransmission automatique des données de facturation B2B & B2C à la DGFiP.
+            Données de facturation exportables en CSV. Intégration Factur-X et télétransmission en préparation.
           </p>
         </div>
       </div>
