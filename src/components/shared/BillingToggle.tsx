@@ -13,14 +13,14 @@ export function BillingToggle({ billingCycle, onChange, className = "" }: Billin
         <button
           type="button"
           onClick={() => onChange("annual")}
-          className={`px-3.5 py-1.5 rounded-pill text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+          className={`px-3.5 py-1.5 rounded-pill text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 dark:focus-visible:outline-primary ${
             billingCycle === "annual"
               ? "bg-primary text-white shadow-sm bylz-glow-cta"
-              : "text-muted hover:text-text"
+              : "text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 dark:focus-visible:outline-primary"
           }`}
         >
           <span>Annuel</span>
-          <span className="bg-emerald-500 text-white text-[10px] px-1.5 py-0.5 rounded-pill font-black uppercase tracking-wider">
+          <span className="bg-emerald-800 text-white text-xs px-2 py-0.5 rounded-pill font-black uppercase tracking-wider">
             -53%
           </span>
         </button>

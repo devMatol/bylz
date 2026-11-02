@@ -53,6 +53,12 @@ export function MarketingNavbar({ theme }: MarketingNavbarProps) {
 
   return (
     <>
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[100] focus:px-4 focus:py-2.5 focus:bg-blue-700 focus:text-white focus:rounded-lg focus:shadow-xl focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-600 font-bold text-sm"
+      >
+        Aller au contenu principal
+      </a>
       <header
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-200 ${
           isLight
@@ -66,7 +72,7 @@ export function MarketingNavbar({ theme }: MarketingNavbarProps) {
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
           {/* Logo */}
-          <Logo variant="gradient" height={32} />
+          <Logo variant={isLight ? "navy" : "white"} height={32} />
 
           {/* Desktop Nav Links */}
           <nav className="hidden md:flex items-center space-x-5 lg:space-x-7">
@@ -122,7 +128,7 @@ export function MarketingNavbar({ theme }: MarketingNavbarProps) {
                   to="/essai"
                   className="px-4 py-2 text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-sm transition-colors"
                 >
-                  Essayer gratuitement
+                  Commencer gratuitement
                 </Link>
               </>
             ) : (
@@ -134,7 +140,7 @@ export function MarketingNavbar({ theme }: MarketingNavbarProps) {
                 </Link>
                 <Link to="/essai">
                   <Button variant="primary" size="sm">
-                    Essayer gratuitement
+                    Commencer gratuitement
                   </Button>
                 </Link>
               </>
@@ -145,7 +151,7 @@ export function MarketingNavbar({ theme }: MarketingNavbarProps) {
           <button
             type="button"
             onClick={() => setMobileMenuOpen((prev) => !prev)}
-            className={`md:hidden p-2.5 rounded-lg transition-colors focus:outline-none flex items-center justify-center min-w-[44px] min-h-[44px] ${
+            className={`md:hidden p-2.5 rounded-lg transition-colors focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 dark:focus-visible:outline-primary flex items-center justify-center min-w-[44px] min-h-[44px] ${
               isLight
                 ? "text-slate-800 hover:bg-slate-100"
                 : "text-text hover:bg-surface-hover"
@@ -170,12 +176,12 @@ export function MarketingNavbar({ theme }: MarketingNavbarProps) {
         >
           {/* Top Bar inside Overlay */}
           <div className={`flex items-center justify-between pb-6 border-b ${isLight ? "border-slate-200" : "border-border"}`}>
-            <Logo variant="gradient" height={32} onClick={() => setMobileMenuOpen(false)} />
+            <Logo variant={isLight ? "navy" : "white"} height={32} onClick={() => setMobileMenuOpen(false)} />
 
             <button
               type="button"
               onClick={() => setMobileMenuOpen(false)}
-              className={`p-2.5 rounded-lg transition-colors focus:outline-none flex items-center justify-center min-w-[44px] min-h-[44px] ${
+              className={`p-2.5 rounded-lg transition-colors focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 dark:focus-visible:outline-primary flex items-center justify-center min-w-[44px] min-h-[44px] ${
                 isLight ? "text-slate-800 hover:bg-slate-100" : "text-primary hover:bg-surface-hover"
               }`}
               aria-label="Fermer le menu"
@@ -193,7 +199,7 @@ export function MarketingNavbar({ theme }: MarketingNavbarProps) {
                   key={link.path}
                   to={link.path}
                   onClick={() => setMobileMenuOpen(false)}
-                  className={`text-lg font-bold py-3 px-4 border-b transition-colors flex items-center justify-between rounded-lg ${
+                  className={`text-lg font-bold min-h-[44px] py-3 px-4 border-b transition-colors flex items-center justify-between rounded-lg ${
                     isLight
                       ? isActive
                         ? "text-blue-700 bg-blue-50 border-blue-100"
@@ -233,7 +239,7 @@ export function MarketingNavbar({ theme }: MarketingNavbarProps) {
                   onClick={() => setMobileMenuOpen(false)}
                   className="w-full text-center py-3.5 rounded-lg bg-blue-600 hover:bg-blue-700 font-bold text-white text-sm shadow-sm transition-colors"
                 >
-                  Essayer gratuitement
+                  Commencer gratuitement
                 </Link>
               </>
             ) : (
@@ -245,7 +251,7 @@ export function MarketingNavbar({ theme }: MarketingNavbarProps) {
                 </Link>
                 <Link to="/essai" onClick={() => setMobileMenuOpen(false)}>
                   <Button variant="primary" className="w-full justify-center text-sm py-3.5 font-bold">
-                    Essayer gratuitement
+                    Commencer gratuitement
                   </Button>
                 </Link>
               </>

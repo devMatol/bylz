@@ -1,50 +1,116 @@
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { ShieldCheck, Heart } from "lucide-react";
 import { Logo } from "../shared/Logo";
 
-export function MarketingFooter() {
+interface MarketingFooterProps {
+  theme?: "light" | "dark";
+}
+
+export function MarketingFooter({ theme }: MarketingFooterProps = {}) {
+  const location = useLocation();
+  const isLight = theme === "light" || (theme === undefined && location.pathname === "/");
+
   return (
-    <footer className="bg-surface/95 border-t border-border pt-16 pb-12 text-sm text-muted">
+    <footer
+      className={`pt-16 pb-12 text-sm transition-colors border-t ${
+        isLight
+          ? "bg-slate-50 border-slate-200 text-slate-700"
+          : "bg-[#0a0e1a] border-slate-800 text-slate-300"
+      }`}
+    >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-10 pb-12 border-b border-border">
+        <div
+          className={`grid grid-cols-1 md:grid-cols-5 gap-10 pb-12 border-b ${
+            isLight ? "border-slate-200" : "border-slate-800"
+          }`}
+        >
           {/* Col 1: Brand */}
           <div className="md:col-span-2 space-y-4">
-            <Logo variant="gradient" height={32} />
-            <p className="text-xs text-text/70 max-w-sm leading-relaxed font-normal">
+            <Logo variant={isLight ? "navy" : "white"} height={32} />
+            <p
+              className={`text-xs max-w-sm leading-relaxed font-normal ${
+                isLight ? "text-slate-700" : "text-slate-400"
+              }`}
+            >
               La solution intégrée de facturation PDF et de pilotage fiscal automatisé pour les indépendants, micro-entreprises et sociétés (SASU, EURL, SAS, SARL) en France.
             </p>
-            <div className="flex items-center space-x-2 text-xs text-emerald-600 dark:text-emerald-400 font-bold">
-              <ShieldCheck className="w-4 h-4" />
+            <div
+              className={`flex items-center space-x-2 text-xs font-bold ${
+                isLight ? "text-emerald-800" : "text-emerald-400"
+              }`}
+            >
+              <ShieldCheck className={`w-4 h-4 ${isLight ? "text-emerald-700" : "text-emerald-400"}`} />
               <span>Facturation électronique en préparation</span>
             </div>
           </div>
 
           {/* Col 2: Produit */}
           <div className="space-y-3">
-            <h4 className="font-bold text-text text-xs uppercase tracking-wider">Produit</h4>
-            <ul className="space-y-2 text-xs font-medium">
+            <h4
+              className={`font-bold text-xs uppercase tracking-wider ${
+                isLight ? "text-slate-900" : "text-white"
+              }`}
+            >
+              Produit
+            </h4>
+            <ul className="space-y-1 sm:space-y-2 text-xs font-medium">
               <li>
-                <Link to="/fonctionnalites" className="text-text/80 hover:text-brand-primary transition-colors">
+                <Link
+                  to="/fonctionnalites"
+                  className={`inline-flex items-center min-h-[44px] sm:min-h-0 py-2 sm:py-0.5 rounded transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 ${
+                    isLight
+                      ? "text-slate-700 hover:text-blue-700 focus-visible:outline-blue-600"
+                      : "text-slate-300 hover:text-white focus-visible:outline-primary"
+                  }`}
+                >
                   Fonctionnalités
                 </Link>
               </li>
               <li>
-                <Link to="/conformite" className="text-text/80 hover:text-brand-primary transition-colors">
+                <Link
+                  to="/conformite"
+                  className={`inline-flex items-center min-h-[44px] sm:min-h-0 py-2 sm:py-0.5 rounded transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 ${
+                    isLight
+                      ? "text-slate-700 hover:text-blue-700 focus-visible:outline-blue-600"
+                      : "text-slate-300 hover:text-white focus-visible:outline-primary"
+                  }`}
+                >
                   Conformité & Sécurité
                 </Link>
               </li>
               <li>
-                <Link to="/facturation-electronique" className="text-text/80 hover:text-brand-primary transition-colors font-bold text-primary">
+                <Link
+                  to="/facturation-electronique"
+                  className={`inline-flex items-center min-h-[44px] sm:min-h-0 py-2 sm:py-0.5 rounded transition-colors font-bold focus-visible:outline-2 focus-visible:outline-offset-2 ${
+                    isLight
+                      ? "text-blue-700 hover:text-blue-900 focus-visible:outline-blue-600"
+                      : "text-primary hover:text-white focus-visible:outline-primary"
+                  }`}
+                >
                   Facturation électronique 2026
                 </Link>
               </li>
               <li>
-                <Link to="/tarifs" className="text-text/80 hover:text-brand-primary transition-colors">
+                <Link
+                  to="/tarifs"
+                  className={`inline-flex items-center min-h-[44px] sm:min-h-0 py-2 sm:py-0.5 rounded transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 ${
+                    isLight
+                      ? "text-slate-700 hover:text-blue-700 focus-visible:outline-blue-600"
+                      : "text-slate-300 hover:text-white focus-visible:outline-primary"
+                  }`}
+                >
                   Tarifs & Abonnements
                 </Link>
               </li>
               <li>
-                <Link to="/essai" className="text-brand-primary font-bold hover:underline">
+                <Link
+                  to="/essai"
+                  className={`inline-flex items-center min-h-[44px] sm:min-h-0 py-2 sm:py-0.5 rounded font-bold hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 ${
+                    isLight
+                      ? "text-blue-700 focus-visible:outline-blue-600"
+                      : "text-primary focus-visible:outline-primary"
+                  }`}
+                >
                   Mode Essai Gratuit (Sans CB)
                 </Link>
               </li>
@@ -53,25 +119,59 @@ export function MarketingFooter() {
 
           {/* Col 3: Outils Fiscaux & Blog */}
           <div className="space-y-3">
-            <h4 className="font-bold text-text text-xs uppercase tracking-wider">Outils & Guides Gratuits</h4>
-            <ul className="space-y-2 text-xs font-medium">
+            <h4
+              className={`font-bold text-xs uppercase tracking-wider ${
+                isLight ? "text-slate-900" : "text-white"
+              }`}
+            >
+              Outils & Guides Gratuits
+            </h4>
+            <ul className="space-y-1 sm:space-y-2 text-xs font-medium">
               <li>
-                <Link to="/outils/simulateur-urssaf" className="text-text/80 hover:text-brand-primary transition-colors font-bold">
+                <Link
+                  to="/outils/simulateur-urssaf"
+                  className={`inline-flex items-center min-h-[44px] sm:min-h-0 py-2 sm:py-0.5 rounded transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 ${
+                    isLight
+                      ? "text-slate-700 hover:text-blue-700 focus-visible:outline-blue-600 font-bold"
+                      : "text-slate-300 hover:text-white focus-visible:outline-primary font-bold"
+                  }`}
+                >
                   Simulateur URSSAF 2026
                 </Link>
               </li>
               <li>
-                <Link to="/outils/simulateur-seuil-tva" className="text-text/80 hover:text-brand-primary transition-colors font-bold">
+                <Link
+                  to="/outils/simulateur-seuil-tva"
+                  className={`inline-flex items-center min-h-[44px] sm:min-h-0 py-2 sm:py-0.5 rounded transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 ${
+                    isLight
+                      ? "text-slate-700 hover:text-blue-700 focus-visible:outline-blue-600 font-bold"
+                      : "text-slate-300 hover:text-white focus-visible:outline-primary font-bold"
+                  }`}
+                >
                   Calculateur Seuil TVA
                 </Link>
               </li>
               <li>
-                <Link to="/outils/modele-facture-gratuit" className="text-text/80 hover:text-brand-primary transition-colors font-bold text-emerald-500">
+                <Link
+                  to="/outils/modele-facture-gratuit"
+                  className={`inline-flex items-center min-h-[44px] sm:min-h-0 py-2 sm:py-0.5 rounded transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 font-bold ${
+                    isLight
+                      ? "text-emerald-800 hover:text-emerald-950 focus-visible:outline-blue-600"
+                      : "text-emerald-400 hover:text-white focus-visible:outline-primary"
+                  }`}
+                >
                   Modèle Facture Gratuit
                 </Link>
               </li>
               <li>
-                <Link to="/blog" className="text-text/80 hover:text-brand-primary transition-colors">
+                <Link
+                  to="/blog"
+                  className={`inline-flex items-center min-h-[44px] sm:min-h-0 py-2 sm:py-0.5 rounded transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 ${
+                    isLight
+                      ? "text-slate-700 hover:text-blue-700 focus-visible:outline-blue-600"
+                      : "text-slate-300 hover:text-white focus-visible:outline-primary"
+                  }`}
+                >
                   Blog & Guides Fiscaux
                 </Link>
               </li>
@@ -80,25 +180,59 @@ export function MarketingFooter() {
 
           {/* Col 4: Légales & Contact */}
           <div className="space-y-3">
-            <h4 className="font-bold text-text text-xs uppercase tracking-wider">Informations</h4>
-            <ul className="space-y-2 text-xs font-medium">
+            <h4
+              className={`font-bold text-xs uppercase tracking-wider ${
+                isLight ? "text-slate-900" : "text-white"
+              }`}
+            >
+              Informations
+            </h4>
+            <ul className="space-y-1 sm:space-y-2 text-xs font-medium">
               <li>
-                <Link to="/contact" className="text-text/80 hover:text-brand-primary transition-colors">
+                <Link
+                  to="/contact"
+                  className={`inline-flex items-center min-h-[44px] sm:min-h-0 py-2 sm:py-0.5 rounded transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 ${
+                    isLight
+                      ? "text-slate-700 hover:text-blue-700 focus-visible:outline-blue-600"
+                      : "text-slate-300 hover:text-white focus-visible:outline-primary"
+                  }`}
+                >
                   Contact & Support
                 </Link>
               </li>
               <li>
-                <Link to="/mentions-legales" className="text-text/80 hover:text-brand-primary transition-colors">
+                <Link
+                  to="/mentions-legales"
+                  className={`inline-flex items-center min-h-[44px] sm:min-h-0 py-2 sm:py-0.5 rounded transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 ${
+                    isLight
+                      ? "text-slate-700 hover:text-blue-700 focus-visible:outline-blue-600"
+                      : "text-slate-300 hover:text-white focus-visible:outline-primary"
+                  }`}
+                >
                   Mentions Légales
                 </Link>
               </li>
               <li>
-                <Link to="/cgu" className="text-text/80 hover:text-brand-primary transition-colors">
+                <Link
+                  to="/cgu"
+                  className={`inline-flex items-center min-h-[44px] sm:min-h-0 py-2 sm:py-0.5 rounded transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 ${
+                    isLight
+                      ? "text-slate-700 hover:text-blue-700 focus-visible:outline-blue-600"
+                      : "text-slate-300 hover:text-white focus-visible:outline-primary"
+                  }`}
+                >
                   CGU & Conditions
                 </Link>
               </li>
               <li>
-                <Link to="/confidentialite" className="text-text/80 hover:text-brand-primary transition-colors">
+                <Link
+                  to="/confidentialite"
+                  className={`inline-flex items-center min-h-[44px] sm:min-h-0 py-2 sm:py-0.5 rounded transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 ${
+                    isLight
+                      ? "text-slate-700 hover:text-blue-700 focus-visible:outline-blue-600"
+                      : "text-slate-300 hover:text-white focus-visible:outline-primary"
+                  }`}
+                >
                   Politique de Confidentialité
                 </Link>
               </li>
@@ -107,7 +241,11 @@ export function MarketingFooter() {
                   href="https://lumisweb.fr"
                   target="_blank"
                   rel="noopener"
-                  className="text-text/80 hover:text-brand-primary transition-colors flex items-center gap-1 font-semibold"
+                  className={`inline-flex items-center min-h-[44px] sm:min-h-0 py-2 sm:py-0.5 rounded transition-colors font-semibold focus-visible:outline-2 focus-visible:outline-offset-2 ${
+                    isLight
+                      ? "text-slate-700 hover:text-blue-700 focus-visible:outline-blue-600"
+                      : "text-slate-300 hover:text-white focus-visible:outline-primary"
+                  }`}
                   title="Lumisweb - Agence Web & Création sur mesure"
                 >
                   <span>Création par Lumisweb</span>
@@ -118,7 +256,11 @@ export function MarketingFooter() {
         </div>
 
         {/* Bottom bar */}
-        <div className="pt-8 flex flex-col md:flex-row items-center justify-between text-xs text-text/70 space-y-4 md:space-y-0 font-medium">
+        <div
+          className={`pt-8 flex flex-col md:flex-row items-center justify-between text-xs space-y-4 md:space-y-0 font-medium ${
+            isLight ? "text-slate-600" : "text-slate-400"
+          }`}
+        >
           <p>© {new Date().getFullYear()} ARABACI HOLDING. Tous droits réservés.</p>
           <p className="flex items-center space-x-1.5">
             <span>Conçu avec</span>
@@ -128,7 +270,11 @@ export function MarketingFooter() {
               href="https://lumisweb.fr"
               target="_blank"
               rel="noopener"
-              className="font-extrabold text-text hover:text-brand-primary transition-colors underline decoration-brand-primary/50 underline-offset-4"
+              className={`font-extrabold underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 rounded transition-colors ${
+                isLight
+                  ? "text-slate-900 hover:text-blue-700 decoration-slate-400 focus-visible:outline-blue-600"
+                  : "text-white hover:text-primary decoration-primary/50 focus-visible:outline-primary"
+              }`}
               title="Lumisweb - Création de site web & applications"
             >
               Lumisweb.fr

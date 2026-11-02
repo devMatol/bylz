@@ -1,6 +1,7 @@
 import { useState, Fragment } from "react";
 import { Link } from "react-router-dom";
-import { Check, X, Sparkles } from "lucide-react";
+import { Check, X, Sparkles, ChevronDown } from "lucide-react";
+import { FAQS_LIST } from "../data/faqData";
 import { SEO } from "../components/seo/SEO";
 import { MarketingNavbar } from "../components/marketing/MarketingNavbar";
 import { MarketingFooter } from "../components/marketing/MarketingFooter";
@@ -12,6 +13,7 @@ import { PLANS_DATA, FEATURE_MATRIX, VAT_MENTION_FRANCHISE } from "../lib/plansD
 
 export function PricingPage() {
   const [billingCycle, setBillingCycle] = useState<BillingCycle>("annual");
+  const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(0);
 
   const productSchemas = [
     {
@@ -81,7 +83,7 @@ export function PricingPage() {
 
       <MarketingNavbar />
 
-      <main className="pt-28 sm:pt-32 pb-20 sm:pb-24">
+      <main id="main-content" className="pt-28 sm:pt-32 pb-20 sm:pb-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10 sm:space-y-12">
           {/* Header */}
           <div className="text-center max-w-3xl mx-auto space-y-4">
@@ -90,7 +92,7 @@ export function PricingPage() {
               <span>Transparence Totale • Sans engagement</span>
             </div>
             <h1 className="text-3xl sm:text-5xl font-black tracking-tight text-text">
-              Des tarifs simples pour booster votre activité
+              Des tarifs simples, sans engagement
             </h1>
             <p className="text-sm sm:text-base text-muted font-medium">
               Démarrez gratuitement avec le plan Starter ou libérez tout le potentiel de votre entreprise avec 14 jours d'essai offerts.
@@ -134,7 +136,7 @@ export function PricingPage() {
               <div className="pt-8">
                 <Link to="/signup?plan=starter" className="block w-full">
                   <Button variant="outline" className="w-full justify-center">
-                    Créer un compte gratuit
+                    Commencer gratuitement
                   </Button>
                 </Link>
               </div>
@@ -142,13 +144,8 @@ export function PricingPage() {
 
             {/* Solo */}
             <div className="relative bg-surface border-2 border-primary rounded-card p-6 sm:p-8 flex flex-col justify-between bylz-glow-primary scale-100 md:scale-105 z-10">
-              <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-gradient-to-r from-primary to-accent text-white text-[11px] font-black uppercase tracking-wider px-4 py-1 rounded-pill shadow-md flex items-center gap-1.5">
-                <span>★ LE PLUS POPULAIRE</span>
-                {billingCycle === "annual" && (
-                  <span className="bg-white/20 px-1.5 py-0.5 rounded text-[10px]">
-                    -{PLANS_DATA.solo.pricing.discountBadgePercent}%
-                  </span>
-                )}
+              <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-gradient-to-r from-primary to-accent text-white text-xs font-black uppercase tracking-wider px-4 py-1.5 rounded-pill shadow-md flex items-center gap-1.5">
+                <span>★ {PLANS_DATA.solo.badge}</span>
               </div>
               <div className="space-y-6">
                 <div>
@@ -157,14 +154,14 @@ export function PricingPage() {
                   <div className="mt-4 flex items-baseline space-x-1">
                     <span className="text-4xl font-black text-primary font-mono">
                       {billingCycle === "annual"
-                        ? `${PLANS_DATA.solo.pricing.annualMonthlyEquivFormatted} €`
+                        ? `${PLANS_DATA.solo.pricing.annualTotal} €`
                         : `${PLANS_DATA.solo.pricing.monthlyPrice.toFixed(2).replace(".", ",")} €`}
                     </span>
-                    <span className="text-xs text-muted">/ mois</span>
+                    <span className="text-xs text-muted">/ {billingCycle === "annual" ? "an" : "mois"}</span>
                   </div>
                   {billingCycle === "annual" ? (
-                    <p className="text-[11px] font-bold text-emerald-500 mt-1">
-                      soit {PLANS_DATA.solo.pricing.annualTotal} € / an ({VAT_MENTION_FRANCHISE})
+                    <p className="text-xs font-bold text-emerald-400 mt-1.5">
+                      (soit {PLANS_DATA.solo.pricing.annualMonthlyEquivFormatted} / mois • {PLANS_DATA.solo.pricing.annualSavingsFormatted} d'économie)
                     </p>
                   ) : (
                     <p className="text-[11px] font-medium text-muted mt-1">
@@ -187,7 +184,7 @@ export function PricingPage() {
               <div className="pt-8">
                 <Link to={`/signup?plan=solo&billing=${billingCycle}`} className="block w-full">
                   <Button variant="primary" className="w-full justify-center bylz-glow-cta py-3.5">
-                    Essayer Solo (14 jours offerts)
+                    Commencer gratuitement
                   </Button>
                 </Link>
               </div>
@@ -209,14 +206,14 @@ export function PricingPage() {
                   <div className="mt-4 flex items-baseline space-x-1">
                     <span className="text-4xl font-black text-text font-mono">
                       {billingCycle === "annual"
-                        ? `${PLANS_DATA.pro.pricing.annualMonthlyEquivFormatted} €`
+                        ? `${PLANS_DATA.pro.pricing.annualTotal} €`
                         : `${PLANS_DATA.pro.pricing.monthlyPrice.toFixed(2).replace(".", ",")} €`}
                     </span>
-                    <span className="text-xs text-muted">/ mois</span>
+                    <span className="text-xs text-muted">/ {billingCycle === "annual" ? "an" : "mois"}</span>
                   </div>
                   {billingCycle === "annual" ? (
-                    <p className="text-[11px] font-bold text-emerald-500 mt-1">
-                      soit {PLANS_DATA.pro.pricing.annualTotal} € / an ({VAT_MENTION_FRANCHISE})
+                    <p className="text-xs font-bold text-emerald-400 mt-1.5">
+                      (soit {PLANS_DATA.pro.pricing.annualMonthlyEquivFormatted} / mois • {PLANS_DATA.pro.pricing.annualSavingsFormatted} d'économie)
                     </p>
                   ) : (
                     <p className="text-[11px] font-medium text-muted mt-1">
@@ -239,7 +236,7 @@ export function PricingPage() {
               <div className="pt-8">
                 <Link to={`/signup?plan=pro&billing=${billingCycle}`} className="block w-full">
                   <Button variant="outline" className="w-full justify-center">
-                    Essayer Pro (14 jours offerts)
+                    Commencer gratuitement
                   </Button>
                 </Link>
               </div>
@@ -260,7 +257,7 @@ export function PricingPage() {
                     <tr className="bg-surface-hover border-b border-border text-text font-bold">
                       <th className="p-4">Fonctionnalité</th>
                       <th className="p-4 text-center w-28">Starter</th>
-                      <th className="p-4 text-center w-28 text-primary font-extrabold">Solo</th>
+                      <th className="p-4 text-center w-28 text-white font-extrabold">Solo</th>
                       <th className="p-4 text-center w-28 text-accent font-extrabold">Pro</th>
                     </tr>
                   </thead>
@@ -307,6 +304,77 @@ export function PricingPage() {
           </div>
 
           <TrustBadgesRow />
+          {/* FAQ Section */}
+          <section id="faq" className="pt-12 sm:pt-16 space-y-8">
+            <div className="text-center max-w-3xl mx-auto space-y-3">
+              <h2 className="text-2xl sm:text-4xl font-extrabold text-text tracking-tight">
+                Foire aux Questions
+              </h2>
+              <p className="text-sm sm:text-base text-muted font-medium">
+                Tout ce que vous devez savoir pour démarrer sereinement sur Bylz.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-left">
+              {FAQS_LIST.map((faq, idx) => {
+                const isOpen = openFaqIndex === idx;
+                return (
+                  <div
+                    key={idx}
+                    className="rounded-card bg-surface border border-border overflow-hidden shadow-sm transition-colors"
+                  >
+                    <button
+                      type="button"
+                      id={`pricing-faq-question-${idx}`}
+                      aria-expanded={isOpen}
+                      aria-controls={`pricing-faq-answer-${idx}`}
+                      onClick={() => setOpenFaqIndex(isOpen ? null : idx)}
+                      className="w-full text-left px-5 py-4 flex items-center justify-between gap-3 font-bold text-text text-sm hover:text-primary transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary rounded-lg"
+                    >
+                      <span>{faq.q}</span>
+                      <ChevronDown
+                        className={`w-4 h-4 text-muted flex-shrink-0 transition-transform duration-200 ${
+                          isOpen ? "rotate-180 text-primary" : ""
+                        }`}
+                      />
+                    </button>
+                    {isOpen && (
+                      <div
+                        id={`pricing-faq-answer-${idx}`}
+                        role="region"
+                        aria-labelledby={`pricing-faq-question-${idx}`}
+                        className="px-5 pb-5 pt-1 text-xs text-muted leading-relaxed font-normal border-t border-border"
+                      >
+                        {faq.a}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+
+          {/* Final CTA Banner */}
+          <section className="pt-8 sm:pt-12">
+            <div className="rounded-3xl bg-[#011142] text-white p-10 sm:p-14 text-center space-y-6 shadow-xl border border-blue-900/40">
+              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight">
+                Prêt à simplifier votre activité ?
+              </h2>
+              <p className="text-slate-200 text-base sm:text-lg max-w-xl mx-auto leading-relaxed font-medium">
+                Créez votre première facture PDF en 2 minutes. Sans carte bancaire et sans engagement.
+              </p>
+              <div className="pt-2">
+                <Link to="/essai">
+                  <Button variant="primary" size="lg" className="py-3.5 px-8 text-sm font-bold bylz-glow-cta">
+                    Créer mon compte gratuitement
+                  </Button>
+                </Link>
+              </div>
+              <p className="text-xs text-slate-400 font-medium">
+                Gratuit pour toujours jusqu'à 3 factures/mois
+              </p>
+            </div>
+          </section>
         </div>
       </main>
 

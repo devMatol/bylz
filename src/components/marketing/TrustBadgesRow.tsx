@@ -17,7 +17,7 @@ export function TrustBadgesRow() {
         className="flex items-center space-x-2 bg-surface/90 border border-primary/30 px-3.5 py-2 rounded-lg hover:border-primary/60 transition-colors"
       >
         <FileCheck className="w-4 h-4 text-primary flex-shrink-0" />
-        <span className="text-text">Facturation électronique en préparation</span>
+        <span className="text-text">Mentions légales obligatoires conformes</span>
       </Link>
 
       <div className="flex items-center space-x-2 bg-surface/90 border border-border px-3.5 py-2 rounded-lg">
