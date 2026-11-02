@@ -176,13 +176,52 @@ for (const [route, expectedMeta] of Object.entries(SEO_METADATA)) {
   }
 }
 
-// 6. Verify dist/_redirects no longer exists
+// 6. Verify dist/_redirects and dist/_headers exist and are properly configured
 const distRedirectsPath = path.join(distDir, '_redirects');
-if (fs.existsSync(distRedirectsPath)) {
-  console.error('❌ dist/_redirects existe encore ! Il doit être supprimé pour laisser netlify.toml gérer les redirections.');
+if (!fs.existsSync(distRedirectsPath)) {
+  console.error('❌ dist/_redirects introuvable ! Il est requis pour assurer les redirections sur Netlify et Bolt.');
   errorCount++;
 } else {
-  console.log('✅ dist/_redirects est absent : netlify.toml est bien l\'unique source des redirections.');
+  const redirectsContent = fs.readFileSync(distRedirectsPath, 'utf8');
+  const expectedRedirectRules = [
+    '/cgv /cgu 301!',
+    '/blog/franchise-en-base-de-tva-2026 /blog/franchise-tva-2026-seuils-et-regles 301!',
+    '/blog/calcul-cotisations-urssaf-bnc-2026 /blog/calcul-cotisations-urssaf-bnc-bic 301!',
+    '/blog/obligation-de-facturation-electronique-pour-les-auto-entrepreneurs-echeances-impacts-et-mise-en-conformite /blog/obligation-facturation-electronique-auto-entrepreneur 301!',
+    '/blog/logiciel-de-facturation-pour-micro-entrepreneur-conforme-securiser-sa-croissance-et-anticiper-2026 /blog/logiciel-facturation-micro-entrepreneur-2026 301!',
+    '/blog/comment-automatiser-sa-declaration-urssaf-d-auto-entrepreneur-pour-optimiser-sa-tresorerie /blog/automatiser-declaration-urssaf-auto-entrepreneur 301!',
+    '/blog/modele-devis-facture-artisan-batiment-gratuit-les-risques-caches-pour-votre-tresorerie /blog/devis-facture-artisan-batiment-risques 301!',
+    '/* /app.html 200'
+  ];
+  let redirectsOk = true;
+  for (const rule of expectedRedirectRules) {
+    if (!redirectsContent.includes(rule)) {
+      console.error(`❌ Règle manquante dans dist/_redirects : "${rule}"`);
+      errorCount++;
+      redirectsOk = false;
+    }
+  }
+  if (redirectsOk) {
+    console.log('✅ dist/_redirects est présent et contient toutes les règles attendues (301 et fallback SPA).');
+  }
+}
+
+const distHeadersPath = path.join(distDir, '_headers');
+if (!fs.existsSync(distHeadersPath)) {
+  console.error('❌ dist/_headers introuvable ! Il est requis pour configurer les en-têtes HTTP de sécurité.');
+  errorCount++;
+} else {
+  const headersContent = fs.readFileSync(distHeadersPath, 'utf8');
+  if (
+    headersContent.includes('/v/*') &&
+    headersContent.includes('X-Robots-Tag: noindex, nofollow') &&
+    headersContent.includes('Referrer-Policy: no-referrer')
+  ) {
+    console.log('✅ dist/_headers est présent et contient les en-têtes de sécurité requis (/v/*).');
+  } else {
+    console.error('❌ dist/_headers ne contient pas les en-têtes attendus pour /v/*');
+    errorCount++;
+  }
 }
 
 // 7. Verify sitemap.xml in dist

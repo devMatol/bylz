@@ -36,27 +36,28 @@ function report(name, success, message = '') {
   }
 }
 
-// 1. Lire les redirections depuis netlify.toml
-function parseNetlifyRedirects() {
-  const tomlPath = path.resolve('netlify.toml');
-  if (!fs.existsSync(tomlPath)) {
-    throw new Error('netlify.toml introuvable');
+// 1. Lire les redirections depuis _redirects (dist/ ou public/)
+function parseRedirectsFile() {
+  const redirectsPath = fs.existsSync(path.resolve('dist/_redirects'))
+    ? path.resolve('dist/_redirects')
+    : path.resolve('public/_redirects');
+  if (!fs.existsSync(redirectsPath)) {
+    throw new Error('_redirects introuvable dans dist/ ou public/');
   }
-  const content = fs.readFileSync(tomlPath, 'utf8');
-  const redirectBlocks = content.split('[[redirects]]').slice(1);
+  const content = fs.readFileSync(redirectsPath, 'utf8');
+  const lines = content.split('\n');
   const redirects = [];
 
-  for (const block of redirectBlocks) {
-    const fromMatch = block.match(/from\s*=\s*["']([^"']+)["']/);
-    const toMatch = block.match(/to\s*=\s*["']([^"']+)["']/);
-    const statusMatch = block.match(/status\s*=\s*(\d+)/);
-
-    if (fromMatch && toMatch && statusMatch) {
-      redirects.push({
-        from: fromMatch[1],
-        to: toMatch[1],
-        status: parseInt(statusMatch[1], 10),
-      });
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith('#')) continue;
+    const parts = trimmed.split(/\s+/);
+    if (parts.length >= 2) {
+      const from = parts[0];
+      const to = parts[1];
+      const statusRaw = parts[2] || '301';
+      const status = parseInt(statusRaw.replace('!', ''), 10);
+      redirects.push({ from, to, status });
     }
   }
   return redirects;
@@ -129,7 +130,7 @@ async function main() {
   }
 
   // --- ÉTAPE 3 : Redirections d'anciens slugs (netlify.toml) ---
-  const allRedirects = parseNetlifyRedirects();
+  const allRedirects = parseRedirectsFile();
   const blogRedirects = allRedirects.filter(r => r.from.startsWith('/blog/') && r.status === 301);
 
   for (const r of blogRedirects) {

@@ -1,0 +1,13 @@
+# Redirections 301 des anciens slugs de blog
+/blog/franchise-en-base-de-tva-2026 /blog/franchise-tva-2026-seuils-et-regles 301!
+/blog/calcul-cotisations-urssaf-bnc-2026 /blog/calcul-cotisations-urssaf-bnc-bic 301!
+/blog/obligation-de-facturation-electronique-pour-les-auto-entrepreneurs-echeances-impacts-et-mise-en-conformite /blog/obligation-facturation-electronique-auto-entrepreneur 301!
+/blog/logiciel-de-facturation-pour-micro-entrepreneur-conforme-securiser-sa-croissance-et-anticiper-2026 /blog/logiciel-facturation-micro-entrepreneur-2026 301!
+/blog/comment-automatiser-sa-declaration-urssaf-d-auto-entrepreneur-pour-optimiser-sa-tresorerie /blog/automatiser-declaration-urssaf-auto-entrepreneur 301!
+/blog/modele-devis-facture-artisan-batiment-gratuit-les-risques-caches-pour-votre-tresorerie /blog/devis-facture-artisan-batiment-risques 301!
+
+# Redirection légale CGV -> CGU
+/cgv /cgu 301!
+
+# Fallback SPA pour les routes dynamiques et privées sans fichier pré-rendu
+/* /app.html 200

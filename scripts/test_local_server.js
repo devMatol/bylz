@@ -5,43 +5,58 @@ import path from 'node:path';
 const PORT = 4173;
 const DIST_DIR = path.resolve('dist');
 
-// Parser basique de netlify.toml pour simuler le comportement Netlify en local
-function parseNetlifyConfig() {
-  const tomlPath = path.resolve('netlify.toml');
+// Parser pour _redirects et _headers (priorité dist/, sinon public/)
+function parseRedirectsAndHeaders() {
   const redirects = [];
   const headers = [];
 
-  if (fs.existsSync(tomlPath)) {
-    const content = fs.readFileSync(tomlPath, 'utf8');
+  const redirectsPath = fs.existsSync(path.join(DIST_DIR, '_redirects'))
+    ? path.join(DIST_DIR, '_redirects')
+    : path.resolve('public/_redirects');
 
-    // Redirects
-    const redirectBlocks = content.split('[[redirects]]').slice(1);
-    for (const b of redirectBlocks) {
-      const from = b.match(/from\s*=\s*["']([^"']+)["']/)?.[1];
-      const to = b.match(/to\s*=\s*["']([^"']+)["']/)?.[1];
-      const status = parseInt(b.match(/status\s*=\s*(\d+)/)?.[1] || '301', 10);
-      const force = b.includes('force = true');
-      if (from && to) redirects.push({ from, to, status, force });
-    }
-
-    // Headers
-    const headerBlocks = content.split('[[headers]]').slice(1);
-    for (const b of headerBlocks) {
-      const forPattern = b.match(/for\s*=\s*["']([^"']+)["']/)?.[1];
-      const values = {};
-      const lines = b.split('\n');
-      for (const line of lines) {
-        const m = line.match(/^\s*([A-Za-z0-9-]+)\s*=\s*["']([^"']+)["']/);
-        if (m) values[m[1]] = m[2];
+  if (fs.existsSync(redirectsPath)) {
+    const lines = fs.readFileSync(redirectsPath, 'utf8').split('\n');
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (!trimmed || trimmed.startsWith('#')) continue;
+      const parts = trimmed.split(/\s+/);
+      if (parts.length >= 2) {
+        const from = parts[0];
+        const to = parts[1];
+        const statusRaw = parts[2] || '301';
+        const status = parseInt(statusRaw.replace('!', ''), 10);
+        const force = statusRaw.includes('!');
+        redirects.push({ from, to, status, force });
       }
-      if (forPattern) headers.push({ forPattern, values });
+    }
+  }
+
+  const headersPath = fs.existsSync(path.join(DIST_DIR, '_headers'))
+    ? path.join(DIST_DIR, '_headers')
+    : path.resolve('public/_headers');
+
+  if (fs.existsSync(headersPath)) {
+    const lines = fs.readFileSync(headersPath, 'utf8').split('\n');
+    let currentBlock = null;
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (!trimmed || trimmed.startsWith('#')) continue;
+      if (!line.startsWith(' ') && !line.startsWith('\t')) {
+        currentBlock = { forPattern: trimmed, values: {} };
+        headers.push(currentBlock);
+      } else if (currentBlock && trimmed.includes(':')) {
+        const idx = trimmed.indexOf(':');
+        const k = trimmed.slice(0, idx).trim();
+        const v = trimmed.slice(idx + 1).trim();
+        currentBlock.values[k] = v;
+      }
     }
   }
 
   return { redirects, headers };
 }
 
-const { redirects, headers } = parseNetlifyConfig();
+const { redirects, headers } = parseRedirectsAndHeaders();
 
 const mimeTypes = {
   '.html': 'text/html; charset=utf-8',

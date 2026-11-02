@@ -59,8 +59,8 @@ function prerenderPlugin(): Plugin {
     closeBundle() {
       console.log('⚡ [vite-prerender] Running generate_sitemap and prerender...');
       try {
-        execSync('node scripts/generate_sitemap.js', { stdio: 'inherit' });
-        execSync('node scripts/prerender.js', { stdio: 'inherit' });
+        execSync('npx tsx scripts/generate_sitemap.js', { stdio: 'inherit' });
+        execSync('npx tsx scripts/prerender.js', { stdio: 'inherit' });
         console.log('✅ [vite-prerender] Prerendering finished successfully!');
       } catch (err) {
         console.error('❌ [vite-prerender] Prerender failed:', err);
