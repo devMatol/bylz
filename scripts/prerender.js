@@ -813,10 +813,10 @@ function renderPageBody(routePath, meta, articles) {
 async function prerender() {
   console.log("Starting SEO prerendering...");
 
-  const isNetlifyProduction = (process.env.NETLIFY === 'true' || process.env.NETLIFY === true) && process.env.CONTEXT === 'production';
+  const isStrictSupabase = process.env.STRICT_SUPABASE_BUILD === 'true' || process.env.STRICT_SUPABASE_BUILD === true;
 
-  if (isNetlifyProduction && (!anonKey || !supabaseUrl || supabaseUrl.includes("placeholder"))) {
-    console.error("FATAL [prerender]: En contexte de production Netlify (CONTEXT=production), les variables VITE_SUPABASE_URL et VITE_SUPABASE_ANON_KEY sont obligatoires.");
+  if (isStrictSupabase && (!anonKey || !supabaseUrl || supabaseUrl.includes("placeholder"))) {
+    console.error("FATAL [prerender]: STRICT_SUPABASE_BUILD=true mais les variables VITE_SUPABASE_URL et VITE_SUPABASE_ANON_KEY sont obligatoires.");
     process.exit(1);
   }
 
@@ -870,18 +870,20 @@ async function prerender() {
             coverImageUrl: p.cover_image_url || DEFAULT_OG_IMAGE,
           });
         }
-      } else if (isNetlifyProduction) {
-        console.error("FATAL [prerender]: En contexte de production Netlify (CONTEXT=production), la table blog_posts n'a renvoyé aucun article publié.");
+      } else if (isStrictSupabase) {
+        console.error("FATAL [prerender]: STRICT_SUPABASE_BUILD=true mais la table blog_posts n'a renvoyé aucun article publié.");
         process.exit(1);
+      } else {
+        console.warn("AVERTISSEMENT [prerender]: La table blog_posts n'a renvoyé aucun article publié. Repli sur src/data/blogArticles.ts.");
       }
     } catch (err) {
-      if (isNetlifyProduction) {
-        console.error("FATAL [prerender]: En contexte de production Netlify (CONTEXT=production), la requête sur la table blog_posts a échoué :", err.message);
+      if (isStrictSupabase) {
+        console.error("FATAL [prerender]: STRICT_SUPABASE_BUILD=true mais la requête sur la table blog_posts a échoué :", err.message);
         process.exit(1);
       }
       console.warn("AVERTISSEMENT [prerender]: Impossible de joindre la base distante (" + (process.env.CONTEXT || 'local') + "). Repli sur src/data/blogArticles.ts :", err.message);
     }
-  } else if (!isNetlifyProduction) {
+  } else {
     console.warn("AVERTISSEMENT [prerender]: Supabase non configuré en contexte (" + (process.env.CONTEXT || 'local') + "). Repli sur la copie statique src/data/blogArticles.ts.");
   }
 
