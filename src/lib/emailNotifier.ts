@@ -209,7 +209,7 @@ export async function sendTrialEndingEmail(options: {
 Votre période d'essai gratuit Bylz PRO arrive à échéance dans ${options.daysLeft} jour${options.daysLeft > 1 ? "s" : ""}.
 
 Pour continuer à bénéficier des fonctionnalités avancées :
-• Format officiel Factur-X 2026
+• Mentions légales obligatoires incluses
 • Paiement en ligne par carte bancaire Stripe
 • Signature électronique sécurisée des devis
 

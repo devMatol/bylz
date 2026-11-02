@@ -131,7 +131,7 @@ export function ModeleFacturePage() {
                 <ul className="space-y-3 text-xs text-muted">
                   <li className="flex items-start gap-2">
                     <span className="text-danger font-bold">✕</span>
-                    <span><strong>Numérotation manuelle à risque :</strong> Un doublon ou un trou dans vos numéros de facture est passible de sanctions prévues par l'administration fiscale (consultables sur impots.gouv.fr).</span>
+                    <span><strong>Numérotation manuelle à risque :</strong> Un doublon ou un trou dans vos numéros de facture expose à des pénalités fiscales (consultables sur impots.gouv.fr).</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="text-danger font-bold">✕</span>

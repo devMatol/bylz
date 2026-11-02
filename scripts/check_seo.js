@@ -273,6 +273,11 @@ const forbiddenPatterns = [
   /Bylz[^.<]{0,80}garantit/i,
   /garantit[^.<]{0,60}(conformit[ée]|int[ée]grit[ée]|authenticit[ée])/i,
   /\d+(?:,\d+)?\s*€\s*par\s*(?:facture|mention)/i,
+  /Factur-X[^<.]{0,25}natif/i,
+  /natif[^<.]{0,60}(mis à jour|norme|r[ée]glementaire)/i,
+  /Format officiel Factur-X/i,
+  /\b(de|des|une|la)\s+sanctions?\s+(administratives|pr[ée]vues)/i,
+  /(amendes?|p[ée]nalit[ée]s?)\s+de\s+sanctions/i,
 ];
 
 function stripCodeComments(sourceText) {
