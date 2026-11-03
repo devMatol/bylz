@@ -358,9 +358,14 @@ export function LandingPage() {
                         <span className="w-2.5 h-2.5 rounded-full bg-blue-700 inline-block" />
                         <span className="font-bold text-xs text-slate-900">Bylz : Pilotage Micro-Entreprise</span>
                       </div>
-                      <span className="text-[11px] font-bold text-emerald-800 bg-emerald-100/70 px-2 py-0.5 rounded border border-emerald-300">
-                        Exercice 2026
-                      </span>
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-[10px] font-bold text-slate-600 bg-slate-200/80 px-2 py-0.5 rounded border border-slate-300 uppercase tracking-wider">
+                          Exemple
+                        </span>
+                        <span className="text-[11px] font-bold text-emerald-800 bg-emerald-100/70 px-2 py-0.5 rounded border border-emerald-300">
+                          Exercice 2026
+                        </span>
+                      </div>
                     </div>
 
                     <div className="p-5 space-y-4 text-left">
@@ -757,9 +762,7 @@ export function LandingPage() {
                         <Check className="w-3.5 h-3.5 stroke-[3]" />
                       </div>
                       <span>
-                        <Link to="/conformite" className="text-slate-900 font-semibold hover:text-blue-700 underline decoration-slate-300">
-                          Facturation instantanée :
-                        </Link>{" "}
+                        <strong className="text-slate-900 font-semibold">Facturation instantanée :</strong>{" "}
                         génération de factures PDF avec mentions légales obligatoires ; format structuré en préparation pour 2026.
                       </span>
                     </li>
@@ -768,9 +771,7 @@ export function LandingPage() {
                         <Check className="w-3.5 h-3.5 stroke-[3]" />
                       </div>
                       <span>
-                        <Link to="/outils/simulateur-urssaf" className="text-slate-900 font-semibold hover:text-blue-700 underline decoration-slate-300">
-                          Cotisations calculées en direct :
-                        </Link>{" "}
+                        <strong className="text-slate-900 font-semibold">Cotisations calculées en direct :</strong>{" "}
                         barèmes officiels 2026 appliqués automatiquement selon votre catégorie d'activité.
                       </span>
                     </li>
@@ -779,9 +780,7 @@ export function LandingPage() {
                         <Check className="w-3.5 h-3.5 stroke-[3]" />
                       </div>
                       <span>
-                        <Link to="/outils/simulateur-seuil-tva" className="text-slate-900 font-semibold hover:text-blue-700 underline decoration-slate-300">
-                          Jauge de TVA & alertes proactives :
-                        </Link>{" "}
+                        <strong className="text-slate-900 font-semibold">Jauge de TVA & alertes proactives :</strong>{" "}
                         suivi en temps réel de votre progression vers le seuil de franchise (Art. 293 B).
                       </span>
                     </li>
@@ -790,9 +789,7 @@ export function LandingPage() {
                         <Check className="w-3.5 h-3.5 stroke-[3]" />
                       </div>
                       <span>
-                        <Link to="/conformite" className="text-slate-900 font-semibold hover:text-blue-700 underline decoration-slate-300">
-                          Livre des recettes :
-                        </Link>{" "}
+                        <strong className="text-slate-900 font-semibold">Livre des recettes :</strong>{" "}
                         tient votre livre chronologique des recettes, exportable en CSV.
                       </span>
                     </li>
