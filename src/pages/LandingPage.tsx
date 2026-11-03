@@ -349,7 +349,7 @@ export function LandingPage() {
               </div>
 
               {/* Right Column : Aperçu Visuel Produit Fidèle */}
-              <div className="lg:col-span-5">
+              <div className="hidden lg:block lg:col-span-5">
                 <div className="relative mx-auto max-w-lg lg:max-w-none">
                   {/* Carte Principale : Dashboard d'activité */}
                   <div className="rounded-2xl bg-white border border-slate-200 shadow-xl overflow-hidden">
