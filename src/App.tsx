@@ -11,6 +11,7 @@ import { OnboardingRoute } from "./components/auth/OnboardingRoute";
 import { AdminRoute } from "./components/auth/AdminRoute";
 import { AdminLayout } from "./components/admin/AdminLayout";
 import { ImpersonationBanner } from "./components/admin/ImpersonationBanner";
+import { MarketingLayout } from "./components/layout/MarketingLayout";
 
 // Auth & Onboarding pages
 import { LoginPage } from "./pages/LoginPage";
@@ -131,7 +132,7 @@ const KitchenSinkPage = lazy(() =>
   import("./pages/KitchenSinkPage").then((m) => ({ default: m.KitchenSinkPage }))
 );
 
-const MarketingSuspense = ({ children }: { children: React.ReactNode }) => (
+const AdminSuspense = ({ children }: { children: React.ReactNode }) => (
   <Suspense
     fallback={
       <div className="min-h-screen bg-bg flex items-center justify-center p-10 text-muted text-sm font-medium">
@@ -141,6 +142,12 @@ const MarketingSuspense = ({ children }: { children: React.ReactNode }) => (
   >
     {children}
   </Suspense>
+);
+
+const MarketingSuspense = ({ children }: { children: React.ReactNode }) => (
+  <MarketingLayout>
+    {children}
+  </MarketingLayout>
 );
 
 function App() {
@@ -298,9 +305,9 @@ function App() {
                 <Route path="/admin" element={<AdminRoute />}>
                   <Route
                     element={
-                      <MarketingSuspense>
+                      <AdminSuspense>
                         <AdminLayout />
-                      </MarketingSuspense>
+                      </AdminSuspense>
                     }
                   >
                     <Route index element={<Navigate to="/admin/reach" replace />} />

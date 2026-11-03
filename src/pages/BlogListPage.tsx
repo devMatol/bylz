@@ -1,70 +1,70 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { BookOpen, Calendar, Clock, ArrowRight, Search, Tag } from "lucide-react";
+import {
+  BookOpen,
+  Calendar,
+  Clock,
+  ArrowRight,
+  Search,
+  User,
+} from "lucide-react";
 import { SEO } from "../components/seo/SEO";
+import { SEO_METADATA } from "../lib/seoMeta";
 import { MarketingNavbar } from "../components/marketing/MarketingNavbar";
 import { MarketingFooter } from "../components/marketing/MarketingFooter";
-import { BLOG_ARTICLES } from "../data/blogArticles";
-import { fetchPublishedBlogPosts } from "../lib/api";
-import type { BlogPost } from "../types/database";
-import { getCanonicalBlogSlug } from "../lib/blogSlugs";
+import { BLOG_ARTICLES, type BlogArticle } from "../data/blogArticles";
+import { supabase } from "../lib/supabase";
 
 export function BlogListPage() {
-  const [articles, setArticles] = useState<
-    { slug: string; title: string; excerpt: string; date: string; readTime: string; category: string }[]
-  >([]);
-  const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState("");
+  const [articles, setArticles] = useState<BlogArticle[]>(BLOG_ARTICLES);
+  const [loading, setLoading] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string>("Tous");
+  const [search, setSearch] = useState("");
 
   useEffect(() => {
-    async function load() {
-      setLoading(true);
+    async function fetchRemoteArticles() {
       try {
-        const dbPosts = await fetchPublishedBlogPosts();
-        const mapped = dbPosts.map((p) => ({
-          slug: getCanonicalBlogSlug(p.slug),
-          title: p.title,
-          excerpt: p.excerpt,
-          date: p.published_at
-            ? new Intl.DateTimeFormat("fr-FR", { day: "numeric", month: "long", year: "numeric" }).format(new Date(p.published_at))
-            : "Récemment",
-          readTime: p.read_time,
-          category: p.category,
-        }));
+        setLoading(true);
+        const { data, error } = await supabase
+          .from("blog_posts")
+          .select("slug, title, excerpt, category, read_time, cover_image_url, author, published_at")
+          .eq("status", "published")
+          .order("published_at", { ascending: false });
 
-        const staticList = BLOG_ARTICLES.map((a) => ({
-          slug: a.slug,
-          title: a.title,
-          excerpt: a.excerpt,
-          date: a.date,
-          readTime: a.readTime,
-          category: a.category,
-        }));
-
-        const combined = [...mapped];
-        for (const s of staticList) {
-          if (!combined.some((item) => item.slug === s.slug)) {
-            combined.push(s);
-          }
+        if (error) {
+          console.warn("Supabase blog fetch fallback:", error.message);
+          return;
         }
-        setArticles(combined);
-      } catch {
-        setArticles(
-          BLOG_ARTICLES.map((a) => ({
-            slug: a.slug,
-            title: a.title,
-            excerpt: a.excerpt,
-            date: a.date,
-            readTime: a.readTime,
-            category: a.category,
-          }))
-        );
+
+        if (data && data.length > 0) {
+          const remoteArticles: BlogArticle[] = data.map((p: any) => ({
+            slug: p.slug,
+            title: p.title,
+            excerpt: p.excerpt || "",
+            content: "",
+            category: p.category || "Fiscalité & Gestion",
+            date: new Date(p.published_at).toLocaleDateString("fr-FR", {
+              day: "numeric",
+              month: "short",
+              year: "numeric",
+            }),
+            readTime: p.read_time || "4 min",
+            author: p.author || "Équipe Bylz",
+            coverImageUrl: p.cover_image_url || "https://bylz.fr/og-image.png",
+          }));
+
+          const remoteSlugs = new Set(remoteArticles.map((a) => a.slug));
+          const fallbackRemaining = BLOG_ARTICLES.filter((a) => !remoteSlugs.has(a.slug));
+          setArticles([...remoteArticles, ...fallbackRemaining]);
+        }
+      } catch (err) {
+        console.warn("Erreur chargement blog distant:", err);
       } finally {
         setLoading(false);
       }
     }
-    void load();
+
+    fetchRemoteArticles();
   }, []);
 
   const categories = ["Tous", ...Array.from(new Set(articles.map((a) => a.category)))];
@@ -79,27 +79,27 @@ export function BlogListPage() {
   });
 
   return (
-    <div className="min-h-screen bg-bg text-text selection:bg-brand-primary/20 selection:text-brand-primary">
+    <div className="min-h-screen bg-white text-slate-900 selection:bg-blue-600/20 selection:text-blue-900 font-sans">
       <SEO
-        title="Blog Bylz : Guides Fiscaux, Factur-X & Gestion pour Auto-Entrepreneurs"
-        description="Retrouvez nos articles, conseils et guides pratiques pour gérer votre micro-entreprise : réforme Factur-X 2026, plafonds de TVA, signature de devis et cotisations URSSAF."
-        canonical="/blog"
+        title={SEO_METADATA["/blog"].title}
+        description={SEO_METADATA["/blog"].description}
+        canonical={SEO_METADATA["/blog"].canonical}
       />
 
-      <MarketingNavbar />
+      <MarketingNavbar theme="light" />
 
-      <main className="pt-32 pb-24">
+      <main id="main-content" className="pt-32 pb-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
           {/* Header */}
           <div className="text-center max-w-3xl mx-auto space-y-4">
-            <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-brand-primary/10 text-brand-primary text-xs font-bold">
-              <BookOpen className="w-3.5 h-3.5" />
+            <div className="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-blue-50 text-blue-800 text-xs font-bold border border-blue-200">
+              <BookOpen className="w-3.5 h-3.5 text-blue-700" />
               <span>Guides & Actualités Fiscales</span>
             </div>
-            <h1 className="text-4xl sm:text-5xl font-black tracking-tight text-text">
+            <h1 className="text-4xl sm:text-5xl font-black tracking-tight text-slate-900">
               Le blog des indépendants et micro-entrepreneurs
             </h1>
-            <p className="text-base text-muted">
+            <p className="text-base text-slate-600 font-medium">
               Des conseils clairs, sans jargon, pour maîtriser votre facturation et votre fiscalité en toute sérénité.
             </p>
           </div>
@@ -107,13 +107,13 @@ export function BlogListPage() {
           {/* Search & Category Filter Bar */}
           <div className="max-w-4xl mx-auto space-y-4">
             <div className="relative">
-              <Search className="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-muted" />
+              <Search className="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
               <input
                 type="text"
                 placeholder="Rechercher un guide (ex: Factur-X, TVA, Devis...)..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-full pl-12 pr-4 py-3 bg-surface border border-border rounded-xl text-sm text-text focus:outline-none focus:border-brand-primary transition-colors"
+                className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-300 rounded-xl text-sm text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:border-blue-600 transition-colors"
               />
             </div>
 
@@ -123,10 +123,10 @@ export function BlogListPage() {
                   key={cat}
                   type="button"
                   onClick={() => setSelectedCategory(cat)}
-                  className={`px-3.5 py-2 min-h-[44px] inline-flex items-center justify-center rounded-full text-xs font-bold transition-all ${
+                  className={`px-4 py-2 min-h-[44px] inline-flex items-center justify-center rounded-full text-xs font-bold transition-all ${
                     selectedCategory === cat
-                      ? "bg-brand-primary text-white shadow-sm"
-                      : "bg-surface border border-border text-muted hover:text-text hover:border-brand-primary/50"
+                      ? "bg-blue-600 text-white shadow-sm"
+                      : "bg-white border border-slate-200 text-slate-700 hover:text-slate-900 hover:border-slate-300"
                   }`}
                 >
                   {cat}
@@ -137,64 +137,62 @@ export function BlogListPage() {
 
           {/* Articles Grid */}
           {loading ? (
-            <div className="p-16 text-center text-muted">
-              <div className="w-8 h-8 border-4 border-brand-primary border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+            <div className="p-16 text-center text-slate-500 font-medium">
+              <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
               Chargement des articles...
             </div>
           ) : filteredArticles.length === 0 ? (
-            <div className="p-12 text-center space-y-2 border border-border rounded-2xl bg-surface">
-              <p className="text-base font-bold text-text">Aucun article trouvé</p>
-              <p className="text-xs text-muted">Essayez avec d'autres mots-clés ou réinitialisez la recherche.</p>
+            <div className="p-12 text-center space-y-2 border border-slate-200 rounded-2xl bg-slate-50">
+              <p className="text-base font-bold text-slate-900">Aucun article trouvé</p>
+              <p className="text-xs text-slate-500">Essayez avec d'autres mots-clés ou réinitialisez la recherche.</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              {filteredArticles.map((article, idx) => {
-                const colors = [
-                  "from-brand-primary/20 via-brand-primary/10 to-surface",
-                  "from-accent/20 via-accent/10 to-surface",
-                  "from-emerald-500/20 via-emerald-500/10 to-surface",
-                ];
-                const bgGradient = colors[idx % colors.length];
-
+              {filteredArticles.map((article) => {
                 return (
                   <article
                     key={article.slug}
-                    className="bg-surface border border-border rounded-2xl overflow-hidden flex flex-col justify-between shadow-sm hover:shadow-xl hover:border-brand-primary/50 transition-all duration-300 group"
+                    className="group bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm hover:border-blue-300 hover:shadow-md transition-all flex flex-col justify-between"
                   >
-                    {/* Visual Card Top Header */}
-                    <div className={`p-6 bg-gradient-to-br ${bgGradient} border-b border-border/50 relative overflow-hidden`}>
-                      <div className="flex items-center justify-between text-xs mb-3">
-                        <span className="px-2.5 py-1 rounded-full bg-brand-primary/15 text-brand-primary font-black text-[11px] uppercase tracking-wider">
+                    <div className="p-6 sm:p-7 space-y-4">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="px-3 py-1 rounded-full text-[11px] font-bold bg-blue-50 text-blue-800 border border-blue-200">
                           {article.category}
                         </span>
-                        <span className="flex items-center gap-1 font-bold text-muted text-[11px]">
-                          <Clock className="w-3.5 h-3.5 text-brand-primary" /> {article.readTime}
+                        <span className="flex items-center text-xs text-slate-500 font-medium">
+                          <Clock className="w-3.5 h-3.5 mr-1 text-slate-400" />
+                          {article.readTime}
                         </span>
                       </div>
-                      <h2 className="text-lg font-black text-text group-hover:text-brand-primary transition-colors leading-snug line-clamp-2">
+
+                      <h2 className="text-lg font-bold text-slate-900 group-hover:text-blue-700 transition-colors leading-snug line-clamp-2">
                         <Link to={`/blog/${article.slug}`}>{article.title}</Link>
                       </h2>
+
+                      <p className="text-xs text-slate-600 leading-relaxed font-normal line-clamp-3">
+                        {article.excerpt}
+                      </p>
                     </div>
 
-                    {/* Body Excerpt */}
-                    <div className="p-6 space-y-4 flex-1 flex flex-col justify-between">
-                      <p className="text-xs text-muted leading-relaxed line-clamp-3">{article.excerpt}</p>
-
-                      <div className="pt-4 border-t border-border/50 flex items-center justify-between text-xs">
-                        <div className="flex items-center gap-2">
-                          <div className="w-6 h-6 rounded-full bg-brand-primary/20 text-brand-primary font-black text-[10px] flex items-center justify-center">
-                            BZ
-                          </div>
-                          <span className="text-[11px] font-bold text-muted">Équipe Bylz • {article.date}</span>
-                        </div>
-
-                        <Link
-                          to={`/blog/${article.slug}`}
-                          className="inline-flex items-center min-h-[44px] px-2 font-extrabold text-brand-primary hover:text-brand-primary-hover group-hover:translate-x-0.5 transition-transform"
-                        >
-                          Lire <ArrowRight className="w-3.5 h-3.5 ml-1" />
-                        </Link>
+                    <div className="px-6 pb-6 pt-3 border-t border-slate-100 flex items-center justify-between">
+                      <div className="flex items-center text-xs text-slate-500 font-medium space-x-3">
+                        <span className="flex items-center">
+                          <User className="w-3.5 h-3.5 mr-1 text-slate-400" />
+                          {article.author}
+                        </span>
+                        <span className="flex items-center">
+                          <Calendar className="w-3.5 h-3.5 mr-1 text-slate-400" />
+                          {article.date}
+                        </span>
                       </div>
+
+                      <Link
+                        to={`/blog/${article.slug}`}
+                        className="inline-flex items-center min-h-[44px] px-2 font-bold text-xs text-blue-700 hover:text-blue-900 group-hover:translate-x-0.5 transition-transform"
+                      >
+                        <span>Lire</span>
+                        <ArrowRight className="w-3.5 h-3.5 ml-1" />
+                      </Link>
                     </div>
                   </article>
                 );
@@ -204,7 +202,7 @@ export function BlogListPage() {
         </div>
       </main>
 
-      <MarketingFooter />
+      <MarketingFooter theme="light" />
     </div>
   );
 }

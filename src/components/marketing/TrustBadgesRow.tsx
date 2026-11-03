@@ -3,31 +3,31 @@ import { ShieldCheck, Lock, Zap, FileCheck } from "lucide-react";
 
 export function TrustBadgesRow() {
   return (
-    <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-4 md:gap-6 text-xs font-semibold text-muted py-4">
+    <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-4 md:gap-6 text-xs font-semibold text-slate-700 py-4">
       <Link
         to="/conformite"
-        className="flex items-center space-x-2 bg-surface/90 border border-emerald-500/30 px-3.5 py-2 rounded-lg hover:border-emerald-500/60 transition-colors"
+        className="inline-flex items-center space-x-2 bg-white border border-emerald-300 px-3.5 py-2.5 min-h-[44px] rounded-lg hover:border-emerald-500 shadow-xs transition-colors"
       >
-        <ShieldCheck className="w-4 h-4 text-emerald-400 flex-shrink-0" />
-        <span className="text-text">Livre chronologique des recettes, exportable en CSV</span>
+        <ShieldCheck className="w-4 h-4 text-emerald-700 flex-shrink-0" />
+        <span className="text-slate-800">Livre chronologique des recettes, exportable en CSV</span>
       </Link>
 
       <Link
         to="/conformite"
-        className="flex items-center space-x-2 bg-surface/90 border border-primary/30 px-3.5 py-2 rounded-lg hover:border-primary/60 transition-colors"
+        className="inline-flex items-center space-x-2 bg-white border border-blue-200 px-3.5 py-2.5 min-h-[44px] rounded-lg hover:border-blue-400 shadow-xs transition-colors"
       >
-        <FileCheck className="w-4 h-4 text-primary flex-shrink-0" />
-        <span className="text-text">Mentions légales obligatoires conformes</span>
+        <FileCheck className="w-4 h-4 text-blue-700 flex-shrink-0" />
+        <span className="text-slate-800">Mentions légales obligatoires conformes</span>
       </Link>
 
-      <div className="flex items-center space-x-2 bg-surface/90 border border-border px-3.5 py-2 rounded-lg">
-        <Lock className="w-4 h-4 text-sky-400 flex-shrink-0" />
-        <span className="text-text">Base de données hébergée en Europe</span>
+      <div className="inline-flex items-center space-x-2 bg-white border border-slate-200 px-3.5 py-2.5 min-h-[44px] rounded-lg shadow-xs">
+        <Lock className="w-4 h-4 text-slate-700 flex-shrink-0" />
+        <span className="text-slate-800">Base de données hébergée en Europe</span>
       </div>
 
-      <div className="flex items-center space-x-2 bg-surface/90 border border-border px-3.5 py-2 rounded-lg">
-        <Zap className="w-4 h-4 text-warning flex-shrink-0" />
-        <span className="text-text">Opérationnel en 2 minutes</span>
+      <div className="inline-flex items-center space-x-2 bg-white border border-slate-200 px-3.5 py-2.5 min-h-[44px] rounded-lg shadow-xs">
+        <Zap className="w-4 h-4 text-amber-600 flex-shrink-0" />
+        <span className="text-slate-800">Opérationnel en 2 minutes</span>
       </div>
     </div>
   );

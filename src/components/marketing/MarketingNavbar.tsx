@@ -15,7 +15,7 @@ export function MarketingNavbar({ theme }: MarketingNavbarProps) {
   const [scrolled, setScrolled] = useState(false);
   const location = useLocation();
 
-  const isLight = theme === "light" || location.pathname === "/";
+  const isLight = theme !== "dark";
 
   useEffect(() => {
     const handleScroll = () => {

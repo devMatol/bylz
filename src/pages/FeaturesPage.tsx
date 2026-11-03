@@ -2,17 +2,16 @@ import { Link } from "react-router-dom";
 import {
   FileText,
   TrendingUp,
-  ShieldCheck,
-  Zap,
   Building,
   Upload,
   RefreshCw,
-  CreditCard,
   Layers,
   ArrowRight,
   CheckCircle2,
+  Zap,
 } from "lucide-react";
 import { SEO } from "../components/seo/SEO";
+import { SEO_METADATA } from "../lib/seoMeta";
 import { MarketingNavbar } from "../components/marketing/MarketingNavbar";
 import { MarketingFooter } from "../components/marketing/MarketingFooter";
 import { TrustBadgesRow } from "../components/marketing/TrustBadgesRow";
@@ -22,8 +21,8 @@ export function FeaturesPage() {
   const featuresList = [
     {
       icon: FileText,
-      color: "text-primary",
-      bgColor: "bg-primary/10",
+      color: "text-blue-700",
+      bgColor: "bg-blue-50 border border-blue-200",
       title: "Éditeur de factures PDF",
       description:
         "Générez des factures et devis professionnels en PDF intégrant les mentions légales essentielles (EI, mentions de TVA, pénalités).",
@@ -35,8 +34,8 @@ export function FeaturesPage() {
     },
     {
       icon: TrendingUp,
-      color: "text-accent",
-      bgColor: "bg-accent/10",
+      color: "text-indigo-700",
+      bgColor: "bg-indigo-50 border border-indigo-200",
       title: "Pilotage fiscal & Santé financière",
       description:
         "Consultez à tout moment votre chiffre d'affaires cumulé, votre bénéfice net estimé et le montant exact de vos cotisations sociales.",
@@ -48,8 +47,8 @@ export function FeaturesPage() {
     },
     {
       icon: Upload,
-      color: "text-success",
-      bgColor: "bg-success/10",
+      color: "text-emerald-700",
+      bgColor: "bg-emerald-50 border border-emerald-200",
       title: "Importation intelligente de factures historiques PDF",
       description:
         "Importez vos anciennes factures de l'année en glisser-déposer. L'analyseur local (zéro frais d'API) extrait automatiquement le SIRET, les dates et montants pour mettre à jour votre historique fiscal.",
@@ -61,8 +60,8 @@ export function FeaturesPage() {
     },
     {
       icon: Building,
-      color: "text-warning",
-      bgColor: "bg-warning/10",
+      color: "text-amber-700",
+      bgColor: "bg-amber-50 border border-amber-200",
       title: "Annuaire client & Recherche SIRET API",
       description:
         "Entrez simplement le numéro SIRET d'une entreprise client. Bylz interroge les bases officielles pour remplir instantanément la raison sociale et l'adresse.",
@@ -74,8 +73,8 @@ export function FeaturesPage() {
     },
     {
       icon: RefreshCw,
-      color: "text-primary",
-      bgColor: "bg-primary/10",
+      color: "text-blue-700",
+      bgColor: "bg-blue-50 border border-blue-200",
       title: "Relances automatiques & Liens de paiement Stripe",
       description:
         "Ne courez plus après les impayés. Bylz envoie des relances automatiques bienveillantes avant et après la date d'échéance et intègre un lien de règlement par carte bancaire.",
@@ -87,8 +86,8 @@ export function FeaturesPage() {
     },
     {
       icon: Layers,
-      color: "text-accent",
-      bgColor: "bg-accent/10",
+      color: "text-indigo-700",
+      bgColor: "bg-indigo-50 border border-indigo-200",
       title: "Support Multi-activités (BNC / BIC)",
       description:
         "Que vous soyez développeur freelance, consultant (BNC), artisan ou commerçant (BIC), Bylz applique les taux d'abattement et de cotisations exacts pour votre catégorie.",
@@ -101,27 +100,27 @@ export function FeaturesPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-bg text-text selection:bg-primary/20 selection:text-primary">
+    <div className="min-h-screen bg-white text-slate-900 selection:bg-blue-600/20 selection:text-blue-900 font-sans">
       <SEO
-        title="Fonctionnalités Bylz : Facturation, TVA et Cotisations URSSAF"
-        description="Découvrez l'ensemble des fonctionnalités de Bylz : édition de factures PDF, suivi des plafonds de TVA, calcul URSSAF, relances et import PDF historique."
-        canonical="/fonctionnalites"
+        title={SEO_METADATA["/fonctionnalites"].title}
+        description={SEO_METADATA["/fonctionnalites"].description}
+        canonical={SEO_METADATA["/fonctionnalites"].canonical}
       />
 
-      <MarketingNavbar />
+      <MarketingNavbar theme="light" />
 
-      <main className="pt-32 pb-24">
+      <main id="main-content" className="pt-32 pb-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-16">
           {/* Header */}
           <div className="text-center max-w-3xl mx-auto space-y-4">
-            <div className="inline-flex items-center space-x-2 px-3.5 py-1 rounded-pill bg-primary/10 text-primary text-xs font-bold border border-primary/20">
-              <Zap className="w-3.5 h-3.5 text-accent" />
+            <div className="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-blue-50 text-blue-800 text-xs font-bold border border-blue-200">
+              <Zap className="w-3.5 h-3.5 text-blue-700" />
               <span>Conçu pour gagner du temps au quotidien</span>
             </div>
-            <h1 className="text-4xl sm:text-5xl font-black tracking-tight text-text">
+            <h1 className="text-4xl sm:text-5xl font-black tracking-tight text-slate-900">
               Toutes les fonctionnalités dont votre micro-entreprise a besoin
             </h1>
-            <p className="text-base text-muted font-medium">
+            <p className="text-base text-slate-600 font-medium">
               Bylz combine un outil de facturation légal ultra-rapide et un véritable copilote fiscal automatisé.
             </p>
           </div>
@@ -133,17 +132,17 @@ export function FeaturesPage() {
               return (
                 <div
                   key={idx}
-                  className="bg-surface border border-border rounded-card p-6 space-y-4 card-shadow hover:border-primary/30 transition-all"
+                  className="bg-white border border-slate-200 rounded-2xl p-6 space-y-4 shadow-sm hover:border-blue-400 hover:shadow-md transition-all"
                 >
-                  <div className={`w-12 h-12 rounded-card ${item.bgColor} flex items-center justify-center ${item.color}`}>
+                  <div className={`w-12 h-12 rounded-xl ${item.bgColor} flex items-center justify-center ${item.color}`}>
                     <IconComp className="w-6 h-6" />
                   </div>
-                  <h2 className="text-lg font-bold text-text">{item.title}</h2>
-                  <p className="text-xs text-muted leading-relaxed font-normal">{item.description}</p>
-                  <ul className="space-y-2 pt-3 border-t border-border text-xs text-text font-semibold">
+                  <h2 className="text-lg font-bold text-slate-900">{item.title}</h2>
+                  <p className="text-xs text-slate-600 leading-relaxed font-normal">{item.description}</p>
+                  <ul className="space-y-2.5 pt-3 border-t border-slate-100 text-xs text-slate-800 font-medium">
                     {item.bullets.map((b, bIdx) => (
                       <li key={bIdx} className="flex items-center space-x-2">
-                        <CheckCircle2 className="w-3.5 h-3.5 text-primary flex-shrink-0" />
+                        <CheckCircle2 className="w-4 h-4 text-emerald-700 flex-shrink-0" />
                         <span>{b}</span>
                       </li>
                     ))}
@@ -156,16 +155,16 @@ export function FeaturesPage() {
           <TrustBadgesRow />
 
           {/* CTA Banner */}
-          <div className="bg-surface border border-border rounded-card p-10 text-center space-y-6 card-shadow">
-            <h2 className="text-2xl sm:text-3xl font-black text-text">
+          <div className="bg-slate-50 border border-slate-200 rounded-3xl p-10 text-center space-y-6 shadow-sm">
+            <h2 className="text-2xl sm:text-3xl font-black text-slate-900">
               Prêt à tester l'éditeur de factures par vous-même ?
             </h2>
-            <p className="text-sm text-muted font-medium max-w-xl mx-auto">
+            <p className="text-sm text-slate-600 font-medium max-w-xl mx-auto">
               Créez votre première facture en mode invité sans inscription ou démarrez avec votre compte gratuit.
             </p>
             <div>
               <Link to="/essai">
-                <Button variant="primary" size="lg" className="bylz-glow-cta px-8 py-3.5 text-sm font-black">
+                <Button variant="primary" size="lg" className="min-h-[44px] px-8 py-3.5 text-sm font-bold bg-blue-600 hover:bg-blue-700 text-white shadow-md">
                   <span>Essayer le générateur gratuit</span>
                   <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
@@ -175,7 +174,7 @@ export function FeaturesPage() {
         </div>
       </main>
 
-      <MarketingFooter />
+      <MarketingFooter theme="light" />
     </div>
   );
 }

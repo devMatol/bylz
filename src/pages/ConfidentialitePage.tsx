@@ -1,18 +1,23 @@
 import { SEO } from "../components/seo/SEO";
+import { SEO_METADATA } from "../lib/seoMeta";
 import { MarketingNavbar } from "../components/marketing/MarketingNavbar";
 import { MarketingFooter } from "../components/marketing/MarketingFooter";
 
 export function ConfidentialitePage() {
   return (
-    <div className="min-h-screen bg-bg text-text">
-      <SEO title="Politique de Confidentialité & RGPD | Bylz" canonical="/confidentialite" />
-      <MarketingNavbar />
-      <main className="pt-32 pb-24 max-w-3xl mx-auto px-4 space-y-6 text-xs sm:text-sm text-muted">
-        <h1 className="text-3xl font-black text-text">Politique de Confidentialité & Protection des Données (RGPD)</h1>
-        <p className="text-xs text-muted">Dernière mise à jour : 21 août 2026</p>
+    <div className="min-h-screen bg-white text-slate-900 selection:bg-blue-600/20 selection:text-blue-900 font-sans">
+      <SEO
+        title={SEO_METADATA["/confidentialite"].title}
+        description={SEO_METADATA["/confidentialite"].description}
+        canonical={SEO_METADATA["/confidentialite"].canonical}
+      />
+      <MarketingNavbar theme="light" />
+      <main id="main-content" className="pt-32 pb-24 max-w-3xl mx-auto px-4 space-y-6 text-xs sm:text-sm text-slate-700">
+        <h1 className="text-3xl font-black text-slate-900">Politique de Confidentialité & Protection des Données (RGPD)</h1>
+        <p className="text-xs text-slate-500">Dernière mise à jour : 21 août 2026</p>
 
         <section className="space-y-2">
-          <h2 className="text-lg font-bold text-text">1. Responsable du traitement & Données collectées</h2>
+          <h2 className="text-lg font-bold text-slate-900">1. Responsable du traitement & Données collectées</h2>
           <p>
             Le responsable du traitement des données personnelles collectées sur le site et l'application Bylz.fr est la société <strong>ARABACI HOLDING</strong>, SASU au capital de 1 000 €, immatriculée au RCS de Bordeaux sous le numéro 908 662 950 (SIREN 908 662 950, SIRET 908 662 950 00017), dont le siège social est situé 21 B rue Général de Castelnau, 33700 Mérignac, représentée par son représentant légal, Irfan Arabaci.
           </p>
@@ -26,7 +31,7 @@ export function ConfidentialitePage() {
         </section>
 
         <section className="space-y-2">
-          <h2 className="text-lg font-bold text-text">2. Flux bancaires en lecture seule</h2>
+          <h2 className="text-lg font-bold text-slate-900">2. Flux bancaires en lecture seule</h2>
           <p>
             En cas d'activation optionnelle de la synchronisation bancaire, celle-ci s'effectue via notre partenaire <strong>Enable Banking Oy</strong> (Finlande, Union européenne).
           </p>
@@ -37,14 +42,14 @@ export function ConfidentialitePage() {
         </section>
 
         <section className="space-y-2">
-          <h2 className="text-lg font-bold text-text">3. Sécurité, Chiffrement & Hébergement</h2>
+          <h2 className="text-lg font-bold text-slate-900">3. Sécurité, Chiffrement & Hébergement</h2>
           <p>
             Toutes les communications entre votre navigateur, nos serveurs et les partenaires tiers sont chiffrées via le protocole TLS/SSL (HTTPS). La base de données principale est hébergée en Europe chez Supabase (datacenter situé dans l'Union Européenne), avec sauvegardes régulières.
           </p>
         </section>
 
         <section className="space-y-2">
-          <h2 className="text-lg font-bold text-text">4. Services Tiers & Sous-traitants</h2>
+          <h2 className="text-lg font-bold text-slate-900">4. Services Tiers & Sous-traitants</h2>
           <p>Afin d'assurer le fonctionnement du service, Bylz fait appel à des prestataires spécialisés :</p>
           <ul className="list-disc pl-5 space-y-1">
             <li><strong>Netlify, Inc. (États-Unis) :</strong> Hébergement du frontend et réseau de distribution de contenu CDN.</li>
@@ -57,13 +62,13 @@ export function ConfidentialitePage() {
         </section>
 
         <section className="space-y-2">
-          <h2 className="text-lg font-bold text-text">5. Vos droits (RGPD)</h2>
+          <h2 className="text-lg font-bold text-slate-900">5. Vos droits (RGPD)</h2>
           <p>
-            Conformément à la réglementation RGPD, vous disposez d'un droit d'accès, de rectification, d'effacement, de portabilité et d'opposition au traitement de vos données personnelles. Vous pouvez exercer ces droits ou révoquer la synchronisation bancaire à tout moment depuis vos paramètres ou en nous contactant à <span className="font-mono text-text">dpo@bylz.fr</span>.
+            Conformément au RGPD, vous disposez d'un droit d'accès, de rectification, de portabilité et de suppression de vos données personnelles. Vous pouvez exercer ces droits à tout moment en écrivant à <span className="font-mono text-slate-900 font-bold">contact@bylz.fr</span>.
           </p>
         </section>
       </main>
-      <MarketingFooter />
+      <MarketingFooter theme="light" />
     </div>
   );
 }

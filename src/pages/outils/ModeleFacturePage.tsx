@@ -1,33 +1,30 @@
-import { useState } from "react";
 import { Link } from "react-router-dom";
 import {
   FileText,
   ShieldCheck,
   CheckCircle2,
   AlertTriangle,
-  Sparkles,
   HelpCircle,
-  ArrowRight,
-  Download,
-  Clock,
-  Laptop,
-  Check
+  Sparkles,
+  Check,
 } from "lucide-react";
 import { SEO } from "../../components/seo/SEO";
+import { SEO_METADATA } from "../../lib/seoMeta";
 import { MarketingNavbar } from "../../components/marketing/MarketingNavbar";
 import { MarketingFooter } from "../../components/marketing/MarketingFooter";
 import { TrustBadgesRow } from "../../components/marketing/TrustBadgesRow";
 import { InvoiceModelConfigurator } from "../../components/tools/InvoiceModelConfigurator";
-import { Card } from "../../components/ui/Card";
 import { Button } from "../../components/ui/Button";
 
 export function ModeleFacturePage() {
   const toolSchema = {
     "@context": "https://schema.org",
     "@type": "WebApplication",
-    name: "Générateur de Modèle de Facture Gratuit | Bylz",
+    name: "Modèle de Facture Gratuit PDF Bylz",
     applicationCategory: "BusinessApplication",
-    operatingSystem: "Web",
+    description:
+      "Générateur de modèle de facture conforme pour micro-entrepreneurs, indépendants et artisans.",
+    url: "https://bylz.fr/outils/modele-facture-gratuit",
     offers: {
       "@type": "Offer",
       price: "0",
@@ -42,62 +39,62 @@ export function ModeleFacturePage() {
     mainEntity: [
       {
         "@type": "Question",
-        name: "Quelle est la mention obligatoire sur une facture d'auto-entrepreneur sans TVA ?",
+        name: "Quelles sont les mentions obligatoires sur une facture de micro-entrepreneur ?",
         acceptedAnswer: {
           "@type": "Answer",
-          text: "Si vous bénéficiez de la franchise en base de TVA, la mention obligatoire à faire figurer est : « TVA non applicable, art. 293 B du CGI ». Elle doit obligatoirement apparaître sur toutes vos factures et devis.",
+          text: "Une facture valide doit comporter : votre identité complète avec la mention « EI », votre SIRET, le numéro unique et chronologique, la date, l'identité du client, le détail des prestations en HT, la mention « TVA non applicable, art. 293 B du CGI », la date d'échéance, les pénalités de retard et l'indemnité forfaitaire de 40 €.",
         },
       },
       {
         "@type": "Question",
-        name: "Pourquoi abandonner les modèles de facture sur Word ou Excel en 2026 ?",
+        name: "Puis-je facturer sur Word ou Excel ?",
         acceptedAnswer: {
           "@type": "Answer",
-          text: "Les fichiers Excel et Word présentent des risques majeurs : erreurs de formules de calcul, numérotation discontinue (passible de sanctions légales prévues par le Code général des impôts, consultables sur impots.gouv.fr) et surtout incompatibilité avec le format Factur-X imposé par la réforme de la facturation électronique 2026.",
+          text: "Bien que toléré en micro-entreprise, Excel comporte des risques majeurs : erreurs de formules, ruptures de numérotation sanctionnées par le fisc, et incompatibilité totale avec la réforme de la facturation électronique 2026.",
         },
       },
       {
         "@type": "Question",
-        name: "Quelles sont les mentions légales obligatoires sur une facture en France ?",
+        name: "Ce modèle de facture PDF est-il gratuit ?",
         acceptedAnswer: {
           "@type": "Answer",
-          text: "Toute facture doit comporter : la dénomination sociale et l'adresse de l'émetteur et du client, les numéros SIRET/SIREN, le numéro unique chronologique, la date d'émission et d'échéance, le détail des prestations (quantité, prix unitaire HT), le taux ou la franchise de TVA, ainsi que les pénalités de retard et l'indemnité forfaitaire de 40 €.",
+          text: "Oui, ce configurateur est 100% gratuit et sans engagement. Vous pouvez générer et télécharger vos factures en PDF directement depuis votre navigateur.",
         },
       },
       {
         "@type": "Question",
-        name: "Ce générateur de facture en ligne est-il gratuit ?",
+        name: "Comment passer à la facturation électronique 2026 ?",
         acceptedAnswer: {
           "@type": "Answer",
-          text: "Oui, ce configurateur est 100% gratuit et sans engagement. Vous pouvez générer et télécharger votre facture immédiatement au format PDF conforme.",
+          text: "Bylz intègre aujourd'hui les mentions légales essentielles sur vos factures PDF et prépare activement l'intégration du standard Factur-X pour la facturation électronique.",
         },
       },
     ],
   };
 
   return (
-    <div className="min-h-screen bg-bg text-text bg-grid-pattern selection:bg-brand-primary/20 selection:text-brand-primary">
+    <div className="min-h-screen bg-white text-slate-900 selection:bg-blue-600/20 selection:text-blue-900 font-sans">
       <SEO
-        title="Modèle de Facture Gratuit 2026 : Auto-Entrepreneur, Artisan & Freelance (PDF)"
-        description="Créez et téléchargez votre modèle de facture gratuit avec les mentions légales essentielles (franchise TVA art. 293 B, pénalités). Prêt en 30 secondes."
-        canonical="/outils/modele-facture-gratuit"
+        title={SEO_METADATA["/outils/modele-facture-gratuit"].title}
+        description={SEO_METADATA["/outils/modele-facture-gratuit"].description}
+        canonical={SEO_METADATA["/outils/modele-facture-gratuit"].canonical}
         jsonLd={[toolSchema, faqSchema]}
       />
 
-      <MarketingNavbar />
+      <MarketingNavbar theme="light" />
 
-      <main className="pt-32 pb-24">
+      <main id="main-content" className="pt-32 pb-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-16">
           {/* Header Section */}
           <div className="text-center max-w-3xl mx-auto space-y-4">
-            <div className="inline-flex items-center space-x-2 px-4 py-1.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-xs font-bold shadow-sm">
-              <ShieldCheck className="w-4 h-4 text-emerald-400" />
+            <div className="inline-flex items-center space-x-2 px-4 py-1.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold shadow-xs">
+              <ShieldCheck className="w-4 h-4 text-emerald-700" />
               <span>Mentions Légales 2026 • Gratuit & Sans Inscription</span>
             </div>
-            <h1 className="text-4xl sm:text-5xl font-black tracking-tight text-text leading-tight">
+            <h1 className="text-4xl sm:text-5xl font-black tracking-tight text-slate-900 leading-tight">
               Modèle de Facture Gratuit
             </h1>
-            <p className="text-base text-text/80 leading-relaxed font-normal">
+            <p className="text-base text-slate-600 leading-relaxed font-medium">
               Ne perdez plus de temps avec des fichiers Excel ou Word risqués. Personnalisez votre modèle de facture en 30 secondes et téléchargez immédiatement votre PDF officiel.
             </p>
           </div>
@@ -106,78 +103,78 @@ export function ModeleFacturePage() {
           <InvoiceModelConfigurator sourcePage="/outils/modele-facture-gratuit" />
 
           {/* Trust Badges */}
-          <div className="pt-6 border-t border-border">
+          <div className="pt-6 border-t border-slate-200">
             <TrustBadgesRow />
           </div>
 
           {/* Educational Content: Excel/Word vs Logiciel Conforme */}
           <div className="space-y-10 pt-8">
             <div className="text-center max-w-2xl mx-auto space-y-3">
-              <h2 className="text-2xl sm:text-3xl font-black text-text">
+              <h2 className="text-2xl sm:text-3xl font-black text-slate-900">
                 Pourquoi abandonner les modèles Word & Excel ?
               </h2>
-              <p className="text-xs sm:text-sm text-muted">
+              <p className="text-xs sm:text-sm text-slate-600">
                 Bien que très répandus, les tableurs Excel et traitements de texte Word exposent votre entreprise à des sanctions financières et à des pertes de temps considérables.
               </p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Card Word/Excel Risks */}
-              <Card className="p-6 border-danger/30 bg-danger/5 space-y-4">
-                <div className="flex items-center gap-2 text-danger">
+              <div className="p-6 rounded-2xl border border-rose-200 bg-rose-50/60 space-y-4">
+                <div className="flex items-center gap-2 text-rose-700">
                   <AlertTriangle className="w-5 h-5 flex-shrink-0" />
-                  <h3 className="font-bold text-base text-text">Les risques d'un modèle Word / Excel</h3>
+                  <h3 className="font-bold text-base text-slate-900">Les risques d'un modèle Word / Excel</h3>
                 </div>
-                <ul className="space-y-3 text-xs text-muted">
+                <ul className="space-y-3 text-xs text-slate-700">
                   <li className="flex items-start gap-2">
-                    <span className="text-danger font-bold">✕</span>
+                    <span className="text-rose-600 font-bold">✕</span>
                     <span><strong>Numérotation manuelle à risque :</strong> Un doublon ou un trou dans vos numéros de facture expose à des pénalités fiscales (consultables sur impots.gouv.fr).</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="text-danger font-bold">✕</span>
+                    <span className="text-rose-600 font-bold">✕</span>
                     <span><strong>Erreurs de calculs :</strong> Des formules Excel cassées ou un oubli d'arrondi faussent votre déclaration de chiffre d'affaires auprès de l'URSSAF.</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="text-danger font-bold">✕</span>
+                    <span className="text-rose-600 font-bold">✕</span>
                     <span><strong>Incompatibilité Factur-X 2026 :</strong> Les factures papier et simples PDF créés sur Word ne contiennent pas les métadonnées XML exigées par la nouvelle réglementation.</span>
                   </li>
                 </ul>
-              </Card>
+              </div>
 
               {/* Card Bylz Advantage */}
-              <Card className="p-6 border-primary/30 bg-primary/5 space-y-4">
-                <div className="flex items-center gap-2 text-primary">
+              <div className="p-6 rounded-2xl border border-blue-200 bg-blue-50/60 space-y-4">
+                <div className="flex items-center gap-2 text-blue-700">
                   <CheckCircle2 className="w-5 h-5 flex-shrink-0" />
-                  <h3 className="font-bold text-base text-text">Les atouts d'une facture générée sur Bylz</h3>
+                  <h3 className="font-bold text-base text-slate-900">Les atouts d'une facture générée sur Bylz</h3>
                 </div>
-                <ul className="space-y-3 text-xs text-muted">
+                <ul className="space-y-3 text-xs text-slate-700">
                   <li className="flex items-start gap-2">
-                    <Check className="w-4 h-4 text-emerald-500 flex-shrink-0 mt-0.5" />
+                    <Check className="w-4 h-4 text-emerald-700 flex-shrink-0 mt-0.5" />
                     <span><strong>Mentions légales essentielles :</strong> Génération de factures PDF avec mentions obligatoires (art. 293 B, pénalités, décennale).</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <Check className="w-4 h-4 text-emerald-500 flex-shrink-0 mt-0.5" />
+                    <Check className="w-4 h-4 text-emerald-700 flex-shrink-0 mt-0.5" />
                     <span><strong>Numérotation chronologique :</strong> Numérotation continue sans trou ni rupture manuelle.</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <Check className="w-4 h-4 text-emerald-500 flex-shrink-0 mt-0.5" />
+                    <Check className="w-4 h-4 text-emerald-700 flex-shrink-0 mt-0.5" />
                     <span><strong>Suivi en temps réel de vos cotisations :</strong> Vos factures alimentent directement le calcul de vos cotisations URSSAF et de vos seuils de TVA.</span>
                   </li>
                 </ul>
-              </Card>
+              </div>
             </div>
           </div>
 
           {/* Legal Checklist Section */}
-          <Card className="p-8 space-y-6">
-            <h2 className="text-xl sm:text-2xl font-black text-text flex items-center gap-2">
-              <FileText className="w-6 h-6 text-brand-primary" />
+          <div className="bg-white border border-slate-200 rounded-2xl p-8 space-y-6 shadow-sm">
+            <h2 className="text-xl sm:text-2xl font-black text-slate-900 flex items-center gap-2">
+              <FileText className="w-6 h-6 text-blue-700" />
               <span>Checklist officielle : Les mentions obligatoires sur vos factures</span>
             </h2>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-xs text-muted">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-xs text-slate-700">
               <div className="space-y-2">
-                <h4 className="font-bold text-text uppercase tracking-wider text-[11px]">1. Identité Émetteur</h4>
+                <h4 className="font-bold text-slate-900 uppercase tracking-wider text-[11px]">1. Identité Émetteur</h4>
                 <ul className="space-y-1.5 list-disc list-inside">
                   <li>Nom et Prénom (ou Dénomination sociale)</li>
                   <li>Mention « EI » ou « Entrepreneur Individuel »</li>
@@ -188,7 +185,7 @@ export function ModeleFacturePage() {
               </div>
 
               <div className="space-y-2">
-                <h4 className="font-bold text-text uppercase tracking-wider text-[11px]">2. Données Client & Document</h4>
+                <h4 className="font-bold text-slate-900 uppercase tracking-wider text-[11px]">2. Données Client & Document</h4>
                 <ul className="space-y-1.5 list-disc list-inside">
                   <li>Nom ou raison sociale du client</li>
                   <li>Adresse de facturation (et livraison si différente)</li>
@@ -199,7 +196,7 @@ export function ModeleFacturePage() {
               </div>
 
               <div className="space-y-2">
-                <h4 className="font-bold text-text uppercase tracking-wider text-[11px]">3. Fiscalité & Conditions</h4>
+                <h4 className="font-bold text-slate-900 uppercase tracking-wider text-[11px]">3. Fiscalité & Conditions</h4>
                 <ul className="space-y-1.5 list-disc list-inside">
                   <li>Détail en quantité et prix unitaire HT</li>
                   <li>Mention « TVA non applicable, art. 293 B du CGI »</li>
@@ -209,24 +206,24 @@ export function ModeleFacturePage() {
                 </ul>
               </div>
             </div>
-          </Card>
+          </div>
 
           {/* FAQ Accordion Section */}
           <div className="space-y-8">
             <div className="text-center max-w-2xl mx-auto space-y-3">
-              <h2 className="text-2xl sm:text-3xl font-black text-text">
+              <h2 className="text-2xl sm:text-3xl font-black text-slate-900">
                 Questions Fréquentes sur les Modèles de Facture
               </h2>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-4xl mx-auto">
               {faqSchema.mainEntity.map((item, idx) => (
-                <div key={idx} className="p-5 rounded-2xl bg-surface border border-border space-y-2">
-                  <h3 className="font-bold text-xs sm:text-sm text-text flex items-start gap-2">
-                    <HelpCircle className="w-4 h-4 text-brand-primary flex-shrink-0 mt-0.5" />
+                <div key={idx} className="p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-2 shadow-xs">
+                  <h3 className="font-bold text-xs sm:text-sm text-slate-900 flex items-start gap-2">
+                    <HelpCircle className="w-4 h-4 text-blue-700 flex-shrink-0 mt-0.5" />
                     <span>{item.name}</span>
                   </h3>
-                  <p className="text-xs text-muted leading-relaxed pl-6">
+                  <p className="text-xs text-slate-600 leading-relaxed pl-6">
                     {item.acceptedAnswer.text}
                   </p>
                 </div>
@@ -235,20 +232,20 @@ export function ModeleFacturePage() {
           </div>
 
           {/* Conversion CTA Box */}
-          <div className="bg-gradient-to-r from-brand-primary/15 via-primary/10 to-accent/15 border border-brand-primary/30 rounded-3xl p-8 sm:p-12 text-center space-y-6 shadow-2xl">
-            <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-primary/20 text-primary text-xs font-bold">
-              <Sparkles className="w-3.5 h-3.5" />
+          <div className="bg-slate-50 border border-slate-200 rounded-3xl p-8 sm:p-12 text-center space-y-6 shadow-sm">
+            <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-blue-50 text-blue-800 text-xs font-bold border border-blue-200">
+              <Sparkles className="w-3.5 h-3.5 text-blue-700" />
               <span>Passez à la vitesse supérieure</span>
             </div>
-            <h2 className="text-2xl sm:text-4xl font-black text-text max-w-xl mx-auto">
+            <h2 className="text-2xl sm:text-4xl font-black text-slate-900 max-w-xl mx-auto">
               Gérez vos devis, factures et déclarations URSSAF en 1 clic
             </h2>
-            <p className="text-xs sm:text-sm text-muted max-w-lg mx-auto">
+            <p className="text-xs sm:text-sm text-slate-600 max-w-lg mx-auto">
               Moins de double saisie, moins de calculs à la main grâce au pilotage fiscal automatisé Bylz.
             </p>
             <div>
               <Link to="/signup">
-                <Button variant="primary" className="py-4 px-8 text-sm font-black bylz-glow-cta">
+                <Button variant="primary" className="py-3.5 px-8 text-sm font-bold bg-blue-600 hover:bg-blue-700 text-white min-h-[44px] shadow-md">
                   Créer mon compte gratuit Bylz
                 </Button>
               </Link>
@@ -257,7 +254,7 @@ export function ModeleFacturePage() {
         </div>
       </main>
 
-      <MarketingFooter />
+      <MarketingFooter theme="light" />
     </div>
   );
 }
