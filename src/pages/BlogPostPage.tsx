@@ -109,8 +109,8 @@ export function BlogPostPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-bg text-text flex items-center justify-center">
-        <div className="w-8 h-8 border-4 border-brand-primary border-t-transparent rounded-full animate-spin" />
+      <div className="min-h-screen bg-white text-slate-900 flex items-center justify-center font-sans">
+        <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -119,53 +119,44 @@ export function BlogPostPage() {
     return <Navigate to="/blog" replace />;
   }
 
-  // Helper to extract FAQ questions and answers from article content HTML
   const extractFaqsFromHtml = (html: string) => {
     const faqs: { question: string; answer: string }[] = [];
     try {
-      // Find h2 or h3 headings that contain a question mark
       const headingRegex = /<(h[23])>([^<]*\?[^<]*)<\/\1>/gi;
       const matches = Array.from(html.matchAll(headingRegex));
 
       for (const match of matches) {
-        const headingHtml = match[0];
-        const headingText = match[2].replace(/<[^>]*>/g, "").trim();
-
-        const headingIndex = html.indexOf(headingHtml);
-        if (headingIndex === -1) continue;
-
-        const restHtml = html.substring(headingIndex + headingHtml.length);
-        const nextParagraphMatch = restHtml.match(/<p>([\s\S]*?)<\/p>/i);
-        if (nextParagraphMatch) {
-          const answerText = nextParagraphMatch[1].replace(/<[^>]*>/g, "").trim();
-          if (headingText && answerText) {
-            faqs.push({
-              question: headingText,
-              answer: answerText,
-            });
+        const question = match[2].trim();
+        const startIdx = match.index! + match[0].length;
+        const remaining = html.slice(startIdx);
+        const pMatch = remaining.match(/<p>([\s\S]*?)<\/p>/i);
+        if (pMatch) {
+          const answer = pMatch[1].replace(/<[^>]+>/g, "").trim();
+          if (answer.length > 15) {
+            faqs.push({ question, answer });
           }
         }
       }
-    } catch (e) {
-      console.warn("Failed to extract FAQs from HTML", e);
+    } catch {
+      // Ignore parse errors
     }
     return faqs;
   };
 
-  const faqs = extractFaqsFromHtml(article.content);
+  const extractedFaqs = extractFaqsFromHtml(article.content);
 
   const blogPostingSchema = {
     "@context": "https://schema.org",
     "@type": "BlogPosting",
     headline: article.title,
     description: article.metaDescription || article.excerpt,
-    datePublished: article.publishedAt || article.createdAt || new Date().toISOString(),
-    dateModified: article.publishedAt || article.createdAt || new Date().toISOString(),
+    image: article.coverImageUrl || "https://bylz.fr/og-image.png",
+    datePublished: article.publishedAt || "2026-07-15T10:00:00.000Z",
+    dateModified: article.publishedAt || "2026-07-15T10:00:00.000Z",
     mainEntityOfPage: {
       "@type": "WebPage",
       "@id": `https://bylz.fr/blog/${article.slug}`,
     },
-    image: article.coverImageUrl || "https://bylz.fr/og-image.png",
     author: {
       "@type": "Person",
       name: article.author || "Équipe Bylz",
@@ -175,15 +166,15 @@ export function BlogPostPage() {
       name: "Bylz",
       logo: {
         "@type": "ImageObject",
-        url: "https://bylz.fr/logo.png",
+        url: "https://bylz.fr/og-image.png",
       },
     },
   };
 
-  const faqSchema = faqs.length > 0 ? {
+  const faqSchema = extractedFaqs.length > 0 ? {
     "@context": "https://schema.org",
     "@type": "FAQPage",
-    mainEntity: faqs.map((f) => ({
+    mainEntity: extractedFaqs.map((f) => ({
       "@type": "Question",
       name: f.question,
       acceptedAnswer: {
@@ -196,7 +187,7 @@ export function BlogPostPage() {
   const schemas = faqSchema ? [blogPostingSchema, faqSchema] : [blogPostingSchema];
 
   return (
-    <div className="min-h-screen bg-bg text-text selection:bg-brand-primary/20 selection:text-brand-primary">
+    <div className="min-h-screen bg-white text-slate-900 selection:bg-blue-600/20 selection:text-blue-900 font-sans">
       <SEO
         title={`${article.title} | Blog Bylz`}
         description={article.metaDescription || article.excerpt}
@@ -205,29 +196,29 @@ export function BlogPostPage() {
         jsonLd={schemas}
       />
 
-      <MarketingNavbar />
+      <MarketingNavbar theme="light" />
 
-      <main className="pt-32 pb-24">
+      <main id="main-content" className="pt-32 pb-24">
         <article className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
           {/* Back link */}
           <Link
             to="/blog"
-            className="inline-flex items-center text-xs font-semibold text-muted hover:text-brand-primary transition-colors"
+            className="min-h-[44px] inline-flex items-center text-xs font-semibold text-slate-600 hover:text-blue-700 transition-colors"
           >
             <ArrowLeft className="w-4 h-4 mr-1" /> Retour au blog
           </Link>
 
           {/* Article Header */}
-          <div className="space-y-4 border-b border-border pb-8">
-            <span className="px-3 py-1 rounded-full bg-brand-primary/10 text-brand-primary text-xs font-bold">
+          <div className="space-y-4 border-b border-slate-200 pb-8">
+            <span className="px-3 py-1 rounded-full bg-blue-50 text-blue-800 border border-blue-200 text-xs font-bold">
               {article.category}
             </span>
-            <h1 className="text-3xl sm:text-4xl font-black tracking-tight leading-tight text-text">
+            <h1 className="text-3xl sm:text-4xl font-black tracking-tight leading-tight text-slate-900">
               {article.title}
             </h1>
-            <div className="flex flex-wrap items-center gap-4 text-xs text-muted font-medium pt-2">
+            <div className="flex flex-wrap items-center gap-4 text-xs text-slate-500 font-medium pt-2">
               <span className="flex items-center">
-                <User className="w-3.5 h-3.5 mr-1 text-brand-primary" /> {article.author}
+                <User className="w-3.5 h-3.5 mr-1 text-blue-700" /> {article.author}
               </span>
               <span className="flex items-center">
                 <Calendar className="w-3.5 h-3.5 mr-1" /> {article.date}
@@ -237,7 +228,7 @@ export function BlogPostPage() {
               </span>
               {article.views != null && (
                 <span className="flex items-center">
-                  <Eye className="w-3.5 h-3.5 mr-1 text-emerald-500" /> {article.views} lectures
+                  <Eye className="w-3.5 h-3.5 mr-1 text-emerald-700" /> {article.views} lectures
                 </span>
               )}
             </div>
@@ -245,7 +236,7 @@ export function BlogPostPage() {
 
           {/* Body Content */}
           <div
-            className="prose prose-slate dark:prose-invert max-w-none text-sm leading-relaxed space-y-4 font-normal"
+            className="prose prose-slate max-w-none text-sm leading-relaxed space-y-4 font-normal text-slate-800"
             dangerouslySetInnerHTML={{ __html: sanitizeHtml(article.content) }}
           />
 
@@ -253,15 +244,15 @@ export function BlogPostPage() {
           {(article.slug.includes("modele") ||
             article.title.toLowerCase().includes("modèle") ||
             article.category.toLowerCase().includes("facturation")) && (
-            <div className="mt-12 pt-8 border-t border-border space-y-6">
+            <div className="mt-12 pt-8 border-t border-slate-200 space-y-6">
               <div className="text-center space-y-2">
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-xs font-bold uppercase tracking-wider">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 text-xs font-bold uppercase tracking-wider">
                   <Sparkles className="w-3.5 h-3.5" /> Configurateur Express Embarqué
                 </span>
-                <h3 className="text-xl sm:text-2xl font-black text-text">
+                <h3 className="text-xl sm:text-2xl font-black text-slate-900">
                   Personnalisez et téléchargez votre modèle de facture avec mentions légales
                 </h3>
-                <p className="text-xs text-muted max-w-lg mx-auto">
+                <p className="text-xs text-slate-600 max-w-lg mx-auto">
                   Modifiez vos coordonnées et téléchargez directement votre facture officielle en PDF gratuit.
                 </p>
               </div>
@@ -281,21 +272,21 @@ export function BlogPostPage() {
           )}
 
           {/* CTA Banner inside Article */}
-          <div className="mt-12 bg-gradient-to-r from-brand-primary/10 via-indigo-500/10 to-brand-accent/10 border border-brand-primary/20 rounded-2xl p-6 text-center space-y-4 shadow-lg">
-            <div className="inline-flex items-center space-x-1.5 text-brand-primary text-xs font-bold">
-              <Sparkles className="w-4 h-4" />
+          <div className="mt-12 bg-slate-50 border border-slate-200 rounded-2xl p-8 text-center space-y-4 shadow-sm">
+            <div className="inline-flex items-center space-x-1.5 text-blue-800 text-xs font-bold">
+              <Sparkles className="w-4 h-4 text-blue-700" />
               <span>Mentions légales & URSSAF 2026</span>
             </div>
-            <h3 className="text-xl font-bold text-text">
+            <h3 className="text-xl font-bold text-slate-900">
               Prêt à automatiser la facturation de votre micro-entreprise ?
             </h3>
-            <p className="text-xs text-muted max-w-md mx-auto">
+            <p className="text-xs text-slate-600 max-w-md mx-auto">
               Bylz simplifie vos factures PDF avec mentions légales obligatoires, la signature électronique et le suivi URSSAF en 2 minutes par jour.
             </p>
             <div>
               <Link
                 to="/signup"
-                className="inline-flex items-center space-x-2 text-xs font-bold text-white bg-brand-primary hover:bg-brand-primary/90 px-6 py-3 rounded-full shadow-md"
+                className="inline-flex items-center space-x-2 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 px-6 py-3 min-h-[44px] rounded-full shadow-md transition-colors"
               >
                 <span>Créer mon compte gratuit Bylz</span>
                 <ArrowRight className="w-4 h-4" />
@@ -305,7 +296,7 @@ export function BlogPostPage() {
         </article>
       </main>
 
-      <MarketingFooter />
+      <MarketingFooter theme="light" />
     </div>
   );
 }

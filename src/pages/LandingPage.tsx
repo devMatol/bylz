@@ -28,6 +28,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import { SEO } from "../components/seo/SEO";
+import { SEO_METADATA } from "../lib/seoMeta";
 import { PLANS_DATA } from "../lib/plansData";
 import { FAQS_LIST } from "../data/faqData";
 import { MarketingNavbar } from "../components/marketing/MarketingNavbar";
@@ -184,7 +185,7 @@ export function LandingPage() {
 
   // Primary Button unified styling class
   const btnPrimary =
-    "inline-flex items-center justify-center font-bold text-sm text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-sm transition-colors";
+    "inline-flex items-center justify-center font-bold text-sm text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-sm transition-colors min-h-[44px]";
 
   // Schemas JSON-LD
   const softwareSchema = {
@@ -250,9 +251,9 @@ export function LandingPage() {
   return (
     <div className="min-h-screen bg-white text-slate-900 selection:bg-blue-600/20 selection:text-blue-900 relative overflow-x-hidden font-sans">
       <SEO
-        title="Bylz : Facturation & Gestion Micro-Entreprise"
-        description="Créez des factures PDF avec les mentions légales essentielles, suivez votre CA et anticipez vos cotisations URSSAF & impôts en toute rigueur. Gratuit jusqu'à 3 factures par mois."
-        canonical="/"
+        title={SEO_METADATA["/"].title}
+        description={SEO_METADATA["/"].description}
+        canonical={SEO_METADATA["/"].canonical}
         jsonLd={[softwareSchema, organizationSchema, faqSchema]}
       />
 
@@ -271,7 +272,7 @@ export function LandingPage() {
                 <div className="flex flex-wrap items-center gap-2.5">
                   <Link
                     to="/facturation-electronique"
-                    className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-50 border border-blue-200 text-blue-800 text-xs font-bold hover:bg-blue-100 transition-colors"
+                    className="inline-flex items-center gap-2 px-3.5 py-2 min-h-[44px] rounded-full bg-blue-50 border border-blue-200 text-blue-800 text-xs font-bold hover:bg-blue-100 transition-colors"
                   >
                     <ShieldCheck className="w-4 h-4 text-blue-700 flex-shrink-0" />
                     <span>Facturation électronique 2026 : voir les règles officielles</span>
@@ -443,19 +444,19 @@ export function LandingPage() {
         <section className="py-6 bg-slate-100 border-b border-slate-200">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-8 text-xs font-bold text-slate-800">
-              <Link to="/conformite" className="flex items-center gap-2 hover:text-blue-700 transition-colors" title="Facturation électronique en préparation">
+              <Link to="/conformite" className="inline-flex items-center gap-2 hover:text-blue-700 transition-colors min-h-[44px] py-2 px-1" title="Mentions légales obligatoires conformes">
                 <ShieldCheck className="w-4 h-4 text-emerald-700" />
-                <span>Facturation électronique en préparation</span>
+                <span>Mentions légales obligatoires conformes</span>
               </Link>
-              <Link to="/outils/modele-facture-gratuit" className="flex items-center gap-2 hover:text-blue-700 transition-colors" title="Modèle de facture">
+              <Link to="/outils/modele-facture-gratuit" className="inline-flex items-center gap-2 hover:text-blue-700 transition-colors min-h-[44px] py-2 px-1" title="Modèle de facture">
                 <FileCheck className="w-4 h-4 text-blue-700" />
                 <span>Livre chronologique des recettes, exportable en CSV</span>
               </Link>
-              <Link to="/conformite" className="flex items-center gap-2 hover:text-blue-700 transition-colors" title="Sécurité et hébergement en Europe">
+              <Link to="/conformite" className="inline-flex items-center gap-2 hover:text-blue-700 transition-colors min-h-[44px] py-2 px-1" title="Sécurité et hébergement en Europe">
                 <Lock className="w-4 h-4 text-slate-700" />
                 <span>Base de données hébergée en Europe</span>
               </Link>
-              <Link to="/outils/simulateur-urssaf" className="flex items-center gap-2 hover:text-blue-700 transition-colors" title="Simulateur de cotisations URSSAF 2026">
+              <Link to="/outils/simulateur-urssaf" className="inline-flex items-center gap-2 hover:text-blue-700 transition-colors min-h-[44px] py-2 px-1" title="Simulateur de cotisations URSSAF 2026">
                 <CheckCircle2 className="w-4 h-4 text-emerald-700" />
                 <span>Taux de cotisations 2026 à jour</span>
               </Link>
@@ -494,10 +495,8 @@ export function LandingPage() {
             </div>
 
             <div className="text-center pt-2">
-              <Link to="/essai">
-                <button className={`${btnPrimary} py-3 px-6 text-sm`}>
-                  Créer ma première facture en 2 minutes
-                </button>
+              <Link to="/essai" className={`${btnPrimary} py-3 px-6 text-sm`}>
+                Créer ma première facture en 2 minutes
               </Link>
             </div>
           </div>
@@ -524,7 +523,7 @@ export function LandingPage() {
                 <div className="pt-2">
                   <Link
                     to="/conformite"
-                    className="inline-flex items-center gap-2 text-sm font-bold text-blue-300 hover:text-white transition-colors"
+                    className="inline-flex items-center gap-2 text-sm font-bold text-blue-300 hover:text-white transition-colors min-h-[44px] py-2"
                   >
                     <span>Comprendre la réforme et les obligations de votre statut</span>
                     <ArrowRight className="w-4 h-4" />
@@ -809,10 +808,8 @@ export function LandingPage() {
                 </div>
 
                 <div className="pt-6 mt-6 border-t border-blue-200">
-                  <Link to="/essai" className="block">
-                    <button className={`${btnPrimary} w-full py-3.5 text-sm`}>
-                      Créer mon compte gratuitement
-                    </button>
+                  <Link to="/essai" className={`${btnPrimary} w-full py-3.5 text-sm`}>
+                    Créer mon compte gratuitement
                   </Link>
                   <p className="text-[11px] text-center text-slate-600 font-medium mt-2">
                     Gratuit jusqu'à 3 factures/mois : Sans carte bancaire : Sans engagement
@@ -837,10 +834,8 @@ export function LandingPage() {
                 </div>
               </div>
               <div className="flex-shrink-0 w-full md:w-auto">
-                <Link to="/contact">
-                  <button className="w-full md:w-auto px-5 py-2.5 rounded-lg border-2 border-blue-600 text-blue-700 hover:bg-blue-50 font-bold text-xs transition-colors">
-                    Poser une question
-                  </button>
+                <Link to="/contact" className="inline-flex items-center justify-center min-h-[44px] w-full md:w-auto px-5 py-2.5 rounded-lg border-2 border-blue-600 text-blue-700 hover:bg-blue-50 font-bold text-xs transition-colors">
+                  Poser une question
                 </Link>
               </div>
             </div>
@@ -1128,7 +1123,7 @@ export function LandingPage() {
                       aria-expanded={isOpen}
                       aria-controls={`faq-answer-${idx}`}
                       onClick={() => setOpenFaqIndex(isOpen ? null : idx)}
-                      className="w-full text-left px-5 py-4 flex items-center justify-between gap-3 font-bold text-slate-900 text-sm hover:text-blue-700 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 rounded-lg"
+                      className="w-full text-left px-5 py-4 min-h-[44px] flex items-center justify-between gap-3 font-bold text-slate-900 text-sm hover:text-blue-700 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 rounded-lg"
                     >
                       <span>{faq.q}</span>
                       <ChevronDown
@@ -1166,10 +1161,8 @@ export function LandingPage() {
               Créez votre première facture PDF en 2 minutes. Sans carte bancaire et sans engagement.
             </p>
             <div className="pt-2">
-              <Link to="/essai">
-                <button className={`${btnPrimary} py-3.5 px-8 text-sm`}>
-                  Créer mon compte gratuitement
-                </button>
+              <Link to="/essai" className={`${btnPrimary} py-3.5 px-8 text-sm`}>
+                Créer mon compte gratuitement
               </Link>
             </div>
             <p className="text-xs text-slate-400 font-medium">

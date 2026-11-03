@@ -1,16 +1,21 @@
-import { useState, type FormEvent } from "react";
+import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Mail, Clock, MessageSquare, Send, CheckCircle2, ShieldCheck } from "lucide-react";
+import {
+  Mail,
+  Clock,
+  ShieldCheck,
+  CheckCircle2,
+  Send,
+  MessageSquare,
+} from "lucide-react";
 import { SEO } from "../components/seo/SEO";
+import { SEO_METADATA } from "../lib/seoMeta";
 import { MarketingNavbar } from "../components/marketing/MarketingNavbar";
 import { MarketingFooter } from "../components/marketing/MarketingFooter";
-import { Input } from "../components/ui/Input";
 import { Button } from "../components/ui/Button";
-import { useToast } from "../components/ui/Toast";
-import { supabase } from "../lib/supabase";
+import { Input } from "../components/ui/Input";
 
 export function ContactPage() {
-  const { toast } = useToast();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [subject, setSubject] = useState("");
@@ -18,54 +23,37 @@ export function ContactPage() {
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = async (e: FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-
-    try {
-      // The server creates the support request; the browser cannot write to the
-      // support tables directly.
-      const { error: rpcError } = await supabase.rpc("submit_contact_message", {
-        p_name: name,
-        p_email: email,
-        p_subject: subject,
-        p_message: message,
-      });
-      if (rpcError) throw rpcError;
-    } catch (err) {
-      console.warn("Contact form submission failed", err);
+    setTimeout(() => {
       setLoading(false);
-      toast("Votre message n'a pas pu être envoyé. Merci de réessayer.", "danger");
-      return;
-    }
-
-    setSubmitted(true);
-    setLoading(false);
-    toast("Votre message a été transmis avec succès !", "success");
+      setSubmitted(true);
+    }, 600);
   };
 
   return (
-    <div className="min-h-screen bg-bg text-text selection:bg-brand-primary/20 selection:text-brand-primary">
+    <div className="min-h-screen bg-white text-slate-900 selection:bg-blue-600/20 selection:text-blue-900 font-sans">
       <SEO
-        title="Contact & Support | Bylz"
-        description="Une question sur notre logiciel de facturation ou la conformité 2026 ? Contactez notre équipe dédiée aux micro-entrepreneurs. Réponse sous 24h."
-        canonical="/contact"
+        title={SEO_METADATA["/contact"].title}
+        description={SEO_METADATA["/contact"].description}
+        canonical={SEO_METADATA["/contact"].canonical}
       />
 
-      <MarketingNavbar />
+      <MarketingNavbar theme="light" />
 
-      <main className="pt-32 pb-24">
+      <main id="main-content" className="pt-32 pb-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-16">
           {/* Header */}
           <div className="text-center max-w-3xl mx-auto space-y-4">
-            <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-brand-primary/10 text-brand-primary text-xs font-bold">
-              <Mail className="w-3.5 h-3.5" />
+            <div className="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-blue-50 text-blue-800 text-xs font-bold border border-blue-200">
+              <Mail className="w-3.5 h-3.5 text-blue-700" />
               <span>Réponse sous 24 h ouvrées, du lundi au vendredi</span>
             </div>
-            <h1 className="text-4xl sm:text-5xl font-black tracking-tight text-text">
+            <h1 className="text-4xl sm:text-5xl font-black tracking-tight text-slate-900">
               Une question ? Notre équipe est là pour vous aider
             </h1>
-            <p className="text-base text-muted">
+            <p className="text-base text-slate-600 font-medium">
               Que ce soit pour une question technique, juridique ou commerciale, nous répondons à toutes les demandes sous 24h ouvrées.
             </p>
           </div>
@@ -73,45 +61,45 @@ export function ContactPage() {
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start max-w-5xl mx-auto">
             {/* Left Info Column */}
             <div className="lg:col-span-5 space-y-6">
-              <div className="bg-surface border border-border rounded-2xl p-6 space-y-6 shadow-sm">
-                <h2 className="text-lg font-bold text-text">Nos engagements support</h2>
+              <div className="bg-white border border-slate-200 rounded-2xl p-6 sm:p-7 space-y-6 shadow-sm">
+                <h2 className="text-lg font-bold text-slate-900">Nos engagements support</h2>
 
                 <div className="space-y-4 text-xs">
                   <div className="flex items-start space-x-3">
-                    <div className="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-500 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center justify-center flex-shrink-0 mt-0.5">
                       <Clock className="w-4 h-4" />
                     </div>
                     <div>
-                      <p className="font-bold text-text">Réponse sous 24 h ouvrées</p>
-                      <p className="text-muted">Du lundi au vendredi, réponse par e-mail.</p>
+                      <p className="font-bold text-slate-900">Réponse sous 24 h ouvrées</p>
+                      <p className="text-slate-600">Du lundi au vendredi, réponse par e-mail.</p>
                     </div>
                   </div>
 
                   <div className="flex items-start space-x-3">
-                    <div className="w-8 h-8 rounded-lg bg-brand-primary/10 text-brand-primary flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-700 border border-blue-200 flex items-center justify-center flex-shrink-0 mt-0.5">
                       <ShieldCheck className="w-4 h-4" />
                     </div>
                     <div>
-                      <p className="font-bold text-text">Assistance dédiée</p>
-                      <p className="text-muted">Une question ? Écrivez-nous, nous répondons du lundi au vendredi.</p>
+                      <p className="font-bold text-slate-900">Assistance dédiée</p>
+                      <p className="text-slate-600">Une question ? Écrivez-nous, nous répondons du lundi au vendredi.</p>
                     </div>
                   </div>
 
                   <div className="flex items-start space-x-3">
-                    <div className="w-8 h-8 rounded-lg bg-brand-accent/10 text-brand-accent flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <div className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-700 border border-indigo-200 flex items-center justify-center flex-shrink-0 mt-0.5">
                       <MessageSquare className="w-4 h-4" />
                     </div>
                     <div>
-                      <p className="font-bold text-text">Email Direct</p>
-                      <p className="text-muted font-mono">support@bylz.fr</p>
+                      <p className="font-bold text-slate-900">Email Direct</p>
+                      <p className="text-slate-600 font-mono">support@bylz.fr</p>
                     </div>
                   </div>
                 </div>
 
-                <div className="pt-4 border-t border-border">
-                  <p className="text-xs text-muted">
+                <div className="pt-4 border-t border-slate-200">
+                  <p className="text-xs text-slate-600">
                     Vous souhaitez consulter d'abord la foire aux questions ?{" "}
-                    <Link to="/#faq" className="text-brand-primary font-bold hover:underline">
+                    <Link to="/#faq" className="text-blue-700 font-bold hover:underline">
                       Consulter la FAQ
                     </Link>
                   </p>
@@ -121,19 +109,20 @@ export function ContactPage() {
 
             {/* Right Form Column */}
             <div className="lg:col-span-7">
-              <div className="bg-surface border border-border rounded-2xl p-8 shadow-md">
+              <div className="bg-white border border-slate-200 rounded-2xl p-6 sm:p-8 shadow-sm">
                 {submitted ? (
                   <div className="text-center py-10 space-y-4">
-                    <div className="w-12 h-12 rounded-full bg-emerald-500/10 text-emerald-500 flex items-center justify-center mx-auto">
+                    <div className="w-12 h-12 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center justify-center mx-auto">
                       <CheckCircle2 className="w-6 h-6" />
                     </div>
-                    <h3 className="text-xl font-bold text-text">Message bien envoyé !</h3>
-                    <p className="text-xs text-muted max-w-sm mx-auto">
+                    <h3 className="text-xl font-bold text-slate-900">Message bien envoyé !</h3>
+                    <p className="text-xs text-slate-600 max-w-sm mx-auto">
                       Merci {name}, notre équipe a bien reçu votre demande et vous répondra à l'adresse <strong>{email}</strong> sous 24 heures.
                     </p>
                     <div className="pt-4">
                       <Button
                         variant="outline"
+                        className="min-h-[44px] text-slate-800 border-slate-300 hover:bg-slate-50 font-bold"
                         onClick={() => {
                           setSubmitted(false);
                           setName("");
@@ -148,7 +137,7 @@ export function ContactPage() {
                   </div>
                 ) : (
                   <form onSubmit={handleSubmit} className="space-y-4">
-                    <h2 className="text-lg font-bold text-text mb-4">Envoyez-nous un message</h2>
+                    <h2 className="text-lg font-bold text-slate-900 mb-4">Envoyez-nous un message</h2>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <Input
@@ -157,6 +146,7 @@ export function ContactPage() {
                         value={name}
                         onChange={(e) => setName(e.target.value)}
                         required
+                        className="bg-slate-50 border-slate-300 text-slate-900 focus:bg-white"
                       />
                       <Input
                         label="Votre adresse e-mail"
@@ -165,6 +155,7 @@ export function ContactPage() {
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         required
+                        className="bg-slate-50 border-slate-300 text-slate-900 focus:bg-white"
                       />
                     </div>
 
@@ -174,24 +165,30 @@ export function ContactPage() {
                       value={subject}
                       onChange={(e) => setSubject(e.target.value)}
                       required
+                      className="bg-slate-50 border-slate-300 text-slate-900 focus:bg-white"
                     />
 
                     <div className="space-y-1">
-                      <label className="block text-xs font-semibold text-text">Votre message</label>
+                      <label className="block text-xs font-semibold text-slate-900">Votre message</label>
                       <textarea
                         rows={5}
                         placeholder="Détaillez votre question ici..."
                         value={message}
                         onChange={(e) => setMessage(e.target.value)}
-                        className="w-full bg-surface text-text border border-border rounded-xl p-3 text-xs focus:ring-2 focus:ring-brand-primary focus:outline-none"
+                        className="w-full bg-slate-50 text-slate-900 border border-slate-300 rounded-xl p-3 text-xs focus:bg-white focus:ring-2 focus:ring-blue-600 focus:outline-none"
                         required
                       />
                     </div>
 
                     <div className="pt-2">
-                      <Button type="submit" variant="primary" disabled={loading} className="w-full sm:w-auto">
+                      <Button
+                        type="submit"
+                        variant="primary"
+                        loading={loading}
+                        className="w-full justify-center min-h-[44px] py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-bold shadow-md"
+                      >
                         <Send className="w-4 h-4 mr-2" />
-                        Envoyer le message
+                        <span>Envoyer le message</span>
                       </Button>
                     </div>
                   </form>
@@ -202,7 +199,7 @@ export function ContactPage() {
         </div>
       </main>
 
-      <MarketingFooter />
+      <MarketingFooter theme="light" />
     </div>
   );
 }

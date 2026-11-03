@@ -62,7 +62,7 @@ const PRESETS: Record<PresetKey, {
       { id: "2", description: "Accompagnement et mise en place technique", quantity: 1, unitPrice: 450 },
     ],
     vatRegime: "franchise",
-    accentColor: "#7C6FE0",
+    accentColor: "#4856DF",
     footerNotes: "Auto-entrepreneur dispensé d'immatriculation au RCS.\nTVA non applicable, art. 293 B du CGI.\nRèglement à réception par virement bancaire.\nPénalités de retard : 3 fois le taux d'intérêt légal. Indemnité forfaitaire de recouvrement : 40 €.",
   },
   artisan_btp: {
@@ -115,7 +115,7 @@ const PRESETS: Record<PresetKey, {
   },
 };
 
-const SWATCHES = ["#7C6FE0", "#6CB8F5", "#10B981", "#F59E0B", "#F43F5E", "#64748B"];
+const SWATCHES = ["#4856DF", "#1D4ED8", "#047857", "#B45309", "#BE123C", "#334155"];
 
 interface InvoiceModelConfiguratorProps {
   initialPreset?: PresetKey;
@@ -510,8 +510,8 @@ export function InvoiceModelConfigurator({
           {/* Download CTA Bar */}
           <div className="p-5 rounded-2xl bg-gradient-to-r from-emerald-500/15 via-teal-500/10 to-primary/15 border border-emerald-500/30 shadow-xl space-y-3">
             <div className="flex items-center justify-between">
-              <span className="inline-flex items-center gap-1.5 text-xs font-extrabold text-emerald-500 uppercase tracking-wider">
-                <ShieldCheck className="w-4 h-4" /> Modèle avec mentions légales
+              <span className="inline-flex items-center gap-1.5 text-xs font-extrabold text-emerald-800 uppercase tracking-wider">
+                <ShieldCheck className="w-4 h-4 text-emerald-700" /> Modèle avec mentions légales
               </span>
               <span className="text-xs font-mono font-black text-text">Gratuit & Sans CB</span>
             </div>
@@ -550,7 +550,7 @@ export function InvoiceModelConfigurator({
                   </div>
                   <p className="font-bold text-sm text-slate-900 leading-tight">{companyName || "Votre Entreprise"}</p>
                   <p className="text-[11px] text-slate-500">{address || "Votre adresse"}</p>
-                  {siret && <p className="text-[10px] text-slate-400 font-mono">SIRET : {siret}</p>}
+                  {siret && <p className="text-[10px] text-slate-600 font-mono">SIRET : {siret}</p>}
                 </div>
 
                 <div className="text-right space-y-1">
@@ -561,20 +561,20 @@ export function InvoiceModelConfigurator({
                     FACTURE
                   </span>
                   <p className="font-mono font-bold text-slate-800 text-xs mt-1">{invoiceNumber}</p>
-                  <p className="text-[10px] text-slate-400">Date : {new Date().toLocaleDateString("fr-FR")}</p>
+                  <p className="text-[10px] text-slate-600">Date : {new Date().toLocaleDateString("fr-FR")}</p>
                 </div>
               </div>
 
               {/* Client Box Preview */}
               <div className="bg-slate-50 border border-slate-200/80 rounded-xl p-3.5 space-y-1">
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Facturé à</p>
+                <p className="text-[10px] font-bold text-slate-600 uppercase tracking-wider">Facturé à</p>
                 <p className="font-bold text-slate-900">{clientName || "Nom du client"}</p>
                 <p className="text-[11px] text-slate-600">{clientAddress || "Adresse du client"}</p>
               </div>
 
               {/* Lines Table Preview */}
               <div className="space-y-2">
-                <div className="flex justify-between text-[10px] font-bold text-slate-400 uppercase pb-1 border-b border-slate-200">
+                <div className="flex justify-between text-[10px] font-bold text-slate-600 uppercase pb-1 border-b border-slate-200">
                   <span className="flex-1">Description</span>
                   <span className="w-12 text-center">Qté</span>
                   <span className="w-20 text-right">P.U. HT</span>
@@ -602,7 +602,7 @@ export function InvoiceModelConfigurator({
                   <span className="font-mono font-semibold">{totalHt.toFixed(2)} €</span>
                 </div>
                 {vatRegime === "franchise" ? (
-                  <p className="text-[10px] text-slate-400 italic text-right">TVA non applicable , art. 293 B du CGI</p>
+                  <p className="text-[10px] text-slate-600 italic text-right">TVA non applicable, art. 293 B du CGI</p>
                 ) : (
                   <div className="flex justify-between text-slate-600">
                     <span>TVA ({(vatRate * 100).toFixed(0)}%)</span>
@@ -618,9 +618,9 @@ export function InvoiceModelConfigurator({
               </div>
 
               {/* Legal Footer Preview */}
-              <div className="border-t border-slate-100 pt-3 text-[9px] text-slate-400 space-y-0.5 leading-tight">
+              <div className="border-t border-slate-100 pt-3 text-[9px] text-slate-600 space-y-0.5 leading-tight">
                 <p className="line-clamp-2">{footerNotes}</p>
-                <p className="text-slate-300 pt-1">Généré avec Bylz | Mentions légales essentielles</p>
+                <p className="text-slate-600 pt-1">Généré avec Bylz | Mentions légales essentielles</p>
               </div>
             </div>
           </div>

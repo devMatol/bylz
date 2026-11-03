@@ -8,7 +8,7 @@ interface MarketingFooterProps {
 
 export function MarketingFooter({ theme }: MarketingFooterProps = {}) {
   const location = useLocation();
-  const isLight = theme === "light" || (theme === undefined && location.pathname === "/");
+  const isLight = theme !== "dark";
 
   return (
     <footer
@@ -270,7 +270,7 @@ export function MarketingFooter({ theme }: MarketingFooterProps = {}) {
               href="https://lumisweb.fr"
               target="_blank"
               rel="noopener"
-              className={`font-extrabold underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 rounded transition-colors ${
+              className={`inline-flex items-center min-h-[44px] sm:min-h-0 py-1.5 sm:py-0 font-extrabold underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 rounded transition-colors ${
                 isLight
                   ? "text-slate-900 hover:text-blue-700 decoration-slate-400 focus-visible:outline-blue-600"
                   : "text-white hover:text-primary decoration-primary/50 focus-visible:outline-primary"
