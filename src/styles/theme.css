@@ -25,7 +25,7 @@
   --bg-sidebar: #ffffff;
   --surface: #ffffff;
   --surface-hover: #f8fafc;
-  --border: #e2e8f0;
+  --border: #64748b;
   --text: #0f172a;
   --text-muted: #475569;
   --primary: #4856df;
@@ -179,4 +179,72 @@ label {
   );
   filter: blur(3xl);
   pointer-events: none;
+}
+
+/* ==========================================================================
+   Public Site Form Accessibility Controls (WCAG AA Compliance)
+   ========================================================================== */
+.public-site input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]),
+.public-site textarea,
+.public-site select {
+  border: 1.5px solid #64748b !important;
+  color: #0f172a !important;
+  background-color: #ffffff;
+}
+
+.public-site input::placeholder,
+.public-site textarea::placeholder {
+  color: #475569 !important;
+  opacity: 1 !important;
+}
+
+.public-site input:focus-visible,
+.public-site input:focus,
+.public-site textarea:focus-visible,
+.public-site textarea:focus,
+.public-site select:focus-visible,
+.public-site select:focus {
+  outline: 2px solid #1d4ed8 !important;
+  outline-offset: 1px !important;
+  border-color: #1d4ed8 !important;
+  box-shadow: 0 0 0 3px rgba(29, 78, 216, 0.25) !important;
+}
+
+/* Range input slider & thumb accessibility: >= 3:1 against background */
+.public-site input[type="range"] {
+  background-color: #64748b !important;
+  accent-color: #1d4ed8 !important;
+}
+
+.public-site input[type="range"]::-webkit-slider-runnable-track {
+  background-color: #64748b !important;
+  height: 8px;
+  border-radius: 999px;
+}
+
+.public-site input[type="range"]::-webkit-slider-thumb {
+  background-color: #1d4ed8 !important;
+  border: 2px solid #ffffff !important;
+  box-shadow: 0 0 0 1.5px #0f172a !important;
+  width: 22px;
+  height: 22px;
+  margin-top: -7px;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.public-site input[type="range"]::-moz-range-track {
+  background-color: #64748b !important;
+  height: 8px;
+  border-radius: 999px;
+}
+
+.public-site input[type="range"]::-moz-range-thumb {
+  background-color: #1d4ed8 !important;
+  border: 2px solid #ffffff !important;
+  box-shadow: 0 0 0 1.5px #0f172a !important;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  cursor: pointer;
 }

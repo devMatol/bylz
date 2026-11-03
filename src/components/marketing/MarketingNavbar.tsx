@@ -75,7 +75,7 @@ export function MarketingNavbar({ theme }: MarketingNavbarProps) {
           <Logo variant={isLight ? "navy" : "white"} height={32} />
 
           {/* Desktop Nav Links */}
-          <nav className="hidden md:flex items-center space-x-5 lg:space-x-7">
+          <nav className="hidden xl:flex items-center space-x-5 lg:space-x-7">
             {navLinks.map((link) => {
               const isActive = location.pathname === link.path;
               if (isLight) {
@@ -83,7 +83,7 @@ export function MarketingNavbar({ theme }: MarketingNavbarProps) {
                   <Link
                     key={link.path}
                     to={link.path}
-                    className={`text-sm font-semibold transition-colors ${
+                    className={`whitespace-nowrap text-sm font-semibold transition-colors ${
                       isActive
                         ? "text-blue-700 font-bold"
                         : "text-slate-700 hover:text-slate-900"
@@ -97,7 +97,7 @@ export function MarketingNavbar({ theme }: MarketingNavbarProps) {
                 <Link
                   key={link.path}
                   to={link.path}
-                  className={`text-sm font-semibold transition-colors ${
+                  className={`whitespace-nowrap text-sm font-semibold transition-colors ${
                     isActive ? "text-primary font-bold" : "text-muted hover:text-text"
                   }`}
                 >
@@ -108,7 +108,7 @@ export function MarketingNavbar({ theme }: MarketingNavbarProps) {
           </nav>
 
           {/* Desktop CTAs */}
-          <div className="hidden md:flex items-center space-x-3">
+          <div className="hidden xl:flex items-center space-x-3">
             {user ? (
               <Link to="/dashboard">
                 <Button variant="primary" size="sm" className="font-bold">
@@ -120,13 +120,13 @@ export function MarketingNavbar({ theme }: MarketingNavbarProps) {
               <>
                 <Link
                   to="/login"
-                  className="px-3.5 py-1.5 text-sm font-bold text-blue-700 hover:bg-blue-50 border-2 border-blue-600 rounded-lg transition-colors"
+                  className="whitespace-nowrap px-3.5 py-1.5 text-sm font-bold text-blue-700 hover:bg-blue-50 border-2 border-blue-600 rounded-lg transition-colors"
                 >
                   Se connecter
                 </Link>
                 <Link
                   to="/essai"
-                  className="px-4 py-2 text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-sm transition-colors"
+                  className="whitespace-nowrap px-4 py-2 text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-sm transition-colors"
                 >
                   Commencer gratuitement
                 </Link>
@@ -151,7 +151,7 @@ export function MarketingNavbar({ theme }: MarketingNavbarProps) {
           <button
             type="button"
             onClick={() => setMobileMenuOpen((prev) => !prev)}
-            className={`md:hidden p-2.5 rounded-lg transition-colors focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 dark:focus-visible:outline-primary flex items-center justify-center min-w-[44px] min-h-[44px] ${
+            className={`xl:hidden p-2.5 rounded-lg transition-colors focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 dark:focus-visible:outline-primary flex items-center justify-center min-w-[44px] min-h-[44px] ${
               isLight
                 ? "text-slate-800 hover:bg-slate-100"
                 : "text-text hover:bg-surface-hover"
@@ -170,7 +170,7 @@ export function MarketingNavbar({ theme }: MarketingNavbarProps) {
       {/* Mobile Drawer Overlay Portal */}
       {mobileMenuOpen && (
         <div
-          className={`md:hidden fixed inset-0 z-[999] flex flex-col justify-between p-6 overflow-y-auto animate-in fade-in duration-200 ${
+          className={`xl:hidden fixed inset-0 z-[999] flex flex-col justify-between p-6 overflow-y-auto animate-in fade-in duration-200 ${
             isLight ? "bg-white text-slate-900" : "bg-bg/98 backdrop-blur-2xl text-text"
           }`}
         >

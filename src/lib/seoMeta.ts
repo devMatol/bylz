@@ -95,6 +95,13 @@ export const SEO_METADATA: Record<string, SeoRouteMeta> = {
     canonical: "/facturation-electronique",
     ogType: "website"
   },
+  "/essai": {
+    path: "essai",
+    title: "Démo Interactive Bylz : Facturation & Pilotage Micro-Entreprise",
+    description: "Testez immédiatement le logiciel de facturation Bylz sans inscription : créez une facture Factur-X en direct et visualisez vos cotisations.",
+    canonical: "/essai",
+    ogType: "website"
+  },
   "/confidentialite": {
     path: "confidentialite",
     title: "Politique de Confidentialité & RGPD | Bylz",

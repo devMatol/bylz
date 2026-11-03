@@ -280,6 +280,10 @@ const staticPages = [
     ]
   },
   {
+    path: "essai",
+    ...getSeo("essai"),
+  },
+  {
     path: "confidentialite",
     ...getSeo("confidentialite"),
   }
@@ -302,7 +306,7 @@ function renderNavbar() {
         </nav>
         <div class="flex items-center space-x-3">
           <a href="/login" class="text-sm font-semibold text-slate-700 hover:text-slate-950 px-3 py-2 transition-colors">Se connecter</a>
-          <a href="/essai" class="bg-[#4856df] hover:bg-[#3b48c4] text-white text-sm font-bold px-4 py-2 rounded-full shadow-md transition-all">Essayer gratuitement</a>
+          <a href="/essai" class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold px-4 py-2 rounded-full shadow-md transition-all">Essayer gratuitement</a>
         </div>
       </div>
     </header>
@@ -362,6 +366,9 @@ function renderFooter() {
 }
 
 function renderPageBody(routePath, meta, articles) {
+  if (routePath === "essai") {
+    return "";
+  }
   const navbar = renderNavbar();
   const footer = renderFooter();
 
@@ -381,7 +388,7 @@ function renderPageBody(routePath, meta, articles) {
           Créez vos factures PDF avec les mentions légales essentielles, suivez votre CA en temps réel et anticipez vos cotisations URSSAF & impôts en 2 minutes par jour.
         </p>
         <div class="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
-          <a href="/essai" class="w-full sm:w-auto px-8 py-4 rounded-full bg-[#4856df] hover:bg-[#3b48c4] text-white font-bold text-base shadow-xl shadow-[#6e7cf0]/25 transition-all text-center">
+          <a href="/essai" class="w-full sm:w-auto px-8 py-4 rounded-full bg-blue-600 hover:bg-blue-700 text-white font-bold text-base shadow-xl shadow-[#6e7cf0]/25 transition-all text-center">
             Tester gratuitement sans carte bancaire
           </a>
           <a href="/tarifs" class="w-full sm:w-auto px-8 py-4 rounded-full border border-slate-200 hover:bg-slate-100 text-slate-900 font-bold text-base transition-all text-center">
@@ -442,7 +449,7 @@ function renderPageBody(routePath, meta, articles) {
         </div>
 
         <div class="bg-white border-2 border-blue-600 rounded-2xl p-8 flex flex-col justify-between space-y-6 relative shadow-xl shadow-[#6e7cf0]/10">
-          <span class="absolute -top-3 right-6 bg-[#4856df] text-white text-[11px] font-black uppercase px-3 py-0.5 rounded-full">Le Plus Populaire</span>
+          <span class="absolute -top-3 right-6 bg-blue-600 text-white text-[11px] font-black uppercase px-3 py-0.5 rounded-full">Le Plus Populaire</span>
           <div class="space-y-4">
             <h2 class="text-xl font-bold text-slate-900">Solo</h2>
             <p class="text-3xl font-black text-blue-700">50 € <span class="text-sm font-normal text-slate-700">/ an (ou 8,90 €/mois)</span></p>
@@ -455,7 +462,7 @@ function renderPageBody(routePath, meta, articles) {
               <li>✓ Importation de factures PDF historiques</li>
             </ul>
           </div>
-          <a href="/essai" class="w-full py-3 rounded-full bg-[#4856df] hover:bg-[#3b48c4] text-white font-bold text-sm text-center shadow-lg transition-all">
+          <a href="/essai" class="w-full py-3 rounded-full bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm text-center shadow-lg transition-all">
             Essai 14 jours offerts
           </a>
         </div>
@@ -621,7 +628,7 @@ function renderPageBody(routePath, meta, articles) {
         <div class="bg-white border border-slate-200 rounded-2xl p-8 text-center space-y-4 mt-12">
           <h2 class="text-2xl font-bold text-slate-900">Mettez vos factures aux normes 2026 dès aujourd'hui</h2>
           <p class="text-sm text-slate-700 max-w-lg mx-auto">Créez vos devis et factures PDF en 30 secondes et pilotez vos cotisations URSSAF sans stress.</p>
-          <a href="/essai" class="inline-block px-8 py-3.5 rounded-full bg-[#4856df] hover:bg-[#3b48c4] text-white font-bold text-sm shadow-lg transition-all">
+          <a href="/essai" class="inline-block px-8 py-3.5 rounded-full bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm shadow-lg transition-all">
             Créer mon compte gratuit (sans carte bancaire)
           </a>
         </div>
@@ -728,7 +735,7 @@ function renderPageBody(routePath, meta, articles) {
 
       <section class="text-center max-w-xl mx-auto space-y-6 pb-20">
         <h2 class="text-2xl font-bold text-slate-900">Prêt à tester Bylz ?</h2>
-        <a href="/signup?plan=starter" class="inline-block px-8 py-4 rounded-full bg-[#4856df] hover:bg-[#3b48c4] text-white font-bold text-base shadow-xl shadow-[#6e7cf0]/25 transition-all">
+        <a href="/signup?plan=starter" class="inline-block px-8 py-4 rounded-full bg-blue-600 hover:bg-blue-700 text-white font-bold text-base shadow-xl shadow-[#6e7cf0]/25 transition-all">
           Essayer gratuitement
         </a>
       </section>
@@ -790,7 +797,7 @@ function renderPageBody(routePath, meta, articles) {
         <div class="bg-white border border-slate-200 rounded-2xl p-8 space-y-6 text-sm text-slate-700 leading-relaxed">
           <p>Bylz est la plateforme tout-en-un de facturation PDF et de pilotage fiscal conçue spécifiquement pour les auto-entrepreneurs et micro-entreprises françaises.</p>
           <div class="pt-4">
-            <a href="/essai" class="px-6 py-3 rounded-full bg-[#4856df] hover:bg-[#3b48c4] text-white font-bold text-sm shadow-md transition-all inline-block">
+            <a href="/essai" class="px-6 py-3 rounded-full bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm shadow-md transition-all inline-block">
               Découvrir Bylz Gratuitement
             </a>
           </div>
@@ -943,6 +950,11 @@ async function prerender() {
     html = html.replace("</head>", `${seoTags}\n  </head>`);
 
     // Inject rich, tailored HTML body matching the exact route design
+    if (routePath === "essai") {
+      html = html.replace('style="background-color: #ffffff; color: #0f172a;"', 'style="background-color: #0a0e1a; color: #ffffff;"');
+      html = html.replace('<meta name="theme-color" content="#ffffff" />', '<meta name="theme-color" content="#0a0e1a" />');
+    }
+
     const bodyContent = renderPageBody(routePath, meta, allArticles);
     if (bodyContent) {
       html = html.replace(/<div id="root">[\s\S]*?<\/div>/i, `<div id="root">${bodyContent}</div>`);
