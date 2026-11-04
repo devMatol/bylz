@@ -14,7 +14,10 @@ import {
   saveReminderRule,
   deleteReminderRule,
   toggleCompanyAutoReminders,
+  fetchCompanyReminderHistory,
+  type ReminderHistoryItem,
 } from "../../lib/api";
+import { formatDateShort } from "../../lib/date";
 import type { ReminderRule, ReminderTone } from "../../types/database";
 
 export function AutoRemindersSection() {
@@ -22,6 +25,8 @@ export function AutoRemindersSection() {
   const { toast } = useToast();
 
   const [rules, setRules] = useState<ReminderRule[]>([]);
+  const [history, setHistory] = useState<ReminderHistoryItem[]>([]);
+  const [loadingHistory, setLoadingHistory] = useState(false);
   const [masterEnabled, setMasterEnabled] = useState<boolean>(company?.auto_reminders_enabled !== false);
   const [loading, setLoading] = useState(true);
   const [savingMaster, setSavingMaster] = useState(false);
@@ -51,8 +56,12 @@ export function AutoRemindersSection() {
     if (!company) return;
     setLoading(true);
     try {
-      const data = await fetchReminderRules(company.id);
+      const [data, hist] = await Promise.all([
+        fetchReminderRules(company.id),
+        fetchCompanyReminderHistory(company.id).catch(() => []),
+      ]);
       setRules(data);
+      setHistory(hist);
     } catch (err: any) {
       toast(err.message || "Erreur lors du chargement des règles de relance", "danger");
     } finally {
@@ -554,6 +563,79 @@ export function AutoRemindersSection() {
           invoiceAmount={1440.0}
         />
       )}
+
+      {/* C11: Historique des relances envoyées */}
+      <div className="pt-6 border-t border-border space-y-3">
+        <div className="flex items-center justify-between">
+          <div>
+            <h4 className="text-sm font-bold text-text flex items-center gap-2">
+              <Clock className="w-4 h-4 text-muted" />
+              <span>Historique des relances envoyées</span>
+            </h4>
+            <p className="text-xs text-muted mt-0.5">
+              Journal chronologique des relances manuelles et automatiques enregistrées en base
+            </p>
+          </div>
+          {history.length > 0 && (
+            <span className="text-xs font-bold text-muted bg-surface-hover px-2.5 py-1 rounded-pill">
+              {history.length} envoi{history.length > 1 ? "s" : ""}
+            </span>
+          )}
+        </div>
+
+        {history.length === 0 ? (
+          <div className="p-4 rounded-xl bg-surface-hover/50 border border-border text-center text-xs text-muted py-6">
+            Aucune relance envoyée pour le moment.
+          </div>
+        ) : (
+          <div className="border border-border rounded-xl overflow-hidden bg-surface">
+            <div className="overflow-x-auto">
+              <table className="w-full text-xs">
+                <thead className="bg-surface-hover text-muted uppercase font-semibold text-[11px]">
+                  <tr>
+                    <th className="p-3 text-left">Date</th>
+                    <th className="p-3 text-left">Facture</th>
+                    <th className="p-3 text-left">Client</th>
+                    <th className="p-3 text-left">Destinataire</th>
+                    <th className="p-3 text-left">Retard</th>
+                    <th className="p-3 text-right">Canal</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border">
+                  {history.map((h) => (
+                    <tr key={h.id} className="hover:bg-surface-hover transition-colors">
+                      <td className="p-3 text-text font-medium whitespace-nowrap">
+                        {formatDateShort(h.sent_at)}
+                      </td>
+                      <td className="p-3 font-mono font-bold text-text whitespace-nowrap">
+                        {h.invoice_number}
+                      </td>
+                      <td className="p-3 text-text font-semibold truncate max-w-[140px]">
+                        {h.client_name}
+                      </td>
+                      <td className="p-3 text-muted truncate max-w-[160px]">
+                        {h.recipient_email || "-"}
+                      </td>
+                      <td className="p-3 text-muted whitespace-nowrap">
+                        {h.days_late > 0 ? (
+                          <span className="text-danger font-semibold">+{h.days_late} j</span>
+                        ) : (
+                          <span>Échéance</span>
+                        )}
+                      </td>
+                      <td className="p-3 text-right">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-pill text-[10px] font-bold bg-primary/10 text-primary border border-primary/20 uppercase">
+                          {h.source === "auto" ? "Automatique" : "Manuelle"}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+      </div>
 
       {/* Upgrade Modal */}
       <UpgradeModal

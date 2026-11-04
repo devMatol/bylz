@@ -232,6 +232,7 @@ export function UrssafPage() {
           <button
             type="button"
             onClick={() => setDataView("total")}
+            title="Périmètre global : prend en compte toutes vos factures émises (PDF, dématérialisées ou papier)"
             className={cn(
               "px-3 h-7 rounded-pill text-xs font-semibold transition-all",
               dataView === "total"
@@ -239,11 +240,12 @@ export function UrssafPage() {
                 : "text-muted hover:text-text"
             )}
           >
-            Périmètre Global
+            Toutes mes factures
           </button>
           <button
             type="button"
             onClick={() => setDataView("electronic")}
+            title="PDP Électronique : uniquement les factures acheminées via la plateforme partenaire de dématérialisation"
             className={cn(
               "px-3 h-7 rounded-pill text-xs font-semibold transition-all",
               dataView === "electronic"
@@ -251,7 +253,7 @@ export function UrssafPage() {
                 : "text-muted hover:text-text"
             )}
           >
-            PDP Électronique
+            Factures électroniques (PDP)
           </button>
         </div>
       </div>

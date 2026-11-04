@@ -18,10 +18,6 @@ export function SearchInput({
   ...props
 }: SearchInputProps) {
   const ref = useRef<HTMLInputElement>(null);
-  useEffect(() => {
-    if (!ref.current) return;
-    if (value === "") ref.current.focus();
-  }, []);
   return (
     <div className={cn("relative", className)}>
       <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted pointer-events-none" />

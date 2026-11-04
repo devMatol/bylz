@@ -223,7 +223,7 @@ export function LivreRecettesSection({
             </div>
             <h3 className="text-base font-bold text-text mb-2">Assistant Impôts 2042-C-PRO</h3>
             <p className="text-xs text-muted max-w-sm mb-6 leading-relaxed">
-              L'assistant de déclaration fiscale annuelle calcule automatiquement les cases et montants de votre formulaire 2042-C-PRO.
+              Le formulaire 2042-C-PRO est la déclaration complémentaire annuelle de vos revenus d'indépendant à joindre à votre déclaration de revenus personnelle. Bylz calcule automatiquement les montants à reporter dans chaque case.
               Cette fonctionnalité est réservée aux abonnés du plan <strong>Pro</strong>.
             </p>
             <Button

@@ -20,7 +20,7 @@ import { Badge } from "../ui/Badge";
 import { Input } from "../ui/Input";
 import { useAuth } from "../../contexts/AuthContext";
 import { useToast } from "../ui/Toast";
-import { formatAmount } from "../../lib/utils";
+import { formatAmount, cn } from "../../lib/utils";
 import { formatDateShort } from "../../lib/date";
 import { canUseFeature } from "../../lib/planLimits";
 import { UpgradeModal } from "../shared/UpgradeModal";
@@ -361,41 +361,105 @@ export function BankSyncSection() {
       {/* Connected Bank Accounts */}
       {connections.length > 0 && (
         <div className="space-y-3">
+          {connections.some((c) => {
+            const lastSync = c.last_synced_at ? new Date(c.last_synced_at) : null;
+            return lastSync ? Math.floor((Date.now() - lastSync.getTime()) / (1000 * 60 * 60 * 24)) > 7 : false;
+          }) && (
+            <div className="p-3.5 rounded-xl border border-amber-500/30 bg-amber-500/10 text-amber-900 dark:text-amber-200 flex items-center justify-between gap-3 text-xs">
+              <div className="flex items-center gap-2.5 font-medium">
+                <AlertTriangle className="w-4 h-4 text-amber-500 flex-shrink-0" />
+                <span>
+                  <strong>Attention :</strong> La dernière synchronisation bancaire date de plus de 7 jours. Cliquez sur « Synchroniser maintenant » pour mettre à jour vos encaissements.
+                </span>
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleTriggerSync}
+                loading={syncing}
+                className="text-xs font-bold border-amber-500/40 text-amber-500 hover:bg-amber-500/20 whitespace-nowrap"
+              >
+                Synchroniser
+              </Button>
+            </div>
+          )}
           <h4 className="text-xs font-bold text-muted uppercase tracking-wider">
             Comptes Bancaires Connectés ({connections.length})
           </h4>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {connections.map((c) => (
-              <div
-                key={c.id}
-                className="p-4 rounded-card border border-border bg-surface flex items-center justify-between gap-3"
-              >
-                <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center font-bold text-sm">
-                    🏛️
-                  </div>
-                  <div>
-                    <p className="font-bold text-sm text-text">{c.bank_name}</p>
-                    <p className="text-[11px] text-muted">
-                      Synchro : {c.last_synced_at ? formatDateShort(c.last_synced_at) : "À l'instant"}
-                    </p>
-                  </div>
-                </div>
+            {connections.map((c) => {
+              const lastSync = c.last_synced_at ? new Date(c.last_synced_at) : null;
+              const daysSinceSync = lastSync
+                ? Math.floor((Date.now() - lastSync.getTime()) / (1000 * 60 * 60 * 24))
+                : 0;
+              // C10: Avertissement orange quand la synchro dépasse 7 jours
+              const isStale = daysSinceSync > 7;
 
-                <div className="flex items-center space-x-2">
-                  <span className="inline-flex items-center px-2 py-0.5 rounded-pill text-[10px] font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
-                    Actif
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => handleDisconnect(c.id)}
-                    className="text-xs text-muted hover:text-danger font-medium transition-colors"
-                  >
-                    Déconnecter
-                  </button>
+              return (
+                <div
+                  key={c.id}
+                  className={cn(
+                    "p-4 rounded-card border bg-surface flex flex-col sm:flex-row sm:items-center justify-between gap-3",
+                    isStale ? "border-amber-500/50 bg-amber-500/5 shadow-sm" : "border-border"
+                  )}
+                >
+                  <div className="flex items-center space-x-3">
+                    <div className={cn(
+                      "w-10 h-10 rounded-xl flex items-center justify-center font-bold text-sm",
+                      isStale ? "bg-amber-500/15 text-amber-500" : "bg-primary/10 text-primary"
+                    )}>
+                      🏛️
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <p className="font-bold text-sm text-text">{c.bank_name}</p>
+                        {isStale && (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-pill text-xs font-bold bg-amber-500/15 text-amber-500 border border-amber-500/30">
+                            <AlertTriangle className="w-3 h-3" />
+                            <span>Synchro &gt; 7j</span>
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs text-muted mt-0.5">
+                        Synchro : {c.last_synced_at ? formatDateShort(c.last_synced_at) : "À l'instant"}
+                        {isStale && (
+                          <span className="text-amber-500 font-semibold block sm:inline sm:ml-2">
+                            (il y a {daysSinceSync} jours • actualisation requise)
+                          </span>
+                        )}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center space-x-2 justify-end pt-2 sm:pt-0 border-t sm:border-t-0 border-border/40">
+                    {!isStale ? (
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-pill text-xs font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+                        Actif
+                      </span>
+                    ) : (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={handleTriggerSync}
+                        loading={syncing}
+                        className="text-xs font-bold border-amber-500/40 text-amber-500 hover:bg-amber-500/10 min-h-[36px]"
+                      >
+                        Actualiser
+                      </Button>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => handleDisconnect(c.id)}
+                      className="text-xs text-muted hover:text-danger font-medium transition-colors px-2 py-1"
+                    >
+                      Déconnecter
+                    </button>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       )}

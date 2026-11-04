@@ -1416,6 +1416,59 @@ export async function fetchInvoiceReminders(
   return (data || []) as InvoiceReminder[];
 }
 
+export interface ReminderHistoryItem {
+  id: string;
+  invoice_id: string;
+  invoice_number: string;
+  client_name: string;
+  sent_at: string;
+  days_late: number;
+  source: string;
+  tone?: string | null;
+  recipient_email?: string | null;
+}
+
+// C11: Historique complet des relances pour l'entreprise
+export async function fetchCompanyReminderHistory(
+  companyId: string
+): Promise<ReminderHistoryItem[]> {
+  const { data: invs, error: invErr } = await supabase
+    .from("invoices")
+    .select("id, number, clients(name)")
+    .eq("company_id", companyId);
+
+  if (invErr || !invs || invs.length === 0) return [];
+
+  const invoiceMap = new Map<string, { number: string; client_name: string }>();
+  for (const i of invs as any[]) {
+    invoiceMap.set(i.id, {
+      number: i.number,
+      client_name: i.clients?.name || "Client",
+    });
+  }
+
+  const ids = Array.from(invoiceMap.keys());
+  const { data: reminders, error: remErr } = await supabase
+    .from("invoice_reminders")
+    .select("*")
+    .in("invoice_id", ids)
+    .order("sent_at", { ascending: false });
+
+  if (remErr || !reminders) return [];
+
+  return (reminders as any[]).map((r) => ({
+    id: r.id,
+    invoice_id: r.invoice_id,
+    invoice_number: invoiceMap.get(r.invoice_id)?.number || "Facture",
+    client_name: invoiceMap.get(r.invoice_id)?.client_name || "Client",
+    sent_at: r.sent_at,
+    days_late: r.days_late || 0,
+    source: r.source || "manual",
+    tone: r.tone || null,
+    recipient_email: r.recipient_email || null,
+  }));
+}
+
 export async function sendInvoiceReminder(
   companyId: string,
   invoiceId: string,

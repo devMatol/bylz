@@ -204,6 +204,7 @@ export function SimulateurUrssafPage() {
 
               <div className="flex items-center justify-between p-3.5 rounded-2xl bg-slate-50 border border-slate-200 text-xs min-h-[44px]">
                 <label className="font-bold text-slate-800">Tranche Marginale Impôt (TMI)</label>
+                <p className="text-xs text-slate-500 font-normal">Taux d'impôt s'appliquant à la tranche supérieure de vos revenus personnels (ex. 11 % ou 30 % selon votre foyer fiscal).</p>
                 <select
                   value={tmi}
                   onChange={(e) => setTmi(Number(e.target.value))}
