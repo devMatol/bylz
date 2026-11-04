@@ -125,7 +125,7 @@ CREATE POLICY "invoices_select_own" ON public.invoices
   TO authenticated
   USING (
     company_id IN (SELECT id FROM public.companies WHERE user_id = auth.uid())
-    OR is_admin()
+    OR public.is_platform_admin()
   );
 
 CREATE POLICY "invoices_insert_own" ON public.invoices
@@ -141,11 +141,11 @@ CREATE POLICY "invoices_update_own" ON public.invoices
   TO authenticated
   USING (
     company_id IN (SELECT id FROM public.companies WHERE user_id = auth.uid())
-    OR is_admin()
+    OR public.is_platform_admin()
   )
   WITH CHECK (
     company_id IN (SELECT id FROM public.companies WHERE user_id = auth.uid())
-    OR is_admin()
+    OR public.is_platform_admin()
   );
 
 CREATE POLICY "invoices_delete_own" ON public.invoices
@@ -153,6 +153,6 @@ CREATE POLICY "invoices_delete_own" ON public.invoices
   TO authenticated
   USING (
     company_id IN (SELECT id FROM public.companies WHERE user_id = auth.uid())
-    OR is_admin()
+    OR public.is_platform_admin()
   );
 
