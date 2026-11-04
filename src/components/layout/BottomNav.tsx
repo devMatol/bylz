@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { NavLink } from "react-router-dom";
+import { NavLink, useLocation } from "react-router-dom";
 import { Menu } from "lucide-react";
 import { NAV_ITEMS } from "../../lib/constants";
 import { cn } from "../../lib/utils";

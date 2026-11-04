@@ -271,43 +271,7 @@ export function InvoiceNewPage() {
         </div>
       )}
 
-      {!dismissedHistory && company && company.previous_ca === 0 && (
-        <div className="mb-6 p-4 rounded-xl border border-indigo-500/20 bg-indigo-500/5 text-indigo-800 dark:text-indigo-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 max-w-[880px] mx-auto w-full">
-          <div className="flex items-center space-x-3">
-            <Receipt className="w-5 h-5 flex-shrink-0 text-indigo-500" />
-            <div>
-              <p className="font-semibold text-sm">Rattraper votre historique {new Date().getFullYear()}</p>
-              <p className="text-xs opacity-90 text-muted">
-                Renseignez votre chiffre d'affaires antérieur ou importez vos anciennes factures de l'année pour suivre précisément vos plafonds de TVA et micro-entreprise.
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2 w-full sm:w-auto">
-            <button
-              type="button"
-              onClick={() => navigate("/settings?focus=company")}
-              className="flex-1 sm:flex-none text-xs whitespace-nowrap bg-surface text-text border border-border px-3 h-8 rounded-pill font-semibold hover:bg-surface-hover transition-colors"
-            >
-              Saisir mon CA
-            </button>
-            <button
-              type="button"
-              onClick={() => navigate("/invoices?import=true")}
-              className="flex-1 sm:flex-none text-xs whitespace-nowrap bg-primary text-primary-foreground px-3 h-8 rounded-pill font-semibold hover:bg-primary-hover transition-colors animate-pulse"
-            >
-              Importer des PDF
-            </button>
-            <button
-              type="button"
-              onClick={handleDismissHistory}
-              className="text-xs text-muted hover:text-text px-2 h-8 font-medium transition-colors"
-              title="Masquer l'invitation"
-            >
-              Masquer
-            </button>
-          </div>
-        </div>
-      )}
+
 
       <form
         onSubmit={handleSubmit}
@@ -426,7 +390,7 @@ export function InvoiceNewPage() {
       </form>
 
       {/* Sticky summary bar */}
-      <div className="fixed bottom-16 md:bottom-0 left-0 right-0 md:left-[280px] z-20 border-t border-border px-4 md:px-10 py-3 flex items-center justify-between gap-4" style={{ backgroundColor: "var(--bg)", backdropFilter: "blur(8px)" }}>
+      <div className="fixed bottom-0 left-0 right-0 md:left-[280px] z-30 border-t border-border px-4 md:px-10 py-3 flex items-center justify-between gap-4" style={{ backgroundColor: "var(--bg)", backdropFilter: "blur(8px)" }}>
         <div className="flex items-center gap-3 min-w-0">
           {isEdit && (
             <Button

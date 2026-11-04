@@ -115,7 +115,7 @@ export function ClientsPage() {
           <ClientsTable rows={rows} onRowClick={(id) => navigate(`/clients/${id}`)} />
 
           {/* Mobile view <768px: stacked cards */}
-          <div className="flex flex-col gap-3 md:hidden">
+          <div className="flex flex-col gap-3 md:hidden pb-28">
             {rows.map((r) => (
               <div
                 key={r.id}
@@ -146,7 +146,7 @@ export function ClientsPage() {
                     {r.invoice_count} facture{r.invoice_count > 1 ? "s" : ""}
                   </span>
                   <div className="flex items-center gap-1 font-bold text-text">
-                    <span className="text-muted font-normal">CA :</span>
+                    <span className="text-muted font-normal">CA facturé :</span>
                     <Amount value={r.total_ca} size="sm" className="inline-block" />
                   </div>
                 </div>
@@ -200,7 +200,7 @@ function ClientsTable({
             <th className="text-left p-3 font-semibold">Nom</th>
             <th className="text-left p-3 font-semibold">Type</th>
             <th className="text-left p-3 font-semibold">SIREN</th>
-            <th className="text-right p-3 font-semibold">CA total</th>
+            <th className="text-right p-3 font-semibold">CA facturé</th>
             <th className="text-right p-3 font-semibold">Factures</th>
             <th className="text-left p-3 font-semibold">Créé le</th>
           </tr>

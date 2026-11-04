@@ -24,6 +24,7 @@ import { useAuth } from "../contexts/AuthContext";
 import { useToast } from "../components/ui/Toast";
 import { supabase } from "../lib/supabase";
 import { BillingToggle } from "../components/shared/BillingToggle";
+import { cn } from "../lib/utils";
 import { PLANS_DATA } from "../lib/plansData";
 import {
   PLAN_LABELS,
@@ -875,10 +876,47 @@ export function SettingsPage() {
 
             {/* Plans Grid */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* Solo Plan */}
-              <Card className="p-6 flex flex-col justify-between border-primary/30">
+              {/* Starter Plan */}
+              <Card className={cn("p-6 flex flex-col justify-between", currentPlan === "starter" ? "border-primary bg-primary/5" : "border-border")}>
                 <div className="space-y-4">
-                  <h3 className="text-lg font-bold text-text">Solo</h3>
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-lg font-bold text-text">Starter</h3>
+                    {currentPlan === "starter" && <Badge variant="primary">Plan actuel</Badge>}
+                  </div>
+                  <div>
+                    <div className="text-3xl font-extrabold font-mono text-text">
+                      0 € <span className="text-xs font-normal text-muted">/ mois</span>
+                    </div>
+                    <p className="text-xs text-muted mt-1">Gratuit sans engagement</p>
+                  </div>
+                  <ul className="space-y-2 text-xs text-muted">
+                    <li className="flex items-center gap-2"><Check className="w-4 h-4 text-emerald-500" /> Jusqu'à 3 factures / mois</li>
+                    <li className="flex items-center gap-2"><Check className="w-4 h-4 text-emerald-500" /> Jusqu'à 3 clients actifs</li>
+                    <li className="flex items-center gap-2"><Check className="w-4 h-4 text-emerald-500" /> Devis & facturation conforme</li>
+                  </ul>
+                </div>
+                {currentPlan === "starter" ? (
+                  <div className="mt-6 py-2.5 text-center text-xs font-bold text-muted bg-surface-hover rounded-xl border border-border">
+                    Plan actuel
+                  </div>
+                ) : (
+                  <div className="mt-6 py-2.5 text-center text-xs text-muted">
+                    Formule gratuite
+                  </div>
+                )}
+              </Card>
+
+              {/* Solo Plan */}
+              <Card className={cn("p-6 flex flex-col justify-between", currentPlan === "solo" ? "border-primary bg-primary/5" : "border-primary/30")}>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-lg font-bold text-text">Solo</h3>
+                    {currentPlan === "solo" ? (
+                      <Badge variant="primary">Plan actuel</Badge>
+                    ) : (
+                      <Badge variant="default">Recommandé</Badge>
+                    )}
+                  </div>
                   <div>
                     <div className="text-3xl font-extrabold font-mono text-text">
                       {billingCycle === "annual"
@@ -891,25 +929,37 @@ export function SettingsPage() {
                         (soit {PLANS_DATA.solo.pricing.annualMonthlyEquivFormatted} / mois • {PLANS_DATA.solo.pricing.annualSavingsFormatted} d'économie)
                       </p>
                     ) : (
-                      <p className="text-[11px] text-muted mt-1">Facturé 8,90 € / mois sans engagement</p>
+                      <p className="text-xs text-muted mt-1">Facturé 8,90 € / mois sans engagement</p>
                     )}
                   </div>
                   <ul className="space-y-2 text-xs text-muted">
                     <li className="flex items-center gap-2"><Check className="w-4 h-4 text-primary" /> Factures & Devis illimités</li>
-                    <li className="flex items-center gap-2"><Check className="w-4 h-4 text-primary" /> Relances automatiques</li>
+                    <li className="flex items-center gap-2"><Check className="w-4 h-4 text-primary" /> Clients et catalogue illimités</li>
+                    <li className="flex items-center gap-2"><Check className="w-4 h-4 text-primary" /> Pilotage fiscal & seuils de TVA</li>
+                    <li className="flex items-center gap-2"><Check className="w-4 h-4 text-primary" /> Relances automatiques des impayés</li>
                   </ul>
                 </div>
-                <Button onClick={() => void handleCheckout(billingCycle === "annual" ? STRIPE_PRICE_SOLO_ANNUAL : STRIPE_PRICE_SOLO_MONTHLY)} className="mt-6 w-full">
-                  Choisir Solo
-                </Button>
+                {currentPlan === "solo" ? (
+                  <div className="mt-6 py-2.5 text-center text-xs font-bold text-primary bg-primary/10 rounded-xl border border-primary/20">
+                    Plan actuel
+                  </div>
+                ) : (
+                  <Button onClick={() => void handleCheckout(billingCycle === "annual" ? STRIPE_PRICE_SOLO_ANNUAL : STRIPE_PRICE_SOLO_MONTHLY)} className="mt-6 w-full">
+                    Choisir Solo
+                  </Button>
+                )}
               </Card>
 
               {/* Pro Plan */}
-              <Card className="p-6 flex flex-col justify-between border-accent bg-accent/5">
+              <Card className={cn("p-6 flex flex-col justify-between", currentPlan === "pro" ? "border-accent bg-accent/10" : "border-accent bg-accent/5")}>
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <h3 className="text-lg font-bold text-text">Pro</h3>
-                    <Badge variant="warning">Recommandé</Badge>
+                    {currentPlan === "pro" ? (
+                      <Badge variant="primary">Plan actuel</Badge>
+                    ) : (
+                      <Badge variant="warning">Multi-entreprises</Badge>
+                    )}
                   </div>
                   <div>
                     <div className="text-3xl font-extrabold font-mono text-text">
@@ -923,18 +973,25 @@ export function SettingsPage() {
                         (soit {PLANS_DATA.pro.pricing.annualMonthlyEquivFormatted} / mois • {PLANS_DATA.pro.pricing.annualSavingsFormatted} d'économie)
                       </p>
                     ) : (
-                      <p className="text-[11px] text-muted mt-1">Facturé 12,90 € / mois sans engagement</p>
+                      <p className="text-xs text-muted mt-1">Facturé 12,90 € / mois sans engagement</p>
                     )}
                   </div>
                   <ul className="space-y-2 text-xs text-muted">
+                    <li className="flex items-center gap-2"><Check className="w-4 h-4 text-accent" /> Toutes les fonctionnalités Solo</li>
                     <li className="flex items-center gap-2"><Check className="w-4 h-4 text-accent" /> Encaissement Stripe Connect</li>
                     <li className="flex items-center gap-2"><Check className="w-4 h-4 text-accent" /> Copilot IA & WhatsApp</li>
                     <li className="flex items-center gap-2"><Check className="w-4 h-4 text-accent" /> Synchro bancaire automatique</li>
                   </ul>
                 </div>
-                <Button onClick={() => void handleCheckout(billingCycle === "annual" ? STRIPE_PRICE_PRO_ANNUAL : STRIPE_PRICE_PRO_MONTHLY)} className="mt-6 w-full bylz-glow-cta">
-                  Choisir Pro
-                </Button>
+                {currentPlan === "pro" ? (
+                  <div className="mt-6 py-2.5 text-center text-xs font-bold text-accent bg-accent/15 rounded-xl border border-accent/30">
+                    Plan actuel
+                  </div>
+                ) : (
+                  <Button onClick={() => void handleCheckout(billingCycle === "annual" ? STRIPE_PRICE_PRO_ANNUAL : STRIPE_PRICE_PRO_MONTHLY)} className="mt-6 w-full bylz-glow-cta">
+                    Choisir Pro
+                  </Button>
+                )}
               </Card>
             </div>
           </div>

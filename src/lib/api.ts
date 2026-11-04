@@ -86,15 +86,23 @@ export async function fetchClients(
 
   const { data: inv, error: invErr } = await supabase
     .from("invoices")
-    .select("client_id, total_ttc, paid_amount, status, issue_date, paid_at")
+    .select("client_id, total_ttc, paid_amount, status, issue_date, paid_at, type")
     .in("client_id", ids);
   if (invErr) throw invErr;
 
   const stats = new Map<string, { total_ca: number; invoice_count: number }>();
   for (const i of inv || []) {
+    // B7: CA facturé réel hors brouillons
+    if (i.status === "draft") continue;
     const s = stats.get(i.client_id) || { total_ca: 0, invoice_count: 0 };
-    if (i.status === "paid") s.total_ca += Number(i.paid_amount) || Number(i.total_ttc);
-    s.invoice_count += 1;
+    const invAmount = Number(i.total_ttc) || 0;
+    if (i.type === "credit_note") {
+      // Déduction si avoir
+      s.total_ca -= invAmount;
+    } else {
+      s.total_ca += invAmount;
+      s.invoice_count += 1;
+    }
     stats.set(i.client_id, s);
   }
   return clients.map((c) => ({
@@ -548,14 +556,19 @@ export async function fetchInvoices(
   companyId: string,
   status?: InvoiceStatus | "all",
   search = ""
-): Promise<(Invoice & { client_name: string; client_type: string })[]> {
+): Promise<(Invoice & { client_name: string; client_type: string; client_email?: string | null })[]> {
   let query = supabase
     .from("invoices")
-    .select("*, clients(name, type)")
+    .select("*, clients(name, type, email)")
     .eq("company_id", companyId)
     .order("created_at", { ascending: false });
 
-  if (status && status !== "all") query = query.eq("status", status);
+  if (status === "late") {
+    // B5: un avoir n'est jamais en retard
+    query = query.eq("status", "late").neq("type", "credit_note");
+  } else if (status && status !== "all") {
+    query = query.eq("status", status);
+  }
   if (search) {
     const safe = sanitizeFilterTerm(search);
     if (safe) {
@@ -570,11 +583,15 @@ export async function fetchInvoices(
     console.warn("fetchInvoices primary query failed, attempting fallback:", error);
     let fallbackQuery = supabase
       .from("invoices")
-      .select("*, clients(name)")
+      .select("*, clients(name, email)")
       .eq("company_id", companyId)
       .order("created_at", { ascending: false });
 
-    if (status && status !== "all") fallbackQuery = fallbackQuery.eq("status", status);
+    if (status === "late") {
+      fallbackQuery = fallbackQuery.eq("status", "late").neq("type", "credit_note");
+    } else if (status && status !== "all") {
+      fallbackQuery = fallbackQuery.eq("status", status);
+    }
     if (search) {
       const safe = sanitizeFilterTerm(search);
       if (safe) fallbackQuery = fallbackQuery.or(`number.ilike.%${safe}%`);
@@ -596,7 +613,6 @@ export async function fetchInvoices(
     credited_invoice_id: i.credited_invoice_id,
     number: i.number,
     type: i.type,
-    status: i.status,
     pa_status: i.pa_status,
     pa_rejection_reason: i.pa_rejection_reason,
     factpulse_ref: i.factpulse_ref,
@@ -614,8 +630,13 @@ export async function fetchInvoices(
     ereporting_status: i.ereporting_status,
     note: i.note,
     created_at: i.created_at,
+    // B5: Un avoir n'est jamais en retard
+    status: (i.type === "credit_note" && i.status === "late")
+      ? ((i.paid_amount != null && Number(i.paid_amount) >= Number(i.total_ttc)) ? "paid" : "pending")
+      : i.status,
     client_name: i.clients?.name || "-",
     client_type: i.clients?.type || "b2b",
+    client_email: i.clients?.email || null,
   }));
 }
 
@@ -1136,7 +1157,8 @@ export interface DashboardData {
   abattementPct: number;
   monthlyCa: { month: string; ca: number }[];
   recentInvoices: (Invoice & { client_name: string })[];
-  upcomingEcheances: (Invoice & { client_name: string })[];
+  upcomingEcheances: (Invoice & { client_name: string; client_email?: string | null })[];
+  lateInvoices: (Invoice & { client_name: string; client_email?: string | null })[];
   bestMonth: { month: string; ca: number } | null;
   monthlyAverage: number;
   yearlyCa: number;
@@ -1320,14 +1342,28 @@ export async function fetchDashboardData(
     .filter((i) => i.status !== "draft")
     .slice(0, 5);
 
+  const todayStr = now.toISOString().slice(0, 10);
+
+  // B5: Prochaines échéances ne montre que le FUTUR (due_date >= today), trié par date croissante
   const upcomingEcheances = invoiceRows
     .filter(
       (i) =>
-        (i.status === "pending" || i.status === "late") &&
-        i.type !== "credit_note"
+        i.type !== "credit_note" &&
+        (i.status === "pending" || i.status === "partially_paid") &&
+        i.due_date >= todayStr
     )
     .sort((a, b) => (a.due_date < b.due_date ? -1 : 1))
     .slice(0, 5);
+
+  // B5: Retards dans un bloc séparé "À relancer" (due_date < today)
+  const lateInvoices = invoiceRows
+    .filter(
+      (i) =>
+        i.type !== "credit_note" &&
+        (i.status === "pending" || i.status === "late" || i.status === "partially_paid") &&
+        i.due_date < todayStr
+    )
+    .sort((a, b) => (a.due_date < b.due_date ? -1 : 1));
 
   const monthlyArr = Array.from(monthlyMap.entries())
     .map(([month, ca]) => ({ month, ca: Number.isFinite(ca) ? ca : 0 }))
@@ -1354,6 +1390,7 @@ export async function fetchDashboardData(
     monthlyCa: monthlyArr,
     recentInvoices,
     upcomingEcheances,
+    lateInvoices,
     bestMonth: bestMonth && bestMonth.ca > 0 ? bestMonth : null,
     monthlyAverage,
     yearlyCa: caEncaisseYear,

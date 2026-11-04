@@ -193,7 +193,7 @@ export function UrssafPage() {
             )}
           >
             <BarChart3 className="w-4 h-4" />
-            <span>📊 Plafonds & Atterrissage</span>
+            <span>📊 Plafonds & Projections</span>
           </button>
 
           <button
@@ -233,7 +233,7 @@ export function UrssafPage() {
             type="button"
             onClick={() => setDataView("total")}
             className={cn(
-              "px-3 h-7 rounded-pill text-[11px] font-semibold transition-all",
+              "px-3 h-7 rounded-pill text-xs font-semibold transition-all",
               dataView === "total"
                 ? "bg-primary text-white font-bold shadow-xs"
                 : "text-muted hover:text-text"
@@ -245,7 +245,7 @@ export function UrssafPage() {
             type="button"
             onClick={() => setDataView("electronic")}
             className={cn(
-              "px-3 h-7 rounded-pill text-[11px] font-semibold transition-all",
+              "px-3 h-7 rounded-pill text-xs font-semibold transition-all",
               dataView === "electronic"
                 ? "bg-primary text-white font-bold shadow-xs"
                 : "text-muted hover:text-text"
@@ -260,7 +260,7 @@ export function UrssafPage() {
         <Skeleton height="14rem" />
       ) : (
         <>
-          {/* TAB 1: PLAFONDS & ATTERRISSAGE */}
+          {/* TAB 1: PLAFONDS & PROJECTIONS */}
           {activeTab === "gauges" && fiscalMetrics && (
             <div className="space-y-6">
               {/* Threshold Gauges Grid */}
@@ -363,7 +363,7 @@ export function UrssafPage() {
                           {formatAmount(currentPeriod.estimatedAmount)}
                         </p>
                         {currentPeriod.revenue === 0 && (
-                          <p className="text-[11px] text-amber-400 mt-1 font-medium">
+                          <p className="text-xs text-amber-400 mt-1 font-medium">
                             Rien à payer, mais la déclaration à 0 € est obligatoire
                           </p>
                         )}

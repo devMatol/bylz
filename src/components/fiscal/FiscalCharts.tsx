@@ -103,7 +103,10 @@ export function FiscalCharts({ monthlyData, caThreshold }: FiscalChartsProps) {
                   fontSize="10"
                   textAnchor="end"
                 >
-                  {Math.round(labelVal / 1000)}k€
+                  {(() => {
+                    const valInK = labelVal / 1000;
+                    return (valInK % 1 === 0 ? `${valInK}k` : `${valInK.toFixed(1).replace(".", ",")}k`) + " €";
+                  })()}
                 </text>
               </g>
             );

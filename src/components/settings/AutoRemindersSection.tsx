@@ -335,14 +335,15 @@ export function AutoRemindersSection() {
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-end gap-2">
+                  {/* B9: Zones tactiles >= 40px et espacées */}
+                  <div className="flex items-center justify-end gap-3 flex-wrap sm:flex-nowrap">
                     <button
                       type="button"
                       onClick={() => {
                         setPreviewRule(rule);
                         setPreviewOpen(true);
                       }}
-                      className="p-2 rounded-lg bg-surface hover:bg-surface-hover text-muted hover:text-text border border-border transition-colors cursor-pointer"
+                      className="min-w-[40px] min-h-[40px] p-2.5 rounded-xl bg-surface hover:bg-surface-hover text-muted hover:text-text border border-border transition-colors cursor-pointer flex items-center justify-center"
                       title="Aperçu du mail"
                     >
                       <Eye className="w-4 h-4" />
@@ -356,7 +357,7 @@ export function AutoRemindersSection() {
                         }
                         handleOpenEdit(rule);
                       }}
-                      className="p-2 rounded-lg bg-surface hover:bg-surface-hover text-muted hover:text-text border border-border transition-colors cursor-pointer"
+                      className="min-w-[40px] min-h-[40px] p-2.5 rounded-xl bg-surface hover:bg-surface-hover text-muted hover:text-text border border-border transition-colors cursor-pointer flex items-center justify-center"
                       title={!canUseAutoReminders ? "Plan Solo requis" : "Modifier la règle"}
                     >
                       <Edit3 className="w-4 h-4" />
@@ -371,32 +372,34 @@ export function AutoRemindersSection() {
                           }
                           handleDeleteRule(rule.id);
                         }}
-                        className="p-2 rounded-lg bg-surface hover:bg-surface-hover text-muted hover:text-danger border border-border transition-colors cursor-pointer"
+                        className="min-w-[40px] min-h-[40px] p-2.5 rounded-xl bg-surface hover:bg-surface-hover text-muted hover:text-danger border border-border transition-colors cursor-pointer flex items-center justify-center"
                         title={!canUseAutoReminders ? "Plan Solo requis" : "Supprimer"}
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
                     )}
-                    <button
-                      type="button"
-                      onClick={() => {
-                        if (!canUseAutoReminders) {
-                          setUpgradeModalOpen(true);
-                          return;
-                        }
-                        handleToggleRule(rule);
-                      }}
-                      className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ml-1 cursor-pointer ${
-                        isRuleActive ? "bg-primary" : "bg-surface-hover border border-border"
-                      }`}
-                      title={!canUseAutoReminders ? "Activer avec le Plan Solo" : rule.enabled ? "Désactiver" : "Activer"}
-                    >
-                      <span
-                        className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${
-                          isRuleActive ? "translate-x-5" : "translate-x-1"
+                    <div className="min-w-[44px] min-h-[40px] flex items-center justify-center">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (!canUseAutoReminders) {
+                            setUpgradeModalOpen(true);
+                            return;
+                          }
+                          handleToggleRule(rule);
+                        }}
+                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors cursor-pointer ${
+                          isRuleActive ? "bg-primary" : "bg-surface-hover border border-border"
                         }`}
-                      />
-                    </button>
+                        title={!canUseAutoReminders ? "Activer avec le Plan Solo" : rule.enabled ? "Désactiver" : "Activer"}
+                      >
+                        <span
+                          className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                            isRuleActive ? "translate-x-6" : "translate-x-1"
+                          }`}
+                        />
+                      </button>
+                    </div>
                   </div>
                 </div>
               );

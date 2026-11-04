@@ -20,12 +20,14 @@ export function ThresholdGaugeCard({
   thresholdLimit,
   projectedValue,
   status,
-  unitLabel = "€",
   secondaryThreshold,
   secondaryThresholdLabel,
 }: ThresholdGaugeCardProps) {
-  const percentUsed = Math.min(100, Math.max(0, (currentValue / thresholdLimit) * 100));
-  const percentProjected = Math.min(100, Math.max(0, (projectedValue / thresholdLimit) * 100));
+  // B6: Progression strictement proportionnelle à la valeur réelle (pas de saut artificiel)
+  const rawPercent = thresholdLimit > 0 ? (currentValue / thresholdLimit) * 100 : 0;
+  const percentUsed = Math.min(100, Math.max(0, rawPercent));
+  const rawProjected = thresholdLimit > 0 ? (projectedValue / thresholdLimit) * 100 : 0;
+  const percentProjected = Math.min(100, Math.max(0, rawProjected));
 
   const statusConfig = {
     safe: {
@@ -81,7 +83,7 @@ export function ThresholdGaugeCard({
 
         <span
           className={cn(
-            "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-pill text-[11px] font-bold border whitespace-nowrap",
+            "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-pill text-xs font-bold border whitespace-nowrap",
             statusConfig.badgeClass
           )}
         >
@@ -96,12 +98,14 @@ export function ThresholdGaugeCard({
           <span className="text-3xl font-black tracking-tight text-text">
             {formatAmount(currentValue)}
           </span>
+          {/* B6: Suppression du double symbole € € */}
           <span className="text-xs text-muted ml-2 font-medium">
-            sur {formatAmount(thresholdLimit)} {unitLabel}
+            sur {formatAmount(thresholdLimit)}
           </span>
         </div>
+        {/* B6: Pourcentage avec virgule française */}
         <span className="text-sm font-extrabold text-muted">
-          {percentUsed.toFixed(1)} %
+          {percentUsed.toFixed(1).replace(".", ",")} %
         </span>
       </div>
 
@@ -112,7 +116,7 @@ export function ThresholdGaugeCard({
           <div
             className="absolute left-0 top-0 bottom-0 rounded-full bg-white/15 transition-all duration-500"
             style={{ width: `${Math.min(100, percentProjected)}%` }}
-            title={`Atterrissage prévisionnel : ${percentProjected.toFixed(1)} %`}
+            title={`Estimation fin d'année : ${percentProjected.toFixed(1).replace(".", ",")} %`}
           />
         )}
 
@@ -137,13 +141,17 @@ export function ThresholdGaugeCard({
 
       {/* Bottom Metrics & Forecast */}
       <div className="mt-4 pt-3 border-t border-border/60 flex items-center justify-between text-xs text-muted">
-        <div className="flex items-center gap-1.5 font-medium">
+        {/* B6: Terme clair remplaçant "Atterrissage" avec bulle explicative */}
+        <div
+          className="flex items-center gap-1.5 font-medium"
+          title="Estimation annuelle projetée au 31 décembre à partir de votre rythme d'encaissement actuel"
+        >
           <TrendingUp className="w-3.5 h-3.5 text-primary" />
-          <span>Atterrissage 31 déc. :</span>
+          <span>Estimation fin d'année (au 31 déc.) :</span>
           <strong className="text-text font-bold">{formatAmount(projectedValue)}</strong>
         </div>
 
-        <div className="flex items-center gap-1 text-[11px]">
+        <div className="flex items-center gap-1 text-xs">
           <Info className="w-3 h-3 text-muted" />
           <span>Reste disponible :</span>
           <strong className={cn("font-bold", thresholdLimit - currentValue <= 0 ? "text-rose-400" : "text-emerald-400")}>
