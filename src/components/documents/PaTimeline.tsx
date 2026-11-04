@@ -65,6 +65,8 @@ export function PaTimeline({ invoice, isB2b, onRefresh }: PaTimelineProps) {
           errorMsg = "Cette facture a déjà fait l'objet d'une transmission validée.";
         } else if (errorCode === "retry_not_allowed") {
           errorMsg = "La relance n'est autorisée que pour une facture précédemment rejetée.";
+        } else if (errorCode === "production_disabled") {
+          errorMsg = "Transmission à la facturation électronique désactivée pour le moment.";
         }
 
         toast(errorMsg, "warning");

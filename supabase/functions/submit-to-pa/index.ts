@@ -4,6 +4,7 @@ import { encode as base64Encode, decode as base64Decode } from "https://deno.lan
 import { callFactPulseApi } from "../_shared/factpulse-client.ts";
 import {
   validateFactPulseAddress,
+  isFactPulseTransmissionAllowed,
   verifyInvoiceTotalsConcordance,
   recoverStaleSubmittingStatus,
   attemptAtomicReservation,
@@ -310,19 +311,18 @@ serve(async (req) => {
     const sourcePdfBytes = new Uint8Array(await sourcePdfBlob.data.arrayBuffer());
     const sourcePdfBase64 = base64Encode(sourcePdfBytes);
 
-    // 10. Contrôle strict Bac à sable vs Production (variables FACTPULSE_SANDBOX & FACTPULSE_ALLOW_PRODUCTION)
-    const isSandbox = Deno.env.get("FACTPULSE_SANDBOX") !== "false";
-    const allowProd = Deno.env.get("FACTPULSE_ALLOW_PRODUCTION") === "true";
-
-    if (!isSandbox && !allowProd) {
-      console.warn("⚠️ Tentative d'envoi FactPulse production bloquée par FACTPULSE_ALLOW_PRODUCTION=false");
+    // 10. Garde-fou strict fail-closed (FACTPULSE_ALLOW_PRODUCTION)
+    // Comme l'URL FactPulse est unique (https://factpulse.fr/api/v1), tout envoi sans validation explicite est bloqué
+    const allowCheck = isFactPulseTransmissionAllowed(Deno.env.get("FACTPULSE_ALLOW_PRODUCTION"));
+    if (!allowCheck.allowed) {
+      console.warn("⚠️ Transmission FactPulse bloquée par FACTPULSE_ALLOW_PRODUCTION !== 'true'");
       return new Response(
         JSON.stringify({
           success: false,
-          error_code: "production_disabled",
-          error: "Les envois en production vers FactPulse sont bloqués par FACTPULSE_ALLOW_PRODUCTION.",
+          error_code: allowCheck.errorCode,
+          error: allowCheck.error,
         }),
-        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        { status: allowCheck.status || 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 

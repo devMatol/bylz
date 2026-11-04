@@ -87,102 +87,82 @@ Vérifier la colonne `remote` pour les 4 migrations du Lot 6 :
 
 ---
 
-## Étape 3 — Application des Migrations SQL (Ordre strict)
+## Étape 3 — Application des Migrations SQL (supabase db push)
 
-Deux méthodes sont possibles. **L'Option A (application ciblée via SQL)** est la méthode recommandée pour maîtriser précisément chaque étape sans effet de bord.
+> [!WARNING]
+> `supabase db push` est la procédure principale requise : elle applique les migrations et enregistre chacune dans la table d'historique `supabase_migrations.schema_migrations` (ce que `db query -f` ne fait pas).
+> Elle inclut la migration `20260919020500` (100 % idempotente, configuration de buckets et politiques de sécurité déjà vérifiée identique en base).
+> C'est à partir de cette étape que la contrainte `NOT NULL` entre en jeu. Enchaîner immédiatement sans pause avec les étapes 4 et 5.
+
+### 3.1 Commande principale d'application
+```bash
+npx supabase db push --remote
+```
+
+Cette commande applique séquentiellement les 5 migrations en attente :
+1. `20260919020500_fix_logo_storage_buckets_and_policies.sql` (alignement de l'historique avec l'état effectif des buckets et RLS)
+2. `20261028110000_schema_reproducibility.sql` (`vat_option`, `legal_snapshot`)
+3. `20261028120000_inalterabilite_and_cancel_match.sql` (`is_reversal`, contre-passation inaltérable)
+4. `20261031170000_add_address_postal_city_and_vat_rate.sql` (`postal_code`, `city`, `vat_rate`)
+5. `20261031180000_factpulse_vat_backfill_and_snapshot.sql` (backfill `vat_rate`, contrainte `NOT NULL`, extension `pa_status`, freeze snapshot)
 
 ---
 
-### Option A (Recommandée) : Exécution ciblée fichier par fichier
-
-#### 3.1 Migration 1 : `20261028110000_schema_reproducibility.sql`
-**Commande :**
+### 3.2 Contrôle d'enregistrement dans l'historique distant
+Vérifier immédiatement après le push que les 5 migrations sont bien enregistrées côté distant :
 ```bash
-npx supabase db query --remote -f supabase/migrations/20261028110000_schema_reproducibility.sql
+npx supabase migration list --remote
 ```
+*Attendu :*
+- Les 5 migrations (`20260919020500`, `20261028110000`, `20261028120000`, `20261031170000`, `20261031180000`) ont chacune un timestamp distant renseigné dans la colonne `remote`.
+- Aucune migration locale ne subsiste avec `remote: ""`.
 
-**SELECT de contrôle immédiat :**
+*Critère d'arrêt :*
+* **ARRÊT IMMÉDIAT SI :**
+  - La commande `db push` a échoué avec une erreur SQL ou réseau.
+  - L'une des 5 migrations n'apparaît pas comme appliquée dans `supabase migration list --remote`.
+
+---
+
+### 3.3 Contrôles SQL immédiats de schéma & contraintes
+
+Lancer les requêtes SELECT suivantes pour certifier l'intégrité de la base :
+
+#### Contrôle 1 : Option TVA entreprise
 ```bash
 npx supabase db query --remote --read-only "SELECT column_name, data_type FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'companies' AND column_name = 'vat_option';"
 ```
 *Attendu :* 1 ligne retournée avec `column_name = 'vat_option'`, `data_type = 'USER-DEFINED'`.
 
-**Critère d'arrêt :**
-* **ARRÊT IMMÉDIAT SI :** La requête retourne 0 ligne ou si l'enum `vat_payment_option` n'est pas reconnu.
-
----
-
-#### 3.2 Migration 2 : `20261028120000_inalterabilite_and_cancel_match.sql`
-**Commande :**
-```bash
-npx supabase db query --remote -f supabase/migrations/20261028120000_inalterabilite_and_cancel_match.sql
-```
-
-**SELECT de contrôle immédiat :**
+#### Contrôle 2 : Inaltérabilité des paiements
 ```bash
 npx supabase db query --remote --read-only "SELECT column_name, data_type, is_nullable FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'payments' AND column_name = 'is_reversal';"
 ```
 *Attendu :* 1 ligne retournée avec `column_name = 'is_reversal'`, `data_type = 'boolean'`, `is_nullable = 'NO'`.
 
-**Critère d'arrêt :**
-* **ARRÊT IMMÉDIAT SI :** `is_reversal` absent ou si la contrainte `payments_amount_sign` échoue.
-
----
-
-#### 3.3 Migration 3 : `20261031170000_add_address_postal_city_and_vat_rate.sql`
-**Commande :**
-```bash
-npx supabase db query --remote -f supabase/migrations/20261031170000_add_address_postal_city_and_vat_rate.sql
-```
-
-**SELECT de contrôle immédiat :**
+#### Contrôle 3 : Adresses & Colonne vat_rate
 ```bash
 npx supabase db query --remote --read-only "SELECT table_name, column_name FROM information_schema.columns WHERE table_schema = 'public' AND ((table_name = 'companies' AND column_name IN ('postal_code', 'city')) OR (table_name = 'clients' AND column_name IN ('postal_code', 'city')) OR (table_name = 'invoice_lines' AND column_name = 'vat_rate')) ORDER BY table_name, column_name;"
 ```
 *Attendu :* Exactement 5 lignes retournées (`clients.city`, `clients.postal_code`, `companies.city`, `companies.postal_code`, `invoice_lines.vat_rate`).
 
-**Critère d'arrêt :**
-* **ARRÊT IMMÉDIAT SI :** Moins de 5 colonnes retournées.
-
----
-
-#### 3.4 Migration 4 : `20261031180000_factpulse_vat_backfill_and_snapshot.sql`
-> [!WARNING]
-> C'est à partir de cette étape que la contrainte `NOT NULL` entre en jeu. Enchaîner immédiatement sans pause avec les étapes 4 et 5.
-
-**Commande :**
-```bash
-npx supabase db query --remote -f supabase/migrations/20261031180000_factpulse_vat_backfill_and_snapshot.sql
-```
-
-**SELECT de contrôle immédiat :**
+#### Contrôle 4 : Backfill TVA & Contrainte NOT NULL sur les lignes de facture
 ```bash
 npx supabase db query --remote --read-only "SELECT count(*) as null_vat_lines FROM public.invoice_lines WHERE vat_rate IS NULL; SELECT is_nullable FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'invoice_lines' AND column_name = 'vat_rate';"
 ```
 *Attendu :*
-1. `null_vat_lines = 0` (toutes les 58 lignes ont été migrées à 0% ou 20%).
+1. `null_vat_lines = 0` (les 58 lignes existantes ont été converties à 0 % ou 20 %).
 2. `is_nullable = 'NO'` (la contrainte `NOT NULL` est active).
 
-**Contrôle secondaire de la fonction de gel :**
+#### Contrôle 5 : Fonction de gel inaltérable
 ```bash
 npx supabase db query --remote --read-only "SELECT proname FROM pg_proc WHERE proname = 'freeze_invoice_legal_snapshot';"
 ```
 *Attendu :* 1 ligne retournée.
 
-**Critère d'arrêt :**
+*Critère d'arrêt :*
 * **ARRÊT IMMÉDIAT SI :**
-  - La commande SQL retourne une erreur arithmétique (`Écart arithmétique TVA inacceptable`).
-  - `null_vat_lines > 0`.
-  - `is_nullable <> 'NO'`.
-
----
-
-### Option B : Application globale via `supabase db push`
-*Si Matthias valide l'inclusion de `20260919020500` :*
-```bash
-npx supabase db push --remote
-```
-Lancer ensuite l'ensemble des 4 requêtes de contrôle de l'Option A (3.1 à 3.4).
+  - L'un des contrôles ci-dessus ne correspond pas à l'attendu (par ex. `null_vat_lines > 0` ou `is_nullable <> 'NO'`).
 
 ---
 
