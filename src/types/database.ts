@@ -3,13 +3,14 @@
 export type PlanType = "starter" | "solo" | "pro";
 export type ActivityType = "freelance_bnc" | "artisan_bic" | "commerce" | "liberal";
 export type VatRegime = "franchise" | "vat";
+export type VatOption = "encaissements" | "debits" | "non_renseigne";
 export type UrssafFreq = "monthly" | "quarterly";
 export type ClientType = "b2b" | "b2c";
 export type ItemNature = "goods" | "service";
 export type QuoteStatus = "draft" | "sent" | "accepted" | "refused";
-export type InvoiceStatus = "draft" | "pending" | "late" | "paid" | "rejected";
+export type InvoiceStatus = "draft" | "pending" | "late" | "paid" | "partially_paid" | "rejected";
 export type InvoiceType = "invoice" | "credit_note";
-export type PaStatus = "none" | "submitted" | "delivered" | "received" | "accepted" | "rejected";
+export type PaStatus = "none" | "submitting" | "submitted" | "delivered" | "received" | "accepted" | "rejected" | "litigation" | "suspended";
 export type PaymentMethod = "transfer" | "stripe" | "cash" | "check";
 export type PaymentSource = "manual" | "stripe_webhook";
 export type EreportingStatus = "pending" | "submitted" | "confirmed" | "error";
@@ -47,9 +48,12 @@ export interface Company {
   legal_name: string;
   commercial_name: string | null;
   address: string;
+  postal_code?: string | null;
+  city?: string | null;
   naf_code: string | null;
   activity_type: ActivityType;
   vat_regime: VatRegime;
+  vat_option?: VatOption;
   structure: CompanyStructure;
   urssaf_frequency: UrssafFreq;
   logo_url: string | null;
@@ -73,6 +77,8 @@ export interface Client {
   vat_number: string | null;
   email: string | null;
   address: string | null;
+  postal_code?: string | null;
+  city?: string | null;
   archived_at: string | null;
   created_at: string;
 }
@@ -82,6 +88,7 @@ export interface CatalogItem {
   company_id: string;
   description: string;
   unit_price: number;
+  vat_rate?: number;
   nature: ItemNature;
   created_at: string;
 }
@@ -119,6 +126,7 @@ export interface QuoteLine {
   description: string;
   quantity: number;
   unit_price: number;
+  vat_rate?: number;
   nature: ItemNature;
   position: number;
 }
@@ -133,6 +141,8 @@ export interface Invoice {
   type: InvoiceType;
   status: InvoiceStatus;
   pa_status: PaStatus;
+  pa_status_updated_at?: string | null;
+  pa_lifecycle_code?: number | null;
   pa_rejection_reason: string | null;
   factpulse_ref?: string | null;
   pa_submission_choice?: boolean;
@@ -163,6 +173,7 @@ export interface InvoiceLine {
   description: string;
   quantity: number;
   unit_price: number;
+  vat_rate?: number;
   nature: ItemNature;
   position: number;
 }
@@ -174,6 +185,10 @@ export interface Payment {
   method: PaymentMethod;
   paid_at: string;
   source: PaymentSource;
+  bank_transaction_id?: string | null;
+  is_reversal?: boolean;
+  reversed_payment_id?: string | null;
+  note?: string | null;
 }
 
 export interface EreportingBatch {

@@ -116,7 +116,7 @@ export async function callFactPulseApi(
   const clientUid = config?.clientUid || Deno.env.get("FACTPULSE_CLIENT_UID");
   let token = config?.apiToken || (await getOrRefreshFactPulseToken(false));
 
-  const baseUrl = "https://app.factpulse.fr/api/v1";
+  const baseUrl = "https://factpulse.fr/api/v1";
   const url = endpoint.startsWith("http") ? endpoint : `${baseUrl}${endpoint.startsWith("/") ? "" : "/"}${endpoint}`;
 
   const sendRequest = async (authToken: string) => {

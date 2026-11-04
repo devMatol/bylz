@@ -644,7 +644,8 @@ function parseFacturXXml(xmlStr: string): {
             unit_price: amtHt,
             nature: "service",
             position: 0,
-          },
+            vat_rate: company.vat_regime === "franchise" ? 0 : (amtHt > 0 && amtTtc > amtHt ? Math.round(((amtTtc - amtHt) / amtHt) * 100) : 20),
+          } as any,
         ],
       });
 

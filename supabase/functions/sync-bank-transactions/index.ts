@@ -265,6 +265,7 @@ Deno.serve(async (req: Request) => {
           .from("bank_transactions")
           .upsert(
             {
+              company_id: conn.company_id,
               bank_connection_id: conn.id,
               external_id: tx.external_id,
               amount: tx.amount,

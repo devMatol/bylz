@@ -57,7 +57,8 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
           company.created_at,
           company.urssaf_frequency,
           payments,
-          declarations
+          declarations,
+          company.activity_type
         );
         const current = periods.find((p) => !p.declared);
         if (current) {

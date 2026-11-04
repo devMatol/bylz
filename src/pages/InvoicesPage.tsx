@@ -29,6 +29,7 @@ const FILTERS: { id: Filter; label: string }[] = [
   { id: "draft", label: "Brouillon" },
   { id: "pending", label: "En attente" },
   { id: "late", label: "En retard" },
+  { id: "partially_paid", label: "Partiellement payées" },
   { id: "paid", label: "Payées" },
 ];
 
@@ -40,6 +41,7 @@ interface Row {
   issue_date: string;
   due_date: string;
   total_ttc: number;
+  paid_amount?: number | null;
   status: InvoiceStatus;
   pa_status?: PaStatus;
   type: InvoiceType;
@@ -103,6 +105,7 @@ export function InvoicesPage() {
           issue_date: i.issue_date,
           due_date: i.due_date,
           total_ttc: i.total_ttc,
+          paid_amount: i.paid_amount,
           status: i.status,
           pa_status: i.pa_status,
           type: i.type,
@@ -147,11 +150,11 @@ export function InvoicesPage() {
   // Custom tab stats
   const activeTotal = activeRows.reduce((acc, r) => acc + r.total_ttc, 0);
   const activePending = activeRows
-    .filter((r) => r.status === "pending")
-    .reduce((acc, r) => acc + r.total_ttc, 0);
+    .filter((r) => r.status === "pending" || r.status === "partially_paid")
+    .reduce((acc, r) => acc + Math.max(0, r.total_ttc - (r.paid_amount || 0)), 0);
   const activeLate = activeRows
-    .filter((r) => (r.status === "pending" || r.status === "late") && r.due_date < today)
-    .reduce((acc, r) => acc + r.total_ttc, 0);
+    .filter((r) => (r.status === "pending" || r.status === "late" || r.status === "partially_paid") && r.due_date < today)
+    .reduce((acc, r) => acc + Math.max(0, r.total_ttc - (r.paid_amount || 0)), 0);
   const activePaidMonth = activeRows
     .filter((r) => r.status === "paid")
     .reduce((acc, r) => acc + r.total_ttc, 0);
@@ -386,7 +389,7 @@ export function InvoicesPage() {
                   <tbody>
                     {activeRows.map((r) => {
                       const isLate =
-                        (r.status === "pending" || r.status === "late") &&
+                        (r.status === "pending" || r.status === "late" || r.status === "partially_paid") &&
                         r.due_date < today;
                       return (
                         <tr
@@ -465,7 +468,7 @@ export function InvoicesPage() {
               <div className="flex flex-col gap-3 lg:hidden mt-4">
                 {activeRows.map((r) => {
                   const isLate =
-                    (r.status === "pending" || r.status === "late") &&
+                    (r.status === "pending" || r.status === "late" || r.status === "partially_paid") &&
                     r.due_date < today;
                   return (
                     <div

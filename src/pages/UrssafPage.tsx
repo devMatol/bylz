@@ -123,7 +123,8 @@ export function UrssafPage() {
         company.created_at,
         company.urssaf_frequency,
         payments,
-        declarations
+        declarations,
+        company.activity_type
       );
       setPeriods(computed);
     } catch (err) {
@@ -274,7 +275,7 @@ export function UrssafPage() {
 
                 <ThresholdGaugeCard
                   title="Seuil de Franchise en Base de TVA"
-                  subtitle="TVA non applicable jusqu'à 36 800 € / Seuil max 39 100 €"
+                  subtitle={`TVA non applicable jusqu'à ${fiscalMetrics.caConfig.tvaBase.toLocaleString("fr-FR")} € / Seuil majoré ${fiscalMetrics.caConfig.tvaMax.toLocaleString("fr-FR")} €`}
                   currentValue={fiscalMetrics.ytdCollected}
                   thresholdLimit={fiscalMetrics.caConfig.tvaBase}
                   projectedValue={fiscalMetrics.projectedEndYear}
@@ -433,7 +434,7 @@ export function UrssafPage() {
             <LockedFeatureOverlay
               planBadge="PLAN SOLO ⚡"
               title="Débloquez vos Déclarations & Pilotage Fiscal"
-              description="Suivez automatiquement vos plafonds de franchise TVA (39 100 €), calculez vos cotisations URSSAF et générez vos déclarations en un clic."
+              description="Suivez automatiquement vos plafonds de franchise TVA (37 500 € en services, 85 000 € en vente), calculez vos cotisations URSSAF et générez vos déclarations en un clic."
               buttonText="Débloquer le Plan Solo (14 jours offerts)"
               onUnlock={() => setUpgradeModalOpen(true)}
             />

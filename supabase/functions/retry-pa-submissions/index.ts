@@ -1,6 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.0";
-import { callFactPulseApi } from "../_shared/factpulse-client.ts";
 import { requireOperator, unauthorized } from "../_shared/require-operator.ts";
 
 const corsHeaders = {
@@ -8,6 +7,16 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+/**
+ * Edge Function de rejeu des soumissions rejetées ou en échec.
+ * S'exécute de façon privilégiée (tâche planifiée ou administrateur plateforme).
+ *
+ * Utilise submit-to-pa comme unique source de vérité pour garantir :
+ * - Réservation atomique (submitting)
+ * - Restitution en cas d'échec
+ * - Validation du legal_snapshot et du PDF certifié
+ * - Endpoint officiel FactPulse /processing/invoices/submit-complete
+ */
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -17,26 +26,11 @@ serve(async (req) => {
   const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
   const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-  // Replays submissions across every company: scheduler or platform admin only.
   const operator = await requireOperator(req);
   if (!operator.allowed) return unauthorized(corsHeaders);
 
   try {
-    // 1. Check FactPulse token status
-    const { data: statusRow } = await supabase
-      .from("factpulse_status")
-      .select("token_valid")
-      .eq("id", "default")
-      .maybeSingle();
-
-    if (statusRow && statusRow.token_valid === false) {
-      return new Response(
-        JSON.stringify({ message: "Tentatives ignorées : Token FactPulse expiré." }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    // 2. Fetch pending submission errors (max 3 retries, excluding token_expired)
+    // 1. Récupération des erreurs de transmission en attente de relance
     const { data: errors, error: fetchErr } = await supabase
       .from("pa_submission_errors")
       .select("id, invoice_id, error_code, created_at")
@@ -54,73 +48,63 @@ serve(async (req) => {
     const results = [];
 
     for (const errLog of errors) {
-      // Mark as retried
+      // Marquer l'erreur comme retraitée
       await supabase
         .from("pa_submission_errors")
         .update({ retried_at: new Date().toISOString() })
         .eq("id", errLog.id);
 
-      // Invoke submit-to-pa logic internally
+      // Récupération de l'utilisateur propriétaire de la facture pour générer son contexte JWT
       const { data: invoice } = await supabase
         .from("invoices")
-        .select("*, company:companies(*), client:clients(*), lines:invoice_lines(*)")
+        .select("id, status, pa_status, company:companies(user_id)")
         .eq("id", errLog.invoice_id)
         .maybeSingle();
 
-      if (invoice && invoice.client && invoice.client.type === "b2b" && invoice.pa_status !== "submitted") {
-        const company = invoice.company;
-        const client = invoice.client;
-        const lines = invoice.lines || [];
+      if (!invoice || !invoice.company?.user_id) {
+        results.push({ invoice_id: errLog.invoice_id, status: "ignored", reason: "Facture ou utilisateur introuvable" });
+        continue;
+      }
 
-        const isFranchise = company?.vat_regime === "franchise";
-        const payload = {
-          invoiceData: {
-            number: invoice.number,
-            supplier: {
-              siret: company?.siret || company?.siren || "00000000000000",
-              routingAddress: company?.address || "",
-              iban: company?.iban || "",
-            },
-            recipient: {
-              siret: client?.siret || client?.siren || "00000000000000",
-            },
-            lines: lines.map((l: any) => ({
-              description: l.description || "Prestation",
-              quantity: Number(l.quantity) || 1,
-              unitPrice: Number(l.unit_price) || 0,
-              vatRate: isFranchise ? 0 : 20,
-            })),
+      // Seules les factures non-brouillon et au statut rejected ou none sont relançables
+      if (invoice.status === "draft" || (invoice.pa_status !== "rejected" && invoice.pa_status !== "none")) {
+        results.push({ invoice_id: errLog.invoice_id, status: "ignored", reason: `Statut actuel incompatible: ${invoice.pa_status}` });
+        continue;
+      }
+
+      try {
+        // Délégation unifiée à submit-to-pa avec retry: true
+        const submitRes = await fetch(`${supabaseUrl}/functions/v1/submit-to-pa`, {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${supabaseServiceKey}`,
+            "Content-Type": "application/json",
           },
-          destination: { type: "afnor" },
-        };
+          body: JSON.stringify({
+            invoice_id: invoice.id,
+            retry: invoice.pa_status === "rejected",
+          }),
+        });
 
-        try {
-          const resData = await callFactPulseApi("/invoices/submit", "POST", payload);
-          const factpulseRef = resData?.reference || resData?.id || `FP-${Date.now()}`;
-
-          await supabase
-            .from("invoices")
-            .update({
-              factpulse_ref: factpulseRef,
-              pa_status: "submitted",
-              pa_rejection_reason: null,
-            })
-            .eq("id", invoice.id);
-
-          results.push({ invoice_id: invoice.id, status: "success", ref: factpulseRef });
-        } catch (retryErr: any) {
-          results.push({ invoice_id: invoice.id, status: "failed", error: retryErr.message });
+        const resJson = await submitRes.json().catch(() => ({}));
+        if (submitRes.ok && resJson.success) {
+          results.push({ invoice_id: invoice.id, status: "success", ref: resJson.factpulse_ref });
+        } else {
+          results.push({ invoice_id: invoice.id, status: "failed", error: resJson.error || resJson.message });
         }
+      } catch (invokeErr: any) {
+        results.push({ invoice_id: invoice.id, status: "failed", error: invokeErr.message });
       }
     }
 
     return new Response(
-      JSON.stringify({ success: true, processed: results.length, results }),
+      JSON.stringify({ message: "Rejeu terminé.", processed: results.length, results }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (err: any) {
+    console.error("Erreur dans retry-pa-submissions:", err);
     return new Response(
-      JSON.stringify({ error: err.message }),
+      JSON.stringify({ error: err.message || "Erreur interne" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }

@@ -49,7 +49,11 @@ export function ComplianceSection() {
     try {
       const { data: res, error } = await supabase.functions.invoke("generate-ereporting");
       if (error || (res && !res.success)) {
-        toast(res?.message || error?.message || "Erreur lors de la génération du batch E-reporting.", "warning");
+        if (res?.disabled) {
+          toast(res?.reason || "E-reporting B2C : transmission réglementaire bientôt disponible (en attente d'ouverture des flux officiels).", "info");
+        } else {
+          toast(res?.message || error?.message || "Erreur lors de la génération du batch E-reporting.", "warning");
+        }
       } else {
         toast("Batch e-reporting B2C généré et transmis à FactPulse !", "success");
       }

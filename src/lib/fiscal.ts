@@ -1,4 +1,5 @@
 import type { ActivityType } from "../types/database";
+import { VAT_THRESHOLDS_2026 } from "./constants";
 
 export interface ThresholdConfig {
   caCeiling: number;
@@ -12,32 +13,32 @@ export interface ThresholdConfig {
 export const FISCAL_THRESHOLDS: Record<string, ThresholdConfig> = {
   services: {
     caCeiling: 77700,
-    tvaBase: 39100,
-    tvaMax: 42500,
+    tvaBase: VAT_THRESHOLDS_2026.services.base,
+    tvaMax: VAT_THRESHOLDS_2026.services.majore,
     abattementPercent: 34,
     taxBoxCode: "5HQ",
     taxBoxLabel: "Micro-BNC (Prestations & professions libérales)",
   },
   services_bic: {
     caCeiling: 77700,
-    tvaBase: 39100,
-    tvaMax: 42500,
+    tvaBase: VAT_THRESHOLDS_2026.services.base,
+    tvaMax: VAT_THRESHOLDS_2026.services.majore,
     abattementPercent: 50,
     taxBoxCode: "5KP",
     taxBoxLabel: "Micro-BIC Prestations de services artisanales / commerciales",
   },
   sales: {
     caCeiling: 188700,
-    tvaBase: 101000,
-    tvaMax: 110000,
+    tvaBase: VAT_THRESHOLDS_2026.sales.base,
+    tvaMax: VAT_THRESHOLDS_2026.sales.majore,
     abattementPercent: 71,
     taxBoxCode: "5KO",
     taxBoxLabel: "Micro-BIC Ventes de marchandises / logement",
   },
   mixed: {
     caCeiling: 188700,
-    tvaBase: 39100,
-    tvaMax: 42500,
+    tvaBase: VAT_THRESHOLDS_2026.services.base,
+    tvaMax: VAT_THRESHOLDS_2026.services.majore,
     abattementPercent: 34,
     taxBoxCode: "5HQ / 5KO",
     taxBoxLabel: "Activité Mixte (Services + Ventes)",

@@ -559,6 +559,7 @@ Deno.serve(async (req: Request) => {
               unit_price: amount,
               nature: "service",
               position: 0,
+              vat_rate: company.vat_regime === "franchise" ? 0 : 20,
             });
           }
 
@@ -690,6 +691,7 @@ Deno.serve(async (req: Request) => {
                 unit_price: Number(targetDraft.total_ttc),
                 nature: "service",
                 position: 0,
+                vat_rate: company.vat_regime === "franchise" ? 0 : 20,
               });
 
             replyText = `✏️ *Description du brouillon mise à jour !*\n\n` +
@@ -738,6 +740,7 @@ Deno.serve(async (req: Request) => {
                 unit_price: newAmount,
                 nature: "service",
                 position: 0,
+                vat_rate: company.vat_regime === "franchise" ? 0 : 20,
               });
 
             replyText = `✏️ *Montant du brouillon mis à jour avec succès !*\n\n` +
@@ -784,53 +787,35 @@ Deno.serve(async (req: Request) => {
           }
 
           if (targetDraft) {
-            const currentYear = new Date().getFullYear();
-            const { data: numData } = await adminClient
-              .from("invoices")
-              .select("number")
-              .eq("company_id", company.id)
-              .like("number", `FAC-${currentYear}-%`)
-              .order("number", { ascending: false })
-              .limit(1);
+            const { data: emittedInv, error: emitError } = await adminClient.rpc("emit_invoice", {
+              p_invoice_id: targetDraft.id,
+            });
 
-            let nextNum = 1;
-            if (numData && numData.length > 0) {
-              const m = /-(\d+)$/.exec(numData[0].number);
-              if (m) nextNum = parseInt(m[1], 10) + 1;
+            if (emitError || !emittedInv) {
+              console.error("Erreur emit_invoice WhatsApp:", emitError);
+              const errMsg = emitError?.message?.includes("Cette facture vient d'être émise") || (emitError as any)?.code === '42501'
+                ? "Cette facture vient d'être émise ou n'est plus un brouillon."
+                : (emitError?.message || "erreur lors de l'émission.");
+              replyText = `⚠️ Impossible de valider la facture : ${errMsg}`;
+            } else {
+              const clientName = (targetDraft as any).client?.name || "Client";
+              const { data: activeLines } = await adminClient
+                .from("invoice_lines")
+                .select("description")
+                .eq("invoice_id", targetDraft.id)
+                .limit(1);
+
+              const desc = activeLines?.[0]?.description || "Prestation de service";
+
+              replyText = `✅ *Facture émise avec succès !*\n\n` +
+                `📄 *Numéro officiel* : **${emittedInv.number}**\n` +
+                `👤 *Client* : ${clientName}\n` +
+                `💰 *Montant TTC* : ${Number(emittedInv.total_ttc).toFixed(2)} €\n` +
+                `📝 *Prestation* : ${desc}\n` +
+                `📅 *Échéance* : ${emittedInv.due_date}\n\n` +
+                `👉 *Consulter votre facture en ligne* :\n` +
+                `https://bylz.fr/invoices/${emittedInv.id}`;
             }
-            const officialNum = `FAC-${currentYear}-${String(nextNum).padStart(3, '0')}`;
-
-            const todayStr = new Date().toISOString().split('T')[0];
-            const dueDate = new Date(Date.now() + 30 * 24 * 3600 * 1000).toISOString().split('T')[0];
-
-            await adminClient
-              .from("invoices")
-              .update({
-                number: officialNum,
-                status: "pending",
-                issue_date: todayStr,
-                due_date: dueDate,
-              })
-              .eq("id", targetDraft.id);
-
-            const clientName = (targetDraft as any).client?.name || "Client";
-
-            const { data: activeLines } = await adminClient
-              .from("invoice_lines")
-              .select("description")
-              .eq("invoice_id", targetDraft.id)
-              .limit(1);
-
-            const desc = activeLines?.[0]?.description || "Prestation de service";
-
-            replyText = `📝 *Brouillon de facture enregistré sur votre compte Bylz !*\n\n` +
-              `👤 *Client* : ${clientName}\n` +
-              `💰 *Montant TTC* : ${Number(targetDraft.total_ttc).toFixed(2)} €\n` +
-              `📝 *Prestation* : ${desc}\n\n` +
-              `🔒 *Statut* : **Brouillon modifiable**\n` +
-              `_Pour respecter la conformité légale, complétez l'adresse et le SIRET du client sur votre tableau de bord avant de valider le numéro officiel._\n\n` +
-              `👉 *Finaliser et valider votre facture en 1 clic* :\n` +
-              `https://bylz.fr/invoices`;
           } else {
             replyText = `ℹ️ Aucun brouillon de facture en attente de validation.\n\nDictez *"Créer une facture de 500€ pour Client X"* pour générer un brouillon !`;
           }
@@ -1070,54 +1055,35 @@ Sinon, réponds de manière concise, précise et amicale en français sur WhatsA
                 if (!targetDraft) {
                   replyText = `ℹ️ Aucun brouillon de facture en attente de validation.\n\nDictez *"Créer une facture de 500€ pour Client X"* pour générer un brouillon !`;
                 } else {
-                  // Use targetDraft for validation
-                const currentYear = new Date().getFullYear();
-                const { data: numData } = await adminClient
-                  .from("invoices")
-                  .select("number")
-                  .eq("company_id", company.id)
-                  .like("number", `FAC-${currentYear}-%`)
-                  .order("number", { ascending: false })
-                  .limit(1);
+                  const { data: emittedInv, error: emitError } = await adminClient.rpc("emit_invoice", {
+                    p_invoice_id: targetDraft.id,
+                  });
 
-                let nextNum = 1;
-                if (numData && numData.length > 0) {
-                  const m = /-(\d+)$/.exec(numData[0].number);
-                  if (m) nextNum = parseInt(m[1], 10) + 1;
-                }
-                const officialNum = `FAC-${currentYear}-${String(nextNum).padStart(3, '0')}`;
+                  if (emitError || !emittedInv) {
+                    console.error("Erreur emit_invoice WhatsApp:", emitError);
+                    const errMsg = emitError?.message?.includes("Cette facture vient d'être émise") || (emitError as any)?.code === '42501'
+                      ? "Cette facture vient d'être émise ou n'est plus un brouillon."
+                      : (emitError?.message || "erreur lors de l'émission.");
+                    replyText = `⚠️ Impossible de valider la facture : ${errMsg}`;
+                  } else {
+                    const clientName = (targetDraft as any).client?.name || "Client";
+                    const { data: activeLines } = await adminClient
+                      .from("invoice_lines")
+                      .select("description")
+                      .eq("invoice_id", targetDraft.id)
+                      .limit(1);
 
-                const todayStr = new Date().toISOString().split('T')[0];
-                const dueDate = new Date(Date.now() + 30 * 24 * 3600 * 1000).toISOString().split('T')[0];
+                    const desc = activeLines?.[0]?.description || "Prestation de service";
 
-                await adminClient
-                  .from("invoices")
-                  .update({
-                    number: officialNum,
-                    status: "pending",
-                    issue_date: todayStr,
-                    due_date: dueDate,
-                  })
-                  .eq("id", targetDraft.id);
-
-                const clientName = (targetDraft as any).client?.name || "Client";
-
-                const { data: activeLines } = await adminClient
-                  .from("invoice_lines")
-                  .select("description")
-                  .eq("invoice_id", targetDraft.id)
-                  .limit(1);
-
-                const desc = activeLines?.[0]?.description || "Prestation de service";
-
-                replyText = `📝 *Brouillon de facture enregistré sur votre compte Bylz !*\n\n` +
-                  `👤 *Client* : ${clientName}\n` +
-                  `💰 *Montant TTC* : ${Number(targetDraft.total_ttc).toFixed(2)} €\n` +
-                  `📝 *Prestation* : ${desc}\n\n` +
-                  `🔒 *Statut* : **Brouillon modifiable**\n` +
-                  `_Pour respecter la conformité légale, complétez l'adresse et le SIRET du client sur votre tableau de bord avant de valider le numéro officiel._\n\n` +
-                  `👉 *Finaliser et valider votre facture en 1 clic* :\n` +
-                  `https://bylz.fr/invoices`;
+                    replyText = `✅ *Facture émise avec succès !*\n\n` +
+                      `📄 *Numéro officiel* : **${emittedInv.number}**\n` +
+                      `👤 *Client* : ${clientName}\n` +
+                      `💰 *Montant TTC* : ${Number(emittedInv.total_ttc).toFixed(2)} €\n` +
+                      `📝 *Prestation* : ${desc}\n` +
+                      `📅 *Échéance* : ${emittedInv.due_date}\n\n` +
+                      `👉 *Consulter votre facture en ligne* :\n` +
+                      `https://bylz.fr/invoices/${emittedInv.id}`;
+                  }
                 }
 
               } else if (actionObj && (actionObj.action === "create_invoice" || actionObj.action === "update_draft" || actionObj.action === "create_quote") && actionObj.amount) {
@@ -1231,6 +1197,7 @@ Sinon, réponds de manière concise, précise et amicale en français sur WhatsA
                         unit_price: amount,
                         nature: "service",
                         position: 0,
+                        vat_rate: company.vat_regime === "franchise" ? 0 : 20,
                       });
 
                     replyText = `✏️ *Brouillon mis à jour avec vos corrections !*\n\n` +
@@ -1284,6 +1251,7 @@ Sinon, réponds de manière concise, précise et amicale en français sur WhatsA
                         unit_price: amount,
                         nature: "service",
                         position: 0,
+                        vat_rate: company.vat_regime === "franchise" ? 0 : 20,
                       });
                     }
 
@@ -1383,6 +1351,7 @@ Sinon, réponds de manière concise, précise et amicale en français sur WhatsA
                   unit_price: amount,
                   nature: "service",
                   position: 0,
+                  vat_rate: company.vat_regime === "franchise" ? 0 : 20,
                 });
 
                 replyText = `📄 *Brouillon de facture prêt pour validation*\n\n` +

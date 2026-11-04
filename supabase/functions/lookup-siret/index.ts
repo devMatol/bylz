@@ -33,6 +33,8 @@ Deno.serve(async (req: Request) => {
         if (firstResult) {
           const etab = firstResult.matching_etablissements?.[0] || firstResult.siege || {};
           const legalName = firstResult.nom_complet || firstResult.nom_raison_sociale || "Entreprise";
+          const postalCode = etab.code_postal || "";
+          const city = etab.libelle_commune || "";
           const address = etab.adresse || etab.adresse_complete || `${etab.code_postal || ""} ${etab.libelle_commune || ""}`.trim();
           const nafCode = etab.activite_principale || firstResult.activite_principale || "";
           const active = etab.etat_administratif === "A" || firstResult.etat_administratif === "A";
@@ -41,6 +43,8 @@ Deno.serve(async (req: Request) => {
             JSON.stringify({
               legal_name: legalName,
               address: address,
+              postal_code: postalCode,
+              city: city,
               naf_code: nafCode,
               naf_label: "",
               active: active,
@@ -87,6 +91,8 @@ Deno.serve(async (req: Request) => {
           JSON.stringify({
             legal_name: legalName,
             address: addressParts.join(" "),
+            postal_code: adresse.codePostalEtablissement || "",
+            city: adresse.libelleCommuneEtablissement || "",
             naf_code: etab.activitePrincipaleEtablissement || unite.activitePrincipaleUniteLegale || "",
             naf_label: "",
             active: periode.etatAdministratifEtablissement === "A",

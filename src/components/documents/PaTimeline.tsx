@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Send, CheckCircle2, Clock, AlertTriangle, RefreshCw, FileText, ArrowRight } from "lucide-react";
+import { Send, CheckCircle2, Clock, AlertTriangle, RefreshCw, AlertCircle } from "lucide-react";
 import { supabase } from "../../lib/supabase";
 import { saveInvoice, fetchInvoice } from "../../lib/api";
 import { useToast } from "../ui/Toast";
@@ -43,20 +43,30 @@ export function PaTimeline({ invoice, isB2b, onRefresh }: PaTimelineProps) {
 
   const activeStepIdx = getStepIndex(currentStatus);
 
-  // Manual Trigger Transmit to FactPulse PA
-  const handleTransmit = async () => {
+  // Manual Trigger Transmit to FactPulse PA (supports retry for rejected invoices)
+  const handleTransmit = async (isRetry = false) => {
     setSubmitting(true);
     try {
       const { data: res, error } = await supabase.functions.invoke("submit-to-pa", {
-        body: { invoice_id: invoice.id },
+        body: { invoice_id: invoice.id, retry: isRetry },
       });
 
       if (error || (res && !res.success)) {
-        const errorMsg =
+        const errorCode = res?.error_code;
+        let errorMsg =
           (typeof res?.error === "string" && res.error) ||
           (typeof res?.message === "string" && res.message) ||
           (typeof error?.message === "string" && error.message) ||
           "Échec de l'envoi à la facturation électronique.";
+
+        if (errorCode === "concurrency_conflict") {
+          errorMsg = "Une transmission pour cette facture est déjà en cours.";
+        } else if (errorCode === "already_submitted") {
+          errorMsg = "Cette facture a déjà fait l'objet d'une transmission validée.";
+        } else if (errorCode === "retry_not_allowed") {
+          errorMsg = "La relance n'est autorisée que pour une facture précédemment rejetée.";
+        }
+
         toast(errorMsg, "warning");
       } else {
         toast("Facture envoyée avec succès à la facturation électronique !", "success");
@@ -121,7 +131,46 @@ export function PaTimeline({ invoice, isB2b, onRefresh }: PaTimelineProps) {
         )}
       </div>
 
-      {/* Rejected Status Danger Card */}
+      {/* Submitting Status : Transit en cours */}
+      {currentStatus === "submitting" && (
+        <div className="p-3.5 rounded-card bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs flex items-center gap-2.5">
+          <Clock className="w-4 h-4 text-amber-400 animate-spin flex-shrink-0" />
+          <div>
+            <p className="font-bold text-amber-200">Transmission en cours...</p>
+            <p className="text-amber-300/80 text-[11px] mt-0.5">
+              Transmission de la facture auprès de la plateforme agréée.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Litigation Status : Facture en litige */}
+      {currentStatus === "litigation" && (
+        <div className="p-3.5 rounded-card bg-orange-500/10 border border-orange-500/30 text-orange-300 text-xs flex items-start gap-2.5">
+          <AlertCircle className="w-4 h-4 text-orange-400 flex-shrink-0 mt-0.5" />
+          <div>
+            <p className="font-bold text-orange-200">Facture en litige</p>
+            <p className="text-orange-300/80 text-[11px] mt-0.5">
+              L'acheteur a signalé un litige sur cette facture via la plateforme agréée.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Suspended Status : Facture suspendue */}
+      {currentStatus === "suspended" && (
+        <div className="p-3.5 rounded-card bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs flex items-start gap-2.5">
+          <Clock className="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5" />
+          <div>
+            <p className="font-bold text-amber-200">Facture suspendue</p>
+            <p className="text-amber-300/80 text-[11px] mt-0.5">
+              Le traitement de la facture a été temporairement suspendu par la plateforme.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Rejected Status Danger Card with Retry & Re-emit buttons */}
       {currentStatus === "rejected" ? (
         <div className="p-3.5 rounded-card bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs space-y-3">
           <div className="flex items-start space-x-2">
@@ -134,20 +183,34 @@ export function PaTimeline({ invoice, isB2b, onRefresh }: PaTimelineProps) {
             </div>
           </div>
 
-          <Button
-            type="button"
-            variant="primary"
-            size="sm"
-            onClick={handleCorrectAndReemit}
-            loading={reemitting}
-            className="w-full justify-center bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold py-2"
-          >
-            <RefreshCw className="w-3.5 h-3.5 mr-1.5" />
-            Corriger et réémettre
-          </Button>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => handleTransmit(true)}
+              loading={submitting}
+              className="w-full justify-center text-xs font-bold py-2 border-rose-500/40 text-rose-200 hover:bg-rose-500/20"
+            >
+              <RefreshCw className="w-3.5 h-3.5 mr-1.5" />
+              Retenter la transmission
+            </Button>
+
+            <Button
+              type="button"
+              variant="primary"
+              size="sm"
+              onClick={handleCorrectAndReemit}
+              loading={reemitting}
+              className="w-full justify-center bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold py-2"
+            >
+              <RefreshCw className="w-3.5 h-3.5 mr-1.5" />
+              Corriger et réémettre
+            </Button>
+          </div>
         </div>
       ) : (
-        /* Timeline Steps */
+        /* Timeline Steps (when not rejected) */
         <div className="space-y-3 pt-1">
           <div className="relative pl-6 space-y-3 before:absolute before:left-2 before:top-2 before:bottom-2 before:w-0.5 before:bg-border">
             {steps.map((step, idx) => {
@@ -195,7 +258,7 @@ export function PaTimeline({ invoice, isB2b, onRefresh }: PaTimelineProps) {
                 type="button"
                 variant="primary"
                 size="sm"
-                onClick={handleTransmit}
+                onClick={() => handleTransmit(false)}
                 loading={submitting}
                 className="w-full justify-center bylz-glow-cta text-xs font-bold py-2"
               >

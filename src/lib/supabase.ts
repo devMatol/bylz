@@ -1,13 +1,13 @@
 import { createClient } from "@supabase/supabase-js";
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-
-if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error(
-    "Missing Supabase env vars. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in .env"
-  );
-}
+const supabaseUrl =
+  (typeof import.meta !== "undefined" && (import.meta as any).env?.VITE_SUPABASE_URL) ||
+  (typeof (globalThis as any).process !== "undefined" && (globalThis as any).process.env?.VITE_SUPABASE_URL) ||
+  "https://placeholder.supabase.co";
+const supabaseAnonKey =
+  (typeof import.meta !== "undefined" && (import.meta as any).env?.VITE_SUPABASE_ANON_KEY) ||
+  (typeof (globalThis as any).process !== "undefined" && (globalThis as any).process.env?.VITE_SUPABASE_ANON_KEY) ||
+  "placeholder-key";
 
 const isAuthCallback =
   typeof window !== "undefined" &&

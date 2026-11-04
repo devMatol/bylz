@@ -168,7 +168,7 @@ export const FEATURE_MATRIX: FeatureMatrixCategory[] = [
         starter: true,
         solo: true,
         pro: true,
-        hint: "Format Factur-X en cours de développement",
+        hint: "Format Factur-X (en préparation)",
       },
     ],
   },

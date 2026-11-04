@@ -1,4 +1,4 @@
-import { supabase } from "./supabase";
+import { supabase } from "./supabase.ts";
 import type { PlanType, Plan } from "../types/database";
 
 export interface PlanFeatureLimits {
