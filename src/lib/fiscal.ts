@@ -69,7 +69,8 @@ export function computeFiscalMetrics(
   activityType: ActivityType,
   yearPayments: Array<{ amount: number; paid_at: string }>,
   pendingInvoices: Array<{ total_ttc: number; total_vat?: number }>,
-  supplierPurchases: Array<{ total_ttc: number; total_vat?: number }> = []
+  supplierPurchases: Array<{ total_ttc: number; total_vat?: number }> = [],
+  vatRegime?: string
 ): FiscalLanding {
   const now = new Date();
   const currentYear = now.getFullYear();
@@ -116,15 +117,23 @@ export function computeFiscalMetrics(
       : "safe";
 
   // TVA Collected & Deductible calculation
-  const tvaCollected = pendingInvoices.reduce(
-    (sum, i) => sum + (Number(i.total_vat) || Number(i.total_ttc || 0) * 0.2),
-    0
-  );
+  // Règle fiscale : En franchise en base, aucune TVA n'est collectée ni déductible.
+  // Hors franchise : s'appuie strictement sur total_vat réel des factures et achats.
+  const isFranchise = vatRegime === "franchise";
 
-  const tvaDeductible = supplierPurchases.reduce(
-    (sum, i) => sum + (Number(i.total_vat) || Number(i.total_ttc || 0) * 0.2),
-    0
-  );
+  const tvaCollected = isFranchise
+    ? 0
+    : pendingInvoices.reduce(
+        (sum, i) => sum + (i.total_vat != null ? Number(i.total_vat) : 0),
+        0
+      );
+
+  const tvaDeductible = isFranchise
+    ? 0
+    : supplierPurchases.reduce(
+        (sum, i) => sum + (i.total_vat != null ? Number(i.total_vat) : 0),
+        0
+      );
 
   const tvaNetToPay = Math.max(0, tvaCollected - tvaDeductible);
 

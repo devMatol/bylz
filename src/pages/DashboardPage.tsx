@@ -296,38 +296,21 @@ export function DashboardPage() {
                     label="Bénéfice fiscal"
                     value={safeNum(data.beneficeFiscal)}
                     icon={<Wallet className="w-3.5 h-3.5" />}
-                    subtitle={<span>Abattement {safeNum(data.abattementPct)}%</span>}
+                    subtitle={<span>Abattement {safeNum(data.abattementPct)}% • {periodLabel}</span>}
                   />
                   <StatCard
                     variant="compact"
                     label="Cotisations URSSAF"
                     value={safeNum(data.cotisationsUrssaf)}
                     icon={<Landmark className="w-3.5 h-3.5" />}
-                    subtitle={
-                      <span>
-                        {data.nextUrssafDueDate
-                          ? `Échéance: ${safeFormatDate(data.nextUrssafDueDate)}`
-                          : "À venir"}
-                      </span>
-                    }
+                    subtitle={<span>{periodLabel}</span>}
                   />
                   <StatCard
                     variant="compact"
                     label="Net estimé"
                     value={safeNum(data.netEstime)}
                     icon={<Receipt className="w-3.5 h-3.5" />}
-                    subtitle={
-                      profile?.tmi != null ? (
-                        <span>{data.netSubtitle}</span>
-                      ) : (
-                        <button
-                          onClick={() => navigate("/settings")}
-                          className="text-primary font-bold hover:underline text-left truncate block"
-                        >
-                          Renseignez votre TMI
-                        </button>
-                      )
-                    }
+                    subtitle={<span>avant impôt • {periodLabel}</span>}
                   />
                 </>
               )}

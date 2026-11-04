@@ -80,21 +80,20 @@ export function ComplianceSection() {
 
         <Button
           type="button"
-          variant="primary"
+          variant="outline"
           size="sm"
-          onClick={handleGenerateBatch}
-          loading={generating}
-          className="bylz-glow-cta text-xs font-bold"
+          disabled
+          className="text-xs font-semibold opacity-60 cursor-not-allowed"
         >
-          <Send className="w-3.5 h-3.5 mr-1.5" />
-          Générer Batch E-Reporting (B2C)
+          <Clock className="w-3.5 h-3.5 mr-1.5" />
+          Bientôt disponible
         </Button>
       </div>
 
       {/* Standards & Démarche de conformité (Art. 286 CGI & Réforme 2026) */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="p-4 rounded-card bg-surface-hover/40 border border-emerald-500/30 space-y-2">
-          <p className="text-xs font-bold text-muted uppercase">Loi Anti-Fraude TVA (Art. 286 CGI)</p>
+          <p className="text-xs font-bold text-muted uppercase">Loi Anti-Fraude TVA (Inaltérabilité & Traçabilité)</p>
           <div className="flex items-center space-x-2">
             <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-pill bg-emerald-500/20 text-emerald-400 font-bold text-xs border border-emerald-500/30">
               <ShieldCheck className="w-3.5 h-3.5" /> Numérotation séquentielle continue
@@ -118,20 +117,14 @@ export function ComplianceSection() {
         </div>
 
         <div className="p-4 rounded-card bg-surface-hover/40 border border-border space-y-2">
-          <p className="text-xs font-bold text-muted uppercase">Réseau PDP & E-reporting FactPulse</p>
+          <p className="text-xs font-bold text-muted uppercase">Réseau PDP & E-reporting</p>
           <div className="flex items-center space-x-2">
-            {tokenValid === false ? (
-              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-pill bg-rose-500/20 text-rose-400 font-bold text-xs border border-rose-500/30">
-                <AlertTriangle className="w-3.5 h-3.5" /> Jeton API Expiré
-              </span>
-            ) : (
-              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-pill bg-emerald-500/20 text-emerald-400 font-bold text-xs border border-emerald-500/30">
-                <CheckCircle2 className="w-3.5 h-3.5" /> Réseau PDP Connecté
-              </span>
-            )}
+            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-pill bg-surface-hover text-muted font-bold text-xs border border-border">
+              <Clock className="w-3.5 h-3.5" /> En préparation
+            </span>
           </div>
           <p className="text-[11px] text-muted leading-relaxed">
-            Données de facturation exportables en CSV. Intégration Factur-X et télétransmission en préparation.
+            Données de facturation exportables en CSV. Intégration Factur-X et télétransmission en cours de raccordement.
           </p>
         </div>
       </div>

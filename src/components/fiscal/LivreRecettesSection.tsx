@@ -134,7 +134,7 @@ export function LivreRecettesSection({
             className="text-xs font-semibold"
           >
             <FileSpreadsheet className="w-4 h-4 mr-1.5 text-emerald-400" />
-            Exporter le livre conforme DGFiP (.csv)
+            Export CSV du livre des recettes
           </Button>
         )}
       </div>
@@ -147,8 +147,8 @@ export function LivreRecettesSection({
               <ShieldCheck className="w-4 h-4 text-emerald-400" />
               <span>
                 {tab === "recettes"
-                  ? "Registre chronologique des encaissements (Art. 286 du CGI)"
-                  : "Registre des achats et des dépenses (Art. 286-1-bis CGI)"}
+                  ? "Registre chronologique des encaissements"
+                  : "Registre des achats et des dépenses"}
               </span>
             </div>
             <span className="text-xs font-bold text-primary">

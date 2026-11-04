@@ -1,3 +1,6 @@
+import { calculateCotisations } from "./fiscal/cotisations";
+import { computeUrssafPeriods, type UrssafPeriod } from "./fiscal/urssafPeriods";
+export { computeUrssafPeriods, type UrssafPeriod };
 import { supabase } from "./supabase";
 import { paymentTermsToDate } from "./date";
 import { parseISO, isValid, format } from "date-fns";
@@ -1300,33 +1303,14 @@ export async function fetchDashboardData(
     if (monthlyMap.has(key)) monthlyMap.set(key, (monthlyMap.get(key) || 0) + amt);
   }
 
-  const abattement = abattementFor(activityType);
-  const urssafRate = urssafRateFor(activityType);
-
-  // Per-nature fiscal computation for mixed activity
-  const isMixed = caByNature.service > 0 && caByNature.goods > 0;
-  let beneficeFiscal: number;
-  let cotisationsUrssaf: number;
-  if (isMixed) {
-    const abattementService = abattementFor("liberal");
-    const abattementGoods = abattementFor("commerce");
-    const rateService = urssafRateFor("liberal");
-    const rateGoods = urssafRateFor("commerce");
-    const beneficeService = caByNature.service * (1 - abattementService);
-    const beneficeGoods = caByNature.goods * (1 - abattementGoods);
-    beneficeFiscal = beneficeService + beneficeGoods;
-    cotisationsUrssaf = beneficeService * rateService + beneficeGoods * rateGoods;
-  } else {
-    beneficeFiscal = caEncaisseYear * (1 - abattement);
-    cotisationsUrssaf = beneficeFiscal * urssafRate;
-  }
-  beneficeFiscal = Math.max(0, beneficeFiscal);
-
-  const impot = tmi != null ? beneficeFiscal * tmi : 0;
-  const netEstime = beneficeFiscal - cotisationsUrssaf - impot;
-  const netSubtitle = tmi != null
-    ? "Après cotisations et impôt estimé"
-    : "Renseignez votre TMI pour affiner";
+  // Calcul unifié des cotisations et du net estimé sur la période sélectionnée
+  const cotiCalc = calculateCotisations(caEncaisse, activityType);
+  const cotisationsUrssaf = cotiCalc.cotisations;
+  const beneficeFiscal = cotiCalc.beneficeFiscal;
+  const netEstime = cotiCalc.netEstime;
+  const abattement = cotiCalc.abattement;
+  const urssafRate = cotiCalc.rate;
+  const netSubtitle = "avant impôt";
 
   const caDeltaPct = caPrevious > 0
     ? Math.round(((caEncaisse - caPrevious) / caPrevious) * 100)
@@ -1580,66 +1564,7 @@ export async function sendDocumentByEmail(
 
 // ---------- URSSAF declarations ----------
 
-export interface UrssafPeriod {
-  periodStart: string;
-  periodEnd: string;
-  dueDate: string;
-  label: string;
-  revenue: number;
-  estimatedAmount: number;
-  declared: boolean;
-  declaredAt: string | null;
-  id: string | null;
-}
-
-export function computeUrssafPeriods(
-  companyCreatedAt: string,
-  frequency: UrssafFreq,
-  payments: Payment[],
-  declarations: UrssafDeclaration[],
-  activityType?: string
-): UrssafPeriod[] {
-  const created = parseISO(companyCreatedAt);
-  const now = new Date();
-  const periods: UrssafPeriod[] = [];
-  const urssafConfig = getUrssafConfig(activityType);
-
-  const start = new Date(created.getFullYear(), created.getMonth(), 1);
-  const endNow = new Date(now.getFullYear(), now.getMonth() + 1, 1);
-
-  const stepMonths = frequency === "monthly" ? 1 : 3;
-  const declWindowDays = frequency === "monthly" ? 15 : 45;
-
-  for (let d = new Date(start); d < endNow; d.setMonth(d.getMonth() + stepMonths)) {
-    const pStart = new Date(d);
-    const pEnd = new Date(d.getFullYear(), d.getMonth() + stepMonths, 0);
-    const due = new Date(pEnd);
-    due.setDate(due.getDate() + declWindowDays);
-
-    const rev = payments
-      .filter((p) => {
-        const pd = parseISO(p.paid_at);
-        return isValid(pd) && pd >= pStart && pd <= new Date(pEnd.getTime() + 86400000);
-      })
-      .reduce((s, p) => s + (Number(p.amount) || 0), 0);
-
-    const matching = declarations.find((decl) => decl.period_start === format(pStart, "yyyy-MM-dd"));
-    const est = Math.round(rev * urssafConfig.rate * 100) / 100;
-
-    periods.push({
-      periodStart: format(pStart, "yyyy-MM-dd"),
-      periodEnd: format(pEnd, "yyyy-MM-dd"),
-      dueDate: format(due, "yyyy-MM-dd"),
-      label: format(pStart, "MMMM yyyy", { locale: fr }),
-      revenue: rev,
-      estimatedAmount: est,
-      declared: !!matching?.declared_at,
-      declaredAt: matching?.declared_at || null,
-      id: matching?.id || null,
-    });
-  }
-  return periods.reverse();
-}
+// computeUrssafPeriods & UrssafPeriod exported from ./fiscal/urssafPeriods
 
 export async function fetchUrssafDeclarations(
   companyId: string

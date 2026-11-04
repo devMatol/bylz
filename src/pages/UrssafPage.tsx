@@ -99,7 +99,8 @@ export function UrssafPage() {
         company.activity_type,
         payments,
         pendingSales,
-        purchaseList
+        purchaseList,
+        company.vat_regime
       );
       setFiscalMetrics(metrics);
 
@@ -302,6 +303,18 @@ export function UrssafPage() {
                 tvaNetToPay={fiscalMetrics.tvaNetToPay}
                 isAssujetti={company.vat_regime !== "franchise"}
               />
+
+              {/* Suivi des seuils de franchise TVA */}
+              <ThresholdGaugeCard
+                title="Seuil de Franchise en Base de TVA"
+                subtitle={`TVA non applicable jusqu'à ${fiscalMetrics.caConfig.tvaBase.toLocaleString("fr-FR")} € / Seuil majoré ${fiscalMetrics.caConfig.tvaMax.toLocaleString("fr-FR")} €`}
+                currentValue={fiscalMetrics.ytdCollected}
+                thresholdLimit={fiscalMetrics.caConfig.tvaBase}
+                projectedValue={fiscalMetrics.projectedEndYear}
+                status={fiscalMetrics.tvaStatus}
+                secondaryThreshold={fiscalMetrics.caConfig.tvaMax}
+                secondaryThresholdLabel="Seuil de majoration d'urgence"
+              />
             </div>
           )}
 
@@ -349,6 +362,11 @@ export function UrssafPage() {
                         <p className="text-xl font-black text-emerald-400">
                           {formatAmount(currentPeriod.estimatedAmount)}
                         </p>
+                        {currentPeriod.revenue === 0 && (
+                          <p className="text-[11px] text-amber-400 mt-1 font-medium">
+                            Rien à payer, mais la déclaration à 0 € est obligatoire
+                          </p>
+                        )}
                       </div>
                       <div className="p-4 rounded-xl bg-slate-900 border border-slate-800">
                         <p className="text-xs text-muted mb-1 font-medium">Date limite de déclaration</p>
@@ -377,16 +395,22 @@ export function UrssafPage() {
                         <ExternalLink className="w-4 h-4" />
                         Déclarer sur autoentrepreneur.urssaf.fr
                       </a>
-                      <Button
-                        type="button"
-                        variant="primary"
-                        size="sm"
-                        leftIcon={<Check className="w-4 h-4" />}
-                        onClick={() => handleDeclare(currentPeriod)}
-                        loading={busy}
-                      >
-                        Marquer comme déclaré
-                      </Button>
+                      {todayISO() >= currentPeriod.periodEnd ? (
+                        <Button
+                          type="button"
+                          variant="primary"
+                          size="sm"
+                          leftIcon={<Check className="w-4 h-4" />}
+                          onClick={() => handleDeclare(currentPeriod)}
+                          loading={busy}
+                        >
+                          Marquer comme déclaré
+                        </Button>
+                      ) : (
+                        <span className="inline-flex items-center text-xs text-muted px-3 py-1.5 rounded-card bg-surface border border-border font-medium">
+                          Déclaration disponible dès le 1er du mois suivant
+                        </span>
+                      )}
                     </div>
                   </Card>
                 )}
@@ -483,22 +507,24 @@ function CountdownPill({ dueDate, declared }: { dueDate: string; declared: boole
     );
   }
   const today = todayISO();
+  const isLate = today > dueDate;
   const days = Math.ceil(
     (new Date(dueDate).getTime() - new Date(today).getTime()) / 86400000
   );
-  const isLate = days < 0;
   const absDays = Math.abs(days);
-  const color = isLate
-    ? "bg-danger/15 text-danger"
-    : absDays < 7
-    ? "bg-danger/15 text-danger"
-    : absDays < 15
+  if (isLate) {
+    return (
+      <span className="text-xs font-semibold px-3 py-1 rounded-pill bg-danger/15 text-danger">
+        En retard (${absDays}j)
+      </span>
+    );
+  }
+  const color = absDays <= 3
     ? "bg-warning/15 text-warning"
     : "bg-surface-hover text-muted";
-  const label = isLate ? `${absDays}j de retard` : `J-${absDays}`;
   return (
     <span className={cn("text-xs font-semibold px-3 py-1 rounded-pill", color)}>
-      {label}
+      J-${absDays}
     </span>
   );
 }
