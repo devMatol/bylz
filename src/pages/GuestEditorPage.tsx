@@ -42,6 +42,7 @@ import { GoogleIcon } from "../components/auth/GoogleIcon";
 import { signInWithGoogle } from "../lib/auth";
 import type { Company, Client, PaymentTerms } from "../types/database";
 import { computeTotals } from "../lib/api";
+import { VAT_THRESHOLDS_2026, URSSAF_RATES_2026 } from "../lib/fiscalRates";
 import { todayISO, paymentTermsToDate, isValidDate } from "../lib/date";
 import { formatAmount } from "../lib/utils";
 import { NAV_ITEMS } from "../lib/constants";
@@ -360,7 +361,7 @@ export function GuestEditorPageContent() {
                   </div>
                   <div className="text-xl sm:text-2xl font-black text-text font-mono">981,75 €</div>
                   <div className="text-[10px] text-amber-400 font-bold">Échéance: 30 nov. 2026</div>
-                  <p className="text-[10px] text-muted">Taux légal 2026 : 23,1%</p>
+                  <p className="text-[10px] text-muted">Taux légal 2026 : {URSSAF_RATES_2026.bnc_ssi.labelPercent}</p>
                 </Card>
 
                 <Card className="p-4 space-y-1.5 bg-surface border-border">
@@ -441,14 +442,14 @@ export function GuestEditorPageContent() {
                     <div className="space-y-2">
                       <div className="flex justify-between text-xs font-semibold">
                         <span className="text-text">Franchise de TVA</span>
-                        <span className="text-muted font-mono">39 100,00 €</span>
+                        <span className="text-muted font-mono">{VAT_THRESHOLDS_2026.services.base.toLocaleString("fr-FR", { minimumFractionDigits: 2 })} €</span>
                       </div>
                       <div className="h-2.5 w-full bg-slate-800 rounded-full overflow-hidden">
                         <div className="h-full bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full" style={{ width: "10.8%" }} />
                       </div>
                       <div className="flex justify-between text-[11px] text-muted pt-1">
                         <span>CA Actuel: <strong>4 250,00 €</strong></span>
-                        <span>Reste: <strong>34 850,00 €</strong></span>
+                        <span>Reste: <strong>{(VAT_THRESHOLDS_2026.services.base - 4250).toLocaleString("fr-FR", { minimumFractionDigits: 2 })} €</strong></span>
                       </div>
                     </div>
 

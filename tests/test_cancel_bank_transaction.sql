@@ -35,20 +35,20 @@ BEGIN
   -- 2. Profils et Entreprise A
   INSERT INTO public.profiles (id, email, plan) VALUES (v_user_a, 'user_a@test.local', 'solo')
   ON CONFLICT (id) DO UPDATE SET plan = 'solo';
-  INSERT INTO public.companies (id, user_id, siret, siren, legal_name, address, activity_type, vat_regime, structure, urssaf_frequency, accent_color, default_payment_terms, previous_ca)
-  VALUES (v_comp_a, v_user_a, '11111111100011', '111111111', 'Entreprise A EI', '1 rue A', 'freelance_bnc', 'franchise', 'micro', 'quarterly', '#7C6FE0', 'on_receipt', 0)
+  INSERT INTO public.companies (id, user_id, siret, siren, legal_name, address, postal_code, city, activity_type, vat_regime, structure, urssaf_frequency, accent_color, default_payment_terms, previous_ca)
+  VALUES (v_comp_a, v_user_a, '11111111100011', '111111111', 'Entreprise A EI', '1 rue A', '75001', 'Paris', 'freelance_bnc', 'franchise', 'micro', 'quarterly', '#7C6FE0', 'on_receipt', 0)
   ON CONFLICT (id) DO NOTHING;
-  INSERT INTO public.clients (id, company_id, name, type, siren) VALUES (v_client_a, v_comp_a, 'Client A', 'b2b', '111111111') ON CONFLICT (id) DO NOTHING;
+  INSERT INTO public.clients (id, company_id, name, type, siren, address, postal_code, city) VALUES (v_client_a, v_comp_a, 'Client A', 'b2b', '111111111', '1 rue Client', '75001', 'Paris') ON CONFLICT (id) DO NOTHING;
   INSERT INTO public.bank_connections (id, company_id, provider_item_id, bank_name, status)
   VALUES (v_conn_a, v_comp_a, 'conn_a_001', 'Qonto', 'active') ON CONFLICT (id) DO NOTHING;
 
   -- 3. Profils et Entreprise B
   INSERT INTO public.profiles (id, email, plan) VALUES (v_user_b, 'user_b@test.local', 'solo')
   ON CONFLICT (id) DO UPDATE SET plan = 'solo';
-  INSERT INTO public.companies (id, user_id, siret, siren, legal_name, address, activity_type, vat_regime, structure, urssaf_frequency, accent_color, default_payment_terms, previous_ca)
-  VALUES (v_comp_b, v_user_b, '22222222200022', '222222222', 'Entreprise B EI', '2 rue B', 'freelance_bnc', 'franchise', 'micro', 'quarterly', '#7C6FE0', 'on_receipt', 0)
+  INSERT INTO public.companies (id, user_id, siret, siren, legal_name, address, postal_code, city, activity_type, vat_regime, structure, urssaf_frequency, accent_color, default_payment_terms, previous_ca)
+  VALUES (v_comp_b, v_user_b, '22222222200022', '222222222', 'Entreprise B EI', '2 rue B', '75002', 'Paris', 'freelance_bnc', 'franchise', 'micro', 'quarterly', '#7C6FE0', 'on_receipt', 0)
   ON CONFLICT (id) DO NOTHING;
-  INSERT INTO public.clients (id, company_id, name, type, siren) VALUES (v_client_b, v_comp_b, 'Client B', 'b2b', '222222222') ON CONFLICT (id) DO NOTHING;
+  INSERT INTO public.clients (id, company_id, name, type, siren, address, postal_code, city) VALUES (v_client_b, v_comp_b, 'Client B', 'b2b', '222222222', '2 rue Client', '75002', 'Paris') ON CONFLICT (id) DO NOTHING;
   INSERT INTO public.bank_connections (id, company_id, provider_item_id, bank_name, status)
   VALUES (v_conn_b, v_comp_b, 'conn_b_001', 'BoursoBank', 'active') ON CONFLICT (id) DO NOTHING;
 END $$;
@@ -690,8 +690,8 @@ BEGIN
   INSERT INTO public.invoices (id, company_id, client_id, number, type, status, issue_date, due_date, payment_terms, total_ht, total_vat, total_ttc, note)
   VALUES (v_inv_draft, v_comp_a, v_client_a, 'FAC-A-DRAFT-01', 'invoice', 'draft', CURRENT_DATE, CURRENT_DATE + 30, 'on_receipt', 200, 0, 200, 'Note brouillon');
 
-  INSERT INTO public.invoice_lines (id, invoice_id, description, quantity, unit_price, nature, position)
-  VALUES (v_line_draft, v_inv_draft, 'Ligne initiale brouillon', 1, 200, 'service', 1);
+  INSERT INTO public.invoice_lines (id, invoice_id, description, quantity, unit_price, nature, position, vat_rate)
+  VALUES (v_line_draft, v_inv_draft, 'Ligne initiale brouillon', 1, 200, 'service', 1, 0);
 
   -- Modification autorisée tant que c'est un brouillon
   UPDATE public.invoice_lines SET quantity = 2, unit_price = 100 WHERE id = v_line_draft;
@@ -767,8 +767,8 @@ BEGIN
 
   -- 5. Attaques Point 2 : invoice_lines sur facture émise (INSERT, UPDATE, DELETE)
   BEGIN
-    INSERT INTO public.invoice_lines (invoice_id, description, quantity, unit_price, nature, position)
-    VALUES (v_inv_draft, 'Ligne pirate après émission', 1, 999, 'service', 2);
+    INSERT INTO public.invoice_lines (invoice_id, description, quantity, unit_price, nature, position, vat_rate)
+    VALUES (v_inv_draft, 'Ligne pirate après émission', 1, 999, 'service', 2, 0);
   EXCEPTION WHEN OTHERS THEN
     GET STACKED DIAGNOSTICS v_insert_line_err = MESSAGE_TEXT;
   END;
@@ -1390,8 +1390,8 @@ BEGIN
   -- Création brouillon + ligne
   INSERT INTO public.invoices (id, company_id, client_id, number, type, status, issue_date, due_date, payment_terms, total_ht, total_vat, total_ttc)
   VALUES (v_inv_wh, v_comp_wh, v_client_wh, 'DRAFT-WH-01', 'invoice', 'draft', CURRENT_DATE, CURRENT_DATE + 30, '30d', 100, 0, 100);
-  INSERT INTO public.invoice_lines (id, invoice_id, description, quantity, unit_price, nature, position)
-  VALUES (v_line_wh, v_inv_wh, 'Prestation Webhook', 1, 100, 'service', 1);
+  INSERT INTO public.invoice_lines (id, invoice_id, description, quantity, unit_price, nature, position, vat_rate)
+  VALUES (v_line_wh, v_inv_wh, 'Prestation Webhook', 1, 100, 'service', 1, 0);
 
   -- Émission via emit_invoice
   PERFORM set_config('request.jwt.claim.sub', v_user_wh::TEXT, true);
@@ -1484,12 +1484,12 @@ BEGIN
     (v_inv3, v_comp_starter, v_client_starter, 'DRAFT-ST-03', 'invoice', 'draft', CURRENT_DATE, CURRENT_DATE + 30, '30d', 100, 0, 100),
     (v_inv4, v_comp_starter, v_client_starter, 'DRAFT-ST-04', 'invoice', 'draft', CURRENT_DATE, CURRENT_DATE + 30, '30d', 100, 0, 100);
 
-  INSERT INTO public.invoice_lines (invoice_id, description, quantity, unit_price, nature, position)
+  INSERT INTO public.invoice_lines (invoice_id, description, quantity, unit_price, nature, position, vat_rate)
   VALUES
-    (v_inv1, 'Prestation 1', 1, 100, 'service', 1),
-    (v_inv2, 'Prestation 2', 1, 100, 'service', 1),
-    (v_inv3, 'Prestation 3', 1, 100, 'service', 1),
-    (v_inv4, 'Prestation 4', 1, 100, 'service', 1);
+    (v_inv1, 'Prestation 1', 1, 100, 'service', 1, 0),
+    (v_inv2, 'Prestation 2', 1, 100, 'service', 1, 0),
+    (v_inv3, 'Prestation 3', 1, 100, 'service', 1, 0),
+    (v_inv4, 'Prestation 4', 1, 100, 'service', 1, 0);
 
   -- Contexte utilisateur starter sous rôle authenticated
   EXECUTE 'SET ROLE authenticated';

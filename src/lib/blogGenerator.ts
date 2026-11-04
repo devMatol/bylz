@@ -201,7 +201,7 @@ export function generateAiArticle(options: {
   } else if (isTva) {
     section1 = `
 <p>La franchise en base de TVA (régie par l'article 293 B du Code Général des Impôts) permet aux auto-entrepreneurs de facturer leurs clients en montant Net sans collecter de TVA. Cependant, le respect rigoureux des deux seuils réglementaires (le <strong>seuil de base</strong> et le <strong>seuil majoré</strong>) est impératif pour éviter une régularisation fiscale rétroactive.</p>
-<p>En 2026, pour les activités de prestations de services (BNC/BIC), le seuil de base s'établit à <strong>36 800 €</strong> et le seuil majoré à <strong>39 100 €</strong>. Pour la vente de marchandises, ils s'élèvent respectivement à <strong>91 900 €</strong> et <strong>101 000 €</strong>.</p>`;
+<p>En 2026, pour les activités de prestations de services (BNC/BIC), le seuil de base s'établit à <strong>37 500 €</strong> et le seuil majoré à <strong>41 250 €</strong>. Pour la vente de marchandises, ils s'élèvent respectivement à <strong>85 000 €</strong> et <strong>93 500 €</strong>.</p>`;
   } else if (isUrssaf) {
     section1 = `
 <p>Chaque mois ou chaque trimestre, les travailleurs indépendants doivent déclarer l'intégralité du chiffre d'affaires réellement encaissé (et non simplement facturé). Les taux de cotisations sociales s'appliquent directement sur ce montant brut brut selon la nature de l'activité exercée.</p>

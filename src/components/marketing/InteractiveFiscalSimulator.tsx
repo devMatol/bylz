@@ -1,13 +1,13 @@
 import { useState } from "react";
 import { TrendingUp, AlertTriangle, CheckCircle2, ShieldAlert } from "lucide-react";
 import { Card } from "../ui/Card";
-import { getVatThresholds } from "../../lib/fiscalRates";
+import { getVatThresholds, URSSAF_RATES_2026 } from "../../lib/fiscalRates";
 
 export function InteractiveFiscalSimulator() {
   const [ca, setCa] = useState<number>(28500);
   const [activityType, setActivityType] = useState<"bnc" | "bic_service">("bnc");
 
-  const urssafRate = activityType === "bnc" ? 0.231 : 0.212;
+  const urssafRate = activityType === "bnc" ? URSSAF_RATES_2026.bnc_ssi.rate : URSSAF_RATES_2026.bic_service.rate;
   const urssafAmount = Math.round(ca * urssafRate);
   const netAmount = ca - urssafAmount;
 
@@ -82,7 +82,7 @@ export function InteractiveFiscalSimulator() {
               : "bg-surface-hover border-border text-muted hover:text-text"
           }`}
         >
-          Prof. Libérale (BNC 23,1%)
+          Prof. Libérale (BNC {URSSAF_RATES_2026.bnc_ssi.labelPercent})
         </button>
         <button
           type="button"
