@@ -17,6 +17,13 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "npm:@supabase/supabase-js@2.57.4";
 import { PDFDocument, rgb, StandardFonts } from "npm:pdf-lib@1.17.1";
+import {
+  formatCompanyLegalName,
+  isB2BClient,
+  B2B_LEGAL_PENALTY_MENTION,
+  VAT_FRANCHISE_MENTION,
+  resolveOperationDate,
+} from "../_shared/invoiceLegalMentions.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -202,26 +209,45 @@ Deno.serve(async (req: Request) => {
       });
     }
 
-    const { data: lines, error: linesErr } = await userClient
-      .from(lineTable)
-      .select("*")
-      .eq(document_type === "quote" ? "quote_id" : "invoice_id", document_id)
-      .order("position", { ascending: true });
-    if (linesErr) throw linesErr;
+    let company: any = null;
+    let client: any = null;
+    let lines: any[] = [];
 
-    const { data: company, error: companyErr } = await userClient
-      .from("companies")
-      .select("*")
-      .eq("id", doc.company_id)
-      .maybeSingle();
-    if (companyErr) throw companyErr;
+    const snapshot = (doc as any)?.legal_snapshot;
+    const isIssuedInvoice = document_type === "invoice" && doc.status !== "draft" && !!snapshot;
 
-    const { data: client, error: clientErr } = await userClient
-      .from("clients")
-      .select("*")
-      .eq("id", doc.client_id)
-      .maybeSingle();
-    if (clientErr) throw clientErr;
+    if (isIssuedInvoice) {
+      // Pour une facture émise, lecture exclusive depuis le snapshot légal figé
+      // Aucune lecture des tables dynamiques companies ou clients
+      company = snapshot.seller;
+      client = snapshot.buyer;
+      lines = Array.isArray(snapshot.lines) ? snapshot.lines : [];
+    } else {
+      // Devis ou brouillon : lecture dynamique depuis les tables
+      const { data: linesData, error: linesErr } = await userClient
+        .from(lineTable)
+        .select("*")
+        .eq(document_type === "quote" ? "quote_id" : "invoice_id", document_id)
+        .order("position", { ascending: true });
+      if (linesErr) throw linesErr;
+      lines = linesData || [];
+
+      const { data: compData, error: companyErr } = await userClient
+        .from("companies")
+        .select("*")
+        .eq("id", doc.company_id)
+        .maybeSingle();
+      if (companyErr) throw companyErr;
+      company = compData;
+
+      const { data: clientData, error: clientErr } = await userClient
+        .from("clients")
+        .select("*")
+        .eq("id", doc.client_id)
+        .maybeSingle();
+      if (clientErr) throw clientErr;
+      client = clientData;
+    }
 
     // Render PDF
     const pdfDoc = await PDFDocument.create();
@@ -259,7 +285,8 @@ Deno.serve(async (req: Request) => {
       }
     }
 
-    const displayName = company?.commercial_name || company?.legal_name || "Entreprise";
+    const rawName = company?.commercial_name || company?.legal_name || "Entreprise";
+    const displayName = formatCompanyLegalName(rawName, company?.structure);
     safeDrawText(page, displayName, { x: 50, y, size: 12, color: black }, fontBold);
     y -= 16;
     if (company?.address) {
@@ -302,12 +329,22 @@ Deno.serve(async (req: Request) => {
       color: gray,
     }, font);
 
+    const opDate = resolveOperationDate(doc.operation_date, doc.issue_date);
+    const opLine = `Prestation / Vente : ${formatDateFR(opDate)}`;
+    const opWidth = safeWidthOfText(font, opLine, 9);
+    safeDrawText(page, opLine, {
+      x: width - 50 - opWidth,
+      y: height - 98,
+      size: 9,
+      color: gray,
+    }, font);
+
     if (document_type === "invoice" && doc.due_date) {
       const dueLine = `Échéance ${formatDateFR(doc.due_date)}`;
       const dueWidth = safeWidthOfText(font, dueLine, 9);
       safeDrawText(page, dueLine, {
         x: width - 50 - dueWidth,
-        y: height - 98,
+        y: height - 111,
         size: 9,
         color: gray,
       }, font);
@@ -317,7 +354,7 @@ Deno.serve(async (req: Request) => {
       const vWidth = safeWidthOfText(font, vLine, 9);
       safeDrawText(page, vLine, {
         x: width - 50 - vWidth,
-        y: height - 98,
+        y: height - 111,
         size: 9,
         color: gray,
       }, font);
@@ -393,7 +430,7 @@ Deno.serve(async (req: Request) => {
 
     drawTotalLine("Total HT", formatEUR(totalHt));
     if (isFranchise) {
-      safeDrawText(page, "TVA non applicable — Art. 293 B du CGI", {
+      safeDrawText(page, "TVA non applicable, art. 293 B du CGI", {
         x: 350, y, size: 8, color: gray,
       }, font);
       y -= 14;
@@ -433,9 +470,21 @@ Deno.serve(async (req: Request) => {
       }
     }
 
+    const isB2B = isB2BClient({
+      type: client?.type,
+      siret: client?.siret,
+      siren: client?.siren,
+    });
+    if (document_type === "invoice" && isB2B) {
+      safeDrawText(page, B2B_LEGAL_PENALTY_MENTION, {
+        x: 50, y: 52, size: 7, color: gray,
+      }, font);
+    }
+
     if (isFranchise) {
-      safeDrawText(page, "Auto-entrepreneur — TVA non applicable, art. 293 B du CGI", {
-        x: 50, y: 40, size: 7, color: gray }, font);
+      safeDrawText(page, VAT_FRANCHISE_MENTION, {
+        x: 50, y: 40, size: 7, color: gray,
+      }, font);
     }
 
     const pdfBytes = await pdfDoc.save();

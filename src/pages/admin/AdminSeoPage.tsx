@@ -129,7 +129,7 @@ export function AdminSeoPage() {
       topQueries: [
         { query: "factur-x auto entrepreneur 2026", clicks: 320, impressions: 4500, ctr: 7.1, position: 2.1 },
         { query: "simulateur cotisations urssaf bnc", clicks: 280, impressions: 3800, ctr: 7.3, position: 1.8 },
-        { query: "seuil de franchise tva 39100", clicks: 210, impressions: 3100, ctr: 6.7, position: 3.4 },
+        { query: "seuil de franchise tva 37500", clicks: 210, impressions: 3100, ctr: 6.7, position: 3.4 },
         { query: "logiciel facturation micro entreprise gratuit", clicks: 190, impressions: 4200, ctr: 4.5, position: 4.2 },
         { query: "bylz facturation", clicks: 150, impressions: 1600, ctr: 9.3, position: 1.0 },
       ],

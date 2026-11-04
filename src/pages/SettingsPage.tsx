@@ -35,7 +35,7 @@ import {
 } from "../lib/constants";
 import { Input } from "../components/ui/Input";
 import { Select } from "../components/ui/Select";
-import type { CompanyStructure } from "../types/database";
+import type { CompanyStructure, VatOption } from "../types/database";
 
 function formatSiret(raw: string): string {
   const digits = raw.replace(/\D/g, "");
@@ -111,10 +111,13 @@ export function SettingsPage() {
   const [legalName, setLegalName] = useState("");
   const [commercialName, setCommercialName] = useState("");
   const [address, setAddress] = useState("");
+  const [postalCode, setPostalCode] = useState("");
+  const [city, setCity] = useState("");
   const [structure, setStructure] = useState<CompanyStructure>("micro");
   const [activityType, setActivityType] = useState<"freelance_bnc" | "artisan_bic" | "commerce" | "liberal">("freelance_bnc");
   const [urssafFrequency, setUrssafFrequency] = useState<"monthly" | "quarterly">("monthly");
   const [vatRegime, setVatRegime] = useState<"franchise" | "vat">("franchise");
+  const [vatOption, setVatOption] = useState<VatOption>("non_renseigne");
   const [previousCa, setPreviousCa] = useState<string>("0");
   const [savingCompany, setSavingCompany] = useState(false);
   const [searchingSiret, setSearchingSiret] = useState(false);
@@ -150,10 +153,13 @@ export function SettingsPage() {
       setLegalName(company.legal_name || "");
       setCommercialName(company.commercial_name || "");
       setAddress(company.address || "");
+      setPostalCode(company.postal_code || "");
+      setCity(company.city || "");
       setStructure(company.structure || "micro");
       setActivityType(company.activity_type || "freelance_bnc");
       setUrssafFrequency(company.urssaf_frequency || "monthly");
       setVatRegime(company.vat_regime || "franchise");
+      setVatOption(company.vat_option || "non_renseigne");
       setPreviousCa((company.previous_ca || 0).toString());
       setLogoUrl(company.logo_url || "");
       setAccentColor(company.accent_color || "#7C6FE0");
@@ -290,10 +296,13 @@ export function SettingsPage() {
           legal_name: legalName,
           commercial_name: commercialName || null,
           address,
+          postal_code: postalCode || null,
+          city: city || null,
           structure,
           activity_type: activityType,
           urssaf_frequency: urssafFrequency,
           vat_regime: vatRegime,
+          vat_option: vatOption,
           previous_ca: parseFloat(previousCa) || 0,
         })
         .eq("id", company.id);
@@ -316,7 +325,7 @@ export function SettingsPage() {
     }
     setSearchingSiret(true);
     try {
-      let resultData: { legal_name?: string; address?: string } | null = null;
+      let resultData: { legal_name?: string; address?: string; postal_code?: string; city?: string } | null = null;
 
       // 1. Appel Edge Function siret-lookup
       const { data, error } = await supabase.functions.invoke("siret-lookup", {
@@ -338,6 +347,8 @@ export function SettingsPage() {
             resultData = {
               legal_name: firstResult.nom_complet || firstResult.nom_raison_sociale,
               address: etab.adresse || etab.adresse_complete || `${etab.code_postal || ""} ${etab.libelle_commune || ""}`.trim(),
+              postal_code: etab.code_postal || "",
+              city: etab.libelle_commune || "",
             };
           }
         }
@@ -354,6 +365,8 @@ export function SettingsPage() {
         if (resultData.address && resultData.address !== "[NON-DIFFUSIBLE]") {
           setAddress(resultData.address);
         }
+        if (resultData.postal_code) setPostalCode(resultData.postal_code);
+        if (resultData.city) setCity(resultData.city);
         toast("Informations de l'entreprise récupérées depuis l'INSEE !", "success");
       }
     } catch (err: any) {
@@ -520,10 +533,27 @@ export function SettingsPage() {
                   />
 
                   <Input
-                    label="Adresse de l'entreprise"
-                    placeholder="12 rue de la Paix, 75002 Paris"
+                    label="Adresse (rue et numéro)"
+                    placeholder="12 rue de la Paix"
                     value={address}
                     onChange={(e) => setAddress(e.target.value)}
+                    required
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <Input
+                    label="Code postal"
+                    placeholder="75002"
+                    value={postalCode}
+                    onChange={(e) => setPostalCode(e.target.value)}
+                    required
+                  />
+                  <Input
+                    label="Ville"
+                    placeholder="Paris"
+                    value={city}
+                    onChange={(e) => setCity(e.target.value)}
                     required
                   />
                 </div>
@@ -555,6 +585,18 @@ export function SettingsPage() {
                     <option value="franchise">Franchise en base (TVA non applicable)</option>
                     <option value="vat">Réel simplifié / normal (TVA applicable)</option>
                   </Select>
+
+                  {vatRegime === "vat" && (
+                    <Select
+                      label="Option de paiement de la TVA"
+                      value={vatOption}
+                      onChange={(e) => setVatOption(e.target.value as any)}
+                    >
+                      <option value="non_renseigne">Non renseigné (aucune mention sur les factures)</option>
+                      <option value="encaissements">Encaissements (prestation de services par défaut)</option>
+                      <option value="debits">Option d'après les débits (mention légale obligatoire)</option>
+                    </Select>
+                  )}
                 </div>
 
                 <div className="flex justify-end pt-2">

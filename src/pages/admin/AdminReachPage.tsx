@@ -324,8 +324,8 @@ export function AdminReachPage() {
           else if (path.includes("simulateur-seuil-tva")) name = "Simulateur Plafond TVA";
           else if (path.includes("simulateur-urssaf")) name = "Simulateur Cotisations URSSAF";
           else if (path.includes("mentions-legales")) name = "Mentions Légales";
-          else if (path.includes("obligation-de-facturation-electronique")) name = "Guide Obligation Facturation 2026";
-          else if (path.includes("modele-devis-facture-artisan-batiment")) name = "Modèle Devis Facture Artisan BTP";
+          else if (path.includes("obligation-de-facturation-electronique") || path.includes("obligation-facturation-electronique")) name = "Guide Obligation Facturation 2026";
+          else if (path.includes("modele-devis-facture-artisan-batiment") || path.includes("devis-facture-artisan-batiment")) name = "Modèle Devis Facture Artisan BTP";
 
           const pageClicks = p.clicks || 0;
           const pageImpressions = p.impressions || 0;

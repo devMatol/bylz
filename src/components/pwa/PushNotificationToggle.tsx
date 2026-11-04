@@ -38,7 +38,7 @@ export function PushNotificationToggle() {
         toast("Notifications Push Mobile activées avec succès !", "success");
         await sendNativePushNotification(
           "🎉 Notifications Bylz Activées",
-          "Vous recevrez désormais vos alertes de paiement et rapprochements bancaires en temps réel.",
+          "Vous recevrez désormais vos alertes de paiement et échéances de factures en temps réel.",
           "/invoices"
         );
       } else if (res === "denied") {

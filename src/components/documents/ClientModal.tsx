@@ -13,6 +13,8 @@ import type { Client, ClientType } from "../../types/database";
 interface SiretResult {
   legal_name: string;
   address: string;
+  postal_code?: string;
+  city?: string;
   naf_code: string;
   naf_label: string;
   active: boolean;
@@ -50,6 +52,8 @@ export function ClientModal({
   const [name, setName] = useState(client?.name || "");
   const [email, setEmail] = useState(client?.email || "");
   const [address, setAddress] = useState(client?.address || "");
+  const [postalCode, setPostalCode] = useState(client?.postal_code || "");
+  const [city, setCity] = useState(client?.city || "");
   const [siretInput, setSiretInput] = useState(
     client?.siret ? formatSiret(client.siret) : ""
   );
@@ -70,6 +74,8 @@ export function ClientModal({
     setName(client?.name || "");
     setEmail(client?.email || "");
     setAddress(client?.address || "");
+    setPostalCode(client?.postal_code || "");
+    setCity(client?.city || "");
     setSiretInput(client?.siret ? formatSiret(client.siret) : "");
     setVatNumber(client?.vat_number || "");
     setSiretStatus("idle");
@@ -111,6 +117,8 @@ export function ClientModal({
       setSiretResult(json);
       setName(json.legal_name);
       setAddress(json.address);
+      if (json.postal_code) setPostalCode(json.postal_code);
+      if (json.city) setCity(json.city);
       setSiretStatus("found");
     } catch (err) {
       setErrorMsg(err instanceof Error ? err.message : "Erreur de recherche");
@@ -144,6 +152,8 @@ export function ClientModal({
         vat_number: vatNumber.trim() || null,
         email: email.trim() || null,
         address: address.trim() || null,
+        postal_code: postalCode.trim() || null,
+        city: city.trim() || null,
       };
       const saved = isEdit
         ? await updateClient(companyId, client!.id, payload)
@@ -263,11 +273,25 @@ export function ClientModal({
           placeholder="client@exemple.fr"
         />
         <Input
-          label="Adresse"
+          label="Adresse (rue et numéro)"
           value={address}
           onChange={(e) => setAddress(e.target.value)}
-          placeholder="Adresse postale"
+          placeholder="10 Rue de la Paix"
         />
+        <div className="grid grid-cols-2 gap-3">
+          <Input
+            label="Code postal"
+            value={postalCode}
+            onChange={(e) => setPostalCode(e.target.value)}
+            placeholder="75002"
+          />
+          <Input
+            label="Ville"
+            value={city}
+            onChange={(e) => setCity(e.target.value)}
+            placeholder="Paris"
+          />
+        </div>
 
         <div className="flex justify-end gap-2 pt-2">
           <Button type="button" variant="ghost" onClick={onClose} disabled={pending}>

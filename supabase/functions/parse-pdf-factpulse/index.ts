@@ -34,7 +34,7 @@ serve(async (req) => {
     };
     if (clientUid) headers["X-Client-UID"] = clientUid;
 
-    let factPulseRes = await fetch("https://app.factpulse.fr/api/v1/invoices/parse", {
+    let factPulseRes = await fetch("https://factpulse.fr/api/v1/processing/parse-facturx", {
       method: "POST",
       headers,
       body: fpFormData,
@@ -43,7 +43,7 @@ serve(async (req) => {
     if (factPulseRes.status === 401) {
       const freshToken = await getOrRefreshFactPulseToken(true);
       headers["Authorization"] = `Bearer ${freshToken}`;
-      factPulseRes = await fetch("https://app.factpulse.fr/api/v1/invoices/parse", {
+      factPulseRes = await fetch("https://factpulse.fr/api/v1/processing/parse-facturx", {
         method: "POST",
         headers,
         body: fpFormData,

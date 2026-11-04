@@ -3,6 +3,7 @@ import { STATUS_LABELS } from "../../lib/constants";
 
 type StatusVariant =
   | "paid"
+  | "partially_paid"
   | "pending"
   | "late"
   | "rejected"
@@ -18,6 +19,7 @@ interface StatusBadgeProps {
 
 const variantStyles: Record<StatusVariant, { dot: string; text: string }> = {
   paid: { dot: "bg-success", text: "text-success" },
+  partially_paid: { dot: "bg-blue-500", text: "text-blue-600 dark:text-blue-400" },
   pending: { dot: "bg-warning", text: "text-warning" },
   late: { dot: "bg-danger", text: "text-danger" },
   rejected: { dot: "bg-danger", text: "text-danger" },

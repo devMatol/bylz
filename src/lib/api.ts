@@ -2,6 +2,7 @@ import { supabase } from "./supabase";
 import { paymentTermsToDate } from "./date";
 import { parseISO, isValid, format } from "date-fns";
 import { fr } from "date-fns/locale";
+import { getUrssafConfig } from "./constants";
 import type {
   Client,
   CatalogItem,
@@ -49,6 +50,7 @@ export interface LineInput {
   description: string;
   quantity: number;
   unit_price: number;
+  vat_rate?: number;
   nature: ItemNature;
   position: number;
 }
@@ -281,10 +283,17 @@ export function computeTotals(
   vatRegime: "franchise" | "vat"
 ): { total_ht: number; total_vat: number; total_ttc: number } {
   const total_ht = lines.reduce(
-    (sum, l) => sum + l.quantity * l.unit_price,
+    (sum, l) => sum + (Number(l.quantity) || 0) * (Number(l.unit_price) || 0),
     0
   );
-  const total_vat = vatRegime === "franchise" ? 0 : 0; // simplified: no per-line VAT rate in schema
+  const total_vat = vatRegime === "franchise"
+    ? 0
+    : lines.reduce((sum, l) => {
+        const rate = l.vat_rate !== undefined ? Number(l.vat_rate) : 20;
+        const lineHt = (Number(l.quantity) || 0) * (Number(l.unit_price) || 0);
+        return sum + round2((lineHt * rate) / 100);
+      }, 0);
+
   return {
     total_ht: round2(total_ht),
     total_vat: round2(total_vat),
@@ -607,78 +616,6 @@ export async function fetchInvoices(
   }));
 }
 
-export async function seedInboundFactpulseInvoice(companyId: string): Promise<string> {
-  // 1. Check if client QONTO / PENNYLANE exists, or create one
-  let { data: existingClient } = await supabase
-    .from("clients")
-    .select("id")
-    .eq("company_id", companyId)
-    .ilike("name", "%Pennylane%")
-    .maybeSingle();
-
-  let clientId = existingClient?.id;
-
-  if (!clientId) {
-    const { data: newClient, error: cErr } = await supabase
-      .from("clients")
-      .insert({
-        company_id: companyId,
-        name: "Qonto SAS / Pennylane (Réseau PDP)",
-        type: "b2b",
-        siren: "842918201",
-        siret: "84291820100019",
-        vat_number: "FR84842918201",
-        email: "facturation@qonto-pennylane.fr",
-        address: "18 Rue du Faubourg Poissonnière, 75010 Paris",
-      })
-      .select("id")
-      .single();
-
-    if (cErr) throw cErr;
-    clientId = newClient.id;
-  }
-
-  const issueDate = new Date().toISOString().slice(0, 10);
-  const invNumber = `FP-REC-${Math.floor(Math.random() * 8999 + 1000)}`;
-  const fpRef = `FP-PDP-INB-${Math.floor(Math.random() * 899999 + 100000)}`;
-
-  // 2. Insert Invoice
-  const { data: inv, error: iErr } = await supabase
-    .from("invoices")
-    .insert({
-      company_id: companyId,
-      client_id: clientId,
-      number: invNumber,
-      type: "invoice",
-      status: "pending",
-      pa_status: "received",
-      ereporting_status: "confirmed",
-      factpulse_ref: fpRef,
-      issue_date: issueDate,
-      due_date: new Date(Date.now() + 30 * 24 * 3600 * 1000).toISOString().slice(0, 10),
-      payment_terms: "30d",
-      total_ht: 1200.0,
-      total_vat: 240.0,
-      total_ttc: 1440.0,
-      note: "Facture fournisseur au format PDF reçue automatiquement via le réseau PDP FactPulse (Émetteur: PENNYLANE / QONTO SAS - SIRET 842 918 201 00019)",
-    })
-    .select("id")
-    .single();
-
-  if (iErr) throw iErr;
-
-  // 3. Insert Invoice Line
-  await supabase.from("invoice_lines").insert({
-    invoice_id: inv.id,
-    description: "Prestation cloud & intégration PDP (Réseau Électronique B2B)",
-    quantity: 1,
-    unit_price: 1200.0,
-    nature: "service",
-    position: 0,
-  });
-
-  return inv.id;
-}
 
 export async function fetchInvoice(
   companyId: string,
@@ -754,7 +691,13 @@ export async function saveInvoice(
   }
 ): Promise<Invoice> {
   const isNew = !input.id;
-  const totals = computeTotals(input.lines, "franchise");
+  const { data: comp } = await supabase
+    .from("companies")
+    .select("vat_regime")
+    .eq("id", companyId)
+    .single();
+  const vatRegime = comp?.vat_regime || "franchise";
+  const totals = computeTotals(input.lines, vatRegime);
 
   const payload: any = {
     company_id: companyId,
@@ -809,6 +752,7 @@ export async function saveInvoice(
       unit_price: l.unit_price,
       nature: l.nature,
       position: l.position,
+      vat_rate: vatRegime === "franchise" ? 0 : (l.vat_rate !== undefined ? Number(l.vat_rate) : 20),
     }));
     const { error: lineErr } = await supabase
       .from("invoice_lines")
@@ -829,27 +773,18 @@ export async function emitInvoice(
   companyId: string,
   id: string
 ): Promise<Invoice> {
-  const { data: inv, error: gErr } = await supabase
-    .from("invoices")
-    .select("issue_date, status")
-    .eq("company_id", companyId)
-    .eq("id", id)
-    .maybeSingle();
-  if (gErr) throw gErr;
-  if (!inv) throw new Error("Facture introuvable");
-  if (inv.status !== "draft") throw new Error("Cette facture n'est plus modifiable");
-  const parsed = parseISO(inv.issue_date);
-  const year = isValid(parsed) ? parsed.getFullYear() : new Date().getFullYear();
-  const number = await nextNumber(companyId, "FAC", year);
-  const { data, error } = await supabase
-    .from("invoices")
-    .update({ number, status: "pending" })
-    .eq("company_id", companyId)
-    .eq("id", id)
-    .eq("status", "draft")
-    .select("*")
-    .single();
-  if (error) throw error;
+  const { data, error } = await supabase.rpc("emit_invoice", {
+    p_invoice_id: id,
+  });
+  if (error) {
+    if (
+      error.message?.includes("Cette facture vient d'être émise") ||
+      error.message?.includes("statut brouillon")
+    ) {
+      throw new Error("Cette facture vient d'être émise.");
+    }
+    throw error;
+  }
   return data as Invoice;
 }
 
@@ -921,8 +856,15 @@ export async function createCreditNote(
     .single();
   if (error) throw error;
   const cn = data as Invoice;
+  const { data: comp } = await supabase
+    .from("companies")
+    .select("vat_regime")
+    .eq("id", companyId)
+    .single();
+  const vatRegime = comp?.vat_regime || "franchise";
+
   if (lines.length > 0) {
-    const rows = lines.map((l) => ({
+    const rows = lines.map((l: any) => ({
       invoice_id: cn.id,
       catalog_item_id: l.catalog_item_id,
       description: l.description,
@@ -930,6 +872,7 @@ export async function createCreditNote(
       unit_price: -Math.abs(Number(l.unit_price)),
       nature: l.nature,
       position: l.position,
+      vat_rate: vatRegime === "franchise" ? 0 : (l.vat_rate !== undefined ? Number(l.vat_rate) : 20),
     }));
     const { error: lErr } = await supabase.from("invoice_lines").insert(rows);
     if (lErr) throw lErr;
@@ -967,8 +910,15 @@ export async function convertQuoteToInvoice(
     .single();
   if (error) throw error;
   const inv = data as Invoice;
+  const { data: comp } = await supabase
+    .from("companies")
+    .select("vat_regime")
+    .eq("id", companyId)
+    .single();
+  const vatRegime = comp?.vat_regime || "franchise";
+
   if (lines.length > 0) {
-    const rows = lines.map((l) => ({
+    const rows = lines.map((l: any) => ({
       invoice_id: inv.id,
       catalog_item_id: l.catalog_item_id,
       description: l.description,
@@ -976,6 +926,7 @@ export async function convertQuoteToInvoice(
       unit_price: l.unit_price,
       nature: l.nature,
       position: l.position,
+      vat_rate: vatRegime === "franchise" ? 0 : (l.vat_rate !== undefined ? Number(l.vat_rate) : 20),
     }));
     const { error: lErr } = await supabase.from("invoice_lines").insert(rows);
     if (lErr) throw lErr;
@@ -1645,11 +1596,13 @@ export function computeUrssafPeriods(
   companyCreatedAt: string,
   frequency: UrssafFreq,
   payments: Payment[],
-  declarations: UrssafDeclaration[]
+  declarations: UrssafDeclaration[],
+  activityType?: string
 ): UrssafPeriod[] {
   const created = parseISO(companyCreatedAt);
   const now = new Date();
   const periods: UrssafPeriod[] = [];
+  const urssafConfig = getUrssafConfig(activityType);
 
   const start = new Date(created.getFullYear(), created.getMonth(), 1);
   const endNow = new Date(now.getFullYear(), now.getMonth() + 1, 1);
@@ -1671,7 +1624,7 @@ export function computeUrssafPeriods(
       .reduce((s, p) => s + (Number(p.amount) || 0), 0);
 
     const matching = declarations.find((decl) => decl.period_start === format(pStart, "yyyy-MM-dd"));
-    const est = rev * 0.212;
+    const est = Math.round(rev * urssafConfig.rate * 100) / 100;
 
     periods.push({
       periodStart: format(pStart, "yyyy-MM-dd"),
@@ -1915,17 +1868,27 @@ export async function fetchBankTransactions(companyId: string): Promise<{
   transactions: Array<BankTransaction & { matched_invoice_number?: string }>;
   unmatchedCount: number;
 }> {
-  const connections = await fetchBankConnections(companyId);
-  if (connections.length === 0) {
-    return { transactions: [], unmatchedCount: 0 };
-  }
-
-  const connIds = connections.map((c) => c.id);
-  const { data, error } = await supabase
+  let { data, error } = await supabase
     .from("bank_transactions")
     .select("*, matched_invoice:invoices(number)")
-    .in("bank_connection_id", connIds)
+    .eq("company_id", companyId)
     .order("transaction_date", { ascending: false });
+
+  if (error && (error.message.includes("company_id") || (error as any).code === "PGRST204")) {
+    const connections = await fetchBankConnections(companyId);
+    if (connections.length === 0) {
+      return { transactions: [], unmatchedCount: 0 };
+    }
+
+    const connIds = connections.map((c) => c.id);
+    const fallback = await supabase
+      .from("bank_transactions")
+      .select("*, matched_invoice:invoices(number)")
+      .in("bank_connection_id", connIds)
+      .order("transaction_date", { ascending: false });
+    data = fallback.data;
+    error = fallback.error;
+  }
 
   if (error && !error.message.includes("does not exist")) {
     console.warn("Could not fetch bank_transactions:", error.message);
@@ -2109,6 +2072,7 @@ export async function manualMatchBankTransaction(
     method: "transfer",
     paid_at: tx.transaction_date || new Date().toISOString().slice(0, 10),
     source: "bank_sync",
+    bank_transaction_id: transactionId,
   });
 }
 
@@ -2120,43 +2084,13 @@ export async function ignoreBankTransaction(transactionId: string): Promise<void
   if (error) throw error;
 }
 
-export async function undoBankMatch(transactionId: string): Promise<void> {
-  const { data: tx } = await supabase
-    .from("bank_transactions")
-    .select("matched_invoice_id")
-    .eq("id", transactionId)
-    .single();
-
-  if (tx?.matched_invoice_id) {
-    // Revert invoice status to pending
-    await supabase
-      .from("invoices")
-      .update({
-        status: "pending",
-        paid_at: null,
-        paid_amount: null,
-      })
-      .eq("id", tx.matched_invoice_id);
-
-    // Delete payment row from bank sync
-    await supabase
-      .from("payments")
-      .delete()
-      .eq("invoice_id", tx.matched_invoice_id)
-      .eq("source", "bank_sync");
-  }
-
-  // Revert bank transaction
-  const { error } = await supabase
-    .from("bank_transactions")
-    .update({
-      match_status: "unmatched",
-      matched_invoice_id: null,
-      confidence_score: null,
-    })
-    .eq("id", transactionId);
+export async function undoBankMatch(transactionId: string): Promise<{ warning?: string | null }> {
+  const { data, error } = await supabase.rpc("cancel_bank_transaction_match", {
+    p_bank_transaction_id: transactionId,
+  });
 
   if (error) throw error;
+  return { warning: data?.warning || null };
 }
 
 export async function disconnectBankConnection(companyId: string, connectionId: string): Promise<void> {

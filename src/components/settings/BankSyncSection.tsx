@@ -241,8 +241,12 @@ export function BankSyncSection() {
 
   const handleUndoMatch = async (txId: string) => {
     try {
-      await undoBankMatch(txId);
-      toast("Rapprochement annulé. La facture repasse en attente.", "success");
+      const res = await undoBankMatch(txId);
+      if (res?.warning) {
+        toast(res.warning, "warning");
+      } else {
+        toast("Rapprochement annulé avec écriture de contre-passation.", "success");
+      }
       void loadData();
     } catch (err: any) {
       toast(err.message || "Erreur lors de l'annulation", "danger");
@@ -325,7 +329,7 @@ export function BankSyncSection() {
         <div className="flex items-center space-x-2 text-[11px] text-muted">
           <ShieldCheck className="w-4 h-4 text-emerald-500 flex-shrink-0" />
           <span>
-            <strong>Sécurité 100% garantie :</strong> Vos identifiants bancaires ne transitent jamais par Bylz. La connexion est chiffrée selon les normes européennes de haute sécurité (Régulation Banque de France / ACPR).
+            <strong>Connexion sécurisée :</strong> Vos identifiants bancaires ne transitent jamais par Bylz. La synchronisation s'effectue via notre partenaire Bridge (établissement régulé par l'ACPR).
           </span>
         </div>
       </div>

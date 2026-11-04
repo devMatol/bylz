@@ -46,7 +46,7 @@ export function SendReachReportModal({
   const { toast } = useToast();
   const [recipient, setRecipient] = useState(defaultEmail);
   const [subject, setSubject] = useState(
-    `📊 Rapport de Performance & Reach — Bylz (${reportData.periodLabel})`
+    `📊 Rapport de Performance & Reach : Bylz (${reportData.periodLabel})`
   );
   const [customNote, setCustomNote] = useState("");
   const [sending, setSending] = useState(false);
@@ -74,7 +74,7 @@ RÉSUMÉ EXÉCUTIF DU REACH
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 TOP CONTENUS LES PLUS VUS
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-${reportData.topPages.slice(0, 4).map((p, i) => `${i + 1}. ${p.title} (${p.page}) — ${p.views.toLocaleString("fr-FR")} visites (${p.percentage}%)`).join("\n")}
+${reportData.topPages.slice(0, 4).map((p, i) => `${i + 1}. ${p.title} (${p.page}) : ${p.views.toLocaleString("fr-FR")} visites (${p.percentage}%)`).join("\n")}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 CANAUX D'ACQUISITION

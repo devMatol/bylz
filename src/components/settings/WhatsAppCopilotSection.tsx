@@ -99,7 +99,7 @@ export function WhatsAppCopilotSection() {
           ...prev,
           {
             sender: "ai",
-            text: "🤖 *Pilote IA Bylz* :\n\n📊 *Bilan du mois* : CA Encaissé 2 850,00 € | En attente : 1 200,00 €\n🏛️ *Cotisations URSSAF* : ~604,00 €\n📈 *Statut TVA* : Franchise en base active (< 36 800 €).\n\n📄 *Nouveau document* : Facture FAC-2026-009 générée avec lien de paiement Stripe prêt à envoyer !",
+            text: "🤖 *Pilote IA Bylz* :\n\n📊 *Bilan du mois* : CA Encaissé 2 850,00 € | En attente : 1 200,00 €\n🏛️ *Cotisations URSSAF* : ~604,00 €\n📈 *Statut TVA* : Franchise en base active (< 37 500 €).\n\n📄 *Nouveau document* : Facture FAC-2026-009 générée avec lien de paiement Stripe prêt à envoyer !",
           },
         ]);
       } else {

@@ -113,33 +113,31 @@ Deno.serve(async (req) => {
       return corsResponse({ error: 'Invoice not found or unauthorized' }, 404);
     }
 
-    // Generate number if draft
-    let number = invoice.number;
-    if (!number || number.startsWith('DRAFT-')) {
-      const prefix = invoice.type === 'credit_note' ? 'AV' : 'FC';
-      const year = new Date().getFullYear();
-      
-      const { count: seqCount } = await supabase
-        .from('invoices')
-        .select('id', { count: 'exact', head: true })
-        .eq('company_id', company.id)
-        .neq('status', 'draft');
+    // Call SECURITY DEFINER emit_invoice RPC which locks company FOR UPDATE,
+    // generates the next sequential number, sets issue_date = CURRENT_DATE, status = 'pending',
+    // and freezes legal_snapshot.
+    const { data: emittedInvoice, error: emitError } = await supabase
+      .rpc('emit_invoice', { p_invoice_id: invoiceId });
 
-      const nextNum = (seqCount ?? 0) + 1;
-      number = `${prefix}-${year}-${String(nextNum).padStart(4, '0')}`;
+    if (emitError || !emittedInvoice) {
+      const msg = emitError?.message?.includes("Cette facture vient d'être émise") || emitError?.message?.includes("statut brouillon")
+        ? "Cette facture vient d'être émise."
+        : (emitError?.message || 'Erreur lors de l’émission de la facture');
+      return corsResponse({ error: msg }, 400);
     }
 
+    let updatedInvoice = emittedInvoice;
     let paymentLinkUrl: string | null = null;
     const origin = req.headers.get('origin') || 'http://localhost:5173';
 
     // Generate Stripe Connect Payment Link if company has Connect account
     if (
       company.stripe_connect_account_id &&
-      invoice.type !== 'credit_note' &&
-      Number(invoice.total_ttc || 0) > 0
+      emittedInvoice.type !== 'credit_note' &&
+      Number(emittedInvoice.total_ttc || 0) > 0
     ) {
       try {
-        const unitAmount = Math.round(Number(invoice.total_ttc) * 100);
+        const unitAmount = Math.round(Number(emittedInvoice.total_ttc) * 100);
         const session = await stripe.checkout.sessions.create({
           payment_method_types: ['card'],
           line_items: [
@@ -147,7 +145,7 @@ Deno.serve(async (req) => {
               price_data: {
                 currency: 'eur',
                 product_data: {
-                  name: `Facture ${number}`,
+                  name: `Facture ${emittedInvoice.number}`,
                 },
                 unit_amount: unitAmount,
               },
@@ -155,10 +153,10 @@ Deno.serve(async (req) => {
             },
           ],
           mode: 'payment',
-          success_url: `${origin}/invoices/${invoice.id}?payment=success`,
-          cancel_url: `${origin}/invoices/${invoice.id}`,
+          success_url: `${origin}/invoices/${emittedInvoice.id}?payment=success`,
+          cancel_url: `${origin}/invoices/${emittedInvoice.id}`,
           metadata: {
-            invoice_id: invoice.id,
+            invoice_id: emittedInvoice.id,
           },
           payment_intent_data: {
             transfer_data: {
@@ -167,26 +165,20 @@ Deno.serve(async (req) => {
           },
         });
         paymentLinkUrl = session.url;
+        if (paymentLinkUrl) {
+          const { data: invWithLink, error: linkErr } = await supabase
+            .from('invoices')
+            .update({ stripe_payment_link: paymentLinkUrl })
+            .eq('id', emittedInvoice.id)
+            .select('*')
+            .single();
+          if (!linkErr && invWithLink) {
+            updatedInvoice = invWithLink;
+          }
+        }
       } catch (e) {
         console.error('Error generating Stripe Connect payment link during emission:', e);
       }
-    }
-
-    // Update invoice status to pending (or emitted)
-    const { data: updatedInvoice, error: updateError } = await supabase
-      .from('invoices')
-      .update({
-        number,
-        status: 'pending',
-        issue_date: invoice.issue_date || new Date().toISOString().split('T')[0],
-        ...(paymentLinkUrl ? { stripe_payment_link: paymentLinkUrl } : {}),
-      })
-      .eq('id', invoice.id)
-      .select('*')
-      .single();
-
-    if (updateError) {
-      return corsResponse({ error: updateError.message }, 500);
     }
 
     return corsResponse({ invoice: updatedInvoice });

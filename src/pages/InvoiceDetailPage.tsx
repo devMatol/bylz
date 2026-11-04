@@ -12,6 +12,7 @@ import {
   User,
   Clock,
   AlertTriangle,
+  Download,
 } from "lucide-react";
 import { PageContainer } from "../components/layout/PageContainer";
 import { Button } from "../components/ui/Button";
@@ -27,6 +28,7 @@ import { sendPaymentReceiptEmail } from "../lib/emailNotifier";
 import { PdfButton } from "../components/documents/PdfButton";
 import { useAuth } from "../contexts/AuthContext";
 import { useToast } from "../components/ui/Toast";
+import { supabase } from "../lib/supabase";
 import {
   fetchInvoice,
   markInvoicePaid,
@@ -113,7 +115,7 @@ export function InvoiceDetailPage() {
 
   const { invoice, lines, client } = data;
   const isDraft = invoice.status === "draft";
-  const isPendingOrLate = invoice.status === "pending" || invoice.status === "late";
+  const isPendingOrLate = invoice.status === "pending" || invoice.status === "late" || invoice.status === "partially_paid";
   const isCreditNote = invoice.type === "credit_note";
 
   function computeDaysLate(): number {
@@ -126,7 +128,8 @@ export function InvoiceDetailPage() {
     if (!company) return { subject: "", body: "" };
     const daysLate = computeDaysLate();
     const clientName = client?.name || "client";
-    const amount = formatAmount(Number(invoice.total_ttc));
+    const remaining = Math.max(0, Number(invoice.total_ttc) - (Number(invoice.paid_amount) || 0));
+    const amount = formatAmount(invoice.status === "partially_paid" && remaining > 0 ? remaining : Number(invoice.total_ttc));
     const dueDate = formatDateLong(invoice.due_date);
     const invoiceNumber = invoice.number;
 
@@ -321,13 +324,14 @@ export function InvoiceDetailPage() {
       leftIcon={<Check className="w-4 h-4" />}
       onClick={() => {
         setPayDate(todayISO());
-        setPayAmount(String(Number(invoice.total_ttc)));
+        const remaining = Math.max(0, Number(invoice.total_ttc) - (Number(invoice.paid_amount) || 0));
+        setPayAmount(String(remaining > 0 ? remaining : Number(invoice.total_ttc)));
         setPayOpen(true);
       }}
       disabled={busy}
       className="w-full"
     >
-      Marquer comme payée
+      {invoice.status === "partially_paid" ? "Enregistrer un paiement" : "Marquer comme payée"}
     </Button>
   ) : null;
 
@@ -518,6 +522,31 @@ export function InvoiceDetailPage() {
               size="sm"
               variant="ghost"
             />
+            {invoice.facturx_pdf_url && (
+              <ActionButton
+                icon={<Download className="w-4 h-4 text-emerald-600" />}
+                onClick={async () => {
+                  try {
+                    let url = invoice.facturx_pdf_url!;
+                    if (!url.startsWith("http://") && !url.startsWith("https://")) {
+                      const { data: signed, error: signErr } = await supabase.storage
+                        .from("documents")
+                        .createSignedUrl(url, 3600);
+                      if (signErr || !signed?.signedUrl) {
+                        throw new Error(signErr?.message || "Impossible de générer le lien");
+                      }
+                      url = signed.signedUrl;
+                    }
+                    window.open(url, "_blank");
+                  } catch (e: any) {
+                    toast(e.message || "Erreur lors du téléchargement Factur-X", "danger");
+                  }
+                }}
+                disabled={busy}
+              >
+                Télécharger Factur-X
+              </ActionButton>
+            )}
             {isDraft && (
               <>
                 <div className="border-t border-border my-1" />

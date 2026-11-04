@@ -232,6 +232,7 @@ Deno.serve(async (req: Request) => {
             const { error: txErr } = await supabase
               .from('bank_transactions')
               .insert({
+                company_id: company.id,
                 bank_connection_id: connection?.id || sessionId,
                 external_id: tx.transaction_id || `eb_tx_${Date.now()}_${Math.random().toString(36).substring(7)}`,
                 amount: rawAmount,

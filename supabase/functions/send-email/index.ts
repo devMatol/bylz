@@ -363,7 +363,7 @@ function buildHtmlEmail(options: {
           <tr>
             <td style="padding: 20px 32px; background-color: #0F172A; border-top: 1px solid #1F2937; text-align: center;">
               <p style="margin: 0; font-size: 12px; color: #475569;">
-                Transmis en toute sécurité via <strong style="color: #94A3B8;">Bylz</strong> — La plateforme de facturation & signature certifiée.
+                Transmis en toute sécurité via <strong style="color: #94A3B8;">Bylz</strong> (édité par ARABACI HOLDING).
               </p>
             </td>
           </tr>
