@@ -1040,13 +1040,13 @@ export function LandingPage() {
                   <div>
                     <div className="flex items-baseline gap-1">
                       <span className="text-4xl font-extrabold text-slate-900 font-mono">
-                        {billingCycle === "annual" ? "6,67 €" : "12,90 €"}
+                        {billingCycle === "annual" ? "80 €" : "12,90 €"}
                       </span>
-                      <span className="text-xs text-slate-600 font-medium">/mois</span>
+                      <span className="text-xs text-slate-600 font-medium">/ {billingCycle === "annual" ? "an" : "mois"}</span>
                     </div>
                     {billingCycle === "annual" ? (
-                      <p className="text-[11px] font-bold text-emerald-700 mt-1">
-                        Soit 80 € / an (TVA non applicable, art. 293 B du CGI)
+                      <p className="text-xs font-bold text-emerald-700 mt-1">
+                        (soit {PLANS_DATA.pro.pricing.annualMonthlyEquivFormatted} / mois • {PLANS_DATA.pro.pricing.annualSavingsFormatted} d'économie)
                       </p>
                     ) : (
                       <p className="text-[11px] text-slate-600 mt-1">

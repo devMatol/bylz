@@ -24,6 +24,7 @@ import { useAuth } from "../contexts/AuthContext";
 import { useToast } from "../components/ui/Toast";
 import { supabase } from "../lib/supabase";
 import { BillingToggle } from "../components/shared/BillingToggle";
+import { PLANS_DATA } from "../lib/plansData";
 import {
   PLAN_LABELS,
   PLAN_PRICES,
@@ -878,8 +879,20 @@ export function SettingsPage() {
               <Card className="p-6 flex flex-col justify-between border-primary/30">
                 <div className="space-y-4">
                   <h3 className="text-lg font-bold text-text">Solo</h3>
-                  <div className="text-3xl font-extrabold font-mono text-text">
-                    {billingCycle === "annual" ? "4,17 €" : "6,90 €"} <span className="text-xs font-normal text-muted">/ mois</span>
+                  <div>
+                    <div className="text-3xl font-extrabold font-mono text-text">
+                      {billingCycle === "annual"
+                        ? `${PLANS_DATA.solo.pricing.annualTotal} €`
+                        : `${PLANS_DATA.solo.pricing.monthlyPrice.toFixed(2).replace(".", ",")} €`}{" "}
+                      <span className="text-xs font-normal text-muted">/ {billingCycle === "annual" ? "an" : "mois"}</span>
+                    </div>
+                    {billingCycle === "annual" ? (
+                      <p className="text-xs font-bold text-emerald-500 mt-1">
+                        (soit {PLANS_DATA.solo.pricing.annualMonthlyEquivFormatted} / mois • {PLANS_DATA.solo.pricing.annualSavingsFormatted} d'économie)
+                      </p>
+                    ) : (
+                      <p className="text-[11px] text-muted mt-1">Facturé 8,90 € / mois sans engagement</p>
+                    )}
                   </div>
                   <ul className="space-y-2 text-xs text-muted">
                     <li className="flex items-center gap-2"><Check className="w-4 h-4 text-primary" /> Factures & Devis illimités</li>
@@ -898,8 +911,20 @@ export function SettingsPage() {
                     <h3 className="text-lg font-bold text-text">Pro</h3>
                     <Badge variant="warning">Recommandé</Badge>
                   </div>
-                  <div className="text-3xl font-extrabold font-mono text-text">
-                    {billingCycle === "annual" ? "6,67 €" : "12,90 €"} <span className="text-xs font-normal text-muted">/ mois</span>
+                  <div>
+                    <div className="text-3xl font-extrabold font-mono text-text">
+                      {billingCycle === "annual"
+                        ? `${PLANS_DATA.pro.pricing.annualTotal} €`
+                        : `${PLANS_DATA.pro.pricing.monthlyPrice.toFixed(2).replace(".", ",")} €`}{" "}
+                      <span className="text-xs font-normal text-muted">/ {billingCycle === "annual" ? "an" : "mois"}</span>
+                    </div>
+                    {billingCycle === "annual" ? (
+                      <p className="text-xs font-bold text-emerald-500 mt-1">
+                        (soit {PLANS_DATA.pro.pricing.annualMonthlyEquivFormatted} / mois • {PLANS_DATA.pro.pricing.annualSavingsFormatted} d'économie)
+                      </p>
+                    ) : (
+                      <p className="text-[11px] text-muted mt-1">Facturé 12,90 € / mois sans engagement</p>
+                    )}
                   </div>
                   <ul className="space-y-2 text-xs text-muted">
                     <li className="flex items-center gap-2"><Check className="w-4 h-4 text-accent" /> Encaissement Stripe Connect</li>
