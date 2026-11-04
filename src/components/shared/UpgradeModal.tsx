@@ -12,6 +12,7 @@ import {
 import { supabase } from "../../lib/supabase";
 import { useToast } from "../ui/Toast";
 import { BillingToggle } from "./BillingToggle";
+import { PLANS_DATA } from "../../lib/plansData";
 import { trackBeginCheckout } from "../../lib/analytics";
 
 export interface UpgradeModalProps {
@@ -219,16 +220,16 @@ export function UpgradeModal({
             <div className="flex items-baseline justify-center gap-1.5">
               <span className="text-3xl sm:text-4xl font-black text-text tracking-tight">
                 {billingCycle === "annual"
-                  ? targetPlan === "pro" ? "6,67 €" : "4,17 €"
-                  : targetPlan === "pro" ? "12,90 €" : "8,90 €"}
+                  ? targetPlan === "pro" ? `${PLANS_DATA.pro.pricing.annualTotal} €` : `${PLANS_DATA.solo.pricing.annualTotal} €`
+                  : targetPlan === "pro" ? `${PLANS_DATA.pro.pricing.monthlyPrice.toFixed(2).replace(".", ",")} €` : `${PLANS_DATA.solo.pricing.monthlyPrice.toFixed(2).replace(".", ",")} €`}
               </span>
-              <span className="text-xs font-bold text-muted uppercase">/ mois</span>
+              <span className="text-xs font-bold text-muted uppercase">/ {billingCycle === "annual" ? "an" : "mois"}</span>
             </div>
             <p className="text-xs text-muted mt-1 font-medium">
               {billingCycle === "annual"
                 ? targetPlan === "pro"
-                  ? "Facturé 80 € / an (soit 2 mois offerts)"
-                  : "Facturé 50 € / an (soit 2 mois offerts)"
+                  ? `(soit ${PLANS_DATA.pro.pricing.annualMonthlyEquivFormatted} / mois • ${PLANS_DATA.pro.pricing.annualSavingsFormatted} d'économie)`
+                  : `(soit ${PLANS_DATA.solo.pricing.annualMonthlyEquivFormatted} / mois • ${PLANS_DATA.solo.pricing.annualSavingsFormatted} d'économie)`
                 : "Facturation mensuelle sans engagement"}
             </p>
           </div>
