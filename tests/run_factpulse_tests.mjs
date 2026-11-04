@@ -4,6 +4,7 @@ import path from "path";
 import { PGlite } from "@electric-sql/pglite";
 import {
   validateFactPulseAddress,
+  isFactPulseTransmissionAllowed,
   verifyInvoiceTotalsConcordance,
   mapCdarStatusCodeToPaStatus,
   getPaStatusRank,
@@ -50,6 +51,39 @@ async function main() {
 
   // --- SECTION 1 : VALIDATION D'ADRESSES ---
   console.log("--- 1. Validation des adresses (émetteur et acheteur) ---");
+
+  // --- SECTION 1.B : GARDE-FOU FAIL-CLOSED FACTPULSE_ALLOW_PRODUCTION ---
+  console.log("\n--- 1.B Garde-fou strict fail-closed (FACTPULSE_ALLOW_PRODUCTION) ---");
+
+  runTest("1.B.1 Rejet fail-closed si FACTPULSE_ALLOW_PRODUCTION est absent ou non 'true'", () => {
+    // Cas absent / undefined
+    const resUndefined = isFactPulseTransmissionAllowed(undefined);
+    assert.strictEqual(resUndefined.allowed, false);
+    assert.strictEqual(resUndefined.status, 403);
+    assert.strictEqual(resUndefined.errorCode, "production_disabled");
+    assert.strictEqual(resUndefined.error, "Transmission à la facturation électronique désactivée pour le moment.");
+
+    // Cas vide ou false
+    const resFalse = isFactPulseTransmissionAllowed("false");
+    assert.strictEqual(resFalse.allowed, false);
+    assert.strictEqual(resFalse.errorCode, "production_disabled");
+
+    const resEmpty = isFactPulseTransmissionAllowed("");
+    assert.strictEqual(resEmpty.allowed, false);
+    assert.strictEqual(resEmpty.errorCode, "production_disabled");
+
+    // Cas aléatoire
+    const resRandom = isFactPulseTransmissionAllowed("sandbox");
+    assert.strictEqual(resRandom.allowed, false);
+    assert.strictEqual(resRandom.errorCode, "production_disabled");
+  });
+
+  runTest("1.B.2 Autorisation uniquement si FACTPULSE_ALLOW_PRODUCTION === 'true'", () => {
+    const resTrue = isFactPulseTransmissionAllowed("true");
+    assert.strictEqual(resTrue.allowed, true);
+    assert.strictEqual(resTrue.error, undefined);
+  });
+
 
   runTest("1.1 Émetteur : rue, code postal et ville obligatoires (rejet si incomplet)", () => {
     const res1 = validateFactPulseAddress({ address: "", postal_code: "75001", city: "Paris" }, "émetteur");

@@ -7,6 +7,28 @@
  * - Filtrage strict des données à caractère personnel (RGPD)
  */
 
+/**
+ * Contrôle strict fail-closed d'autorisation d'émission FactPulse.
+ * L'URL étant unique (https://factpulse.fr/api/v1), aucun envoi réseau
+ * n'est autorisé sans accord explicite FACTPULSE_ALLOW_PRODUCTION="true".
+ */
+export function isFactPulseTransmissionAllowed(envAllowProduction?: string | null): {
+  allowed: boolean;
+  status?: number;
+  errorCode?: string;
+  error?: string;
+} {
+  if (envAllowProduction !== "true") {
+    return {
+      allowed: false,
+      status: 403,
+      errorCode: "production_disabled",
+      error: "Transmission à la facturation électronique désactivée pour le moment.",
+    };
+  }
+  return { allowed: true };
+}
+
 export interface FactPulseAddressInput {
   address?: string | null;
   postal_code?: string | null;

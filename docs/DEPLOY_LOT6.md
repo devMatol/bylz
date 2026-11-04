@@ -135,8 +135,7 @@ Les fonctions lisent des variables précises (et **non** une variable génériqu
 | `FACTPULSE_PASSWORD` | `_shared/factpulse-client.ts` | Optionnel | Mot de passe pour login OAuth automatique si aucun Bearer token n'est configuré. |
 | `FACTPULSE_EMAIL` | `_shared/factpulse-client.ts` | Optionnel | Fallback pour le nom d'utilisateur si `FACTPULSE_USERNAME` est omis. |
 | `FACTPULSE_WEBHOOK_SECRET` | `factpulse-webhook/index.ts` | **OUI** | Clé secrète partagée pour la vérification de signature HMAC-SHA256 des notifications FactPulse. **Fail-closed :** si non défini, la fonction renvoie HTTP 503 à toute requête. |
-| `FACTPULSE_SANDBOX` | `_shared/factpulse-client.ts` | Optionnel (défaut `true`) | Active l'environnement bac à sable (`https://app.factpulse.fr`). Ne bascule sur `https://factpulse.fr` que si explicitement défini à `'false'`. |
-| `FACTPULSE_ALLOW_PRODUCTION` | `_shared/factpulse-client.ts` | Optionnel (défaut `false`) | **Verrou anti-erreur :** Même si `FACTPULSE_SANDBOX='false'`, le client bloque tout appel vers la production et lève une exception si `FACTPULSE_ALLOW_PRODUCTION` n'est pas explicitement `'true'`. |
+| `FACTPULSE_ALLOW_PRODUCTION` | `submit-to-pa/index.ts`<br>`_shared/factpulse-helpers.ts` | Optionnel (défaut `false`) | **Verrou strict fail-closed :** Le client FactPulse n'a pas de mode sandbox séparé (une seule URL `https://factpulse.fr/api/v1`). Tant que `FACTPULSE_ALLOW_PRODUCTION` n'est pas exactement `"true"`, tout envoi sortant est immédiatement bloqué (HTTP 403 `production_disabled`) sans aucun appel réseau. |
 | `CRON_SECRET` | `_shared/require-operator.ts`<br>(appelé par `retry-pa-submissions`, `generate-ereporting`) | **OUI** (pour les crons) | Jeton secret pour sécuriser les tâches de maintenance appelées par pg_cron ou un scheduler externe. |
 
 #### État des secrets sur Supabase (Vérifié via `supabase secrets list`) :
@@ -144,7 +143,7 @@ Les fonctions lisent des variables précises (et **non** une variable génériqu
 - **À configurer avant ouverture :**
   - `FACTPULSE_WEBHOOK_SECRET` : à renseigner avec le secret fourni par le portail FactPulse.
   - `CRON_SECRET` : à renseigner avec une chaîne aléatoire sécurisée pour pg_cron.
-- **Sécurité par défaut :** `FACTPULSE_SANDBOX` et `FACTPULSE_ALLOW_PRODUCTION` ne sont pas définis sur le projet, ce qui garantit par défaut que le système reste en mode Sandbox et ne peut en aucun cas envoyer de flux réels en production par inadvertance.
+- **Sécurité fail-closed par défaut :** Le client FactPulse n'a pas de mode sandbox séparé et utilise une URL unique (`https://factpulse.fr/api/v1`). La variable `FACTPULSE_ALLOW_PRODUCTION` est non définie (ou différente de `'true'`) sur Supabase, ce qui bloque immédiatement tout appel réseau sortant vers FactPulse (HTTP 403 `production_disabled` fail-closed) sans risquer d'émission réelle.
 
 ### 2.2 Déploiement des Fonctions Edge
 
