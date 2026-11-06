@@ -313,7 +313,11 @@ serve(async (req) => {
 
     // 10. Garde-fou strict fail-closed (FACTPULSE_ALLOW_PRODUCTION)
     // Comme l'URL FactPulse est unique (https://factpulse.fr/api/v1), tout envoi sans validation explicite est bloqué
-    const allowCheck = isFactPulseTransmissionAllowed(Deno.env.get("FACTPULSE_ALLOW_PRODUCTION"));
+    const allowCheck = isFactPulseTransmissionAllowed(
+      Deno.env.get("FACTPULSE_ALLOW_PRODUCTION"),
+      invoice.company_id,
+      Deno.env.get("FACTPULSE_ALLOWED_COMPANY_IDS")
+    );
     if (!allowCheck.allowed) {
       console.warn("⚠️ Transmission FactPulse bloquée par FACTPULSE_ALLOW_PRODUCTION !== 'true'");
       return new Response(

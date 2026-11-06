@@ -261,6 +261,37 @@ async function main() {
     assert.ok(res.reason?.includes("Horodatage expiré"));
   });
 
+  await runAsyncTest("4.5 Signature HMAC valide SANS en-tête timestamp (spécification standard FactPulse OpenAPI)", async () => {
+    const secret = "factpulse_webhook_secret_hmac_test";
+    const body = JSON.stringify({ event_type: "status.updated", factpulse_ref: "FLOW-12345", statusCode: 200 });
+
+    const encoder = new TextEncoder();
+    const key = await crypto.subtle.importKey(
+      "raw",
+      encoder.encode(secret),
+      { name: "HMAC", hash: "SHA-256" },
+      false,
+      ["sign"]
+    );
+    const sigBuf = await crypto.subtle.sign("HMAC", key, encoder.encode(body));
+    const sigHex = Array.from(new Uint8Array(sigBuf))
+      .map((b) => b.toString(16).padStart(2, "0"))
+      .join("");
+
+    // Test sans header timestamp (timestampHeader = null / undefined)
+    const resWithoutTimestamp = await verifyWebhookSignatureAndTime(body, sigHex, null, secret);
+    assert.strictEqual(resWithoutTimestamp.valid, true);
+
+    // Test avec préfixe sha256= sans header timestamp
+    const resWithPrefix = await verifyWebhookSignatureAndTime(body, "sha256=" + sigHex, undefined, secret);
+    assert.strictEqual(resWithPrefix.valid, true);
+
+    // Rejet si signature erronée sans header timestamp
+    const resBadSig = await verifyWebhookSignatureAndTime(body, "bad" + sigHex.slice(3), null, secret);
+    assert.strictEqual(resBadSig.valid, false);
+    assert.strictEqual(resBadSig.reason, "Signature HMAC invalide.");
+  });
+
   runTest("4.4 Assainissement RGPD : masquage systématique des coordonnées et données bancaires", () => {
     const payload = {
       event_type: "status.updated",
