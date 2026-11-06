@@ -63,6 +63,7 @@ export function InvoicesPage() {
   const [rows, setRows] = useState<Row[] | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Row | null>(null);
   const [importOpen, setImportOpen] = useState(false);
+  const [historyExpanded, setHistoryExpanded] = useState(false);
   const [stats, setStats] = useState<{
     totalFacture: number;
     enAttente: number;
@@ -197,7 +198,7 @@ export function InvoicesPage() {
           >
             <span>Factures validées</span>
             <span className={cn(
-              "text-[10px] px-1.5 py-0.5 rounded-full font-bold",
+              "text-xs px-1.5 py-0.5 rounded-full font-bold",
               activeTab === "sales"
                 ? "bg-primary/10 text-primary"
                 : "bg-surface-hover/80 text-muted"
@@ -217,7 +218,7 @@ export function InvoicesPage() {
           >
             <span>Factures reçues</span>
             <span className={cn(
-              "text-[10px] px-1.5 py-0.5 rounded-full font-bold",
+              "text-xs px-1.5 py-0.5 rounded-full font-bold",
               activeTab === "purchases"
                 ? "bg-primary/10 text-primary"
                 : "bg-surface-hover/80 text-muted"
@@ -239,7 +240,7 @@ export function InvoicesPage() {
             >
               <span>💳 Rapprochement</span>
               {unmatchedCount > 0 && (
-                <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-amber-500 text-white font-black animate-pulse">
+                <span className="text-xs px-1.5 py-0.5 rounded-full bg-amber-500 text-white font-black animate-pulse">
                   {unmatchedCount}
                 </span>
               )}
@@ -262,7 +263,7 @@ export function InvoicesPage() {
           <button
             type="button"
             onClick={() => navigate("/onboarding?mode=complete")}
-            className="w-full sm:w-auto text-xs whitespace-nowrap bg-surface text-text border border-border px-3 h-8 rounded-pill font-semibold hover:bg-surface-hover transition-colors"
+            className="w-full sm:w-auto text-xs whitespace-nowrap bg-surface text-text border border-border px-3.5 min-h-[40px] rounded-pill font-semibold hover:bg-surface-hover transition-colors flex items-center justify-center"
           >
             Compléter mon profil
           </button>
@@ -270,39 +271,67 @@ export function InvoicesPage() {
       )}
 
       {showHistoryBanner && (
-        <div className="mb-6 p-4 rounded-xl border border-indigo-500/20 bg-indigo-500/5 text-indigo-800 dark:text-indigo-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <div className="flex items-center space-x-3">
-            <Receipt className="w-5 h-5 flex-shrink-0 text-indigo-500" />
-            <div>
-              <p className="font-semibold text-sm">Rattraper votre historique {new Date().getFullYear()}</p>
-              <p className="text-xs opacity-90 text-muted">
-                Renseignez votre chiffre d'affaires antérieur ou importez vos anciennes factures de l'année pour suivre précisément vos plafonds de TVA et micro-entreprise.
-              </p>
+        <div className="mb-6 rounded-xl border border-indigo-500/20 bg-indigo-500/5 text-indigo-800 dark:text-indigo-200">
+          {/* Mobile compact 1-line bar */}
+          <div className="flex sm:hidden items-center justify-between p-3 gap-2">
+            <div className="flex items-center gap-2 min-w-0">
+              <Receipt className="w-4 h-4 flex-shrink-0 text-indigo-500" />
+              <span className="font-semibold text-xs truncate">Rattraper historique {new Date().getFullYear()}</span>
+            </div>
+            <div className="flex items-center gap-1.5 flex-shrink-0">
+              <button
+                type="button"
+                onClick={() => setHistoryExpanded((v) => !v)}
+                className="text-xs font-semibold text-primary px-2.5 min-h-[40px] flex items-center justify-center"
+              >
+                {historyExpanded ? "Réduire" : "Déplier"}
+              </button>
+              <button
+                type="button"
+                onClick={handleDismissHistory}
+                className="text-xs text-muted hover:text-text px-2 min-h-[40px] flex items-center justify-center"
+                title="Masquer l'invitation"
+              >
+                ✕
+              </button>
             </div>
           </div>
-          <div className="flex items-center gap-2 w-full sm:w-auto">
-            <button
-              type="button"
-              onClick={() => navigate("/settings?focus=company")}
-              className="flex-1 sm:flex-none text-xs whitespace-nowrap bg-surface text-text border border-border px-3 h-8 rounded-pill font-semibold hover:bg-surface-hover transition-colors"
-            >
-              Saisir mon CA
-            </button>
-            <button
-              type="button"
-              onClick={() => setImportOpen(true)}
-              className="flex-1 sm:flex-none text-xs whitespace-nowrap bg-primary text-primary-foreground px-3 h-8 rounded-pill font-semibold hover:bg-primary-hover transition-colors animate-pulse"
-            >
-              Importer des PDF
-            </button>
-            <button
-              type="button"
-              onClick={handleDismissHistory}
-              className="text-xs text-muted hover:text-text px-2 h-8 font-medium transition-colors"
-              title="Masquer l'invitation"
-            >
-              Masquer
-            </button>
+
+          {/* Desktop full bar & mobile expanded content */}
+          <div className={cn("p-4 sm:flex items-start sm:items-center justify-between gap-4 border-t sm:border-t-0 border-indigo-500/10", !historyExpanded && "hidden sm:flex")}>
+            <div className="flex items-center space-x-3 mb-3 sm:mb-0">
+              <Receipt className="w-5 h-5 flex-shrink-0 text-indigo-500 hidden sm:block" />
+              <div>
+                <p className="font-semibold text-sm">Rattraper votre historique {new Date().getFullYear()}</p>
+                <p className="text-xs opacity-90 text-muted">
+                  Renseignez votre chiffre d'affaires antérieur ou importez vos anciennes factures pour suivre précisément vos plafonds de TVA.
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 w-full sm:w-auto">
+              <button
+                type="button"
+                onClick={() => navigate("/settings?focus=company")}
+                className="flex-1 sm:flex-none text-xs whitespace-nowrap bg-surface text-text border border-border px-3.5 min-h-[40px] rounded-pill font-semibold hover:bg-surface-hover transition-colors flex items-center justify-center"
+              >
+                Saisir mon CA
+              </button>
+              <button
+                type="button"
+                onClick={() => setImportOpen(true)}
+                className="flex-1 sm:flex-none text-xs whitespace-nowrap bg-primary text-primary-foreground px-3.5 min-h-[40px] rounded-pill font-semibold hover:bg-primary-hover transition-colors animate-pulse flex items-center justify-center"
+              >
+                Importer des PDF
+              </button>
+              <button
+                type="button"
+                onClick={handleDismissHistory}
+                className="text-xs text-muted hover:text-text px-2.5 min-h-[40px] font-medium transition-colors flex items-center justify-center"
+                title="Masquer l'invitation"
+              >
+                Masquer
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -356,7 +385,7 @@ export function InvoicesPage() {
               description={
                 activeTab === "sales"
                   ? "Créez votre première facture pour facturer vos clients."
-                  : "Les factures d'achats reçues via le réseau électronique FactPulse PDP apparaîtront ici."
+                  : "Les factures d'achats reçues par voie électronique apparaîtront ici."
               }
               ctaLabel={activeTab === "sales" ? "Créer une facture" : undefined}
               onCta={activeTab === "sales" ? () => navigate("/invoices/new") : undefined}
@@ -424,8 +453,8 @@ export function InvoicesPage() {
                           <td className="p-3">
                             <div className="inline-flex items-center gap-1.5 whitespace-nowrap flex-shrink-0">
                               {r.pa_status === "received" && (
-                                <span className="inline-flex items-center px-2 py-0.5 rounded-pill text-[10px] font-extrabold bg-violet-500/15 text-violet-400 border border-violet-500/30">
-                                  Achat PDP
+                                <span className="inline-flex items-center px-2 py-0.5 rounded-pill text-xs font-extrabold bg-violet-500/15 text-violet-400 border border-violet-500/30">
+                                  Achat électronique
                                 </span>
                               )}
                               <StatusBadge status={r.status} type={r.type} />
@@ -480,8 +509,8 @@ export function InvoicesPage() {
                               {r.number}
                             </span>
                             {r.pa_status === "received" && (
-                              <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-violet-500/10 text-violet-400 border border-violet-500/20">
-                                Achat PDP
+                              <span className="px-1.5 py-0.5 rounded text-xs font-bold bg-violet-500/10 text-violet-400 border border-violet-500/20">
+                                Achat électronique
                               </span>
                             )}
                           </div>

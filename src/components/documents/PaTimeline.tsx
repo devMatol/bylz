@@ -180,7 +180,7 @@ export function PaTimeline({ invoice, isB2b, onRefresh }: PaTimelineProps) {
             <div>
               <p className="font-bold text-rose-200">Facture rejetée</p>
               <p className="text-rose-300/80 mt-1 leading-relaxed">
-                Motif : {invoice.pa_rejection_reason || "Rejeté sur le réseau PDP / AFNOR"}
+                Motif : {invoice.pa_rejection_reason || "Rejeté lors de la transmission"}
               </p>
             </div>
           </div>

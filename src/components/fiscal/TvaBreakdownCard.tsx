@@ -62,7 +62,7 @@ export function TvaBreakdownCard({
             <p className="text-2xl font-black text-emerald-400">
               {formatAmount(tvaCollected)}
             </p>
-            <p className="text-[11px] text-muted">TVA facturée à vos clients</p>
+            <p className="text-xs text-muted">TVA facturée à vos clients</p>
           </div>
 
           {/* TVA Déductible */}
@@ -76,7 +76,7 @@ export function TvaBreakdownCard({
             <p className="text-2xl font-black text-violet-400">
               {formatAmount(tvaDeductible)}
             </p>
-            <p className="text-[11px] text-muted">TVA récupérable sur vos dépenses</p>
+            <p className="text-xs text-muted">TVA récupérable sur vos dépenses</p>
           </div>
 
           {/* Solde à Reverser */}
@@ -90,7 +90,7 @@ export function TvaBreakdownCard({
             <p className="text-2xl font-black text-primary">
               {formatAmount(tvaNetToPay)}
             </p>
-            <p className="text-[11px] text-muted">Estimation pour la prochaine déclaration CA3 / CA12</p>
+            <p className="text-xs text-muted">Estimation pour la prochaine déclaration CA3 / CA12</p>
           </div>
         </div>
       )}

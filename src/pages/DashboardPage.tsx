@@ -39,7 +39,7 @@ import { sendInvoiceReminder } from "../lib/api";
 import type { Invoice } from "../types/database";
 import { LockedFeatureOverlay } from "../components/shared/LockedFeatureOverlay";
 import { FloatingActionButton } from "../components/ui/FloatingActionButton";
-import { Sparkles, Lock, AlertCircle } from "lucide-react";
+import { Sparkles, Lock, AlertCircle, X, ChevronDown, ChevronUp } from "lucide-react";
 
 const MONTH_LABELS = [
   "janv.", "févr.", "mars", "avr.", "mai", "juin",
@@ -75,6 +75,7 @@ export function DashboardPage() {
   const [dismissedHistory, setDismissedHistory] = useState(() => {
     return localStorage.getItem("bylz-dismiss-history-banner") === "true";
   });
+  const [mobileHistoryExpanded, setMobileHistoryExpanded] = useState(false);
 
   const handleDismissHistory = () => {
     localStorage.setItem("bylz-dismiss-history-banner", "true");
@@ -134,7 +135,7 @@ export function DashboardPage() {
         <button
           type="button"
           onClick={() => navigate("/invoices/new")}
-          className="inline-flex items-center gap-1.5 h-9 px-3.5 rounded-pill bg-primary text-white text-xs font-bold hover:opacity-90 transition-opacity shadow-xs"
+          className="inline-flex items-center gap-1.5 min-h-[40px] px-4 rounded-pill bg-primary text-white text-xs font-bold hover:opacity-90 transition-opacity shadow-xs"
         >
           <Plus className="w-4 h-4" />
           Facture
@@ -142,7 +143,7 @@ export function DashboardPage() {
       }
     >
       {/* Dashboard Control Toolbar - Clean, Modern & Responsive */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
         {/* Time Horizon Selector: Ce mois / Ce trimestre / Cette année */}
         <div className="flex items-center gap-1 p-1 bg-surface border border-border rounded-pill overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden w-fit max-w-full">
           {(["month", "quarter", "year"] as DashboardPeriod[]).map((p) => (
@@ -151,7 +152,7 @@ export function DashboardPage() {
               type="button"
               onClick={() => setPeriod(p)}
               className={cn(
-                "px-3.5 py-1.5 rounded-pill text-xs font-semibold whitespace-nowrap transition-all",
+                "min-h-[40px] px-3.5 py-2 rounded-pill text-xs font-semibold whitespace-nowrap transition-all flex items-center justify-center",
                 period === p
                   ? "bg-primary text-primary-foreground font-bold shadow-xs"
                   : "text-muted hover:text-text"
@@ -168,7 +169,7 @@ export function DashboardPage() {
             type="button"
             onClick={() => setDataView("total")}
             className={cn(
-              "px-3 py-1.5 rounded-pill text-xs font-semibold transition-all",
+              "min-h-[40px] px-3.5 py-2 rounded-pill text-xs font-semibold transition-all flex items-center justify-center",
               dataView === "total"
                 ? "bg-surface-hover text-text font-bold shadow-xs border border-border/60"
                 : "text-muted hover:text-text"
@@ -180,7 +181,7 @@ export function DashboardPage() {
             type="button"
             onClick={() => setDataView("electronic")}
             className={cn(
-              "px-3 py-1.5 rounded-pill text-xs font-semibold transition-all",
+              "min-h-[40px] px-3.5 py-2 rounded-pill text-xs font-semibold transition-all flex items-center justify-center",
               dataView === "electronic"
                 ? "bg-surface-hover text-text font-bold shadow-xs border border-border/60"
                 : "text-muted hover:text-text"
@@ -191,7 +192,7 @@ export function DashboardPage() {
         </div>
       </div>
       {isProfileIncomplete && (
-        <div className="mb-6 p-4 rounded-xl border border-amber-500/20 bg-amber-500/5 text-amber-800 dark:text-amber-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="mb-4 p-3 sm:p-4 rounded-xl border border-amber-500/20 bg-amber-500/5 text-amber-800 dark:text-amber-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
           <div className="flex items-center space-x-3">
             <AlertTriangle className="w-5 h-5 flex-shrink-0 animate-pulse text-amber-500" />
             <div>
@@ -204,7 +205,7 @@ export function DashboardPage() {
           <button
             type="button"
             onClick={() => navigate("/onboarding?mode=complete")}
-            className="w-full sm:w-auto text-xs whitespace-nowrap bg-surface text-text border border-border px-3 h-8 rounded-pill font-semibold hover:bg-surface-hover transition-colors"
+            className="w-full sm:w-auto text-xs whitespace-nowrap bg-surface text-text border border-border px-3 min-h-[40px] rounded-pill font-semibold hover:bg-surface-hover transition-colors flex items-center justify-center"
           >
             Compléter mon profil
           </button>
@@ -212,39 +213,67 @@ export function DashboardPage() {
       )}
 
       {!dismissedHistory && company && company.previous_ca === 0 && (
-        <div className="mb-6 p-4 rounded-xl border border-indigo-500/20 bg-indigo-500/5 text-indigo-800 dark:text-indigo-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <div className="flex items-center space-x-3">
-            <Receipt className="w-5 h-5 flex-shrink-0 text-indigo-500" />
-            <div>
-              <p className="font-semibold text-sm">Rattraper votre historique {new Date().getFullYear()}</p>
-              <p className="text-xs opacity-90 text-muted">
-                Renseignez votre chiffre d'affaires antérieur ou importez vos anciennes factures de l'année pour suivre précisément vos plafonds de TVA et micro-entreprise.
-              </p>
+        <div className="mb-4 rounded-xl border border-indigo-500/20 bg-indigo-500/5 text-indigo-800 dark:text-indigo-200 overflow-hidden">
+          {/* Mobile: Replié sur 1 seule ligne par défaut */}
+          <div className="flex sm:hidden items-center justify-between px-3 py-2 text-xs min-h-[40px]">
+            <div className="flex items-center gap-2 min-w-0">
+              <Receipt className="w-4 h-4 text-indigo-500 flex-shrink-0" />
+              <span className="font-semibold truncate">Rattraper votre historique {new Date().getFullYear()}</span>
+            </div>
+            <div className="flex items-center gap-1 flex-shrink-0">
+              <button
+                type="button"
+                onClick={() => setMobileHistoryExpanded(!mobileHistoryExpanded)}
+                className="px-2.5 py-1 text-xs font-bold text-indigo-600 dark:text-indigo-300 min-h-[40px] flex items-center"
+              >
+                {mobileHistoryExpanded ? "Réduire" : "Déplier"}
+              </button>
+              <button
+                type="button"
+                onClick={handleDismissHistory}
+                className="p-2 text-muted hover:text-text min-h-[40px] min-w-[40px] flex items-center justify-center"
+                title="Masquer"
+              >
+                <X className="w-4 h-4" />
+              </button>
             </div>
           </div>
-          <div className="flex items-center gap-2 w-full sm:w-auto">
-            <button
-              type="button"
-              onClick={() => navigate("/settings?focus=company")}
-              className="flex-1 sm:flex-none text-xs whitespace-nowrap bg-surface text-text border border-border px-3 h-8 rounded-pill font-semibold hover:bg-surface-hover transition-colors"
-            >
-              Saisir mon CA
-            </button>
-            <button
-              type="button"
-              onClick={() => navigate("/invoices?import=true")}
-              className="flex-1 sm:flex-none text-xs whitespace-nowrap bg-primary text-primary-foreground px-3 h-8 rounded-pill font-semibold hover:bg-primary-hover transition-colors animate-pulse"
-            >
-              Importer des PDF
-            </button>
-            <button
-              type="button"
-              onClick={handleDismissHistory}
-              className="text-xs text-muted hover:text-text px-2 h-8 font-medium transition-colors"
-              title="Masquer l'invitation"
-            >
-              Masquer
-            </button>
+
+          {/* Contenu complet : visible sur sm+ ou si déplié sur mobile */}
+          <div className={cn("p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4", !mobileHistoryExpanded && "hidden sm:flex")}>
+            <div className="flex items-center space-x-3">
+              <Receipt className="w-5 h-5 flex-shrink-0 text-indigo-500 hidden sm:block" />
+              <div>
+                <p className="font-semibold text-sm hidden sm:block">Rattraper votre historique {new Date().getFullYear()}</p>
+                <p className="text-xs opacity-90 text-muted">
+                  Renseignez votre chiffre d'affaires antérieur ou importez vos anciennes factures de l'année pour suivre précisément vos plafonds de TVA et micro-entreprise.
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 w-full sm:w-auto">
+              <button
+                type="button"
+                onClick={() => navigate("/settings?focus=company")}
+                className="flex-1 sm:flex-none text-xs whitespace-nowrap bg-surface text-text border border-border px-3 min-h-[40px] rounded-pill font-semibold hover:bg-surface-hover transition-colors flex items-center justify-center"
+              >
+                Saisir mon CA
+              </button>
+              <button
+                type="button"
+                onClick={() => navigate("/invoices?import=true")}
+                className="flex-1 sm:flex-none text-xs whitespace-nowrap bg-primary text-primary-foreground px-3 min-h-[40px] rounded-pill font-semibold hover:bg-primary-hover transition-colors flex items-center justify-center"
+              >
+                Importer des PDF
+              </button>
+              <button
+                type="button"
+                onClick={handleDismissHistory}
+                className="hidden sm:inline-flex text-xs text-muted hover:text-text px-2 min-h-[40px] items-center font-medium transition-colors"
+                title="Masquer l'invitation"
+              >
+                Masquer
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -879,7 +908,7 @@ function CaBarChart({
                 x={padLeft - 6}
                 y={y + 3}
                 textAnchor="end"
-                fontSize={9}
+                fontSize={12}
                 fill="var(--text-muted)"
               >
                 {tv >= 1000 ? `${(tv / 1000).toFixed(0)}k` : tv.toFixed(0)}
@@ -919,7 +948,7 @@ function CaBarChart({
                 x={x + w / 2}
                 y={height - 10}
                 textAnchor="middle"
-                fontSize={9}
+                fontSize={12}
                 fill="var(--text-muted)"
               >
                 {monthLabel}
@@ -940,7 +969,7 @@ function CaBarChart({
                     x={x + w / 2}
                     y={y - 11}
                     textAnchor="middle"
-                    fontSize={10}
+                    fontSize={12}
                     fill="var(--text)"
                     fontWeight={600}
                   >

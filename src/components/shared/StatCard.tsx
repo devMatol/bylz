@@ -36,7 +36,7 @@ export function StatCard({
             {delta && (
               <span
                 className={cn(
-                  "inline-flex items-center gap-0.5 text-[10px] font-bold px-1.5 py-0.2 rounded-pill border whitespace-nowrap",
+                  "inline-flex items-center gap-0.5 text-xs font-bold px-1.5 py-0.5 rounded-pill border whitespace-nowrap",
                   delta.positive
                     ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
                     : "bg-rose-500/10 text-rose-400 border-rose-500/20"
@@ -48,7 +48,7 @@ export function StatCard({
           </div>
         </div>
         {subtitle && (
-          <div className="text-[11px] text-muted mt-2 pt-2 border-t border-border/40 font-medium truncate">
+          <div className="text-xs text-muted mt-2 pt-2 border-t border-border/40 font-medium truncate">
             {subtitle}
           </div>
         )}
@@ -73,7 +73,7 @@ export function StatCard({
             {delta && (
               <span
                 className={cn(
-                  "inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-pill border whitespace-nowrap",
+                  "inline-flex items-center gap-1 text-xs font-bold px-2 py-0.5 rounded-pill border whitespace-nowrap",
                   delta.positive
                     ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
                     : "bg-rose-500/10 text-rose-400 border-rose-500/20"

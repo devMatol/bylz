@@ -140,24 +140,29 @@ export function ThresholdGaugeCard({
       </div>
 
       {/* Bottom Metrics & Forecast */}
-      <div className="mt-4 pt-3 border-t border-border/60 flex items-center justify-between text-xs text-muted">
-        {/* B6: Terme clair remplaçant "Atterrissage" avec bulle explicative */}
-        <div
-          className="flex items-center gap-1.5 font-medium"
-          title="Estimation annuelle projetée au 31 décembre à partir de votre rythme d'encaissement actuel"
-        >
-          <TrendingUp className="w-3.5 h-3.5 text-primary" />
-          <span>Estimation fin d'année (au 31 déc.) :</span>
-          <strong className="text-text font-bold">{formatAmount(projectedValue)}</strong>
-        </div>
+      <div className="mt-4 pt-3 border-t border-border/60 space-y-1.5 text-xs text-muted">
+        <div className="flex items-center justify-between flex-wrap gap-2">
+          {/* B6: Terme clair remplaçant "Atterrissage" avec bulle explicative */}
+          <div
+            className="flex items-center gap-1.5 font-medium"
+            title="Calculé selon : projection annuelle de vos encaissements actuels + factures en attente d'encaissement"
+          >
+            <TrendingUp className="w-3.5 h-3.5 text-primary" />
+            <span>Estimation fin d'année (au 31 déc.) :</span>
+            <strong className="text-text font-bold">{formatAmount(projectedValue)}</strong>
+          </div>
 
-        <div className="flex items-center gap-1 text-xs">
-          <Info className="w-3 h-3 text-muted" />
-          <span>Reste disponible :</span>
-          <strong className={cn("font-bold", thresholdLimit - currentValue <= 0 ? "text-rose-400" : "text-emerald-400")}>
-            {formatAmount(Math.max(0, thresholdLimit - currentValue))}
-          </strong>
+          <div className="flex items-center gap-1 text-xs">
+            <Info className="w-3 h-3 text-muted" />
+            <span>Reste disponible :</span>
+            <strong className={cn("font-bold", thresholdLimit - currentValue <= 0 ? "text-rose-400" : "text-emerald-400")}>
+              {formatAmount(Math.max(0, thresholdLimit - currentValue))}
+            </strong>
+          </div>
         </div>
+        <p className="text-xs text-muted/80 italic">
+          Projection basée sur le CA encaissé annualisé + factures à recevoir
+        </p>
       </div>
     </div>
   );
