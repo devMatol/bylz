@@ -7,7 +7,7 @@ BEGIN;
 
 CREATE EXTENSION IF NOT EXISTS pgtap;
 
-SELECT plan(86);
+SELECT plan(89);
 
 -- =========================================================================
 -- SETUP : Création des utilisateurs, entreprises et connexions bancaires
@@ -1527,6 +1527,87 @@ BEGIN
   EXECUTE 'RESET ROLE';
 END $$;
 
+-- =========================================================================
+-- SCÉNARIO 21 : Masque de numérotation séquentielle à 3 chiffres (FAC-YYYY-XXX / AV-YYYY-XXX)
+-- =========================================================================
+DO $$
+DECLARE
+  v_user_pad UUID := gen_random_uuid();
+  v_comp_pad UUID := gen_random_uuid();
+  v_client_pad UUID := gen_random_uuid();
+  v_inv_draft1 UUID := gen_random_uuid();
+  v_inv_draft2 UUID := gen_random_uuid();
+  v_inv_draft3 UUID := gen_random_uuid();
+  v_inv_existing_4digits UUID := gen_random_uuid();
+  v_emitted1 public.invoices%ROWTYPE;
+  v_emitted2 public.invoices%ROWTYPE;
+  v_emitted3 public.invoices%ROWTYPE;
+  v_current_year TEXT := public.paris_year();
+BEGIN
+  -- Setup utilisateur et entreprise avec profil SOLO (illimité)
+  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'auth' AND table_name = 'users') THEN
+    INSERT INTO auth.users (id, email, aud, role) VALUES (v_user_pad, 'pad@test.local', 'authenticated', 'authenticated') ON CONFLICT (id) DO NOTHING;
+  END IF;
+  INSERT INTO public.profiles (id, email, plan) VALUES (v_user_pad, 'pad@test.local', 'solo')
+  ON CONFLICT (id) DO UPDATE SET plan = 'solo';
+
+  INSERT INTO public.companies (id, user_id, siret, siren, legal_name, address, activity_type, vat_regime, vat_option, structure, urssaf_frequency, accent_color, default_payment_terms, previous_ca)
+  VALUES (v_comp_pad, v_user_pad, '44444444400044', '444444444', 'Padding Test SASU', '1 rue Du Chiffre', 'freelance_bnc', 'franchise', 'non_renseigne', 'micro', 'monthly', '#7C6FE0', '30d', 0);
+  INSERT INTO public.clients (id, company_id, name, type, siren, email, address)
+  VALUES (v_client_pad, v_comp_pad, 'Client Padding', 'b2b', '111111111', 'pad@client.fr', '2 rue Client');
+
+  -- Contexte authentifié
+  PERFORM set_config('request.jwt.claim.sub', v_user_pad::TEXT, true);
+  PERFORM set_config('request.jwt.claim.role', 'authenticated', true);
+
+  -- 1. Première émission : doit donner FAC-YYYY-001 (3 chiffres)
+  INSERT INTO public.invoices (id, company_id, client_id, number, type, status, issue_date, due_date, payment_terms, total_ht, total_vat, total_ttc)
+  VALUES (v_inv_draft1, v_comp_pad, v_client_pad, 'DRAFT-PAD-01', 'invoice', 'draft', CURRENT_DATE, CURRENT_DATE + 30, '30d', 100, 0, 100);
+  INSERT INTO public.invoice_lines (id, invoice_id, description, quantity, unit_price, nature, position, vat_rate)
+  VALUES (gen_random_uuid(), v_inv_draft1, 'Prestation 1', 1, 100, 'service', 1, 0);
+
+  v_emitted1 := public.emit_invoice(v_inv_draft1);
+
+  PERFORM is(
+    v_emitted1.number,
+    'FAC-' || v_current_year || '-001',
+    'Scénario 21a : Première facture d''une société reçoit le masque à 3 chiffres FAC-YYYY-001'
+  );
+
+  -- 2. Simulation d'une facture existante à 4 chiffres (comme FAC-2026-0011 issue du lot 6)
+  INSERT INTO public.invoices (id, company_id, client_id, number, type, status, issue_date, due_date, payment_terms, total_ht, total_vat, total_ttc)
+  VALUES (v_inv_existing_4digits, v_comp_pad, v_client_pad, 'FAC-' || v_current_year || '-0011', 'invoice', 'pending', CURRENT_DATE, CURRENT_DATE + 30, '30d', 100, 0, 100);
+
+  -- 3. Émission suivante : doit lire le max (11) et générer FAC-YYYY-012 sur 3 chiffres sans doublon ni saut
+  INSERT INTO public.invoices (id, company_id, client_id, number, type, status, issue_date, due_date, payment_terms, total_ht, total_vat, total_ttc)
+  VALUES (v_inv_draft2, v_comp_pad, v_client_pad, 'DRAFT-PAD-02', 'invoice', 'draft', CURRENT_DATE, CURRENT_DATE + 30, '30d', 100, 0, 100);
+  INSERT INTO public.invoice_lines (id, invoice_id, description, quantity, unit_price, nature, position, vat_rate)
+  VALUES (gen_random_uuid(), v_inv_draft2, 'Prestation 2', 1, 100, 'service', 1, 0);
+
+  v_emitted2 := public.emit_invoice(v_inv_draft2);
+
+  PERFORM is(
+    v_emitted2.number,
+    'FAC-' || v_current_year || '-012',
+    'Scénario 21b : Émission après une facture 4 chiffres (0011) génère bien FAC-YYYY-012 sur 3 chiffres'
+  );
+
+  -- 4. Test note de crédit (avoir) : doit utiliser le préfixe AV et 3 chiffres (AV-YYYY-001)
+  INSERT INTO public.invoices (id, company_id, client_id, number, type, status, issue_date, due_date, payment_terms, total_ht, total_vat, total_ttc, credited_invoice_id)
+  VALUES (v_inv_draft3, v_comp_pad, v_client_pad, 'DRAFT-PAD-03', 'credit_note', 'draft', CURRENT_DATE, CURRENT_DATE + 30, '30d', 50, 0, 50, v_emitted2.id);
+  INSERT INTO public.invoice_lines (id, invoice_id, description, quantity, unit_price, nature, position, vat_rate)
+  VALUES (gen_random_uuid(), v_inv_draft3, 'Avoir prestation', 1, -50, 'service', 1, 0);
+
+  v_emitted3 := public.emit_invoice(v_inv_draft3);
+
+  PERFORM is(
+    v_emitted3.number,
+    'AV-' || v_current_year || '-001',
+    'Scénario 21c : Émission d''un avoir génère le préfixe AV-YYYY-001 sur 3 chiffres'
+  );
+
+  EXECUTE 'RESET ROLE';
+END $$;
 
 
 SELECT * FROM finish();

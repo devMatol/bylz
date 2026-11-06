@@ -5,7 +5,7 @@ BEGIN;
 
 DO $$ BEGIN CREATE EXTENSION IF NOT EXISTS pgtap; EXCEPTION WHEN OTHERS THEN null; END $$;
 
-SELECT plan(8);
+SELECT plan(9);
 
 DO $$
 DECLARE
@@ -60,6 +60,7 @@ BEGIN
   v_snap := v_emitted.legal_snapshot;
 
   PERFORM ok(v_emitted.status = 'pending', 'Émission réussie : la facture passe au statut pending');
+  PERFORM is(v_emitted.number, 'FAC-2026-001', 'Masque séquentiel sur 3 chiffres : FAC-2026-001');
   PERFORM ok(v_snap IS NOT NULL, 'Émission réussie : legal_snapshot généré et non null');
   PERFORM is(v_snap->'seller'->>'postal_code', '75002', 'Snapshot seller postal_code exact');
   PERFORM is(v_snap->'buyer'->>'city', 'Paris', 'Snapshot buyer city exact');
