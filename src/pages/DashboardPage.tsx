@@ -33,9 +33,13 @@ import { formatAmount, cn } from "../lib/utils";
 import { formatDateLong, todayISO, safeFormatDate } from "../lib/date";
 import { canUseFeature } from "../lib/planLimits";
 import { UpgradeModal } from "../components/shared/UpgradeModal";
+import { ReminderModal } from "../components/documents/ReminderModal";
+import { Button } from "../components/ui/Button";
+import { sendInvoiceReminder } from "../lib/api";
+import type { Invoice } from "../types/database";
 import { LockedFeatureOverlay } from "../components/shared/LockedFeatureOverlay";
 import { FloatingActionButton } from "../components/ui/FloatingActionButton";
-import { Sparkles, Lock } from "lucide-react";
+import { Sparkles, Lock, AlertCircle } from "lucide-react";
 
 const MONTH_LABELS = [
   "janv.", "févr.", "mars", "avr.", "mai", "juin",
@@ -64,6 +68,7 @@ export function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
+  const [reminderInvoice, setReminderInvoice] = useState<(Invoice & { client_name: string; client_email?: string | null }) | null>(null);
 
   const isBlurred = !canUseFeature(profile?.plan, "fiscalDashboard");
 
@@ -296,38 +301,21 @@ export function DashboardPage() {
                     label="Bénéfice fiscal"
                     value={safeNum(data.beneficeFiscal)}
                     icon={<Wallet className="w-3.5 h-3.5" />}
-                    subtitle={<span>Abattement {safeNum(data.abattementPct)}%</span>}
+                    subtitle={<span>Abattement {safeNum(data.abattementPct)}% • {periodLabel}</span>}
                   />
                   <StatCard
                     variant="compact"
                     label="Cotisations URSSAF"
                     value={safeNum(data.cotisationsUrssaf)}
                     icon={<Landmark className="w-3.5 h-3.5" />}
-                    subtitle={
-                      <span>
-                        {data.nextUrssafDueDate
-                          ? `Échéance: ${safeFormatDate(data.nextUrssafDueDate)}`
-                          : "À venir"}
-                      </span>
-                    }
+                    subtitle={<span>{periodLabel}</span>}
                   />
                   <StatCard
                     variant="compact"
                     label="Net estimé"
                     value={safeNum(data.netEstime)}
                     icon={<Receipt className="w-3.5 h-3.5" />}
-                    subtitle={
-                      profile?.tmi != null ? (
-                        <span>{data.netSubtitle}</span>
-                      ) : (
-                        <button
-                          onClick={() => navigate("/settings")}
-                          className="text-primary font-bold hover:underline text-left truncate block"
-                        >
-                          Renseignez votre TMI
-                        </button>
-                      )
-                    }
+                    subtitle={<span>avant impôt • {periodLabel}</span>}
                   />
                 </>
               )}
@@ -390,7 +378,7 @@ export function DashboardPage() {
                       <ShieldCheck className="w-5 h-5" />
                     </div>
                     <h4 className="text-xs font-bold text-text">Régime Réel de TVA</h4>
-                    <p className="text-[11px] text-muted max-w-xs leading-relaxed">
+                    <p className="text-xs text-muted max-w-xs leading-relaxed">
                       Votre société est assujettie à la TVA. Vos factures incluent la TVA par défaut et aucun plafond de chiffre d'affaires ne s'applique.
                     </p>
                   </div>
@@ -560,6 +548,71 @@ export function DashboardPage() {
                   </div>
                 )}
               </Card>
+
+              {/* B5: Bloc dédié "À relancer" pour les retards avec bouton Relancer */}
+              {(data?.lateInvoices || []).length > 0 && (
+                <Card className="lg:col-span-2 border-danger/30 bg-danger/5">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-2">
+                      <AlertCircle className="w-4 h-4 text-danger" />
+                      <h3 className="text-sm font-bold text-text">À relancer</h3>
+                      <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-danger/15 text-danger border border-danger/20">
+                        {(data?.lateInvoices || []).length} impayé{(data?.lateInvoices || []).length > 1 ? "s" : ""}
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => navigate("/invoices?filter=late")}
+                      className="text-xs text-danger font-semibold hover:underline"
+                    >
+                      Voir tous les retards
+                    </button>
+                  </div>
+
+                  <div className="flex flex-col divide-y divide-border/60">
+                    {(data?.lateInvoices || []).slice(0, 5).map((inv) => {
+                      const today = todayISO();
+                      const dueDate = parseISO(inv.due_date);
+                      const todayDate = parseISO(today);
+                      const daysOverdue = isValid(dueDate) && isValid(todayDate)
+                        ? Math.max(1, Math.ceil((todayDate.getTime() - dueDate.getTime()) / 86400000))
+                        : 0;
+
+                      return (
+                        <div
+                          key={inv.id}
+                          className="flex flex-col sm:flex-row sm:items-center justify-between py-3 gap-3"
+                        >
+                          <div
+                            className="min-w-0 flex-1 cursor-pointer"
+                            onClick={() => navigate(`/invoices/${inv.id}`)}
+                          >
+                            <p className="text-sm font-semibold text-text truncate">
+                              {inv.client_name}
+                            </p>
+                            <p className="text-xs text-danger font-medium mt-0.5">
+                              {inv.number} · Échue le {safeFormatDate(inv.due_date)} ({daysOverdue} j de retard)
+                            </p>
+                          </div>
+
+                          <div className="flex items-center justify-between sm:justify-end gap-3 flex-shrink-0">
+                            <Amount value={safeNum(inv.total_ttc)} size="sm" className="font-bold text-text" />
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              className="text-xs font-bold border-danger/30 text-danger hover:bg-danger/10 min-h-[36px]"
+                              onClick={() => setReminderInvoice(inv)}
+                            >
+                              Relancer
+                            </Button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </Card>
+              )}
             </div>
 
             <p className="text-xs text-muted mt-6 text-center">
@@ -585,6 +638,33 @@ export function DashboardPage() {
             onClose={() => setUpgradeModalOpen(false)}
             feature="fiscalDashboard"
           />
+
+          {reminderInvoice && (
+            <ReminderModal
+              open={!!reminderInvoice}
+              onClose={() => setReminderInvoice(null)}
+              clientName={reminderInvoice.client_name}
+              clientEmail={reminderInvoice.client_email}
+              invoiceNumber={reminderInvoice.number}
+              invoiceAmount={safeNum(reminderInvoice.total_ttc)}
+              onSend={async (subject, body) => {
+                if (!company) return;
+                try {
+                  await sendInvoiceReminder(
+                    company.id,
+                    reminderInvoice.id,
+                    reminderInvoice,
+                    { name: reminderInvoice.client_name, email: reminderInvoice.client_email } as any,
+                    { subject, body }
+                  );
+                  toast("Relance envoyée par email", "success");
+                } catch (err) {
+                  toast(err instanceof Error ? err.message : "Erreur lors de l'envoi", "danger");
+                  throw err;
+                }
+              }}
+            />
+          )}
         </div>
       )}
 
@@ -680,11 +760,16 @@ function FiscalHealthGauge({
   accent: string;
 }) {
   const safeThreshold = threshold > 0 ? threshold : 1;
+  // B6: Progression strictement proportionnelle à la valeur réelle
   const pct = Math.min(ca / safeThreshold, 1);
-  const visualPct = Math.max(pct, 0.03);
+  const visualPct = ca > 0 ? pct : 0;
   const radius = 52;
   const circumference = 2 * Math.PI * radius;
   const arcLength = visualPct * circumference;
+
+  // B6: Pourcentage unifié avec Déclarations et virgule française
+  const rawPercent = (ca / safeThreshold) * 100;
+  const formattedPct = rawPercent.toFixed(1).replace(".", ",");
 
   const status =
     pct < 0.7 ? "Sain" : pct < 0.9 ? "Attention" : "Critique";
@@ -723,7 +808,7 @@ function FiscalHealthGauge({
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-center">
           <span className="text-2xl font-bold text-text tabular-nums">
-            {Math.round(pct * 100)}%
+            {formattedPct} %
           </span>
           <span className="text-xs text-muted">
             {isVatOnly ? "du seuil TVA" : "du plafond micro"}

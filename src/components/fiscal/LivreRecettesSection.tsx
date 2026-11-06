@@ -134,7 +134,7 @@ export function LivreRecettesSection({
             className="text-xs font-semibold"
           >
             <FileSpreadsheet className="w-4 h-4 mr-1.5 text-emerald-400" />
-            Exporter le livre conforme DGFiP (.csv)
+            Export CSV du livre des recettes
           </Button>
         )}
       </div>
@@ -147,8 +147,8 @@ export function LivreRecettesSection({
               <ShieldCheck className="w-4 h-4 text-emerald-400" />
               <span>
                 {tab === "recettes"
-                  ? "Registre chronologique des encaissements (Art. 286 du CGI)"
-                  : "Registre des achats et des dépenses (Art. 286-1-bis CGI)"}
+                  ? "Registre chronologique des encaissements"
+                  : "Registre des achats et des dépenses"}
               </span>
             </div>
             <span className="text-xs font-bold text-primary">
@@ -223,7 +223,7 @@ export function LivreRecettesSection({
             </div>
             <h3 className="text-base font-bold text-text mb-2">Assistant Impôts 2042-C-PRO</h3>
             <p className="text-xs text-muted max-w-sm mb-6 leading-relaxed">
-              L'assistant de déclaration fiscale annuelle calcule automatiquement les cases et montants de votre formulaire 2042-C-PRO.
+              Le formulaire 2042-C-PRO est la déclaration complémentaire annuelle de vos revenus d'indépendant à joindre à votre déclaration de revenus personnelle. Bylz calcule automatiquement les montants à reporter dans chaque case.
               Cette fonctionnalité est réservée aux abonnés du plan <strong>Pro</strong>.
             </p>
             <Button

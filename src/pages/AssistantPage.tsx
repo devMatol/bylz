@@ -274,7 +274,7 @@ export function AssistantPage() {
               </div>
               <div>
                 <h4 className="text-sm font-bold text-text">WhatsApp Copilot IA</h4>
-                <p className="text-xs text-muted">Contrôle vocal 24/7 depuis votre mobile</p>
+                <p className="text-xs text-muted">Contrôle vocal 24/7 (créez vos factures par message WhatsApp)</p>
               </div>
             </div>
 
@@ -282,7 +282,7 @@ export function AssistantPage() {
               <div className="flex items-center justify-between text-muted">
                 <span>Statut du numéro :</span>
                 <span className="text-emerald-500 font-bold flex items-center gap-1">
-                  <CheckCircle2 className="w-3.5 h-3.5" /> {company?.phone ? "Actif & Relié" : "En attente"}
+                  <CheckCircle2 className="w-3.5 h-3.5" /> {company?.phone ? "Numéro connecté" : "En attente"}
                 </span>
               </div>
 
@@ -337,7 +337,7 @@ export function AssistantPage() {
             </h4>
             <div className="space-y-2 text-xs">
               <div className="p-2.5 rounded-xl bg-bg border border-border text-muted font-medium">
-                🎙️ <em>"Créé une facture de 400€ pour Client X pour de la création de site web"</em>
+                🎙️ <em>"Crée une facture de 400€ pour Client X pour de la création de site web"</em>
               </div>
               <div className="p-2.5 rounded-xl bg-bg border border-border text-muted font-medium">
                 🎙️ <em>"Quel est mon chiffre d'affaires et mon URSSAF ce mois-ci ?"</em>

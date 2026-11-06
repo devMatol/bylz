@@ -14,6 +14,7 @@ type StatusVariant =
 
 interface StatusBadgeProps {
   status: StatusVariant;
+  type?: "invoice" | "credit_note";
   className?: string;
 }
 
@@ -29,7 +30,29 @@ const variantStyles: Record<StatusVariant, { dot: string; text: string }> = {
   refused: { dot: "bg-danger", text: "text-danger" },
 };
 
-export function StatusBadge({ status, className }: StatusBadgeProps) {
+export function StatusBadge({ status, type, className }: StatusBadgeProps) {
+  // B5: Un avoir n'est jamais "En retard" ou "En attente"
+  if (type === "credit_note") {
+    const isImputed = status === "paid";
+    return (
+      <span
+        className={cn(
+          "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-pill text-xs font-semibold bg-surface-hover whitespace-nowrap flex-shrink-0 align-middle",
+          isImputed ? "text-success" : "text-violet-600 dark:text-violet-400",
+          className
+        )}
+      >
+        <span
+          className={cn(
+            "inline-block w-1.5 h-1.5 rounded-full flex-shrink-0",
+            isImputed ? "bg-success" : "bg-violet-500"
+          )}
+        />
+        <span>{isImputed ? "Imputé" : "Avoir"}</span>
+      </span>
+    );
+  }
+
   const style = variantStyles[status] || variantStyles.draft;
   return (
     <span

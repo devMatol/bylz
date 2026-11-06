@@ -1,6 +1,7 @@
 import { type ReactNode } from "react";
 import { cn } from "../../lib/utils";
 import { useSetPageHeader } from "./PageHeaderContext";
+import { SEO } from "../seo/SEO";
 
 interface PageContainerProps {
   title: string;
@@ -20,6 +21,7 @@ export function PageContainer({
   useSetPageHeader({ title, subtitle, actions });
   return (
     <div className={cn("flex flex-col gap-6", className)}>
+      <SEO title={`${title} | Bylz`} />
       <div className="flex-1">{children}</div>
     </div>
   );

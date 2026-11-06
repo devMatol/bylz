@@ -153,7 +153,7 @@ export function InvoicesPage() {
     .filter((r) => r.status === "pending" || r.status === "partially_paid")
     .reduce((acc, r) => acc + Math.max(0, r.total_ttc - (r.paid_amount || 0)), 0);
   const activeLate = activeRows
-    .filter((r) => (r.status === "pending" || r.status === "late" || r.status === "partially_paid") && r.due_date < today)
+    .filter((r) => r.type !== "credit_note" && (r.status === "pending" || r.status === "late" || r.status === "partially_paid") && r.due_date < today)
     .reduce((acc, r) => acc + Math.max(0, r.total_ttc - (r.paid_amount || 0)), 0);
   const activePaidMonth = activeRows
     .filter((r) => r.status === "paid")
@@ -389,6 +389,7 @@ export function InvoicesPage() {
                   <tbody>
                     {activeRows.map((r) => {
                       const isLate =
+                        r.type !== "credit_note" &&
                         (r.status === "pending" || r.status === "late" || r.status === "partially_paid") &&
                         r.due_date < today;
                       return (
@@ -427,12 +428,7 @@ export function InvoicesPage() {
                                   Achat PDP
                                 </span>
                               )}
-                              {r.type === "credit_note" && (
-                                <span className="inline-flex items-center px-1.5 py-0.5 rounded-pill text-[10px] font-bold bg-violet-500/15 text-violet-600 dark:text-violet-400">
-                                  Avoir
-                                </span>
-                              )}
-                              <StatusBadge status={r.status} />
+                              <StatusBadge status={r.status} type={r.type} />
                             </div>
                           </td>
                           <td className="p-3 text-right" onClick={(e) => e.stopPropagation()}>
@@ -465,9 +461,10 @@ export function InvoicesPage() {
               </div>
 
               {/* Mobile View <1024px */}
-              <div className="flex flex-col gap-3 lg:hidden mt-4">
+              <div className="flex flex-col gap-3 lg:hidden mt-4 pb-28">
                 {activeRows.map((r) => {
                   const isLate =
+                    r.type !== "credit_note" &&
                     (r.status === "pending" || r.status === "late" || r.status === "partially_paid") &&
                     r.due_date < today;
                   return (
@@ -482,11 +479,6 @@ export function InvoicesPage() {
                             <span className="font-mono font-bold text-sm text-text">
                               {r.number}
                             </span>
-                            {r.type === "credit_note" && (
-                              <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-danger/10 text-danger border border-danger/20">
-                                Avoir
-                              </span>
-                            )}
                             {r.pa_status === "received" && (
                               <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-violet-500/10 text-violet-400 border border-violet-500/20">
                                 Achat PDP
@@ -497,7 +489,7 @@ export function InvoicesPage() {
                             {r.client_name}
                           </p>
                         </div>
-                        <StatusBadge status={r.status} />
+                        <StatusBadge status={r.status} type={r.type} />
                       </div>
 
                       <div className="flex items-center justify-between pt-2 border-t border-border/60 text-xs">
