@@ -12,7 +12,11 @@
  * L'URL étant unique (https://factpulse.fr/api/v1), aucun envoi réseau
  * n'est autorisé sans accord explicite FACTPULSE_ALLOW_PRODUCTION="true".
  */
-export function isFactPulseTransmissionAllowed(envAllowProduction?: string | null): {
+export function isFactPulseTransmissionAllowed(
+  envAllowProduction?: string | null,
+  companyId?: string | null,
+  envAllowedCompanyIds?: string | null
+): {
   allowed: boolean;
   status?: number;
   errorCode?: string;
@@ -26,6 +30,26 @@ export function isFactPulseTransmissionAllowed(envAllowProduction?: string | nul
       error: "Transmission à la facturation électronique désactivée pour le moment.",
     };
   }
+
+  // Liste blanche optionnelle d'entreprises autorisées (séparées par des virgules)
+  if (envAllowedCompanyIds && envAllowedCompanyIds.trim() !== "") {
+    const allowedList = envAllowedCompanyIds
+      .split(",")
+      .map((id) => id.trim())
+      .filter((id) => id.length > 0);
+
+    if (allowedList.length > 0) {
+      if (!companyId || !allowedList.includes(companyId)) {
+        return {
+          allowed: false,
+          status: 403,
+          errorCode: "company_not_allowed",
+          error: "Transmission à la facturation électronique non autorisée pour cette entreprise.",
+        };
+      }
+    }
+  }
+
   return { allowed: true };
 }
 
