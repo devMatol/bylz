@@ -90,7 +90,7 @@ export function ComplianceSection() {
         </Button>
       </div>
 
-      {/* Standards & Démarche de conformité (Art. 286 CGI & Réforme 2026) */}
+      {/* Standards & Démarche de conformité (Réforme 2026) */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="p-4 rounded-card bg-surface-hover/40 border border-emerald-500/30 space-y-2">
           <p className="text-xs font-bold text-muted uppercase">Loi Anti-Fraude TVA (Inaltérabilité & Traçabilité)</p>

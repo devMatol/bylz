@@ -1,5 +1,5 @@
-import type { ActivityType } from "../types/database";
-import { VAT_THRESHOLDS_2026 } from "./constants";
+import type { ActivityType } from "../types/database.ts";
+import { VAT_THRESHOLDS_2026 } from "./constants.ts";
 
 export interface ThresholdConfig {
   caCeiling: number;
@@ -65,11 +65,47 @@ export interface FiscalLanding {
   tvaNetToPay: number;
 }
 
+export interface InvoiceVatItem {
+  total_ttc: number;
+  total_ht?: number;
+  total_vat?: number | null;
+  legal_snapshot?: {
+    vat_rate?: number | null;
+    [key: string]: any;
+  } | null;
+}
+
+/**
+ * Extrait le montant réel de TVA d'une facture sans jamais inventer un taux forfaitaire.
+ * Si total_vat est explicitement renseigné (même à 0), il est utilisé.
+ * Sinon, si legal_snapshot.vat_rate existe, la TVA est calculée d'après ce taux réel (0 si taux = 0).
+ * Si aucun taux ni montant n'est spécifié, retourne 0 (aucune TVA inventée).
+ */
+export function extractInvoiceVat(invoice: InvoiceVatItem): number {
+  if (invoice.total_vat != null && !isNaN(Number(invoice.total_vat))) {
+    return Number(invoice.total_vat);
+  }
+  const snapRate = invoice.legal_snapshot?.vat_rate;
+  if (snapRate != null && !isNaN(Number(snapRate))) {
+    const rate = Number(snapRate);
+    if (rate === 0) return 0;
+    const ht = Number(invoice.total_ht ?? 0);
+    if (ht > 0) {
+      return Math.round(ht * (rate / 100) * 100) / 100;
+    }
+    const ttc = Number(invoice.total_ttc ?? 0);
+    if (ttc > 0) {
+      return Math.round((ttc - ttc / (1 + rate / 100)) * 100) / 100;
+    }
+  }
+  return 0;
+}
+
 export function computeFiscalMetrics(
   activityType: ActivityType,
   yearPayments: Array<{ amount: number; paid_at: string }>,
-  pendingInvoices: Array<{ total_ttc: number; total_vat?: number }>,
-  supplierPurchases: Array<{ total_ttc: number; total_vat?: number }> = [],
+  pendingInvoices: InvoiceVatItem[],
+  supplierPurchases: InvoiceVatItem[] = [],
   vatRegime?: string
 ): FiscalLanding {
   const now = new Date();
@@ -118,20 +154,20 @@ export function computeFiscalMetrics(
 
   // TVA Collected & Deductible calculation
   // Règle fiscale : En franchise en base, aucune TVA n'est collectée ni déductible.
-  // Hors franchise : s'appuie strictement sur total_vat réel des factures et achats.
+  // Hors franchise : s'appuie strictement sur total_vat réel ou legal_snapshot.vat_rate (0 si exonéré/taux 0).
   const isFranchise = vatRegime === "franchise";
 
   const tvaCollected = isFranchise
     ? 0
     : pendingInvoices.reduce(
-        (sum, i) => sum + (i.total_vat != null ? Number(i.total_vat) : 0),
+        (sum, i) => sum + extractInvoiceVat(i),
         0
       );
 
   const tvaDeductible = isFranchise
     ? 0
     : supplierPurchases.reduce(
-        (sum, i) => sum + (i.total_vat != null ? Number(i.total_vat) : 0),
+        (sum, i) => sum + extractInvoiceVat(i),
         0
       );
 
