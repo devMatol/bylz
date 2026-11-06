@@ -217,7 +217,7 @@ export function AutoRemindersSection() {
             type="button"
             onClick={handleMasterToggle}
             disabled={savingMaster}
-            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors cursor-pointer ${
+            className={`relative inline-flex h-6 w-11 min-h-[40px] items-center rounded-full transition-colors cursor-pointer ${
               canUseAutoReminders && masterEnabled ? "bg-primary" : "bg-surface-hover border border-border"
             }`}
             title={!canUseAutoReminders ? "Débloquer avec le plan Solo ou Pro" : masterEnabled ? "Suspendre" : "Activer"}
@@ -241,7 +241,7 @@ export function AutoRemindersSection() {
             <div>
               <p className="font-bold text-sm text-text flex items-center gap-2">
                 Les relances automatiques sont inactives sur votre forfait Starter
-                <span className="px-2 py-0.5 text-[10px] font-extrabold bg-amber-500/20 text-amber-400 rounded-md border border-amber-500/30">SOLO ⚡</span>
+                <span className="px-2 py-0.5 text-xs font-extrabold bg-amber-500/20 text-amber-400 rounded-md border border-amber-500/30">SOLO ⚡</span>
               </p>
               <p className="text-xs text-muted mt-0.5">
                 Passez au plan Solo ou Pro pour que Bylz envoie automatiquement vos relances d'impayés et encaisse plus vite votre trésorerie.
@@ -266,7 +266,7 @@ export function AutoRemindersSection() {
           <h4 className="text-xs font-bold text-muted uppercase tracking-wider flex items-center gap-2">
             <span>Échéancier des Relances ({rules.length})</span>
             {!canUseAutoReminders && (
-              <span className="px-2 py-0.5 text-[10px] font-extrabold bg-amber-500/10 text-amber-400 border border-amber-500/20 rounded-md">
+              <span className="px-2 py-0.5 text-xs font-extrabold bg-amber-500/10 text-amber-400 border border-amber-500/20 rounded-md">
                 Aperçu (Inactif)
               </span>
             )}
@@ -321,17 +321,17 @@ export function AutoRemindersSection() {
                           Relance à J+{rule.delay_days}
                         </span>
                         <span
-                          className={`inline-flex items-center px-2 py-0.5 rounded-pill text-[10px] font-extrabold border ${toneInfo.color}`}
+                          className={`inline-flex items-center px-2 py-0.5 rounded-pill text-xs font-extrabold border ${toneInfo.color}`}
                         >
                           {toneInfo.label}
                         </span>
                         {!canUseAutoReminders && (
-                          <span className="text-[10px] font-semibold text-amber-500 bg-amber-500/10 border border-amber-500/20 px-1.5 py-0.5 rounded flex items-center gap-1">
+                          <span className="text-xs font-semibold text-amber-500 bg-amber-500/10 border border-amber-500/20 px-1.5 py-0.5 rounded flex items-center gap-1">
                             <Lock className="w-2.5 h-2.5" /> Verrouillé
                           </span>
                         )}
                         {rule.custom_subject && (
-                          <span className="text-[10px] font-semibold text-muted bg-surface border border-border px-1.5 py-0.5 rounded">
+                          <span className="text-xs font-semibold text-muted bg-surface border border-border px-1.5 py-0.5 rounded">
                             Personnalisé
                           </span>
                         )}
@@ -397,7 +397,7 @@ export function AutoRemindersSection() {
                           }
                           handleToggleRule(rule);
                         }}
-                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors cursor-pointer ${
+                        className={`relative inline-flex h-6 w-11 min-h-[40px] items-center rounded-full transition-colors cursor-pointer ${
                           isRuleActive ? "bg-primary" : "bg-surface-hover border border-border"
                         }`}
                         title={!canUseAutoReminders ? "Activer avec le Plan Solo" : rule.enabled ? "Désactiver" : "Activer"}
@@ -505,10 +505,10 @@ export function AutoRemindersSection() {
 
           {/* Interactive Variables Section */}
           <div className="bg-slate-900 border border-slate-800 rounded-xl p-3 space-y-2">
-            <span className="block text-[10px] font-bold text-muted uppercase tracking-wider">
+            <span className="block text-xs font-bold text-muted uppercase tracking-wider">
               Variables de personnalisation
             </span>
-            <p className="text-[11px] text-muted leading-relaxed">
+            <p className="text-xs text-muted leading-relaxed">
               Cliquez sur une variable ci-dessous pour l'insérer à la fin du corps du message :
             </p>
             <div className="flex flex-wrap gap-1.5 pt-1">
@@ -527,7 +527,7 @@ export function AutoRemindersSection() {
                       custom_body: (prev?.custom_body || "") + " " + v.tag,
                     }));
                   }}
-                  className="px-2 py-1 bg-surface border border-border rounded text-[10px] font-bold text-primary hover:bg-surface-hover hover:border-primary/30 transition-all flex items-center gap-1"
+                  className="min-h-[40px] px-3.5 py-2 bg-surface border border-border rounded-lg text-xs font-bold text-primary hover:bg-surface-hover hover:border-primary/30 transition-all flex items-center gap-1.5"
                 >
                   <code className="text-primary font-mono">{v.tag}</code>
                   <span className="text-muted font-normal">({v.label})</span>
@@ -591,7 +591,7 @@ export function AutoRemindersSection() {
           <div className="border border-border rounded-xl overflow-hidden bg-surface">
             <div className="overflow-x-auto">
               <table className="w-full text-xs">
-                <thead className="bg-surface-hover text-muted uppercase font-semibold text-[11px]">
+                <thead className="bg-surface-hover text-muted uppercase font-semibold text-xs">
                   <tr>
                     <th className="p-3 text-left">Date</th>
                     <th className="p-3 text-left">Facture</th>
@@ -624,7 +624,7 @@ export function AutoRemindersSection() {
                         )}
                       </td>
                       <td className="p-3 text-right">
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-pill text-[10px] font-bold bg-primary/10 text-primary border border-primary/20 uppercase">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-pill text-xs font-bold bg-primary/10 text-primary border border-primary/20 uppercase">
                           {h.source === "auto" ? "Automatique" : "Manuelle"}
                         </span>
                       </td>

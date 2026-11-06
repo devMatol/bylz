@@ -7,7 +7,18 @@ import { MobileDrawer } from "./MobileDrawer";
 
 export function BottomNav() {
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const location = useLocation();
   const mainItems = NAV_ITEMS.slice(0, 4);
+
+  // Hide BottomNav on full-screen creation/edit pages so there is only a single fixed action bar at bottom
+  const isEditorPage =
+    location.pathname.startsWith("/invoices/new") ||
+    location.pathname.startsWith("/quotes/new") ||
+    location.pathname.includes("/edit");
+
+  if (isEditorPage) {
+    return null;
+  }
 
   return (
     <>
@@ -23,7 +34,7 @@ export function BottomNav() {
                 to={item.path}
                 className={({ isActive }) =>
                   cn(
-                    "flex flex-col items-center justify-center gap-0.5 flex-1 h-full text-[10px] font-black transition-all relative",
+                    "flex flex-col items-center justify-center gap-0.5 flex-1 h-full text-xs font-black transition-all relative min-h-[44px]",
                     isActive ? "text-emerald-400 font-black scale-105" : "text-emerald-400/90 hover:text-emerald-300"
                   )
                 }
@@ -32,7 +43,7 @@ export function BottomNav() {
                   <Icon className="w-4 h-4 text-white" />
                 </div>
                 <span className="truncate max-w-full font-black flex items-center gap-0.5">
-                  Assistant IA <span className="px-1 py-0.2 text-[8px] bg-emerald-500/30 text-emerald-300 rounded font-black">PRO</span>
+                  Assistant IA <span className="px-1 py-0.2 text-xs bg-emerald-500/30 text-emerald-300 rounded font-black">PRO</span>
                 </span>
               </NavLink>
             );
@@ -45,7 +56,7 @@ export function BottomNav() {
               end={item.path === "/"}
               className={({ isActive }) =>
                 cn(
-                  "flex flex-col items-center justify-center gap-0.5 flex-1 h-full text-[11px] font-semibold transition-colors",
+                  "flex flex-col items-center justify-center gap-0.5 flex-1 h-full text-xs font-semibold transition-colors min-h-[44px]",
                   isActive ? "text-primary font-extrabold" : "text-muted hover:text-text"
                 )
               }
@@ -60,7 +71,7 @@ export function BottomNav() {
         <button
           type="button"
           onClick={() => setDrawerOpen(true)}
-          className="flex flex-col items-center justify-center gap-0.5 flex-1 h-full text-[11px] font-semibold text-muted hover:text-text transition-colors"
+          className="flex flex-col items-center justify-center gap-0.5 flex-1 h-full text-xs font-semibold text-muted hover:text-text transition-colors min-h-[44px]"
         >
           <Menu className="w-5 h-5" />
           <span className="truncate max-w-full">Menu</span>

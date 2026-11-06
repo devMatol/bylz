@@ -245,7 +245,7 @@ export function UrssafPage() {
           <button
             type="button"
             onClick={() => setDataView("electronic")}
-            title="PDP Électronique : uniquement les factures acheminées via la plateforme partenaire de dématérialisation"
+            title="Factures électroniques : uniquement les factures acheminées par voie électronique"
             className={cn(
               "px-3 h-7 rounded-pill text-xs font-semibold transition-all",
               dataView === "electronic"
@@ -253,7 +253,7 @@ export function UrssafPage() {
                 : "text-muted hover:text-text"
             )}
           >
-            Factures électroniques (PDP)
+            Factures électroniques
           </button>
         </div>
       </div>
@@ -517,7 +517,7 @@ function CountdownPill({ dueDate, declared }: { dueDate: string; declared: boole
   if (isLate) {
     return (
       <span className="text-xs font-semibold px-3 py-1 rounded-pill bg-danger/15 text-danger">
-        En retard (${absDays}j)
+        {`En retard (${absDays}j)`}
       </span>
     );
   }
@@ -526,7 +526,7 @@ function CountdownPill({ dueDate, declared }: { dueDate: string; declared: boole
     : "bg-surface-hover text-muted";
   return (
     <span className={cn("text-xs font-semibold px-3 py-1 rounded-pill", color)}>
-      J-${absDays}
+      {`J-${absDays}`}
     </span>
   );
 }

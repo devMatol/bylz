@@ -71,10 +71,10 @@ export function ComplianceSection() {
         <div>
           <h3 className="text-lg font-black text-text tracking-tight flex items-center gap-2">
             <ShieldCheck className="w-5 h-5 text-primary" />
-            <span>Conformité E-invoicing & FactPulse (PDP)</span>
+            <span>Préparation à la facturation électronique</span>
           </h3>
           <p className="text-xs text-muted mt-1">
-            Transmission réglementaire B2B et e-reporting mensuel B2C centralisé via la plateforme PDP FactPulse.
+            Préparation de la facturation électronique. La transmission via un prestataire n'est pas encore ouverte.
           </p>
         </div>
 
@@ -99,7 +99,7 @@ export function ComplianceSection() {
               <ShieldCheck className="w-3.5 h-3.5" /> Numérotation séquentielle continue
             </span>
           </div>
-          <p className="text-[11px] text-muted leading-relaxed">
+          <p className="text-xs text-muted leading-relaxed">
             Numérotation continue sans rupture et données légales figées dès l'émission de la facture.
           </p>
         </div>
@@ -111,19 +111,19 @@ export function ComplianceSection() {
               <ShieldCheck className="w-3.5 h-3.5" /> Factur-X en préparation
             </span>
           </div>
-          <p className="text-[11px] text-muted leading-relaxed">
+          <p className="text-xs text-muted leading-relaxed">
             Factures PDF avec mentions légales obligatoires. Format structuré hybride en cours de préparation pour la norme européenne.
           </p>
         </div>
 
         <div className="p-4 rounded-card bg-surface-hover/40 border border-border space-y-2">
-          <p className="text-xs font-bold text-muted uppercase">Réseau PDP & E-reporting</p>
+          <p className="text-xs font-bold text-muted uppercase">Facturation électronique & E-reporting</p>
           <div className="flex items-center space-x-2">
             <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-pill bg-surface-hover text-muted font-bold text-xs border border-border">
               <Clock className="w-3.5 h-3.5" /> En préparation
             </span>
           </div>
-          <p className="text-[11px] text-muted leading-relaxed">
+          <p className="text-xs text-muted leading-relaxed">
             Données de facturation exportables en CSV. Intégration Factur-X et télétransmission en cours de raccordement.
           </p>
         </div>
@@ -151,21 +151,21 @@ export function ComplianceSection() {
                   <th className="p-3 text-right">Nb Factures</th>
                   <th className="p-3 text-right">Montant Total TTC</th>
                   <th className="p-3 text-center">Statut</th>
-                  <th className="p-3 font-mono">Réf. FactPulse</th>
+                  <th className="p-3 font-mono">Réf. Transmission</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
                 {batches.map((b) => (
                   <tr key={b.id} className="hover:bg-surface-hover/50">
                     <td className="p-3 font-bold text-text">{b.period_start ? b.period_start.slice(0, 7) : b.created_at.slice(0, 7)}</td>
-                    <td className="p-3 font-semibold text-muted uppercase text-[11px]">{b.nature || "Services"}</td>
+                    <td className="p-3 font-semibold text-muted uppercase text-xs">{b.nature || "Services"}</td>
                     <td className="p-3 text-right font-mono font-bold">{b.transaction_count || (b as any).count || 0}</td>
                     <td className="p-3 text-right font-mono font-bold text-primary">
                       {formatAmount(Number((b as any).amount_ttc || (b as any).total_ttc || 0))}
                     </td>
                     <td className="p-3 text-center">
                       <span
-                        className={`px-2 py-0.5 rounded-pill text-[10px] font-bold ${
+                        className={`px-2 py-0.5 rounded-pill text-xs font-bold ${
                           b.status === "confirmed" || (b.status as string) === "submitted"
                             ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
                             : b.status === "error"
@@ -176,7 +176,7 @@ export function ComplianceSection() {
                         {b.status}
                       </span>
                     </td>
-                    <td className="p-3 font-mono text-[11px] text-muted">{b.factpulse_ref || "-"}</td>
+                    <td className="p-3 font-mono text-xs text-muted">{b.factpulse_ref || "-"}</td>
                   </tr>
                 ))}
               </tbody>

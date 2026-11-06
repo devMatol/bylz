@@ -153,15 +153,15 @@ export function QuotesPage() {
       ) : (
         <>
           {/* Desktop + tablet ≥768px table */}
-          <div className="hidden md:block border border-border rounded-card overflow-hidden">
-            <table className="w-full text-sm table-fixed">
+          <div className="hidden md:block border border-border rounded-card overflow-x-auto">
+            <table className="w-full text-sm">
               <colgroup>
-                <col />
+                <col className="min-w-[160px]" />
+                <col className="w-[120px]" />
                 <col className="w-[110px]" />
-                <col className="w-[100px]" />
-                <col className="w-[110px]" />
-                <col className="w-[100px]" />
-                <col className="w-[90px]" />
+                <col className="w-[120px]" />
+                <col className="w-[130px]" />
+                <col className="w-[180px]" />
               </colgroup>
               <thead className="bg-surface-hover text-muted text-xs uppercase">
                 <tr>
@@ -169,8 +169,8 @@ export function QuotesPage() {
                   <th className="text-left p-3 font-semibold whitespace-nowrap">Numéro</th>
                   <th className="text-left p-3 font-semibold whitespace-nowrap">Date</th>
                   <th className="text-right p-3 font-semibold whitespace-nowrap">Montant</th>
-                  <th className="text-left p-3 font-semibold">Statut</th>
-                  <th className="text-right p-3 font-semibold">Actions</th>
+                  <th className="text-left p-3 font-semibold whitespace-nowrap">Statut</th>
+                  <th className="text-right p-3 font-semibold whitespace-nowrap">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -196,15 +196,15 @@ export function QuotesPage() {
                     <td className="p-3 text-right whitespace-nowrap">
                       <Amount value={r.total_ttc} size="sm" />
                     </td>
-                    <td className="p-3">
+                    <td className="p-3 whitespace-nowrap">
                       <StatusBadge status={r.status} />
                     </td>
-                    <td className="p-3" onClick={(e) => e.stopPropagation()}>
-                      <div className="flex items-center justify-end gap-1.5">
+                    <td className="p-3 whitespace-nowrap text-right" onClick={(e) => e.stopPropagation()}>
+                      <div className="flex items-center justify-end gap-1.5 min-w-[170px]">
                         <button
                           type="button"
                           onClick={() => navigate(`/quotes/${r.id}`)}
-                          className="p-1.5 rounded-lg bg-surface hover:bg-surface-hover text-muted hover:text-text border border-border transition-colors cursor-pointer"
+                          className="min-h-[36px] min-w-[36px] p-2 rounded-lg bg-surface hover:bg-surface-hover text-muted hover:text-text border border-border transition-colors cursor-pointer flex items-center justify-center"
                           title="Ouvrir le devis"
                         >
                           <Eye className="w-4 h-4" />
@@ -213,7 +213,7 @@ export function QuotesPage() {
                           type="button"
                           onClick={() => void handleConvert(r.id)}
                           disabled={convertingId === r.id}
-                          className="px-2 py-1.5 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 text-xs font-bold transition-colors cursor-pointer flex items-center gap-1"
+                          className="min-h-[36px] px-2.5 py-1.5 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 text-xs font-bold transition-colors cursor-pointer flex items-center gap-1.5"
                           title="Convertir ce devis en facture"
                         >
                           {convertingId === r.id ? (
@@ -221,12 +221,12 @@ export function QuotesPage() {
                           ) : (
                             <FileText className="w-3.5 h-3.5" />
                           )}
-                          <span className="hidden xl:inline">Facturer</span>
+                          <span>Facturer</span>
                         </button>
                         <button
                           type="button"
                           onClick={() => handleDuplicate(r.id)}
-                          className="p-1.5 rounded-lg bg-surface hover:bg-surface-hover text-muted hover:text-text border border-border transition-colors cursor-pointer"
+                          className="min-h-[36px] min-w-[36px] p-2 rounded-lg bg-surface hover:bg-surface-hover text-muted hover:text-text border border-border transition-colors cursor-pointer flex items-center justify-center"
                           title="Dupliquer"
                         >
                           <Copy className="w-4 h-4" />
@@ -235,7 +235,7 @@ export function QuotesPage() {
                           <button
                             type="button"
                             onClick={() => setDeleteTarget(r)}
-                            className="p-1.5 rounded-lg bg-surface hover:bg-surface-hover text-muted hover:text-danger border border-border transition-colors cursor-pointer"
+                            className="min-h-[36px] min-w-[36px] p-2 rounded-lg bg-surface hover:bg-surface-hover text-muted hover:text-danger border border-border transition-colors cursor-pointer flex items-center justify-center"
                             title="Supprimer"
                           >
                             <Trash2 className="w-4 h-4" />
@@ -249,7 +249,7 @@ export function QuotesPage() {
             </table>
           </div>
 
-          {/* Mobile <768px: stacked cards */}
+          {/* Mobile <768px: stacked cards with separate status and full 40px touch actions */}
           <div className="flex flex-col gap-3 md:hidden pb-28">
             {rows.map((r) => (
               <div
@@ -257,25 +257,27 @@ export function QuotesPage() {
                 className="border border-border rounded-card p-4 hover:bg-surface-hover transition-colors cursor-pointer space-y-3"
                 onClick={() => navigate(`/quotes/${r.id}`)}
               >
-                <div className="flex items-start justify-between gap-2">
+                <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0 flex-1">
-                    <p className="font-semibold text-text truncate">{r.client_name}</p>
+                    <p className="font-semibold text-text text-sm truncate">{r.client_name}</p>
                     <p className="text-xs text-muted mt-0.5">{r.number}</p>
                   </div>
-                  <StatusBadge status={r.status} />
+                  <div className="flex-shrink-0">
+                    <StatusBadge status={r.status} />
+                  </div>
                 </div>
                 <div className="flex items-center justify-between gap-2 text-sm border-t border-border/40 pt-2">
-                  <span className="text-muted">{formatDateShort(r.issue_date)}</span>
+                  <span className="text-muted text-xs">{formatDateShort(r.issue_date)}</span>
                   <Amount value={r.total_ttc} size="sm" />
                 </div>
 
-                <div className="flex items-center justify-end gap-2 pt-1 border-t border-border/40" onClick={(e) => e.stopPropagation()}>
+                <div className="flex items-center justify-end gap-2 pt-2 border-t border-border/40" onClick={(e) => e.stopPropagation()}>
                   <Button
                     type="button"
                     variant="outline"
                     size="sm"
                     onClick={() => navigate(`/quotes/${r.id}`)}
-                    className="text-xs font-bold min-h-[36px]"
+                    className="text-xs font-bold min-h-[40px] px-3.5"
                   >
                     Ouvrir
                   </Button>
@@ -285,10 +287,10 @@ export function QuotesPage() {
                     size="sm"
                     loading={convertingId === r.id}
                     onClick={() => void handleConvert(r.id)}
-                    leftIcon={<FileText className="w-3.5 h-3.5" />}
-                    className="text-xs font-bold min-h-[36px]"
+                    leftIcon={<FileText className="w-4 h-4" />}
+                    className="text-xs font-bold min-h-[40px] px-3.5"
                   >
-                    Convertir en facture
+                    Facturer
                   </Button>
                 </div>
               </div>

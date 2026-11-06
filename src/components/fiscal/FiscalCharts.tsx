@@ -100,7 +100,7 @@ export function FiscalCharts({ monthlyData, caThreshold }: FiscalChartsProps) {
                   x={paddingX - 8}
                   y={yVal + 3}
                   fill="rgba(148, 163, 184, 0.6)"
-                  fontSize="10"
+                  fontSize="12"
                   textAnchor="end"
                 >
                   {(() => {
@@ -152,7 +152,7 @@ export function FiscalCharts({ monthlyData, caThreshold }: FiscalChartsProps) {
                   x={cx}
                   y={chartHeight - 4}
                   fill="rgba(148, 163, 184, 0.8)"
-                  fontSize="11"
+                  fontSize="12"
                   fontWeight={isHovered ? "bold" : "normal"}
                   textAnchor="middle"
                 >

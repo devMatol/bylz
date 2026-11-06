@@ -158,7 +158,7 @@ export function LivreRecettesSection({
 
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
-              <thead className="bg-surface-hover text-muted uppercase text-[10px] tracking-wider">
+              <thead className="bg-surface-hover text-muted uppercase text-xs tracking-wider">
                 <tr>
                   <th className="p-3 font-semibold">Date</th>
                   <th className="p-3 font-semibold">N° Pièce / Facture</th>
@@ -241,7 +241,7 @@ export function LivreRecettesSection({
             <Card className="p-6 border border-emerald-500/30 bg-surface/90 space-y-4">
             <div className="flex items-start justify-between">
               <div>
-                <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider bg-emerald-500/10 px-2 py-0.5 rounded-pill border border-emerald-500/20">
+                <span className="text-xs font-bold text-emerald-400 uppercase tracking-wider bg-emerald-500/10 px-2 py-0.5 rounded-pill border border-emerald-500/20">
                   Déclaration Annuelle de Revenus
                 </span>
                 <h3 className="text-lg font-black text-text mt-1">Formulaire 2042-C-PRO</h3>
@@ -303,7 +303,7 @@ export function LivreRecettesSection({
 
             <div className="p-3 rounded-xl bg-primary/10 border border-primary/20 text-xs text-primary font-medium flex items-center justify-between">
               <span>Besoin d'un récapitulatif annuel complet ?</span>
-              <Button type="button" variant="primary" size="sm" onClick={() => exportCsv("recettes")} className="text-[11px] font-bold">
+              <Button type="button" variant="primary" size="sm" onClick={() => exportCsv("recettes")} className="text-xs font-bold">
                 <Download className="w-3.5 h-3.5 mr-1" /> PDF / CSV
               </Button>
             </div>

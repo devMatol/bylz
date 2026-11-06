@@ -6,7 +6,7 @@ export function RemindersPage() {
   return (
     <PageContainer
       title="Relances Automatiques & Paiements"
-      subtitle="Configurez les règles de relance automatique (J+3, J+15) et les notifications de paiement"
+      subtitle="Configurez les règles de relance automatique (J+7, J+14, J+30) et les notifications de paiement"
     >
       <SEO title="Relances Automatiques & Paiements | Bylz" canonical="/reminders" />
       <div className="space-y-6">

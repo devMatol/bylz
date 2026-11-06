@@ -914,9 +914,9 @@ export function SettingsPage() {
                     <h3 className="text-lg font-bold text-text">Solo</h3>
                     {currentPlan === "solo" ? (
                       <Badge variant="primary">Plan actuel</Badge>
-                    ) : (
+                    ) : currentPlan === "starter" ? (
                       <Badge variant="default">Recommandé</Badge>
-                    )}
+                    ) : null}
                   </div>
                   <div>
                     <div className="text-3xl font-extrabold font-mono text-text">
@@ -1047,7 +1047,7 @@ export function SettingsPage() {
                     <h3 className="text-base font-bold text-text">Relances automatiques des impayés</h3>
                   </div>
                   <p className="text-xs text-muted max-w-xl">
-                    Configurez vos règles de relance automatique (J+3, J+15), personnalisez vos messages et consultez l'historique complet des envois sur la page dédiée.
+                    Configurez vos règles de relance automatique (J+7, J+14, J+30), personnalisez vos messages et consultez l'historique complet des envois sur la page dédiée.
                   </p>
                 </div>
                 <Link to="/reminders">
