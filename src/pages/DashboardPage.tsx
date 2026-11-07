@@ -298,9 +298,9 @@ export function DashboardPage() {
           "relative",
           isBlurred && "overflow-hidden max-h-[520px] sm:max-h-[580px] -mx-4 md:-mx-10 -mb-20 md:-mb-10"
         )}>
-          <div className={cn("space-y-6 transition-all duration-300", isBlurred && "blur-md pointer-events-none select-none opacity-60 px-4 md:px-10 pt-6")}>
+          <div className={cn("space-y-4 sm:space-y-6 transition-all duration-300", isBlurred && "blur-md pointer-events-none select-none opacity-60 px-4 md:px-10 pt-6")}>
             {/* KPI Cards Row - Compact 2-column mobile grid matching InvoicesPage */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4 mb-4 sm:mb-6">
               {loading || !data ? (
                 Array.from({ length: 4 }).map((_, i) => (
                   <Card key={i} className="p-4 h-28">
@@ -351,7 +351,7 @@ export function DashboardPage() {
             </div>
 
             {/* Row 2 */}
-            <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 mb-6">
+            <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 sm:gap-6 mb-4 sm:mb-6">
               {/* CA chart (60%) */}
               <Card className="lg:col-span-3">
                 <h3 className="text-sm font-bold text-text mb-4">Évolution du CA</h3>
@@ -363,7 +363,7 @@ export function DashboardPage() {
                       data={sanitizeMonthlyCa(data?.monthlyCa)}
                       accent={company.accent_color}
                     />
-                    <div className="flex justify-around mt-4 pt-4 border-t border-border">
+                    <div className="flex justify-around mt-2 sm:mt-4 pt-2 sm:pt-4 border-t border-border">
                       <div className="text-center">
                         <p className="text-xs text-muted">Meilleur mois</p>
                         <p className="text-sm font-bold text-text">
@@ -394,7 +394,7 @@ export function DashboardPage() {
                         : "Suivi des seuils de franchise en base de TVA"
                     }
                   >
-                    <span className="inline-flex text-muted hover:text-text transition-colors cursor-help">
+                    <span className="min-h-[40px] min-w-[40px] inline-flex items-center justify-center -my-2 -mr-2 text-muted hover:text-text transition-colors cursor-help">
                       <Info className="w-3.5 h-3.5" />
                     </span>
                   </Tooltip>
@@ -468,7 +468,7 @@ export function DashboardPage() {
             </div>
 
             {/* Row 3 */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
               {/* Factures récentes */}
               <Card>
                 <div className="flex items-center justify-between mb-4">
@@ -476,7 +476,7 @@ export function DashboardPage() {
                   <button
                     type="button"
                     onClick={() => navigate("/invoices")}
-                    className="text-xs text-primary font-semibold hover:underline"
+                    className="min-h-[40px] px-2 -mr-2 inline-flex items-center text-xs text-primary font-semibold hover:underline"
                   >
                     Voir tout
                   </button>
@@ -491,12 +491,12 @@ export function DashboardPage() {
                   <p className="text-sm text-muted text-center py-8">Aucune facture validée</p>
                 ) : (
                   <div className="flex flex-col">
-                    {(data?.recentInvoices || []).map((inv) => (
+                    {(data?.recentInvoices || []).slice(0, 3).map((inv, idx) => (
                       <button
                         key={inv.id}
                         type="button"
                         onClick={() => navigate(`/invoices/${inv.id}`)}
-                        className="flex items-center justify-between py-2.5 border-b border-border last:border-0 hover:bg-surface-hover -mx-2 px-2 rounded transition-colors text-left"
+                        className={cn("flex items-center justify-between min-h-[44px] py-2 sm:py-2.5 border-b border-border last:border-0 hover:bg-surface-hover -mx-2 px-2 rounded transition-colors text-left", idx >= 2 && "hidden sm:flex")}
                       >
                         <div className="min-w-0 flex-1">
                           <p className="text-sm font-semibold text-text truncate">
@@ -538,7 +538,7 @@ export function DashboardPage() {
                   </div>
                 ) : (
                   <div className="flex flex-col">
-                    {(data?.upcomingEcheances || []).map((inv) => {
+                    {(data?.upcomingEcheances || []).slice(0, 3).map((inv, idx) => {
                       const today = todayISO();
                       const isLate = inv.due_date < today;
                       const dueDate = parseISO(inv.due_date);
@@ -552,7 +552,7 @@ export function DashboardPage() {
                           key={inv.id}
                           type="button"
                           onClick={() => navigate(`/invoices/${inv.id}`)}
-                          className="flex items-center justify-between py-2.5 border-b border-border last:border-0 hover:bg-surface-hover -mx-2 px-2 rounded transition-colors text-left"
+                          className={cn("flex items-center justify-between min-h-[44px] py-2 sm:py-2.5 border-b border-border last:border-0 hover:bg-surface-hover -mx-2 px-2 rounded transition-colors text-left", idx >= 2 && "hidden sm:flex")}
                         >
                           <div className="min-w-0 flex-1">
                             <p className="text-sm font-semibold text-text truncate">
@@ -592,14 +592,14 @@ export function DashboardPage() {
                     <button
                       type="button"
                       onClick={() => navigate("/invoices?filter=late")}
-                      className="text-xs text-danger font-semibold hover:underline"
+                      className="min-h-[40px] px-2 -mr-2 inline-flex items-center text-xs text-danger font-semibold hover:underline"
                     >
                       Voir tous les retards
                     </button>
                   </div>
 
                   <div className="flex flex-col divide-y divide-border/60">
-                    {(data?.lateInvoices || []).slice(0, 5).map((inv) => {
+                    {(data?.lateInvoices || []).slice(0, 5).map((inv, idx) => {
                       const today = todayISO();
                       const dueDate = parseISO(inv.due_date);
                       const todayDate = parseISO(today);
@@ -610,7 +610,7 @@ export function DashboardPage() {
                       return (
                         <div
                           key={inv.id}
-                          className="flex flex-col sm:flex-row sm:items-center justify-between py-3 gap-3"
+                          className={cn("flex items-center justify-between py-2.5 sm:py-3 gap-2 sm:gap-3", idx >= 2 && "hidden sm:flex")}
                         >
                           <div
                             className="min-w-0 flex-1 cursor-pointer"
@@ -624,13 +624,13 @@ export function DashboardPage() {
                             </p>
                           </div>
 
-                          <div className="flex items-center justify-between sm:justify-end gap-3 flex-shrink-0">
+                          <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
                             <Amount value={safeNum(inv.total_ttc)} size="sm" className="font-bold text-text" />
                             <Button
                               type="button"
                               variant="outline"
                               size="sm"
-                              className="text-xs font-bold border-danger/30 text-danger hover:bg-danger/10 min-h-[36px]"
+                              className="text-xs font-bold border-danger/30 text-danger hover:bg-danger/10 min-h-[40px] px-3.5 py-2 sm:px-3 sm:py-1"
                               onClick={() => setReminderInvoice(inv)}
                             >
                               Relancer
@@ -813,8 +813,8 @@ function FiscalHealthGauge({
 
   return (
     <div className="flex flex-col items-center">
-      <div className="relative" style={{ width: 140, height: 140 }}>
-        <svg width="140" height="140" viewBox="0 0 140 140" className="-rotate-90">
+      <div className="relative w-28 h-28 sm:w-[140px] sm:h-[140px]">
+        <svg viewBox="0 0 140 140" className="w-full h-full -rotate-90">
           <circle
             cx="70"
             cy="70"
@@ -844,10 +844,10 @@ function FiscalHealthGauge({
           </span>
         </div>
       </div>
-      <span className={cn("mt-4 text-xs font-bold px-3 py-1 rounded-pill", pillClass)}>
+      <span className={cn("mt-2 sm:mt-4 text-xs font-bold px-3 py-1 rounded-pill", pillClass)}>
         {status}
       </span>
-      <p className="text-sm text-muted mt-2 text-center">
+      <p className="text-xs sm:text-sm text-muted mt-1.5 sm:mt-2 text-center">
         {formatAmount(ca)} / {formatAmount(threshold)}
       </p>
     </div>
@@ -889,7 +889,7 @@ function CaBarChart({
 
   return (
     <div className="w-full">
-      <svg viewBox={`0 0 ${width} ${height}`} className="w-full" style={{ height: 240 }}>
+      <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-44 sm:h-60" style={{ maxHeight: 240 }}>
         {/* Y grid + labels */}
         {tickVals.map((tv, i) => {
           const y = padTop + chartH - (tv / maxVal) * chartH;

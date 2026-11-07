@@ -465,7 +465,7 @@ export function InvoicesPage() {
                               <button
                                 type="button"
                                 onClick={() => navigate(`/invoices/${r.id}`)}
-                                className="p-1.5 rounded-lg text-muted hover:text-text hover:bg-surface-hover transition-colors"
+                                className="min-h-[40px] min-w-[40px] inline-flex items-center justify-center p-2 rounded-lg text-muted hover:text-text hover:bg-surface-hover transition-colors"
                                 title="Voir la facture"
                               >
                                 <Eye className="w-4 h-4" />
@@ -474,7 +474,7 @@ export function InvoicesPage() {
                                 <button
                                   type="button"
                                   onClick={() => setDeleteTarget(r)}
-                                  className="p-1.5 rounded-lg text-muted hover:text-danger hover:bg-surface-hover transition-colors"
+                                  className="min-h-[40px] min-w-[40px] inline-flex items-center justify-center p-2 rounded-lg text-muted hover:text-danger hover:bg-surface-hover transition-colors"
                                   title="Supprimer"
                                 >
                                   <Trash2 className="w-4 h-4" />
