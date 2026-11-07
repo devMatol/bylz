@@ -186,7 +186,7 @@ export function UrssafPage() {
             type="button"
             onClick={() => setActiveTab("gauges")}
             className={cn(
-              "flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all",
+              "flex items-center gap-2 px-4 py-2 min-h-[40px] rounded-xl text-xs font-bold transition-all",
               activeTab === "gauges"
                 ? "bg-primary text-white shadow-md shadow-primary/20"
                 : "bg-surface-hover text-muted hover:text-text"
@@ -200,7 +200,7 @@ export function UrssafPage() {
             type="button"
             onClick={() => setActiveTab("tva")}
             className={cn(
-              "flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all",
+              "flex items-center gap-2 px-4 py-2 min-h-[40px] rounded-xl text-xs font-bold transition-all",
               activeTab === "tva"
                 ? "bg-primary text-white shadow-md shadow-primary/20"
                 : "bg-surface-hover text-muted hover:text-text"
@@ -216,7 +216,7 @@ export function UrssafPage() {
             type="button"
             onClick={() => setActiveTab("urssaf")}
             className={cn(
-              "flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all",
+              "flex items-center gap-2 px-4 py-2 min-h-[40px] rounded-xl text-xs font-bold transition-all",
               activeTab === "urssaf"
                 ? "bg-primary text-white shadow-md shadow-primary/20"
                 : "bg-surface-hover text-muted hover:text-text"
@@ -234,7 +234,7 @@ export function UrssafPage() {
             onClick={() => setDataView("total")}
             title="Périmètre global : prend en compte toutes vos factures émises (PDF, dématérialisées ou papier)"
             className={cn(
-              "px-3 h-7 rounded-pill text-xs font-semibold transition-all",
+              "px-3.5 min-h-[40px] sm:min-h-0 sm:h-7 rounded-pill text-xs font-semibold transition-all inline-flex items-center justify-center",
               dataView === "total"
                 ? "bg-primary text-white font-bold shadow-xs"
                 : "text-muted hover:text-text"
@@ -247,7 +247,7 @@ export function UrssafPage() {
             onClick={() => setDataView("electronic")}
             title="Factures électroniques : uniquement les factures acheminées par voie électronique"
             className={cn(
-              "px-3 h-7 rounded-pill text-xs font-semibold transition-all",
+              "px-3.5 min-h-[40px] sm:min-h-0 sm:h-7 rounded-pill text-xs font-semibold transition-all inline-flex items-center justify-center",
               dataView === "electronic"
                 ? "bg-primary text-white font-bold shadow-xs"
                 : "text-muted hover:text-text"
@@ -392,7 +392,7 @@ export function UrssafPage() {
                         href="https://www.autoentrepreneur.urssaf.fr"
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center gap-2 h-9 px-4 rounded-card text-sm font-semibold border border-border text-text hover:bg-surface-hover transition-colors"
+                        className="inline-flex items-center gap-2 min-h-[40px] px-4 rounded-card text-sm font-semibold border border-border text-text hover:bg-surface-hover transition-colors"
                       >
                         <ExternalLink className="w-4 h-4" />
                         Déclarer sur autoentrepreneur.urssaf.fr

@@ -204,7 +204,7 @@ export function QuotesPage() {
                         <button
                           type="button"
                           onClick={() => navigate(`/quotes/${r.id}`)}
-                          className="min-h-[36px] min-w-[36px] p-2 rounded-lg bg-surface hover:bg-surface-hover text-muted hover:text-text border border-border transition-colors cursor-pointer flex items-center justify-center"
+                          className="min-h-[40px] min-w-[40px] p-2 rounded-lg bg-surface hover:bg-surface-hover text-muted hover:text-text border border-border transition-colors cursor-pointer flex items-center justify-center"
                           title="Ouvrir le devis"
                         >
                           <Eye className="w-4 h-4" />
@@ -213,7 +213,7 @@ export function QuotesPage() {
                           type="button"
                           onClick={() => void handleConvert(r.id)}
                           disabled={convertingId === r.id}
-                          className="min-h-[36px] px-2.5 py-1.5 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 text-xs font-bold transition-colors cursor-pointer flex items-center gap-1.5"
+                          className="min-h-[40px] px-3 py-2 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 text-xs font-bold transition-colors cursor-pointer flex items-center gap-1.5"
                           title="Convertir ce devis en facture"
                         >
                           {convertingId === r.id ? (
@@ -226,7 +226,7 @@ export function QuotesPage() {
                         <button
                           type="button"
                           onClick={() => handleDuplicate(r.id)}
-                          className="min-h-[36px] min-w-[36px] p-2 rounded-lg bg-surface hover:bg-surface-hover text-muted hover:text-text border border-border transition-colors cursor-pointer flex items-center justify-center"
+                          className="min-h-[40px] min-w-[40px] p-2 rounded-lg bg-surface hover:bg-surface-hover text-muted hover:text-text border border-border transition-colors cursor-pointer flex items-center justify-center"
                           title="Dupliquer"
                         >
                           <Copy className="w-4 h-4" />
@@ -235,7 +235,7 @@ export function QuotesPage() {
                           <button
                             type="button"
                             onClick={() => setDeleteTarget(r)}
-                            className="min-h-[36px] min-w-[36px] p-2 rounded-lg bg-surface hover:bg-surface-hover text-muted hover:text-danger border border-border transition-colors cursor-pointer flex items-center justify-center"
+                            className="min-h-[40px] min-w-[40px] p-2 rounded-lg bg-surface hover:bg-surface-hover text-muted hover:text-danger border border-border transition-colors cursor-pointer flex items-center justify-center"
                             title="Supprimer"
                           >
                             <Trash2 className="w-4 h-4" />
