@@ -591,3 +591,24 @@ export function extractAndValidateCompanyIban(
     error: "Renseignez votre IBAN dans Paramètres avant la transmission à la facturation électronique.",
   };
 }
+
+/**
+ * Contrôle de présence et validité du SIREN client (acheteur B2B).
+ * En facturation électronique B2B (normes AFNOR XP Z12-012, BR-FR-21 / BT-47 / BT-49),
+ * le client doit obligatoirement avoir un numéro SIREN valide de 9 chiffres.
+ */
+export function validateClientSirenForPa(
+  buyer: { siren?: string | null; siret?: string | null } | null | undefined
+): { valid: boolean; siren?: string; error?: string } {
+  const siret = (buyer?.siret || "").replace(/\s+/g, "");
+  const siren = (buyer?.siren || (siret.length >= 9 ? siret.slice(0, 9) : "")).replace(/\s+/g, "");
+
+  if (!siren || siren.length !== 9 || !/^\d{9}$/.test(siren) || siren === "000000000") {
+    return {
+      valid: false,
+      error: "Le client doit avoir un SIREN pour la facturation électronique B2B.",
+    };
+  }
+
+  return { valid: true, siren };
+}

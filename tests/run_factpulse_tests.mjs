@@ -15,6 +15,7 @@ import {
   decideSubmissionSuccess,
   restorePreviousStatus,
   extractAndValidateCompanyIban,
+  validateClientSirenForPa,
 } from "../supabase/functions/_shared/factpulse-helpers.ts";
 
 async function main() {
@@ -131,6 +132,30 @@ async function main() {
     const clean = sanitizeWebhookPayload(payload);
     assert.strictEqual(clean.supplier.iban, "[MASQUÉ]");
     assert.strictEqual(clean.data.iban, "[MASQUÉ]");
+  });
+
+  runTest("1.C.6 Rejet si le client B2B n'a pas de SIREN (Le client doit avoir un SIREN pour la facturation électronique B2B)", () => {
+    // 1. Client sans SIREN et sans SIRET
+    const resEmpty = validateClientSirenForPa({});
+    assert.strictEqual(resEmpty.valid, false);
+    assert.strictEqual(resEmpty.error, "Le client doit avoir un SIREN pour la facturation électronique B2B.");
+
+    // 2. Client avec SIREN incomplet ou non-numérique
+    const resShort = validateClientSirenForPa({ siren: "12345" });
+    assert.strictEqual(resShort.valid, false);
+
+    const resAlpha = validateClientSirenForPa({ siren: "12345678A" });
+    assert.strictEqual(resAlpha.valid, false);
+
+    // 3. Client avec SIRET 14 chiffres : extraction automatique du SIREN (9 premiers chiffres)
+    const resFromSiret = validateClientSirenForPa({ siret: "84957894300011" });
+    assert.strictEqual(resFromSiret.valid, true);
+    assert.strictEqual(resFromSiret.siren, "849578943");
+
+    // 4. Client avec SIREN direct 9 chiffres
+    const resDirect = validateClientSirenForPa({ siren: "849578943" });
+    assert.strictEqual(resDirect.valid, true);
+    assert.strictEqual(resDirect.siren, "849578943");
   });
 
   // --- SECTION 1.B : GARDE-FOU FAIL-CLOSED FACTPULSE_ALLOW_PRODUCTION ---
