@@ -14,6 +14,7 @@ import {
   attemptAtomicReservation,
   decideSubmissionSuccess,
   restorePreviousStatus,
+  extractAndValidateCompanyIban,
 } from "../supabase/functions/_shared/factpulse-helpers.ts";
 
 async function main() {
@@ -51,6 +52,86 @@ async function main() {
 
   // --- SECTION 1 : VALIDATION D'ADRESSES ---
   console.log("--- 1. Validation des adresses (émetteur et acheteur) ---");
+
+  // --- SECTION 1.C : VALIDATION OBLIGATOIRE DE L'IBAN FOURNISSEUR (LOT 9BIS) ---
+  console.log("\n--- 1.C Contrôle strict préalable de l'IBAN fournisseur (avant tout appel FactPulse) ---");
+
+  runTest("1.C.1 Rejet explicite si l'IBAN est absent (message clair pour Paramètres)", () => {
+    // 1. Cas company sans IBAN et sans footer
+    const resEmpty = extractAndValidateCompanyIban({}, {});
+    assert.strictEqual(resEmpty.valid, false);
+    assert.strictEqual(resEmpty.iban, undefined);
+    assert.strictEqual(
+      resEmpty.error,
+      "Renseignez votre IBAN dans Paramètres avant la transmission à la facturation électronique."
+    );
+
+    // 2. Cas null ou undefined
+    const resNull = extractAndValidateCompanyIban(null, null);
+    assert.strictEqual(resNull.valid, false);
+    assert.strictEqual(
+      resNull.error,
+      "Renseignez votre IBAN dans Paramètres avant la transmission à la facturation électronique."
+    );
+
+    // 3. Cas footer présent mais sans aucun IBAN
+    const resNoIbanInFooter = extractAndValidateCompanyIban(
+      { invoice_footer: "Règlement par chèque. Pénalités de retard : 3x le taux légal." },
+      {}
+    );
+    assert.strictEqual(resNoIbanInFooter.valid, false);
+    assert.strictEqual(
+      resNoIbanInFooter.error,
+      "Renseignez votre IBAN dans Paramètres avant la transmission à la facturation électronique."
+    );
+  });
+
+  runTest("1.C.2 Rejet explicite si le format de l'IBAN direct est invalide", () => {
+    const resInvalid = extractAndValidateCompanyIban({ iban: "FR00INVALIDE" }, {});
+    assert.strictEqual(resInvalid.valid, false);
+    assert.strictEqual(
+      resInvalid.error,
+      "Format d'IBAN invalide. Veuillez corriger votre IBAN dans Paramètres."
+    );
+  });
+
+  runTest("1.C.3 Validation réussie si l'IBAN est fourni directement dans company ou snapshot", () => {
+    const rawIban = "FR76 3000 6000 0112 3456 7890 189";
+    const expected = "FR7630006000011234567890189";
+
+    // Directement dans company
+    const resCompany = extractAndValidateCompanyIban({ iban: rawIban }, {});
+    assert.strictEqual(resCompany.valid, true);
+    assert.strictEqual(resCompany.iban, expected);
+
+    // Directement dans seller snapshot
+    const resSnap = extractAndValidateCompanyIban({}, { iban: rawIban });
+    assert.strictEqual(resSnap.valid, true);
+    assert.strictEqual(resSnap.iban, expected);
+  });
+
+  runTest("1.C.4 Extraction automatique réussie si l'IBAN figure dans le pied de facture (invoice_footer)", () => {
+    const footer = "Règlement par virement sous 30 jours.\nIBAN : FR76 3000 6000 0112 3456 7890 189\nBIC : BCOPFRPP";
+    const resFooter = extractAndValidateCompanyIban({ invoice_footer: footer }, {});
+    assert.strictEqual(resFooter.valid, true);
+    assert.strictEqual(resFooter.iban, "FR7630006000011234567890189");
+  });
+
+  runTest("1.C.5 Sécurité : l'IBAN n'est jamais consigné en clair dans les logs ou payloads webhook", () => {
+    const payload = {
+      event_type: "submission.completed",
+      supplier: {
+        siret: "10082895300016",
+        iban: "FR7630006000011234567890189",
+      },
+      data: {
+        iban: "FR7630006000011234567890189",
+      },
+    };
+    const clean = sanitizeWebhookPayload(payload);
+    assert.strictEqual(clean.supplier.iban, "[MASQUÉ]");
+    assert.strictEqual(clean.data.iban, "[MASQUÉ]");
+  });
 
   // --- SECTION 1.B : GARDE-FOU FAIL-CLOSED FACTPULSE_ALLOW_PRODUCTION ---
   console.log("\n--- 1.B Garde-fou strict fail-closed (FACTPULSE_ALLOW_PRODUCTION) ---");

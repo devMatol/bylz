@@ -10,6 +10,7 @@ import {
   attemptAtomicReservation,
   decideSubmissionSuccess,
   restorePreviousStatus,
+  extractAndValidateCompanyIban,
 } from "../_shared/factpulse-helpers.ts";
 
 const corsHeaders = {
@@ -228,6 +229,19 @@ serve(async (req) => {
       );
     }
 
+    // Contrôle strict de l'IBAN émetteur avant tout appel FactPulse (P0.1 mandatory)
+    const ibanCheck = extractAndValidateCompanyIban(invoice.company, sellerSnap);
+    if (!ibanCheck.valid || !ibanCheck.iban) {
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error_code: "missing_company_iban",
+          error: ibanCheck.error || "Renseignez votre IBAN dans Paramètres avant la transmission à la facturation électronique.",
+        }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     // 8. vat_rate depuis invoice_lines apparié par ID de ligne avec le snapshot
     const { data: dbLines } = await adminClient
       .from("invoice_lines")
@@ -347,6 +361,7 @@ serve(async (req) => {
           siret: supplierSiret,
           taxRegistrationId: supplierSiren,
           routingAddress: supplierSiret,
+          iban: ibanCheck.iban,
           postalAddress: {
             street: sellerAddrCheck.street,
             postalCode: sellerAddrCheck.postalCode,
@@ -377,7 +392,9 @@ serve(async (req) => {
     // 12. Appel à l'API officielle FactPulse via le client partagé
     let resData: any = null;
     try {
-      resData = await callFactPulseApi("/processing/invoices/submit-complete", "POST", payload);
+      const webhookCallbackUrl = "https://sbwbjkzustnlnnilkogm.supabase.co/functions/v1/factpulse-webhook";
+      const submitEndpoint = `/processing/invoices/submit-complete?callback_url=${encodeURIComponent(webhookCallbackUrl)}&webhook_mode=inline`;
+      resData = await callFactPulseApi(submitEndpoint, "POST", payload);
     } catch (err: any) {
       await adminClient.from("pa_submission_errors").insert({
         invoice_id: invoice.id,
