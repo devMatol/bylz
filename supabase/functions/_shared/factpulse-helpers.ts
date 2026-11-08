@@ -261,8 +261,17 @@ export function mapCdarStatusCodeToPaStatus(
       if (eventType === "submission.completed") {
         return { pa_status: "submitted", rank: 10, code: 200, label: "Soumission confirmée par l'API", isKnown: true, isTerminal: false };
       }
+      if (eventType === "submission.partial") {
+        return { pa_status: "submitted", rank: 10, code: 206, label: "Soumission partielle", isKnown: true, isTerminal: false };
+      }
       if (eventType === "submission.failed") {
         return { pa_status: "rejected", rank: 40, code: 213, label: "Échec de soumission", isKnown: true, isTerminal: true };
+      }
+      if (eventType === "generation.completed") {
+        return { pa_status: "submitted", rank: 10, code: 200, label: "Génération Factur-X terminée", isKnown: true, isTerminal: false };
+      }
+      if (eventType === "generation.failed") {
+        return { pa_status: "rejected", rank: 40, code: 213, label: "Échec de génération Factur-X", isKnown: true, isTerminal: true };
       }
       return { pa_status: null, rank: 0, code: code || 0, label: `Statut non répertorié (${statusCode})`, isKnown: false, isTerminal: false };
   }

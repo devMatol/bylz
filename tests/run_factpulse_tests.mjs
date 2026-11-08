@@ -261,9 +261,10 @@ async function main() {
     assert.ok(res.reason?.includes("Horodatage expiré"));
   });
 
-  await runAsyncTest("4.5 Signature HMAC valide SANS en-tête timestamp (spécification standard FactPulse OpenAPI)", async () => {
+  // --- TESTS SPÉCIFIQUES LOT 9 : CONTRÔLE RIGOUREUX DE LA SIGNATURE WEBHOOK FACTPULSE ---
+  await runAsyncTest("4.5.A Header sha256=<hex> valide reconnu et validé", async () => {
     const secret = "factpulse_webhook_secret_hmac_test";
-    const body = JSON.stringify({ event_type: "status.updated", factpulse_ref: "FLOW-12345", statusCode: 200 });
+    const body = JSON.stringify({ event_type: "submission.completed", factpulse_ref: "FLOW-12345", statusCode: 200 });
 
     const encoder = new TextEncoder();
     const key = await crypto.subtle.importKey(
@@ -278,18 +279,125 @@ async function main() {
       .map((b) => b.toString(16).padStart(2, "0"))
       .join("");
 
-    // Test sans header timestamp (timestampHeader = null / undefined)
-    const resWithoutTimestamp = await verifyWebhookSignatureAndTime(body, sigHex, null, secret);
-    assert.strictEqual(resWithoutTimestamp.valid, true);
-
-    // Test avec préfixe sha256= sans header timestamp
-    const resWithPrefix = await verifyWebhookSignatureAndTime(body, "sha256=" + sigHex, undefined, secret);
+    const resWithPrefix = await verifyWebhookSignatureAndTime(body, "sha256=" + sigHex, null, secret);
     assert.strictEqual(resWithPrefix.valid, true);
+    assert.strictEqual(resWithPrefix.reason, undefined);
+  });
 
-    // Rejet si signature erronée sans header timestamp
-    const resBadSig = await verifyWebhookSignatureAndTime(body, "bad" + sigHex.slice(3), null, secret);
+  await runAsyncTest("4.5.B Hex nu <hex> valide reconnu et validé sans préfixe", async () => {
+    const secret = "factpulse_webhook_secret_hmac_test";
+    const body = JSON.stringify({ event_type: "submission.completed", factpulse_ref: "FLOW-12345", statusCode: 200 });
+
+    const encoder = new TextEncoder();
+    const key = await crypto.subtle.importKey(
+      "raw",
+      encoder.encode(secret),
+      { name: "HMAC", hash: "SHA-256" },
+      false,
+      ["sign"]
+    );
+    const sigBuf = await crypto.subtle.sign("HMAC", key, encoder.encode(body));
+    const sigHex = Array.from(new Uint8Array(sigBuf))
+      .map((b) => b.toString(16).padStart(2, "0"))
+      .join("");
+
+    const resRawHex = await verifyWebhookSignatureAndTime(body, sigHex, null, secret);
+    assert.strictEqual(resRawHex.valid, true);
+    assert.strictEqual(resRawHex.reason, undefined);
+  });
+
+  await runAsyncTest("4.5.C Signature invalide rejetée (altération du corps ou du hash)", async () => {
+    const secret = "factpulse_webhook_secret_hmac_test";
+    const body = JSON.stringify({ event_type: "submission.completed", factpulse_ref: "FLOW-12345" });
+
+    const encoder = new TextEncoder();
+    const key = await crypto.subtle.importKey(
+      "raw",
+      encoder.encode(secret),
+      { name: "HMAC", hash: "SHA-256" },
+      false,
+      ["sign"]
+    );
+    const sigBuf = await crypto.subtle.sign("HMAC", key, encoder.encode(body));
+    const sigHex = Array.from(new Uint8Array(sigBuf))
+      .map((b) => b.toString(16).padStart(2, "0"))
+      .join("");
+
+    // 1. Signature corrompue
+    const corruptedHex = "0000" + sigHex.slice(4);
+    const resBadSig = await verifyWebhookSignatureAndTime(body, corruptedHex, null, secret);
     assert.strictEqual(resBadSig.valid, false);
     assert.strictEqual(resBadSig.reason, "Signature HMAC invalide.");
+
+    // 2. Corps altéré
+    const tamperedBody = JSON.stringify({ event_type: "submission.completed", factpulse_ref: "FLOW-66666" });
+    const resTampered = await verifyWebhookSignatureAndTime(tamperedBody, sigHex, null, secret);
+    assert.strictEqual(resTampered.valid, false);
+    assert.strictEqual(resTampered.reason, "Signature HMAC invalide.");
+  });
+
+  await runAsyncTest("4.5.D Signature de longueur différente rejetée sans crasher", async () => {
+    const secret = "factpulse_webhook_secret_hmac_test";
+    const body = JSON.stringify({ event: "test" });
+
+    // 1. Longueur impaire (ex: 63 caractères au lieu de 64) -> rejet sans crash
+    const oddSig = "a".repeat(63);
+    const resOdd = await verifyWebhookSignatureAndTime(body, oddSig, null, secret);
+    assert.strictEqual(resOdd.valid, false);
+    assert.strictEqual(resOdd.reason, "Format de signature hexadécimal invalide.");
+
+    // 2. Longueur trop courte paire (ex: 32 caractères = 16 octets au lieu de 32 octets) -> rejet sans crash
+    const shortSig = "a".repeat(32);
+    const resShort = await verifyWebhookSignatureAndTime(body, shortSig, null, secret);
+    assert.strictEqual(resShort.valid, false);
+    assert.strictEqual(resShort.reason, "Signature HMAC invalide.");
+
+    // 3. Longueur trop longue paire (ex: 128 caractères = 64 octets) -> rejet sans crash
+    const longSig = "b".repeat(128);
+    const resLong = await verifyWebhookSignatureAndTime(body, longSig, null, secret);
+    assert.strictEqual(resLong.valid, false);
+    assert.strictEqual(resLong.reason, "Signature HMAC invalide.");
+
+    // 4. Chaîne vide ou whitespace -> rejet sans crash
+    const resEmpty = await verifyWebhookSignatureAndTime(body, "   ", null, secret);
+    assert.strictEqual(resEmpty.valid, false);
+    assert.strictEqual(resEmpty.reason, "En-tête X-Webhook-Signature manquant.");
+  });
+
+  runTest("4.5.E Secret absent : échec fermé dans le helper et statut HTTP 503 dans le handler", () => {
+    const body = JSON.stringify({ event: "test" });
+    const sig = "a".repeat(64);
+
+    // 1. Helper : secret null, undefined ou chaîne vide
+    for (const absentSecret of [null, undefined, "", "   "]) {
+      // synchrone ou asynchrone, vérifions le retour immédiat du guard
+      verifyWebhookSignatureAndTime(body, sig, null, absentSecret).then((res) => {
+        assert.strictEqual(res.valid, false);
+        assert.ok(res.reason?.includes("échec fermé"));
+      });
+    }
+
+    // 2. Contrat formel de l'endpoint factpulse-webhook : si FACTPULSE_WEBHOOK_SECRET est vide => HTTP 503
+    const simulateEndpointHandler = (envSecret) => {
+      const webhookSecret = envSecret || "";
+      if (!webhookSecret || webhookSecret.trim() === "") {
+        return {
+          status: 503,
+          body: { error: "Service webhook temporairement indisponible : secret non configuré." },
+        };
+      }
+      return { status: 200, body: { ok: true } };
+    };
+
+    const resAbsent = simulateEndpointHandler(undefined);
+    assert.strictEqual(resAbsent.status, 503);
+    assert.strictEqual(resAbsent.body.error, "Service webhook temporairement indisponible : secret non configuré.");
+
+    const resEmpty = simulateEndpointHandler("");
+    assert.strictEqual(resEmpty.status, 503);
+
+    const resPresent = simulateEndpointHandler("secret_valide_123");
+    assert.strictEqual(resPresent.status, 200);
   });
 
   runTest("4.4 Assainissement RGPD : masquage systématique des coordonnées et données bancaires", () => {

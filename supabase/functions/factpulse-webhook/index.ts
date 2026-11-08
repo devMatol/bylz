@@ -121,7 +121,14 @@ serve(async (req) => {
     }
 
     // 5. Mapping AFNOR XP Z12-012 et contrôle de non-régression de statut
-    const rawStatusCode = data.status_code || data.statusCode || data.data?.statusCode;
+    // Supporte également le schéma AFNOR InvoiceLifecycle (data.events[].statusCode)
+    const rawStatusCode =
+      data.status_code ||
+      data.statusCode ||
+      data.data?.statusCode ||
+      data.data?.status_code ||
+      data.events?.[data.events.length - 1]?.statusCode ||
+      data.code;
     const statusMapping = mapCdarStatusCodeToPaStatus(rawStatusCode, eventType);
 
     const currentRank = getPaStatusRank(invoice.pa_status);
