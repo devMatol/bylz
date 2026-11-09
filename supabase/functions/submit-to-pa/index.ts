@@ -10,6 +10,8 @@ import {
   attemptAtomicReservation,
   decideSubmissionSuccess,
   restorePreviousStatus,
+  extractAndValidateCompanyIban,
+  validateClientSirenForPa,
 } from "../_shared/factpulse-helpers.ts";
 
 const corsHeaders = {
@@ -212,7 +214,8 @@ serve(async (req) => {
 
     const supplierSiret = (sellerSnap.siret || "").replace(/\s+/g, "");
     const supplierSiren = sellerSnap.siren || (supplierSiret.length >= 9 ? supplierSiret.slice(0, 9) : supplierSiret);
-    const recipientSiret = (buyerSnap.siret || buyerSnap.siren || "").replace(/\s+/g, "");
+    const recipientSiret = (buyerSnap.siret || "").replace(/\s+/g, "");
+    const recipientSiren = (buyerSnap.siren || (recipientSiret.length >= 9 ? recipientSiret.slice(0, 9) : "")).replace(/\s+/g, "");
 
     if (!supplierSiret || supplierSiret === "00000000000000") {
       return new Response(
@@ -221,9 +224,36 @@ serve(async (req) => {
       );
     }
 
+    // Contrôle strict du SIREN client (B2B obligatoire pour BT-47 et BT-49)
+    const clientSirenCheck = validateClientSirenForPa(buyerSnap);
+    if (!clientSirenCheck.valid || !clientSirenCheck.siren) {
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error_code: "missing_client_siren",
+          error: clientSirenCheck.error || "Le client doit avoir un SIREN pour la facturation électronique B2B.",
+        }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+    const recipientSiren = clientSirenCheck.siren;
+
     if (!recipientSiret || recipientSiret === "00000000000000") {
       return new Response(
         JSON.stringify({ success: false, error: "Le SIRET du client B2B dans le snapshot est obligatoire." }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Contrôle strict de l'IBAN émetteur avant tout appel FactPulse (P0.1 mandatory)
+    const ibanCheck = extractAndValidateCompanyIban(invoice.company, sellerSnap);
+    if (!ibanCheck.valid || !ibanCheck.iban) {
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error_code: "missing_company_iban",
+          error: ibanCheck.error || "Renseignez votre IBAN dans Paramètres avant la transmission à la facturation électronique.",
+        }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -345,8 +375,18 @@ serve(async (req) => {
         supplier: {
           name: sellerSnap.legal_name || invoice.company.legal_name,
           siret: supplierSiret,
+          siren: supplierSiren,
           taxRegistrationId: supplierSiren,
+          iban: ibanCheck.iban,
           routingAddress: supplierSiret,
+          electronicAddress: {
+            identifier: supplierSiret,
+            schemeId: "0225",
+          },
+          electronic_address: {
+            identifier: supplierSiret,
+            scheme_id: "0225",
+          },
           postalAddress: {
             street: sellerAddrCheck.street,
             postalCode: sellerAddrCheck.postalCode,
@@ -357,7 +397,16 @@ serve(async (req) => {
         recipient: {
           name: buyerSnap.name,
           siret: recipientSiret,
+          siren: recipientSiren,
           routingAddress: recipientSiret,
+          electronicAddress: {
+            identifier: recipientSiret,
+            schemeId: "0225",
+          },
+          electronic_address: {
+            identifier: recipientSiret,
+            scheme_id: "0225",
+          },
           postalAddress: {
             street: buyerAddrCheck.street,
             postalCode: buyerAddrCheck.postalCode,
@@ -377,7 +426,9 @@ serve(async (req) => {
     // 12. Appel à l'API officielle FactPulse via le client partagé
     let resData: any = null;
     try {
-      resData = await callFactPulseApi("/processing/invoices/submit-complete", "POST", payload);
+      const webhookCallbackUrl = "https://sbwbjkzustnlnnilkogm.supabase.co/functions/v1/factpulse-webhook";
+      const submitEndpoint = `/processing/invoices/submit-complete?callback_url=${encodeURIComponent(webhookCallbackUrl)}&webhook_mode=inline`;
+      resData = await callFactPulseApi(submitEndpoint, "POST", payload);
     } catch (err: any) {
       await adminClient.from("pa_submission_errors").insert({
         invoice_id: invoice.id,

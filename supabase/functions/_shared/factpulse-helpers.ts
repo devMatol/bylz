@@ -261,8 +261,17 @@ export function mapCdarStatusCodeToPaStatus(
       if (eventType === "submission.completed") {
         return { pa_status: "submitted", rank: 10, code: 200, label: "Soumission confirmée par l'API", isKnown: true, isTerminal: false };
       }
+      if (eventType === "submission.partial") {
+        return { pa_status: "submitted", rank: 10, code: 206, label: "Soumission partielle", isKnown: true, isTerminal: false };
+      }
       if (eventType === "submission.failed") {
         return { pa_status: "rejected", rank: 40, code: 213, label: "Échec de soumission", isKnown: true, isTerminal: true };
+      }
+      if (eventType === "generation.completed") {
+        return { pa_status: "submitted", rank: 10, code: 200, label: "Génération Factur-X terminée", isKnown: true, isTerminal: false };
+      }
+      if (eventType === "generation.failed") {
+        return { pa_status: "rejected", rank: 40, code: 213, label: "Échec de génération Factur-X", isKnown: true, isTerminal: true };
       }
       return { pa_status: null, rank: 0, code: code || 0, label: `Statut non répertorié (${statusCode})`, isKnown: false, isTerminal: false };
   }
@@ -532,3 +541,74 @@ export async function restorePreviousStatus(
     .eq("id", invoiceId);
 }
 
+
+/**
+ * Extraction et validation stricte de l'IBAN fournisseur (émetteur de la facture).
+ * Norme Factur-X / FactPulse P0.1 : l'IBAN du fournisseur est obligatoire pour la génération et soumission.
+ * Vérifie d'abord company.iban ou sellerSnap.iban, ou extrait un IBAN depuis invoice_footer.
+ * Si absent ou invalide, refuse avant tout appel API tiers.
+ */
+export function extractAndValidateCompanyIban(
+  company: { iban?: string | null; invoice_footer?: string | null } | null | undefined,
+  sellerSnap?: { iban?: string | null; invoice_footer?: string | null } | null | undefined
+): { valid: boolean; iban?: string; error?: string } {
+  const direct = (company?.iban || sellerSnap?.iban || "").trim().replace(/\s+/g, "").toUpperCase();
+  if (direct) {
+    if (/^[A-Z]{2}[0-9]{2}[A-Z0-9]{10,30}$/.test(direct)) {
+      return { valid: true, iban: direct };
+    }
+    return {
+      valid: false,
+      error: "Format d'IBAN invalide. Veuillez corriger votre IBAN dans Paramètres.",
+    };
+  }
+
+  // Repli : extraction depuis invoice_footer (ex: 'IBAN : FR76 ...')
+  const footer = String(sellerSnap?.invoice_footer || company?.invoice_footer || "");
+  
+  // 1. Recherche par mot-clé explicite 'IBAN :'
+  const keywordMatch = footer.match(/IBAN\s*[:=]?\s*([A-Z0-9\s]{14,35})/i);
+  if (keywordMatch) {
+    const candidate = keywordMatch[1].replace(/\s+/g, "").toUpperCase();
+    const frPrefix = candidate.match(/^(FR\d{2}[A-Z0-9]{23})/);
+    if (frPrefix) {
+      return { valid: true, iban: frPrefix[1] };
+    }
+    if (/^[A-Z]{2}[0-9]{2}[A-Z0-9]{10,30}$/.test(candidate)) {
+      return { valid: true, iban: candidate };
+    }
+  }
+
+  // 2. Recherche générale d'un IBAN français (FR + 2 chiffres + 23 caractères alphanumériques)
+  const cleanedFooter = footer.replace(/\s+/g, "");
+  const generalFrMatch = cleanedFooter.match(/(FR\d{2}[A-Z0-9]{23})/i);
+  if (generalFrMatch) {
+    return { valid: true, iban: generalFrMatch[1].toUpperCase() };
+  }
+
+  return {
+    valid: false,
+    error: "Renseignez votre IBAN dans Paramètres avant la transmission à la facturation électronique.",
+  };
+}
+
+/**
+ * Contrôle de présence et validité du SIREN client (acheteur B2B).
+ * En facturation électronique B2B (normes AFNOR XP Z12-012, BR-FR-21 / BT-47 / BT-49),
+ * le client doit obligatoirement avoir un numéro SIREN valide de 9 chiffres.
+ */
+export function validateClientSirenForPa(
+  buyer: { siren?: string | null; siret?: string | null } | null | undefined
+): { valid: boolean; siren?: string; error?: string } {
+  const siret = (buyer?.siret || "").replace(/\s+/g, "");
+  const siren = (buyer?.siren || (siret.length >= 9 ? siret.slice(0, 9) : "")).replace(/\s+/g, "");
+
+  if (!siren || siren.length !== 9 || !/^\d{9}$/.test(siren) || siren === "000000000") {
+    return {
+      valid: false,
+      error: "Le client doit avoir un SIREN pour la facturation électronique B2B.",
+    };
+  }
+
+  return { valid: true, siren };
+}
