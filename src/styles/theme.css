@@ -1,23 +1,25 @@
 :root {
-  --bg: #0a0e1a;
-  --bg-sidebar: #0f1426;
-  --surface: #141c38;
-  --surface-hover: #1c274c;
-  --border: #25325c;
-  --text: #ffffff;
-  --text-muted: #8e9bbf;
-  --primary: #4856df;
-  --primary-hover: #3b48c4;
+  --bg: #ffffff;
+  --bg-sidebar: #ffffff;
+  --surface: #ffffff;
+  --surface-hover: #f8fafc;
+  --border: #e2e8f0;
+  --text: #0f172a;
+  --text-muted: #64748b;
+  --primary: #2563eb;
+  --primary-hover: #1d4ed8;
   --brand-navy: #011142;
-  --accent: #ced7fd;
-  --success: #10b981;
-  --warning: #f59e0b;
-  --danger: #ef4444;
-  --glow-primary: rgba(72, 86, 223, 0.22);
-  --glow-accent: rgba(206, 215, 253, 0.18);
+  --accent: #2563eb;
+  --success: #059669;
+  --warning: #d97706;
+  --danger: #dc2626;
+  --glow-primary: rgba(37, 99, 235, 0.15);
+  --glow-accent: rgba(37, 99, 235, 0.1);
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.03);
+  --shadow-input-focus: inset 0 1px 2px rgba(1, 17, 66, 0.04);
   --radius: 8px;
   --radius-card: 12px;
-  --radius-pill: 999px;
+  --radius-pill: 8px;
 }
 
 [data-theme="light"] {
@@ -25,20 +27,47 @@
   --bg-sidebar: #ffffff;
   --surface: #ffffff;
   --surface-hover: #f8fafc;
-  --border: #64748b;
+  --border: #e2e8f0;
   --text: #0f172a;
-  --text-muted: #475569;
-  --primary: #4856df;
-  --primary-hover: #3b48c4;
+  --text-muted: #64748b;
+  --primary: #2563eb;
+  --primary-hover: #1d4ed8;
   --brand-navy: #011142;
-  --accent: #4856df;
+  --accent: #2563eb;
   --success: #059669;
   --warning: #d97706;
   --danger: #dc2626;
-  --glow-primary: rgba(72, 86, 223, 0.15);
-  --glow-accent: rgba(72, 86, 223, 0.1);
+  --glow-primary: rgba(37, 99, 235, 0.15);
+  --glow-accent: rgba(37, 99, 235, 0.1);
   --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.03);
   --shadow-input-focus: inset 0 1px 2px rgba(1, 17, 66, 0.04);
+  --radius: 8px;
+  --radius-card: 12px;
+  --radius-pill: 8px;
+}
+
+[data-theme="dark"] {
+  --bg: #0a0e1a;
+  --bg-sidebar: #0f1426;
+  --surface: #141c38;
+  --surface-hover: #1c274c;
+  --border: #25325c;
+  --text: #ffffff;
+  --text-muted: #8e9bbf;
+  --primary: #2563eb;
+  --primary-hover: #1d4ed8;
+  --brand-navy: #011142;
+  --accent: #ced7fd;
+  --success: #10b981;
+  --warning: #f59e0b;
+  --danger: #ef4444;
+  --glow-primary: rgba(37, 99, 235, 0.22);
+  --glow-accent: rgba(206, 215, 253, 0.18);
+  --shadow-card: none;
+  --shadow-input-focus: none;
+  --radius: 8px;
+  --radius-card: 12px;
+  --radius-pill: 8px;
 }
 
 * {

@@ -5,7 +5,7 @@ type Theme = "dark" | "light";
 const STORAGE_KEY = "bylz-theme";
 
 function getInitialTheme(): Theme {
-  if (typeof window === "undefined") return "dark";
+  if (typeof window === "undefined") return "light";
   const stored = window.localStorage.getItem(STORAGE_KEY);
   if (stored === "light" || stored === "dark") return stored;
   return "dark";

@@ -353,13 +353,13 @@ export function UrssafPage() {
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-                      <div className="p-4 rounded-xl bg-slate-900 border border-slate-800">
+                      <div className="p-4 rounded-xl bg-surface border border-border">
                         <p className="text-xs text-muted mb-1 font-medium">CA encaissé sur la période</p>
                         <p className="text-xl font-black text-text">
                           {formatAmount(currentPeriod.revenue)}
                         </p>
                       </div>
-                      <div className="p-4 rounded-xl bg-slate-900 border border-slate-800">
+                      <div className="p-4 rounded-xl bg-surface border border-border">
                         <p className="text-xs text-muted mb-1 font-medium">Cotisations estimées</p>
                         <p className="text-xl font-black text-emerald-400">
                           {formatAmount(currentPeriod.estimatedAmount)}
@@ -370,7 +370,7 @@ export function UrssafPage() {
                           </p>
                         )}
                       </div>
-                      <div className="p-4 rounded-xl bg-slate-900 border border-slate-800">
+                      <div className="p-4 rounded-xl bg-surface border border-border">
                         <p className="text-xs text-muted mb-1 font-medium">Date limite de déclaration</p>
                         <p className="text-xl font-bold text-text">
                           {formatDateLong(currentPeriod.dueDate)}
