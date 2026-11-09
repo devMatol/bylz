@@ -119,8 +119,8 @@ export function LandingPage() {
     {
       role: "Designers & Créatifs",
       icon: Palette,
-      highlight: "Acomptes & Devis",
-      details: "Cession de droits d'auteur, acomptes à la commande et modèles de devis soignés.",
+      highlight: "Devis & Factures",
+      details: "Modèles de devis soignés, conversion en facture en un clic et suivi des règlements.",
     },
     {
       role: "Consultants & Coachs",
@@ -131,20 +131,20 @@ export function LandingPage() {
     {
       role: "Artisans & BTP",
       icon: Wrench,
-      highlight: "Mentions Décennales",
-      details: "Attestation d'assurance obligatoire et gestion de l'autoliquidation de sous-traitance.",
+      highlight: "Mentions Légales",
+      details: "Pied de page personnalisable pour vos mentions d'assurance et devis détaillés clairs.",
     },
     {
       role: "Formateurs & Enseignants",
       icon: GraduationCap,
-      highlight: "Exonération TVA",
-      details: "Application de l'article 261 du CGI et numéro de déclaration d'activité DREETS.",
+      highlight: "Franchise en base",
+      details: "Mention légale de TVA automatique, gestion des devis et ventilation des cotisations BNC.",
     },
     {
       role: "Vente & E-commerce",
       icon: ShoppingBag,
-      highlight: "Régime BIC 71%",
-      details: "Livre des recettes doublé du registre des achats avec abattement fiscal adapté.",
+      highlight: "Régime Vente BIC",
+      details: "Livre des recettes chronologique, suivi des dépenses et calcul du taux spécifique de 12,3 %.",
     },
   ];
 

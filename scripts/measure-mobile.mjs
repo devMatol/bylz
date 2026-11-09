@@ -261,7 +261,7 @@ if (arg === "--before") {
   printReport("SORTIE BRUTE AVANT - origin/main", true);
   console.log("------------------------------------------------------------");
   console.log("");
-  printReport("SORTIE BRUTE APRÈS - fix/lot7ter-mobile", false);
+  const now = new Date().toISOString(); const branch = "fix/lot10-ux-conversion"; printReport(`SORTIE BRUTE APRÈS - ${branch} (${now})`, false);
 } else {
-  printReport("SORTIE BRUTE APRÈS - fix/lot7ter-mobile", false);
+  const now = new Date().toISOString(); const branch = "fix/lot10-ux-conversion"; printReport(`SORTIE BRUTE APRÈS - ${branch} (${now})`, false);
 }
