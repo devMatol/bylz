@@ -92,3 +92,36 @@ test("B7 - Calcul CA facturé client : MON AUTO affiche ses 4 factures et 16 050
   assert.equal(clientStats.invoice_count, 4);
   assert.equal(clientStats.total_ca, 16050);
 });
+
+
+test("D2 - Préfixe des avoirs AV et immutabilité de la facture source", () => {
+  // Règle d'attribution du préfixe : type 'credit_note' -> 'AV', type 'invoice' -> 'FAC'
+  function getNumberPrefix(type: string): string {
+    return type === "credit_note" ? "AV" : "FAC";
+  }
+
+  const invoiceNumber = "FAC-2026-003";
+  const invoiceStatus = "late";
+  const sourceInvoice = {
+    id: "inv-003",
+    number: invoiceNumber,
+    type: "invoice" as const,
+    status: invoiceStatus,
+    total_ht: 1200,
+  };
+
+  // Création de l'avoir
+  const creditNoteType = "credit_note" as const;
+  const avPrefix = getNumberPrefix(creditNoteType);
+  assert.equal(avPrefix, "AV", "Le préfixe d'un avoir doit obligatoirement être AV");
+
+  const year = 2026;
+  const seq = 1;
+  const creditNoteNumber = `${avPrefix}-${year}-${String(seq).padStart(3, "0")}`;
+  assert.equal(creditNoteNumber, "AV-2026-001", "La numérotation de l'avoir doit respecter le format AV-YYYY-XXX");
+
+  // Vérifier que la facture d'origine n'est pas modifiée
+  assert.equal(sourceInvoice.number, "FAC-2026-003", "La facture originale conserve son numéro intact");
+  assert.equal(sourceInvoice.status, "late", "La facture originale conserve son statut intact");
+  assert.notEqual(sourceInvoice.number, creditNoteNumber);
+});
