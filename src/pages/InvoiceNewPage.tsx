@@ -27,7 +27,7 @@ import {
 } from "../lib/api";
 import { todayISO, paymentTermsToDate, isValidDate } from "../lib/date";
 import { formatAmount } from "../lib/utils";
-import { trackInvoiceEmitted } from "../lib/analytics";
+import { trackInvoiceEmitted, trackFirstInvoice } from "../lib/analytics";
 import type { Client, CatalogItem, PaymentTerms } from "../types/database";
 
 export function InvoiceNewPage() {
@@ -201,6 +201,10 @@ export function InvoiceNewPage() {
         });
       }
       const emitted = await emitInvoice(company.id, invoiceId);
+      const pastCount = await countEmittedInvoicesThisMonth(company.id);
+      if (pastCount <= 1) {
+        trackFirstInvoice(emitted.id, emitted.total_ttc || 0);
+      }
       trackInvoiceEmitted(emitted.id, emitted.total_ttc || 0);
       toast(`Facture validée : ${emitted.number}`, "success");
       navigate(`/invoices/${emitted.id}`);

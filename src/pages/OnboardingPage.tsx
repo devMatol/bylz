@@ -6,6 +6,7 @@ import { useAuth } from "../contexts/AuthContext";
 import { supabase } from "../lib/supabase";
 import { useToast } from "../components/ui/Toast";
 import { migrateGuestDraft } from "../lib/api";
+import { STRIPE_PRICE_SOLO_ANNUAL, STRIPE_PRICE_SOLO_MONTHLY, STRIPE_PRICE_PRO_ANNUAL, STRIPE_PRICE_PRO_MONTHLY } from "../lib/constants";
 import { trackEvent } from "../lib/analytics";
 
 export function OnboardingPage() {
@@ -100,6 +101,30 @@ export function OnboardingPage() {
       is_guest: searchParams.get("guest") === "true",
     });
     toast("Profil entreprise configuré avec succès !", "success");
+
+    
+    const presPlan = searchParams.get("plan") || localStorage.getItem("bylz-preselected-plan");
+    const presBilling = (searchParams.get("billing") || localStorage.getItem("bylz-preselected-billing") || "annual") as "monthly" | "annual";
+
+    if (presPlan === "solo" || presPlan === "pro") {
+      localStorage.removeItem("bylz-preselected-plan");
+      localStorage.removeItem("bylz-preselected-billing");
+      const priceId = presPlan === "pro"
+        ? (presBilling === "annual" ? STRIPE_PRICE_PRO_ANNUAL : STRIPE_PRICE_PRO_MONTHLY)
+        : (presBilling === "annual" ? STRIPE_PRICE_SOLO_ANNUAL : STRIPE_PRICE_SOLO_MONTHLY);
+
+      try {
+        const { data: checkoutData } = await supabase.functions.invoke("stripe-checkout", {
+          body: { priceId },
+        });
+        if (checkoutData?.url) {
+          window.location.href = checkoutData.url;
+          return;
+        }
+      } catch (checkoutErr) {
+        console.error("Auto checkout error:", checkoutErr);
+      }
+    }
 
     if (targetInvoiceId) {
       navigate(`/invoices/${targetInvoiceId}`, { replace: true });

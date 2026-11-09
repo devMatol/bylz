@@ -34,8 +34,8 @@ export function FeaturesPage() {
     },
     {
       icon: TrendingUp,
-      color: "text-indigo-700",
-      bgColor: "bg-indigo-50 border border-indigo-200",
+      color: "text-blue-700",
+      bgColor: "bg-blue-50 border border-blue-200",
       title: "Pilotage fiscal & Santé financière",
       description:
         "Consultez à tout moment votre chiffre d'affaires cumulé, votre bénéfice net estimé et le montant exact de vos cotisations sociales.",
@@ -86,8 +86,8 @@ export function FeaturesPage() {
     },
     {
       icon: Layers,
-      color: "text-indigo-700",
-      bgColor: "bg-indigo-50 border border-indigo-200",
+      color: "text-blue-700",
+      bgColor: "bg-blue-50 border border-blue-200",
       title: "Support Multi-activités (BNC / BIC)",
       description:
         "Que vous soyez développeur freelance, consultant (BNC), artisan ou commerçant (BIC), Bylz applique les taux d'abattement et de cotisations exacts pour votre catégorie.",

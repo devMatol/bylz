@@ -29,7 +29,7 @@ export function SecurityCompliancePage() {
         {/* Hero Banner */}
         <div className="text-center space-y-4 max-w-3xl mx-auto">
           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 text-xs font-bold uppercase tracking-wider">
-            <ShieldCheck className="w-4 h-4 text-emerald-700" /> Facturation électronique en préparation
+            <ShieldCheck className="w-4 h-4 text-emerald-700" /> Factures Factur-X générées et validées
           </span>
           <h1 className="text-3xl sm:text-5xl font-black tracking-tight text-slate-900">
             Sécurité & Conformité Légale
@@ -72,7 +72,7 @@ export function SecurityCompliancePage() {
             </div>
             <div>
               <span className="text-[10px] font-bold text-blue-800 uppercase tracking-wider">Évolution réglementaire</span>
-              <h3 className="text-lg font-bold text-slate-900 mt-0.5">Facturation électronique en préparation</h3>
+              <h3 className="text-lg font-bold text-slate-900 mt-0.5">Factures Factur-X générées et validées, transmission partenaire en cours d'activation</h3>
               <p className="text-xs text-slate-600 mt-2 leading-relaxed">
                 Bylz intègre aujourd'hui les mentions légales essentielles sur vos factures PDF et prépare activement l'intégration du standard Factur-X.
               </p>
@@ -84,7 +84,7 @@ export function SecurityCompliancePage() {
               </li>
               <li className="flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4 text-blue-700 flex-shrink-0" />
-                <span>Format Factur-X en cours de préparation</span>
+                <span>Factures Factur-X générées et validées, transmission via partenaire en cours d'activation</span>
               </li>
             </ul>
           </div>

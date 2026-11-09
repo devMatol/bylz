@@ -67,6 +67,24 @@ export function ConfidentialitePage() {
             Conformément au RGPD, vous disposez d'un droit d'accès, de rectification, de portabilité et de suppression de vos données personnelles. Vous pouvez exercer ces droits à tout moment en écrivant à <span className="font-mono text-slate-900 font-bold">contact@bylz.fr</span>.
           </p>
         </section>
+
+        <section className="space-y-3">
+          <h2 className="text-lg font-bold text-slate-900">6. Cookies, Consent Mode v2 & Traceurs</h2>
+          <p>
+            Bylz applique les recommandations de la CNIL et le standard <strong>Google Consent Mode v2</strong>. Par défaut, aucun traceur d'audience ou de publicité n'est déposé sur votre terminal lors de votre visite (<span className="font-mono text-slate-800">denied</span> par défaut pour <span className="font-mono text-slate-800">ad_storage</span>, <span className="font-mono text-slate-800">analytics_storage</span>, <span className="font-mono text-slate-800">ad_user_data</span> et <span className="font-mono text-slate-800">ad_personalization</span>).
+          </p>
+          <ul className="list-disc pl-5 space-y-1">
+            <li><strong>Cookies techniques strictement nécessaires :</strong> Gestion de l'authentification sécurisée (Supabase), protection CSRF, maintien de vos préférences d'affichage (thème) et conservation de votre choix de consentement. Ces cookies ne nécessitent pas de consentement préalable.</li>
+            <li><strong>Cookies de mesure d'audience (Google Analytics 4 : <span className="font-mono">_ga</span>, <span className="font-mono">_ga_*</span>) :</strong> Utilisés uniquement si vous y consentez expressément pour mesurer la fréquentation et optimiser les performances de navigation.</li>
+            <li><strong>Cookies publicitaires et de conversion (Google Ads : <span className="font-mono">_gcl_au</span>) :</strong> Utilisés uniquement si vous y consentez expressément pour évaluer l'efficacité de nos campagnes d'acquisition lors d'une inscription ou d'une souscription.</li>
+          </ul>
+          <p>
+            <strong>Durée de conservation du choix :</strong> Votre consentement ou refus est conservé sur votre navigateur pendant une durée maximale de <strong>6 mois</strong> (180 jours). À l'expiration de cette période, ou en cas de suppression manuelle de votre stockage local, le bandeau de consentement vous sera à nouveau présenté.
+          </p>
+          <p>
+            <strong>Modification ou retrait à tout moment :</strong> Vous pouvez à tout moment modifier vos préférences ou révoquer votre accord en cliquant sur le lien <strong>« Gérer les cookies »</strong> situé dans le pied de page du site.
+          </p>
+        </section>
       </main>
       <MarketingFooter theme="light" />
     </div>

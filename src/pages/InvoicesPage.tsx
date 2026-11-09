@@ -271,11 +271,11 @@ export function InvoicesPage() {
       )}
 
       {showHistoryBanner && (
-        <div className="mb-6 rounded-xl border border-indigo-500/20 bg-indigo-500/5 text-indigo-800 dark:text-indigo-200">
+        <div className="mb-6 rounded-xl border border-blue-500/20 bg-blue-500/5 text-blue-800 dark:text-blue-200">
           {/* Mobile compact 1-line bar */}
           <div className="flex sm:hidden items-center justify-between p-3 gap-2">
             <div className="flex items-center gap-2 min-w-0">
-              <Receipt className="w-4 h-4 flex-shrink-0 text-indigo-500" />
+              <Receipt className="w-4 h-4 flex-shrink-0 text-blue-500" />
               <span className="font-semibold text-xs truncate">Rattraper historique {new Date().getFullYear()}</span>
             </div>
             <div className="flex items-center gap-1.5 flex-shrink-0">
@@ -298,9 +298,9 @@ export function InvoicesPage() {
           </div>
 
           {/* Desktop full bar & mobile expanded content */}
-          <div className={cn("p-4 sm:flex items-start sm:items-center justify-between gap-4 border-t sm:border-t-0 border-indigo-500/10", !historyExpanded && "hidden sm:flex")}>
+          <div className={cn("p-4 sm:flex items-start sm:items-center justify-between gap-4 border-t sm:border-t-0 border-blue-500/10", !historyExpanded && "hidden sm:flex")}>
             <div className="flex items-center space-x-3 mb-3 sm:mb-0">
-              <Receipt className="w-5 h-5 flex-shrink-0 text-indigo-500 hidden sm:block" />
+              <Receipt className="w-5 h-5 flex-shrink-0 text-blue-500 hidden sm:block" />
               <div>
                 <p className="font-semibold text-sm">Rattraper votre historique {new Date().getFullYear()}</p>
                 <p className="text-xs opacity-90 text-muted">

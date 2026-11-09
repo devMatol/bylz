@@ -23,6 +23,7 @@ import { Button } from "../components/ui/Button";
 import { Badge } from "../components/ui/Badge";
 import { useAuth } from "../contexts/AuthContext";
 import { useToast } from "../components/ui/Toast";
+import { trackCheckoutSuccess } from "../lib/analytics";
 import { supabase } from "../lib/supabase";
 import { BillingToggle } from "../components/shared/BillingToggle";
 import { cn } from "../lib/utils";
@@ -140,6 +141,13 @@ export function SettingsPage() {
   const [loadingConnect, setLoadingConnect] = useState(false);
   const [loadingStatus, setLoadingStatus] = useState(false);
   const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
+
+  useEffect(() => {
+    if (searchParams.get("checkout") === "success") {
+      trackCheckoutSuccess(profile?.plan || "solo");
+      toast("Abonnement activé avec succès !", "success");
+    }
+  }, [searchParams, profile?.plan, toast]);
 
   const activeTab = searchParams.get("tab") || (searchParams.get("focus") === "company" ? "company" : "company");
 

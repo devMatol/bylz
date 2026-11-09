@@ -119,10 +119,10 @@ export function PricingPage() {
                     <span className="text-4xl font-black text-slate-900 font-mono">0 €</span>
                     <span className="text-xs text-slate-600">/ mois</span>
                   </div>
-                  <p className="text-[11px] text-slate-500 mt-1">{VAT_MENTION_FRANCHISE}</p>
+                  
                 </div>
                 <p className="text-xs text-slate-600 leading-relaxed border-t border-slate-200 pt-4 font-normal">
-                  Idéal pour démarrer votre activité en toute conformité légale.
+                  Idéal pour démarrer votre activité en micro-entreprise.
                 </p>
                 <ul className="space-y-2.5 text-xs text-slate-700 font-medium pt-2">
                   {PLANS_DATA.starter.features.map((feat, i) => (
@@ -136,7 +136,7 @@ export function PricingPage() {
               <div className="pt-8">
                 <Link to="/signup?plan=starter" className="block w-full">
                   <Button variant="outline" className="w-full justify-center min-h-[44px] text-slate-800 border-slate-300 hover:bg-slate-50 font-bold">
-                    Commencer gratuitement
+                    Créer mon compte gratuit
                   </Button>
                 </Link>
               </div>
@@ -184,7 +184,7 @@ export function PricingPage() {
               <div className="pt-8">
                 <Link to={`/signup?plan=solo&billing=${billingCycle}`} className="block w-full">
                   <Button variant="primary" className="w-full justify-center min-h-[44px] bg-blue-600 hover:bg-blue-700 text-white font-bold shadow-md">
-                    Commencer gratuitement
+                    Choisir Solo
                   </Button>
                 </Link>
               </div>
@@ -220,7 +220,7 @@ export function PricingPage() {
                 <ul className="space-y-2.5 text-xs text-slate-700 font-medium pt-2">
                   {PLANS_DATA.pro.features.map((feat, i) => (
                     <li key={i} className="flex items-center gap-2">
-                      <Check className="w-4 h-4 text-indigo-700 shrink-0" />
+                      <Check className="w-4 h-4 text-blue-700 shrink-0" />
                       <span>{feat}</span>
                     </li>
                   ))}
@@ -229,7 +229,7 @@ export function PricingPage() {
               <div className="pt-8">
                 <Link to={`/signup?plan=pro&billing=${billingCycle}`} className="block w-full">
                   <Button variant="primary" className="w-full justify-center min-h-[44px] bg-blue-600 hover:bg-blue-700 text-white font-bold">
-                    Commencer gratuitement
+                    Choisir Pro
                   </Button>
                 </Link>
               </div>
@@ -251,7 +251,7 @@ export function PricingPage() {
                       <th className="p-4">Fonctionnalité</th>
                       <th className="p-4 text-center w-28 text-slate-900">Starter</th>
                       <th className="p-4 text-center w-28 text-blue-700 font-extrabold">Solo</th>
-                      <th className="p-4 text-center w-28 text-indigo-800 font-extrabold">Pro</th>
+                      <th className="p-4 text-center w-28 text-blue-800 font-extrabold">Pro</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
@@ -281,9 +281,9 @@ export function PricingPage() {
                             </td>
                             <td className="p-4 text-center">
                               {typeof feat.pro === "boolean" ? (
-                                feat.pro ? <Check className="w-4 h-4 text-indigo-700 mx-auto" /> : <X className="w-4 h-4 text-slate-300 mx-auto" />
+                                feat.pro ? <Check className="w-4 h-4 text-blue-700 mx-auto" /> : <X className="w-4 h-4 text-slate-300 mx-auto" />
                               ) : (
-                                <span className="font-bold text-indigo-800">{feat.pro}</span>
+                                <span className="font-bold text-blue-800">{feat.pro}</span>
                               )}
                             </td>
                           </tr>
@@ -359,7 +359,7 @@ export function PricingPage() {
               </p>
               <div className="pt-2">
                 <Link to="/essai" className="inline-flex items-center justify-center min-h-[44px] py-3.5 px-8 text-sm font-bold bg-blue-600 hover:bg-blue-700 text-white rounded-xl shadow-lg transition-colors">
-                  Créer mon compte gratuitement
+                  Créer mon compte gratuit
                 </Link>
               </div>
               <p className="text-xs text-slate-400 font-medium">

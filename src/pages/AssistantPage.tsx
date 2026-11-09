@@ -207,7 +207,7 @@ export function AssistantPage() {
                   className={`max-w-[80%] rounded-2xl px-4 py-3 text-xs sm:text-sm leading-relaxed ${
                     m.sender === "user"
                       ? "bg-emerald-600 text-white rounded-tr-none font-medium shadow-sm"
-                      : "bg-slate-900/90 border border-slate-800 text-slate-100 rounded-tl-none whitespace-pre-line shadow-sm"
+                      : "bg-surface border border-border text-text rounded-tl-none whitespace-pre-line shadow-sm"
                   }`}
                 >
                   {m.text}
@@ -222,7 +222,7 @@ export function AssistantPage() {
               </div>
             ))}
             {loading && (
-              <div className="flex items-center gap-2 text-xs text-slate-300 font-medium bg-slate-900 border border-slate-800 w-max px-3 py-2 rounded-xl">
+              <div className="flex items-center gap-2 text-xs text-slate-300 font-medium bg-surface border border-border w-max px-3 py-2 rounded-xl">
                 <Sparkles className="w-4 h-4 text-emerald-400 animate-spin" />
                 L'IA analyse vos instructions...
               </div>
@@ -251,7 +251,7 @@ export function AssistantPage() {
               disabled={!isPro || loading}
               onChange={(e) => setInput(e.target.value)}
               placeholder={!isPro ? "Fonctionnalité réservée aux membres du Plan PRO ⚡" : "Posez une question ou dictez : 'Créer une facture de 400€ pour Client X'..."}
-              className="flex-1 bg-slate-900/90 text-slate-100 placeholder:text-slate-400 border border-slate-700/80 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/30 rounded-xl px-4 py-2.5 text-xs sm:text-sm outline-none transition-all shadow-inner font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 bg-surface text-text placeholder:text-muted border border-border focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/30 rounded-xl px-4 py-2.5 text-xs sm:text-sm outline-none transition-all shadow-inner font-medium disabled:opacity-50 disabled:cursor-not-allowed"
             />
             <button
               type="submit"

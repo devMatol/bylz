@@ -51,7 +51,7 @@ export const PLANS_DATA: Record<"starter" | "solo" | "pro", PlanData> = {
   starter: {
     id: "starter",
     name: "Starter",
-    description: "Pour lancer votre activité en toute conformité",
+    description: "Pour lancer votre activité en micro-entreprise",
     pricing: {
       annualTotal: 0,
       monthlyPrice: 0,
@@ -164,11 +164,11 @@ export const FEATURE_MATRIX: FeatureMatrixCategory[] = [
         pro: true,
       },
       {
-        name: "Facturation électronique (en préparation)",
+        name: "Facturation électronique Factur-X",
         starter: true,
         solo: true,
         pro: true,
-        hint: "Format Factur-X (en préparation)",
+        hint: "Factures Factur-X générées et validées, transmission via partenaire en cours d'activation",
       },
     ],
   },

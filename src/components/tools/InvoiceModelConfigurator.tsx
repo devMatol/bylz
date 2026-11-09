@@ -62,7 +62,7 @@ const PRESETS: Record<PresetKey, {
       { id: "2", description: "Accompagnement et mise en place technique", quantity: 1, unitPrice: 450 },
     ],
     vatRegime: "franchise",
-    accentColor: "#4856DF",
+    accentColor: "#2563EB",
     footerNotes: "Auto-entrepreneur dispensé d'immatriculation au RCS.\nTVA non applicable, art. 293 B du CGI.\nRèglement à réception par virement bancaire.\nPénalités de retard : 3 fois le taux d'intérêt légal. Indemnité forfaitaire de recouvrement : 40 €.",
   },
   artisan_btp: {
@@ -115,7 +115,7 @@ const PRESETS: Record<PresetKey, {
   },
 };
 
-const SWATCHES = ["#4856DF", "#1D4ED8", "#047857", "#B45309", "#BE123C", "#334155"];
+const SWATCHES = ["#2563EB", "#1D4ED8", "#047857", "#B45309", "#BE123C", "#334155"];
 
 interface InvoiceModelConfiguratorProps {
   initialPreset?: PresetKey;

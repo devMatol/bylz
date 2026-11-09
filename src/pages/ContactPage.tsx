@@ -86,7 +86,7 @@ export function ContactPage() {
                   </div>
 
                   <div className="flex items-start space-x-3">
-                    <div className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-700 border border-indigo-200 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-700 border border-blue-200 flex items-center justify-center flex-shrink-0 mt-0.5">
                       <MessageSquare className="w-4 h-4" />
                     </div>
                     <div>

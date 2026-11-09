@@ -40,7 +40,7 @@ export function MarketingFooter({ theme }: MarketingFooterProps = {}) {
               }`}
             >
               <ShieldCheck className={`w-4 h-4 ${isLight ? "text-emerald-700" : "text-emerald-400"}`} />
-              <span>Facturation électronique en préparation</span>
+              <span>Factures Factur-X générées et validées, transmission via partenaire en cours d'activation</span>
             </div>
           </div>
 
@@ -235,6 +235,19 @@ export function MarketingFooter({ theme }: MarketingFooterProps = {}) {
                 >
                   Politique de Confidentialité
                 </Link>
+              </li>
+              <li>
+                <button
+                  type="button"
+                  onClick={() => window.dispatchEvent(new CustomEvent("bylz-open-cookie-banner"))}
+                  className={`inline-flex items-center min-h-[44px] sm:min-h-0 py-2 sm:py-0.5 rounded transition-colors text-left focus-visible:outline-2 focus-visible:outline-offset-2 ${
+                    isLight
+                      ? "text-slate-700 hover:text-blue-700 focus-visible:outline-blue-600"
+                      : "text-slate-300 hover:text-white focus-visible:outline-primary"
+                  }`}
+                >
+                  Gérer les cookies
+                </button>
               </li>
               <li>
                 <a

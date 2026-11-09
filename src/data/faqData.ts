@@ -6,7 +6,7 @@ export interface FaqItem {
 export const FAQS_LIST: FaqItem[] = [
   {
     q: "Comment Bylz prépare la facturation électronique ?",
-    a: "Bylz intègre aujourd'hui les mentions légales essentielles sur vos factures PDF. Le format électronique structuré Factur-X est actuellement en cours de préparation.",
+    a: "Factures Factur-X générées et validées, transmission via partenaire en cours d'activation.",
   },
   {
     q: "Puis-je utiliser Bylz gratuitement ?",

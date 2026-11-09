@@ -24,6 +24,7 @@ import { useAuth } from "../contexts/AuthContext";
 import { useToast } from "../components/ui/Toast";
 import {
   fetchDashboardData,
+  fetchClients,
   MICRO_THRESHOLDS,
   VAT_THRESHOLDS,
   type DashboardData,
@@ -32,6 +33,7 @@ import {
 import { formatAmount, cn } from "../lib/utils";
 import { formatDateLong, todayISO, safeFormatDate } from "../lib/date";
 import { canUseFeature } from "../lib/planLimits";
+import { OnboardingChecklist } from "../components/dashboard/OnboardingChecklist";
 import { UpgradeModal } from "../components/shared/UpgradeModal";
 import { ReminderModal } from "../components/documents/ReminderModal";
 import { Button } from "../components/ui/Button";
@@ -68,6 +70,7 @@ export function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
+  const [clientsCount, setClientsCount] = useState(0);
   const [reminderInvoice, setReminderInvoice] = useState<(Invoice & { client_name: string; client_email?: string | null }) | null>(null);
 
   const isBlurred = !canUseFeature(profile?.plan, "fiscalDashboard");
@@ -82,14 +85,6 @@ export function DashboardPage() {
     setDismissedHistory(true);
   };
 
-  useEffect(() => {
-    // Only redirect to /invoices on the very first connection of the session
-    const hasLandedFirstTime = sessionStorage.getItem("bylz-first-landing-done");
-    if (!hasLandedFirstTime) {
-      sessionStorage.setItem("bylz-first-landing-done", "true");
-      navigate("/invoices", { replace: true });
-    }
-  }, [navigate]);
 
   const load = useCallback(async () => {
     if (!company) return;
@@ -191,6 +186,13 @@ export function DashboardPage() {
           </button>
         </div>
       </div>
+      {/* Checklist d'onboarding jusqu'à la 1ère facture */}
+      <OnboardingChecklist
+        company={company}
+        clientsCount={clientsCount}
+        invoicesCount={data?.recentInvoices?.length || 0}
+      />
+
       {isProfileIncomplete && (
         <div className="mb-4 p-3 sm:p-4 rounded-xl border border-amber-500/20 bg-amber-500/5 text-amber-800 dark:text-amber-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
           <div className="flex items-center space-x-3">
@@ -213,18 +215,18 @@ export function DashboardPage() {
       )}
 
       {!dismissedHistory && company && company.previous_ca === 0 && (
-        <div className="mb-4 rounded-xl border border-indigo-500/20 bg-indigo-500/5 text-indigo-800 dark:text-indigo-200 overflow-hidden">
+        <div className="mb-4 rounded-xl border border-blue-500/20 bg-blue-500/5 text-blue-800 dark:text-blue-200 overflow-hidden">
           {/* Mobile: Replié sur 1 seule ligne par défaut */}
           <div className="flex sm:hidden items-center justify-between px-3 py-2 text-xs min-h-[40px]">
             <div className="flex items-center gap-2 min-w-0">
-              <Receipt className="w-4 h-4 text-indigo-500 flex-shrink-0" />
+              <Receipt className="w-4 h-4 text-blue-500 flex-shrink-0" />
               <span className="font-semibold truncate">Rattraper votre historique {new Date().getFullYear()}</span>
             </div>
             <div className="flex items-center gap-1 flex-shrink-0">
               <button
                 type="button"
                 onClick={() => setMobileHistoryExpanded(!mobileHistoryExpanded)}
-                className="px-2.5 py-1 text-xs font-bold text-indigo-600 dark:text-indigo-300 min-h-[40px] flex items-center"
+                className="px-2.5 py-1 text-xs font-bold text-blue-600 dark:text-blue-300 min-h-[40px] flex items-center"
               >
                 {mobileHistoryExpanded ? "Réduire" : "Déplier"}
               </button>
@@ -242,7 +244,7 @@ export function DashboardPage() {
           {/* Contenu complet : visible sur sm+ ou si déplié sur mobile */}
           <div className={cn("p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4", !mobileHistoryExpanded && "hidden sm:flex")}>
             <div className="flex items-center space-x-3">
-              <Receipt className="w-5 h-5 flex-shrink-0 text-indigo-500 hidden sm:block" />
+              <Receipt className="w-5 h-5 flex-shrink-0 text-blue-500 hidden sm:block" />
               <div>
                 <p className="font-semibold text-sm hidden sm:block">Rattraper votre historique {new Date().getFullYear()}</p>
                 <p className="text-xs opacity-90 text-muted">

@@ -40,6 +40,7 @@ import { BankPage } from "./pages/BankPage";
 import { RemindersPage } from "./pages/RemindersPage";
 import { PublicDocumentPage } from "./pages/PublicDocumentPage";
 import { PwaInstallBanner } from "./components/pwa/PwaInstallBanner";
+import { CookieConsentBanner } from "./components/shared/CookieConsentBanner";
 
 // Code-split marketing & tools bundle from main app
 const LandingPage = lazy(() =>
@@ -372,6 +373,7 @@ function App() {
                 />
               </Routes>
               <PwaInstallBanner />
+              <CookieConsentBanner />
             </NotificationsProvider>
           </BrowserRouter>
         </AuthProvider>

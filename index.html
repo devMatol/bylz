@@ -1,13 +1,48 @@
 <!doctype html>
 <html lang="fr">
   <head>
-    <!-- Google tag (gtag.js) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-VQPRVC8HMJ"></script>
+    <!-- Google Consent Mode v2 Default (Strictement denied par défaut avant tout chargement de traceurs) -->
     <script>
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
 
+      // Lecture du consentement sauvegardé (valide 6 mois = 180 jours)
+      var savedConsent = null;
+      try {
+        var rawConsent = localStorage.getItem('bylz-consent-preferences');
+        if (rawConsent) {
+          var parsed = JSON.parse(rawConsent);
+          var ageDays = (Date.now() - (parsed.timestamp || 0)) / (1000 * 60 * 60 * 24);
+          if (ageDays < 180) {
+            savedConsent = parsed;
+          } else {
+            localStorage.removeItem('bylz-consent-preferences');
+          }
+        }
+      } catch (e) {}
+
+      if (savedConsent) {
+        gtag('consent', 'default', {
+          'analytics_storage': savedConsent.analytics ? 'granted' : 'denied',
+          'ad_storage': savedConsent.marketing ? 'granted' : 'denied',
+          'ad_user_data': savedConsent.marketing ? 'granted' : 'denied',
+          'ad_personalization': savedConsent.marketing ? 'granted' : 'denied',
+          'wait_for_update': 500
+        });
+      } else {
+        gtag('consent', 'default', {
+          'analytics_storage': 'denied',
+          'ad_storage': 'denied',
+          'ad_user_data': 'denied',
+          'ad_personalization': 'denied',
+          'wait_for_update': 500
+        });
+      }
+    </script>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-VQPRVC8HMJ"></script>
+    <script>
+      gtag('js', new Date());
       gtag('config', 'G-VQPRVC8HMJ');
       gtag('config', 'AW-18465275177');
     </script>

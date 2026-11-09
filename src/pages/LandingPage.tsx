@@ -11,7 +11,7 @@ import {
   Building2,
   FileCheck,
   Receipt,
-  Layers,
+  Layers, BellRing,
   Check,
   ArrowRight,
   Zap,
@@ -62,7 +62,7 @@ export function LandingPage() {
     {
       num: "2",
       title: "Facturez simplement",
-      desc: "Factures PDF avec mentions légales obligatoires. Format structuré en cours de préparation pour la réforme 2026.",
+      desc: "Factures Factur-X générées et validées, transmission via partenaire en cours d'activation.",
     },
     {
       num: "3",
@@ -119,8 +119,8 @@ export function LandingPage() {
     {
       role: "Designers & Créatifs",
       icon: Palette,
-      highlight: "Acomptes & Devis",
-      details: "Cession de droits d'auteur, acomptes à la commande et modèles de devis soignés.",
+      highlight: "Devis & Factures",
+      details: "Modèles de devis soignés, conversion en facture en un clic et suivi des règlements.",
     },
     {
       role: "Consultants & Coachs",
@@ -131,27 +131,27 @@ export function LandingPage() {
     {
       role: "Artisans & BTP",
       icon: Wrench,
-      highlight: "Mentions Décennales",
-      details: "Attestation d'assurance obligatoire et gestion de l'autoliquidation de sous-traitance.",
+      highlight: "Mentions Légales",
+      details: "Pied de page personnalisable pour vos mentions d'assurance et devis détaillés clairs.",
     },
     {
       role: "Formateurs & Enseignants",
       icon: GraduationCap,
-      highlight: "Exonération TVA",
-      details: "Application de l'article 261 du CGI et numéro de déclaration d'activité DREETS.",
+      highlight: "Franchise en base",
+      details: "Mention légale de TVA automatique, gestion des devis et ventilation des cotisations BNC.",
     },
     {
       role: "Vente & E-commerce",
       icon: ShoppingBag,
-      highlight: "Régime BIC 71%",
-      details: "Livre des recettes doublé du registre des achats avec abattement fiscal adapté.",
+      highlight: "Régime Vente BIC",
+      details: "Suivi des encaissements chronologique, registre des dépenses et calcul du taux spécifique de 12,3 %.",
     },
   ];
 
   const faqs = [
     {
       q: "Comment Bylz prépare la facturation électronique ?",
-      a: "Bylz intègre aujourd'hui les mentions légales essentielles sur vos factures PDF. Le format électronique structuré Factur-X est actuellement en cours de préparation.",
+      a: "Factures Factur-X générées et validées, transmission via partenaire en cours d'activation.",
     },
     {
       q: "Puis-je utiliser Bylz gratuitement ?",
@@ -309,7 +309,7 @@ export function LandingPage() {
                     <span className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-800 flex items-center justify-center flex-shrink-0">
                       <Sparkles className="w-3.5 h-3.5 stroke-[2.5]" />
                     </span>
-                    <span><strong>Assistant IA intégré utilisable depuis WhatsApp</strong> pour créer vos devis, facturer et calculer votre URSSAF</span>
+                    <span><strong>Assistant IA utilisable depuis WhatsApp</strong> <span className="inline-block px-1.5 py-0.5 rounded text-[11px] font-bold bg-amber-100 text-amber-800 border border-amber-300 ml-1">Option Pro</span> pour dicter vos devis et facturer</span>
                   </li>
                 </ul>
 
@@ -325,7 +325,7 @@ export function LandingPage() {
                     <>
                       <Link to="/essai" className="w-full sm:w-auto">
                         <button className={`${btnPrimary} py-3.5 px-8 text-base w-full sm:w-auto`}>
-                          Commencer gratuitement
+                          Créer mon compte gratuit
                         </button>
                       </Link>
                       <Link to="/tarifs" className="w-full sm:w-auto">
@@ -427,7 +427,7 @@ export function LandingPage() {
                             PDF/A
                           </div>
                           <div>
-                            <p className="text-xs font-bold text-slate-900">FAC-2026-0012</p>
+                            <p className="text-xs font-bold text-slate-900">FAC-2026-012</p>
                             <p className="text-[11px] text-slate-600 font-medium">Facture PDF</p>
                           </div>
                         </div>
@@ -501,7 +501,7 @@ export function LandingPage() {
 
             <div className="text-center pt-2">
               <Link to="/essai" className={`${btnPrimary} py-3 px-6 text-sm`}>
-                Créer ma première facture en 2 minutes
+                Créer mon compte gratuit
               </Link>
             </div>
           </div>
@@ -520,10 +520,10 @@ export function LandingPage() {
                   <span>Obligation Légale 2026</span>
                 </div>
                 <h2 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight leading-tight">
-                  Bylz est déjà prêt pour la facturation électronique obligatoire
+                  Factures Factur-X générées et validées, transmission via partenaire en cours d'activation
                 </h2>
                 <p className="text-slate-200 text-sm sm:text-base leading-relaxed">
-                  Bylz intègre les mentions légales obligatoires sur vos factures PDF et prépare l'intégration de la facturation électronique structurée pour les échanges inter-entreprises.
+                  Bylz génère des factures conformes Factur-X validées selon les schémas officiels. La transmission via notre plateforme partenaire est en cours d'activation pour la réforme. Bylz n'est pas une plateforme agréée.
                 </p>
                 <div className="pt-2">
                   <Link
@@ -543,9 +543,9 @@ export function LandingPage() {
                     <Check className="w-4 h-4 stroke-[2.5]" />
                   </div>
                   <div>
-                    <h3 className="font-bold text-sm text-white">Facturation électronique en préparation</h3>
+                    <h3 className="font-bold text-sm text-white">Facturation électronique Factur-X</h3>
                     <p className="text-xs text-slate-200 mt-0.5">
-                      Factures PDF avec mentions légales obligatoires ; format structuré hybride en cours de préparation pour la réforme.
+                      Factures Factur-X générées et validées, transmission via partenaire en cours d'activation.
                     </p>
                   </div>
                 </div>
@@ -555,9 +555,9 @@ export function LandingPage() {
                     <Check className="w-4 h-4 stroke-[2.5]" />
                   </div>
                   <div>
-                    <h3 className="font-bold text-sm text-white">Livre des recettes & Exports comptables</h3>
+                    <h3 className="font-bold text-sm text-white">Conformité fiscale & Mentions obligatoires</h3>
                     <p className="text-xs text-slate-200 mt-0.5">
-                      Exportez vos données de facturation et votre livre des recettes au format CSV en un clic.
+                      Mentions légales indispensables générées automatiquement selon votre statut juridique.
                     </p>
                   </div>
                 </div>
@@ -595,7 +595,7 @@ export function LandingPage() {
                 <div className="pt-2 hidden lg:block">
                   <Link to="/essai">
                     <button className={`${btnPrimary} py-2.5 px-5 text-sm`}>
-                      Démarrer gratuitement
+                      Créer mon compte gratuit
                     </button>
                   </Link>
                 </div>
@@ -763,7 +763,7 @@ export function LandingPage() {
                       </div>
                       <span>
                         <strong className="text-slate-900 font-semibold">Facturation instantanée :</strong>{" "}
-                        génération de factures PDF avec mentions légales obligatoires ; format structuré en préparation pour 2026.
+                        Factures Factur-X générées et validées, transmission via partenaire en cours d'activation.
                       </span>
                     </li>
                     <li className="flex items-start gap-3">
@@ -806,7 +806,7 @@ export function LandingPage() {
 
                 <div className="pt-6 mt-6 border-t border-blue-200">
                   <Link to="/essai" className={`${btnPrimary} w-full py-3.5 text-sm`}>
-                    Créer mon compte gratuitement
+                    Créer mon compte gratuit
                   </Link>
                   <p className="text-[11px] text-center text-slate-600 font-medium mt-2">
                     Gratuit jusqu'à 3 factures/mois : Sans carte bancaire : Sans engagement
@@ -903,16 +903,14 @@ export function LandingPage() {
                 <div className="space-y-4">
                   <div>
                     <h3 className="text-xl font-bold text-slate-900">Starter</h3>
-                    <p className="text-xs text-slate-600 font-medium mt-0.5">
-                      Pour lancer votre activité en toute conformité
-                    </p>
+                    
                   </div>
 
                   <div className="flex items-baseline gap-1">
                     <span className="text-4xl font-extrabold text-slate-900 font-mono">0 €</span>
                     <span className="text-xs text-slate-600 font-medium">/mois</span>
                   </div>
-                  <p className="text-[11px] text-slate-500">TVA non applicable, art. 293 B du CGI</p>
+                  
 
                   <hr className="border-slate-100" />
 
@@ -942,7 +940,7 @@ export function LandingPage() {
 
                 <Link to="/signup?plan=starter" className="block w-full pt-2">
                   <button className={`${btnPrimary} w-full py-3`}>
-                    Commencer gratuitement
+                    Créer mon compte gratuit
                   </button>
                 </Link>
               </div>
@@ -1015,7 +1013,7 @@ export function LandingPage() {
 
                 <Link to={`/signup?plan=solo&billing=${billingCycle}`} className="block w-full pt-2">
                   <button className={`${btnPrimary} w-full py-3.5 text-base`}>
-                    Commencer gratuitement
+                    Choisir Solo
                   </button>
                 </Link>
               </div>
@@ -1027,7 +1025,7 @@ export function LandingPage() {
                     <div className="flex items-center justify-between">
                       <h3 className="text-xl font-bold text-slate-900">Pro</h3>
                       {billingCycle === "annual" && (
-                        <span className="bg-indigo-50 text-indigo-700 font-bold text-[11px] px-2 py-0.5 rounded-full border border-indigo-200">
+                        <span className="bg-blue-50 text-blue-700 font-bold text-[11px] px-2 py-0.5 rounded-full border border-blue-200">
                           -48%
                         </span>
                       )}
@@ -1083,7 +1081,7 @@ export function LandingPage() {
 
                 <Link to={`/signup?plan=pro&billing=${billingCycle}`} className="block w-full pt-2">
                   <button className={`${btnPrimary} w-full py-3`}>
-                    Commencer gratuitement
+                    Choisir Pro
                   </button>
                 </Link>
               </div>
@@ -1159,7 +1157,7 @@ export function LandingPage() {
             </p>
             <div className="pt-2">
               <Link to="/essai" className={`${btnPrimary} py-3.5 px-8 text-sm`}>
-                Créer mon compte gratuitement
+                Créer mon compte gratuit
               </Link>
             </div>
             <p className="text-xs text-slate-400 font-medium">
