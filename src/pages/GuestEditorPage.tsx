@@ -396,7 +396,7 @@ export function GuestEditorPageContent() {
                               <div
                                 className={`w-full rounded-t-lg transition-all duration-500 ${
                                   item.current
-                                    ? "bg-gradient-to-t from-blue-600 to-indigo-500"
+                                    ? "bg-blue-600"
                                     : "bg-primary/40 hover:bg-primary/60"
                                 }`}
                                 style={{ height: `${heightPct}%` }}
@@ -445,7 +445,7 @@ export function GuestEditorPageContent() {
                         <span className="text-muted font-mono">{VAT_THRESHOLDS_2026.services.base.toLocaleString("fr-FR", { minimumFractionDigits: 2 })} €</span>
                       </div>
                       <div className="h-2.5 w-full bg-slate-800 rounded-full overflow-hidden">
-                        <div className="h-full bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full" style={{ width: "10.8%" }} />
+                        <div className="h-full bg-blue-600 rounded-full" style={{ width: "10.8%" }} />
                       </div>
                       <div className="flex justify-between text-[11px] text-muted pt-1">
                         <span>CA Actuel: <strong>4 250,00 €</strong></span>

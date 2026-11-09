@@ -220,7 +220,7 @@ export function PricingPage() {
                 <ul className="space-y-2.5 text-xs text-slate-700 font-medium pt-2">
                   {PLANS_DATA.pro.features.map((feat, i) => (
                     <li key={i} className="flex items-center gap-2">
-                      <Check className="w-4 h-4 text-indigo-700 shrink-0" />
+                      <Check className="w-4 h-4 text-blue-700 shrink-0" />
                       <span>{feat}</span>
                     </li>
                   ))}
@@ -251,7 +251,7 @@ export function PricingPage() {
                       <th className="p-4">Fonctionnalité</th>
                       <th className="p-4 text-center w-28 text-slate-900">Starter</th>
                       <th className="p-4 text-center w-28 text-blue-700 font-extrabold">Solo</th>
-                      <th className="p-4 text-center w-28 text-indigo-800 font-extrabold">Pro</th>
+                      <th className="p-4 text-center w-28 text-blue-800 font-extrabold">Pro</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
@@ -281,9 +281,9 @@ export function PricingPage() {
                             </td>
                             <td className="p-4 text-center">
                               {typeof feat.pro === "boolean" ? (
-                                feat.pro ? <Check className="w-4 h-4 text-indigo-700 mx-auto" /> : <X className="w-4 h-4 text-slate-300 mx-auto" />
+                                feat.pro ? <Check className="w-4 h-4 text-blue-700 mx-auto" /> : <X className="w-4 h-4 text-slate-300 mx-auto" />
                               ) : (
-                                <span className="font-bold text-indigo-800">{feat.pro}</span>
+                                <span className="font-bold text-blue-800">{feat.pro}</span>
                               )}
                             </td>
                           </tr>

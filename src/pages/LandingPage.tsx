@@ -1025,7 +1025,7 @@ export function LandingPage() {
                     <div className="flex items-center justify-between">
                       <h3 className="text-xl font-bold text-slate-900">Pro</h3>
                       {billingCycle === "annual" && (
-                        <span className="bg-indigo-50 text-indigo-700 font-bold text-[11px] px-2 py-0.5 rounded-full border border-indigo-200">
+                        <span className="bg-blue-50 text-blue-700 font-bold text-[11px] px-2 py-0.5 rounded-full border border-blue-200">
                           -48%
                         </span>
                       )}

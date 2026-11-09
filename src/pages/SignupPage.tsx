@@ -332,19 +332,19 @@ export function SignupPage() {
       <SEO title={isPaidPlan ? `Inscription ${planName} | Bylz` : "Créer un compte | Bylz"} noindex />
 
       {isPaidPlan && (
-        <div className="mb-5 p-3.5 rounded-xl bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 flex items-center justify-between text-xs">
-          <div className="space-y-0.5">
-            <div className="flex items-center gap-1.5 font-bold text-blue-900 dark:text-blue-200">
-              <CheckCircle2 className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0" />
-              <span>{planName} ({planPrice})</span>
+        <div className="mb-5 p-4 rounded-xl bg-blue-50 border-2 border-blue-600 flex items-center justify-between text-xs shadow-sm">
+          <div className="space-y-1">
+            <div className="flex items-center gap-1.5 font-black text-sm text-slate-900">
+              <CheckCircle2 className="w-4 h-4 text-blue-600 shrink-0" />
+              <span>{planName} — {planPrice}</span>
             </div>
-            <p className="text-[11px] text-blue-700 dark:text-blue-300">
+            <p className="text-xs font-semibold text-slate-700">
               Paiement sécurisé après création du compte
             </p>
           </div>
           <Link
             to="/tarifs"
-            className="text-primary hover:underline font-bold text-xs whitespace-nowrap pl-2"
+            className="text-blue-700 hover:text-blue-900 font-black text-xs underline whitespace-nowrap pl-3"
           >
             Changer de plan
           </Link>
