@@ -21,7 +21,7 @@ export function BillingToggle({ billingCycle, onChange, className = "" }: Billin
         >
           <span>Annuel</span>
           <span className="bg-emerald-800 text-white text-xs px-2 py-0.5 rounded-pill font-black uppercase tracking-wider">
-            -53%
+            Jusqu'à -53%
           </span>
         </button>
 

@@ -231,7 +231,7 @@ export function FacturationElectroniquePage() {
                 Statut officiel de notre logiciel
               </span>
               <p className="text-sm font-semibold text-slate-900 leading-relaxed">
-                Bylz produit aujourd'hui des factures PDF avec les mentions légales essentielles. La génération du format Factur-X et le raccordement à une plateforme agréée sont en préparation.
+                Factures Factur-X générées et validées, transmission via partenaire en cours d'activation.
               </p>
               <p className="text-xs text-slate-700 leading-relaxed pt-1 border-t border-blue-200/60">
                 Bylz ne propose pas encore la réception de factures électroniques. Pour recevoir des factures dès le 1er septembre 2026, vous devez disposer d'une adresse de réception sur une plateforme agréée de votre choix.

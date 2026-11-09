@@ -136,7 +136,7 @@ export function PricingPage() {
               <div className="pt-8">
                 <Link to="/signup?plan=starter" className="block w-full">
                   <Button variant="outline" className="w-full justify-center min-h-[44px] text-slate-800 border-slate-300 hover:bg-slate-50 font-bold">
-                    Commencer gratuitement
+                    Créer mon compte gratuit
                   </Button>
                 </Link>
               </div>
@@ -184,7 +184,7 @@ export function PricingPage() {
               <div className="pt-8">
                 <Link to={`/signup?plan=solo&billing=${billingCycle}`} className="block w-full">
                   <Button variant="primary" className="w-full justify-center min-h-[44px] bg-blue-600 hover:bg-blue-700 text-white font-bold shadow-md">
-                    Commencer gratuitement
+                    Choisir Solo
                   </Button>
                 </Link>
               </div>
@@ -229,7 +229,7 @@ export function PricingPage() {
               <div className="pt-8">
                 <Link to={`/signup?plan=pro&billing=${billingCycle}`} className="block w-full">
                   <Button variant="primary" className="w-full justify-center min-h-[44px] bg-blue-600 hover:bg-blue-700 text-white font-bold">
-                    Commencer gratuitement
+                    Choisir Pro
                   </Button>
                 </Link>
               </div>

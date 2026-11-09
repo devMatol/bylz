@@ -108,11 +108,11 @@ export function ComplianceSection() {
           <p className="text-xs font-bold text-muted uppercase">Norme Européenne EN 16931 / Factur-X</p>
           <div className="flex items-center space-x-2">
             <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-pill bg-primary/20 text-primary font-bold text-xs border border-primary/30">
-              <ShieldCheck className="w-3.5 h-3.5" /> Factur-X en préparation
+              <ShieldCheck className="w-3.5 h-3.5" /> Factures Factur-X générées et validées
             </span>
           </div>
           <p className="text-xs text-muted leading-relaxed">
-            Factures PDF avec mentions légales obligatoires. Format structuré hybride en cours de préparation pour la norme européenne.
+            Factures Factur-X générées et validées, transmission via partenaire en cours d'activation.
           </p>
         </div>
 

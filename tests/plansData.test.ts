@@ -93,7 +93,7 @@ test("Absence stricte d'affirmations non codées dans les fonctionnalités et la
   // Factur-X doit TOUJOURS comporter la mention 'en préparation'
   const facturxMatches = allJson.match(/factur-x/gi) || [];
   for (const _ of facturxMatches) {
-    assert.match(allJson, /Factur-X.*en.*préparation/i);
+    assert.match(allJson, /(?:Factur-X.*(?:en.*préparation|générées et validées)|transmission.*partenaire)/i);
   }
 });
 

@@ -1,5 +1,6 @@
 /**
  * Analytics Event Helper (GA4 / Google Ads / Gtag integration)
+ * Strictement conditionné au recueil du consentement utilisateur (Consent Mode v2)
  */
 
 declare global {
@@ -9,10 +10,61 @@ declare global {
   }
 }
 
+const STORAGE_KEY = "bylz-consent-preferences";
+const CONSENT_VALIDITY_DAYS = 180; // 6 mois
+
+/**
+ * Vérifie si l'utilisateur a explicitement consenti aux cookies d'analyse (GA4)
+ */
+export function hasAnalyticsConsent(): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return false;
+    const parsed = JSON.parse(raw);
+    const ageDays = (Date.now() - (parsed.timestamp || 0)) / (1000 * 60 * 60 * 24);
+    if (ageDays >= CONSENT_VALIDITY_DAYS) {
+      localStorage.removeItem(STORAGE_KEY);
+      return false;
+    }
+    return Boolean(parsed.analytics);
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Vérifie si l'utilisateur a explicitement consenti aux cookies publicitaires (Google Ads)
+ */
+export function hasMarketingConsent(): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return false;
+    const parsed = JSON.parse(raw);
+    const ageDays = (Date.now() - (parsed.timestamp || 0)) / (1000 * 60 * 60 * 24);
+    if (ageDays >= CONSENT_VALIDITY_DAYS) {
+      localStorage.removeItem(STORAGE_KEY);
+      return false;
+    }
+    return Boolean(parsed.marketing);
+  } catch {
+    return false;
+  }
+}
+
 export function trackEvent(
   eventName: string,
   props?: Record<string, any>
 ): void {
+  // Garde-fou strict : aucun événement sans consentement préalable d'analyse
+  if (!hasAnalyticsConsent()) {
+    if (import.meta.env.DEV) {
+      console.log(`[Analytics] Consentement analytics absent. Événement ignoré : ${eventName}`, props);
+    }
+    return;
+  }
+
   if (typeof window !== "undefined" && typeof window.gtag === "function") {
     window.gtag("event", eventName, props);
     if (import.meta.env.DEV) {
@@ -25,9 +77,11 @@ export function trackEvent(
  * Standard GA4 / Google Ads: User creates an account
  */
 export function trackSignUp(method: "email" | "google" = "email") {
+  if (!hasAnalyticsConsent()) return;
   trackEvent("sign_up", { method });
-  // Google Ads conversion event: Inscription
-  if (typeof window !== "undefined" && typeof window.gtag === "function") {
+
+  // Google Ads conversion event: Inscription (nécessite consentement marketing)
+  if (hasMarketingConsent() && typeof window !== "undefined" && typeof window.gtag === "function") {
     window.gtag("event", "conversion", {
       send_to: "AW-18465275177/sjQfCKe00YQdEKn69uRE",
     });
@@ -38,6 +92,7 @@ export function trackSignUp(method: "email" | "google" = "email") {
  * Standard GA4 / Google Ads: User initiates checkout
  */
 export function trackBeginCheckout(plan: string, billingCycle: string, value: number) {
+  if (!hasAnalyticsConsent()) return;
   trackEvent("begin_checkout", {
     currency: "EUR",
     value,
@@ -56,6 +111,7 @@ export function trackBeginCheckout(plan: string, billingCycle: string, value: nu
  * Standard GA4 / Google Ads: User completes a purchase / subscription
  */
 export function trackPurchase(plan: string, value: number, transactionId?: string) {
+  if (!hasAnalyticsConsent()) return;
   const txId = transactionId || `bylz_${Date.now()}`;
   trackEvent("purchase", {
     transaction_id: txId,
@@ -69,8 +125,9 @@ export function trackPurchase(plan: string, value: number, transactionId?: strin
       },
     ],
   });
-  // Google Ads conversion event: Abonnement
-  if (typeof window !== "undefined" && typeof window.gtag === "function") {
+
+  // Google Ads conversion event: Abonnement (nécessite consentement marketing)
+  if (hasMarketingConsent() && typeof window !== "undefined" && typeof window.gtag === "function") {
     window.gtag("event", "ads_conversion_Abonnement_1", {
       value,
       currency: "EUR",
@@ -83,6 +140,7 @@ export function trackPurchase(plan: string, value: number, transactionId?: strin
  * User starts a free trial
  */
 export function trackTrialStart(plan: string) {
+  if (!hasAnalyticsConsent()) return;
   trackEvent("start_trial", { plan });
 }
 
@@ -90,6 +148,7 @@ export function trackTrialStart(plan: string) {
  * User emits a certified invoice
  */
 export function trackInvoiceEmitted(invoiceId: string, amount: number) {
+  if (!hasAnalyticsConsent()) return;
   trackEvent("invoice_emitted", {
     invoice_id: invoiceId,
     value: amount,
@@ -97,13 +156,11 @@ export function trackInvoiceEmitted(invoiceId: string, amount: number) {
   });
 }
 
-
-
-
 /**
  * User creates their first invoice
  */
 export function trackFirstInvoice(invoiceId: string, amount: number) {
+  if (!hasAnalyticsConsent()) return;
   trackEvent("first_invoice", {
     invoice_id: invoiceId,
     value: amount,
@@ -115,6 +172,7 @@ export function trackFirstInvoice(invoiceId: string, amount: number) {
  * User clicks an upgrade touchpoint
  */
 export function trackUpgradeClick(plan: string, location: string) {
+  if (!hasAnalyticsConsent()) return;
   trackEvent("upgrade_click", {
     plan,
     location,
@@ -125,6 +183,7 @@ export function trackUpgradeClick(plan: string, location: string) {
  * User successfully completes Stripe checkout
  */
 export function trackCheckoutSuccess(plan: string, value?: number) {
+  if (!hasAnalyticsConsent()) return;
   trackEvent("checkout_success", {
     plan,
     value,
