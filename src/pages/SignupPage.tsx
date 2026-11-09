@@ -58,6 +58,14 @@ function isValidPhone(value: string): boolean {
 const STRENGTH_LABELS = { weak: "Faible", medium: "Moyen", strong: "Fort" };
 
 export function SignupPage() {
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const p = params.get("plan");
+    const b = params.get("billing");
+    if (p) localStorage.setItem("bylz-preselected-plan", p);
+    if (b) localStorage.setItem("bylz-preselected-billing", b);
+  }, []);
+
   const navigate = useNavigate();
   const { refreshProfile } = useAuth();
   const [email, setEmail] = useState("");
@@ -142,7 +150,14 @@ export function SignupPage() {
     // If session is immediately active
     void sendWelcomeEmail(email.trim());
     await refreshProfile();
-    navigate(isGuest ? "/onboarding?guest=true" : "/onboarding");
+    const presPlan = localStorage.getItem("bylz-preselected-plan");
+    const presBilling = localStorage.getItem("bylz-preselected-billing");
+    const query = new URLSearchParams();
+    if (isGuest) query.set("guest", "true");
+    if (presPlan) query.set("plan", presPlan);
+    if (presBilling) query.set("billing", presBilling);
+    const qStr = query.toString();
+    navigate(qStr ? `/onboarding?${qStr}` : "/onboarding");
   };
 
   const handleResend = async () => {

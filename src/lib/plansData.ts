@@ -51,7 +51,7 @@ export const PLANS_DATA: Record<"starter" | "solo" | "pro", PlanData> = {
   starter: {
     id: "starter",
     name: "Starter",
-    description: "Pour lancer votre activité en toute conformité",
+    description: "Pour lancer votre activité en micro-entreprise",
     pricing: {
       annualTotal: 0,
       monthlyPrice: 0,

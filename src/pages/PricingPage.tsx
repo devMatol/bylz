@@ -119,10 +119,10 @@ export function PricingPage() {
                     <span className="text-4xl font-black text-slate-900 font-mono">0 €</span>
                     <span className="text-xs text-slate-600">/ mois</span>
                   </div>
-                  <p className="text-[11px] text-slate-500 mt-1">{VAT_MENTION_FRANCHISE}</p>
+                  
                 </div>
                 <p className="text-xs text-slate-600 leading-relaxed border-t border-slate-200 pt-4 font-normal">
-                  Idéal pour démarrer votre activité en toute conformité légale.
+                  Idéal pour démarrer votre activité en micro-entreprise.
                 </p>
                 <ul className="space-y-2.5 text-xs text-slate-700 font-medium pt-2">
                   {PLANS_DATA.starter.features.map((feat, i) => (
@@ -359,7 +359,7 @@ export function PricingPage() {
               </p>
               <div className="pt-2">
                 <Link to="/essai" className="inline-flex items-center justify-center min-h-[44px] py-3.5 px-8 text-sm font-bold bg-blue-600 hover:bg-blue-700 text-white rounded-xl shadow-lg transition-colors">
-                  Créer mon compte gratuitement
+                  Créer mon compte gratuit
                 </Link>
               </div>
               <p className="text-xs text-slate-400 font-medium">

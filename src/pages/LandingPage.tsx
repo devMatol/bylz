@@ -11,7 +11,7 @@ import {
   Building2,
   FileCheck,
   Receipt,
-  Layers,
+  Layers, BellRing,
   Check,
   ArrowRight,
   Zap,
@@ -309,7 +309,7 @@ export function LandingPage() {
                     <span className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-800 flex items-center justify-center flex-shrink-0">
                       <Sparkles className="w-3.5 h-3.5 stroke-[2.5]" />
                     </span>
-                    <span><strong>Assistant IA intégré utilisable depuis WhatsApp</strong> pour créer vos devis, facturer et calculer votre URSSAF</span>
+                    <span><strong>Assistant IA utilisable depuis WhatsApp</strong> <span className="inline-block px-1.5 py-0.5 rounded text-[11px] font-bold bg-amber-100 text-amber-800 border border-amber-300 ml-1">Option Pro</span> pour dicter vos devis et facturer</span>
                   </li>
                 </ul>
 
@@ -325,7 +325,7 @@ export function LandingPage() {
                     <>
                       <Link to="/essai" className="w-full sm:w-auto">
                         <button className={`${btnPrimary} py-3.5 px-8 text-base w-full sm:w-auto`}>
-                          Commencer gratuitement
+                          Créer mon compte gratuit
                         </button>
                       </Link>
                       <Link to="/tarifs" className="w-full sm:w-auto">
@@ -427,7 +427,7 @@ export function LandingPage() {
                             PDF/A
                           </div>
                           <div>
-                            <p className="text-xs font-bold text-slate-900">FAC-2026-0012</p>
+                            <p className="text-xs font-bold text-slate-900">FAC-2026-012</p>
                             <p className="text-[11px] text-slate-600 font-medium">Facture PDF</p>
                           </div>
                         </div>
@@ -520,10 +520,10 @@ export function LandingPage() {
                   <span>Obligation Légale 2026</span>
                 </div>
                 <h2 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight leading-tight">
-                  Bylz est déjà prêt pour la facturation électronique obligatoire
+                  Factures Factur-X générées et validées, transmission via partenaire en cours d'activation
                 </h2>
                 <p className="text-slate-200 text-sm sm:text-base leading-relaxed">
-                  Bylz intègre les mentions légales obligatoires sur vos factures PDF et prépare l'intégration de la facturation électronique structurée pour les échanges inter-entreprises.
+                  Bylz génère des factures conformes Factur-X validées selon les schémas officiels. La transmission via notre plateforme partenaire est en cours d'activation pour la réforme. Bylz n'est pas une plateforme agréée.
                 </p>
                 <div className="pt-2">
                   <Link
@@ -806,7 +806,7 @@ export function LandingPage() {
 
                 <div className="pt-6 mt-6 border-t border-blue-200">
                   <Link to="/essai" className={`${btnPrimary} w-full py-3.5 text-sm`}>
-                    Créer mon compte gratuitement
+                    Créer mon compte gratuit
                   </Link>
                   <p className="text-[11px] text-center text-slate-600 font-medium mt-2">
                     Gratuit jusqu'à 3 factures/mois : Sans carte bancaire : Sans engagement
@@ -942,7 +942,7 @@ export function LandingPage() {
 
                 <Link to="/signup?plan=starter" className="block w-full pt-2">
                   <button className={`${btnPrimary} w-full py-3`}>
-                    Commencer gratuitement
+                    Créer mon compte gratuit
                   </button>
                 </Link>
               </div>
@@ -1015,7 +1015,7 @@ export function LandingPage() {
 
                 <Link to={`/signup?plan=solo&billing=${billingCycle}`} className="block w-full pt-2">
                   <button className={`${btnPrimary} w-full py-3.5 text-base`}>
-                    Commencer gratuitement
+                    Créer mon compte gratuit
                   </button>
                 </Link>
               </div>
@@ -1083,7 +1083,7 @@ export function LandingPage() {
 
                 <Link to={`/signup?plan=pro&billing=${billingCycle}`} className="block w-full pt-2">
                   <button className={`${btnPrimary} w-full py-3`}>
-                    Commencer gratuitement
+                    Créer mon compte gratuit
                   </button>
                 </Link>
               </div>
@@ -1159,7 +1159,7 @@ export function LandingPage() {
             </p>
             <div className="pt-2">
               <Link to="/essai" className={`${btnPrimary} py-3.5 px-8 text-sm`}>
-                Créer mon compte gratuitement
+                Créer mon compte gratuit
               </Link>
             </div>
             <p className="text-xs text-slate-400 font-medium">
