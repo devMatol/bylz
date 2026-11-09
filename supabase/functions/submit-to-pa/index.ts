@@ -42,9 +42,8 @@ serve(async (req) => {
       );
     }
 
-    const anonClient = createClient(supabaseUrl, authHeader.replace(/^Bearer /i, ""));
     const jwt = authHeader.replace(/^Bearer\s+/i, "");
-    const { data: userData } = await anonClient.auth.getUser(jwt);
+    const { data: userData } = await adminClient.auth.getUser(jwt);
     const authUser = userData?.user;
 
     if (!authUser) {
@@ -141,6 +140,25 @@ serve(async (req) => {
           pa_status: previousPaStatus,
         }),
         { status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Garde-fou strict fail-closed (FACTPULSE_ALLOW_PRODUCTION)
+    // Comme l'URL FactPulse est unique (https://factpulse.fr/api/v1), tout envoi sans validation explicite est bloqué
+    const allowCheck = isFactPulseTransmissionAllowed(
+      Deno.env.get("FACTPULSE_ALLOW_PRODUCTION"),
+      invoice.company_id,
+      Deno.env.get("FACTPULSE_ALLOWED_COMPANY_IDS")
+    );
+    if (!allowCheck.allowed) {
+      console.warn("⚠️ Transmission FactPulse bloquée par FACTPULSE_ALLOW_PRODUCTION !== 'true'");
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error_code: allowCheck.errorCode,
+          error: allowCheck.error,
+        }),
+        { status: allowCheck.status || 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
@@ -340,24 +358,6 @@ serve(async (req) => {
     const sourcePdfBytes = new Uint8Array(await sourcePdfBlob.data.arrayBuffer());
     const sourcePdfBase64 = base64Encode(sourcePdfBytes.buffer as ArrayBuffer);
 
-    // 10. Garde-fou strict fail-closed (FACTPULSE_ALLOW_PRODUCTION)
-    // Comme l'URL FactPulse est unique (https://factpulse.fr/api/v1), tout envoi sans validation explicite est bloqué
-    const allowCheck = isFactPulseTransmissionAllowed(
-      Deno.env.get("FACTPULSE_ALLOW_PRODUCTION"),
-      invoice.company_id,
-      Deno.env.get("FACTPULSE_ALLOWED_COMPANY_IDS")
-    );
-    if (!allowCheck.allowed) {
-      console.warn("⚠️ Transmission FactPulse bloquée par FACTPULSE_ALLOW_PRODUCTION !== 'true'");
-      return new Response(
-        JSON.stringify({
-          success: false,
-          error_code: allowCheck.errorCode,
-          error: allowCheck.error,
-        }),
-        { status: allowCheck.status || 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
 
     // 11. Préparation du payload FactPulse
     const payload = {
