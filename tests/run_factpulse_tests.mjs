@@ -1,3 +1,4 @@
+import { execSync } from "child_process";
 import assert from "assert";
 import fs from "fs";
 import path from "path";
@@ -156,6 +157,16 @@ async function main() {
     const resDirect = validateClientSirenForPa({ siren: "849578943" });
     assert.strictEqual(resDirect.valid, true);
     assert.strictEqual(resDirect.siren, "849578943");
+  });
+
+  // --- SECTION 1.D : VÉRIFICATION STATIQUE ET TYPAGE DENO CHECK ---
+  console.log("\n--- 1.D Vérification statique et typage Deno Check des fonctions FactPulse ---");
+
+  runTest("1.D.1 Deno check sur submit-to-pa, factpulse-webhook et retry-pa-submissions (0 erreur de boot)", () => {
+    execSync("npx deno check --node-modules-dir=none supabase/functions/submit-to-pa/index.ts supabase/functions/factpulse-webhook/index.ts supabase/functions/retry-pa-submissions/index.ts", {
+      stdio: "pipe",
+      encoding: "utf8",
+    });
   });
 
   // --- SECTION 1.B : GARDE-FOU FAIL-CLOSED FACTPULSE_ALLOW_PRODUCTION ---

@@ -215,7 +215,6 @@ serve(async (req) => {
     const supplierSiret = (sellerSnap.siret || "").replace(/\s+/g, "");
     const supplierSiren = sellerSnap.siren || (supplierSiret.length >= 9 ? supplierSiret.slice(0, 9) : supplierSiret);
     const recipientSiret = (buyerSnap.siret || "").replace(/\s+/g, "");
-    const recipientSiren = (buyerSnap.siren || (recipientSiret.length >= 9 ? recipientSiret.slice(0, 9) : "")).replace(/\s+/g, "");
 
     if (!supplierSiret || supplierSiret === "00000000000000") {
       return new Response(
@@ -339,7 +338,7 @@ serve(async (req) => {
     }
 
     const sourcePdfBytes = new Uint8Array(await sourcePdfBlob.data.arrayBuffer());
-    const sourcePdfBase64 = base64Encode(sourcePdfBytes);
+    const sourcePdfBase64 = base64Encode(sourcePdfBytes.buffer as ArrayBuffer);
 
     // 10. Garde-fou strict fail-closed (FACTPULSE_ALLOW_PRODUCTION)
     // Comme l'URL FactPulse est unique (https://factpulse.fr/api/v1), tout envoi sans validation explicite est bloqué
