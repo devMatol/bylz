@@ -1,5 +1,5 @@
 import { useState, useEffect, type FormEvent } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { Eye, EyeOff, Mail, Lock, Phone, FileText, CheckCircle2, AlertTriangle, RefreshCw } from "lucide-react";
 import { AuthLayout } from "../components/auth/AuthLayout";
 import { GoogleIcon } from "../components/auth/GoogleIcon";
@@ -11,6 +11,8 @@ import { signUp, signInWithGoogle, resendConfirmationEmail } from "../lib/auth";
 import { sendWelcomeEmail } from "../lib/emailNotifier";
 import { trackSignUp } from "../lib/analytics";
 import { cn, formatAmount } from "../lib/utils";
+import { supabase } from "../lib/supabase";
+import { STRIPE_PRICE_SOLO_ANNUAL, STRIPE_PRICE_SOLO_MONTHLY, STRIPE_PRICE_PRO_ANNUAL, STRIPE_PRICE_PRO_MONTHLY } from "../lib/constants";
 
 function mapAuthError(code: string | undefined): string {
   if (!code) return "Une erreur est survenue. Réessayez.";
@@ -67,7 +69,16 @@ export function SignupPage() {
   }, []);
 
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { refreshProfile } = useAuth();
+
+  const planParam = searchParams.get("plan") || localStorage.getItem("bylz-preselected-plan");
+  const billingParam = (searchParams.get("billing") || localStorage.getItem("bylz-preselected-billing") || "annual") as "monthly" | "annual";
+  const isPaidPlan = planParam === "solo" || planParam === "pro";
+  const planName = planParam === "solo" ? "Plan Solo" : "Plan Pro";
+  const planPrice = planParam === "solo"
+    ? (billingParam === "annual" ? "50 € / an" : "8,90 € / mois")
+    : (billingParam === "annual" ? "80 € / an" : "12,90 € / mois");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
@@ -150,12 +161,31 @@ export function SignupPage() {
     // If session is immediately active
     void sendWelcomeEmail(email.trim());
     await refreshProfile();
-    const presPlan = localStorage.getItem("bylz-preselected-plan");
-    const presBilling = localStorage.getItem("bylz-preselected-billing");
+
+    if (isPaidPlan) {
+      localStorage.removeItem("bylz-preselected-plan");
+      localStorage.removeItem("bylz-preselected-billing");
+      const priceId = planParam === "pro"
+        ? (billingParam === "annual" ? STRIPE_PRICE_PRO_ANNUAL : STRIPE_PRICE_PRO_MONTHLY)
+        : (billingParam === "annual" ? STRIPE_PRICE_SOLO_ANNUAL : STRIPE_PRICE_SOLO_MONTHLY);
+
+      try {
+        const { data: checkoutData } = await supabase.functions.invoke("stripe-checkout", {
+          body: { priceId },
+        });
+        if (checkoutData?.url) {
+          window.location.href = checkoutData.url;
+          return;
+        }
+      } catch (checkoutErr) {
+        console.error("Auto checkout error:", checkoutErr);
+      }
+    }
+
     const query = new URLSearchParams();
     if (isGuest) query.set("guest", "true");
-    if (presPlan) query.set("plan", presPlan);
-    if (presBilling) query.set("billing", presBilling);
+    if (planParam) query.set("plan", planParam);
+    if (billingParam) query.set("billing", billingParam);
     const qStr = query.toString();
     navigate(qStr ? `/onboarding?${qStr}` : "/onboarding");
   };
@@ -184,7 +214,7 @@ export function SignupPage() {
     setError(null);
     setGoogleLoading(true);
     trackSignUp("google");
-    const redirectTo = `${window.location.origin}/onboarding?guest=true`;
+    const redirectTo = isPaidPlan ? `${window.location.origin}/onboarding?plan=${planParam}&billing=${billingParam}` : `${window.location.origin}/onboarding?guest=true`;
     const { error: googleError } = await signInWithGoogle(redirectTo);
     if (googleError) {
       setError(mapAuthError(googleError.code));
@@ -281,8 +311,12 @@ export function SignupPage() {
   // 2. Signup form
   return (
     <AuthLayout
-      title="Créez votre espace Bylz"
-      subtitle="Gratuit pour toujours jusqu'à 3 factures/mois, sans carte bancaire"
+      title={isPaidPlan ? planName : "Créez votre espace Bylz"}
+      subtitle={
+        isPaidPlan
+          ? `${planPrice} • Paiement sécurisé après création du compte`
+          : "Gratuit pour toujours jusqu'à 3 factures/mois, sans carte bancaire"
+      }
       footer={
         <p>
           Déjà un compte ?{" "}
@@ -295,7 +329,27 @@ export function SignupPage() {
         </p>
       }
     >
-      <SEO title="Créer un compte | Bylz" noindex />
+      <SEO title={isPaidPlan ? `Inscription ${planName} | Bylz` : "Créer un compte | Bylz"} noindex />
+
+      {isPaidPlan && (
+        <div className="mb-5 p-3.5 rounded-xl bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 flex items-center justify-between text-xs">
+          <div className="space-y-0.5">
+            <div className="flex items-center gap-1.5 font-bold text-blue-900 dark:text-blue-200">
+              <CheckCircle2 className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0" />
+              <span>{planName} ({planPrice})</span>
+            </div>
+            <p className="text-[11px] text-blue-700 dark:text-blue-300">
+              Paiement sécurisé après création du compte
+            </p>
+          </div>
+          <Link
+            to="/tarifs"
+            className="text-primary hover:underline font-bold text-xs whitespace-nowrap pl-2"
+          >
+            Changer de plan
+          </Link>
+        </div>
+      )}
 
       {draftTotal !== null && (
         <div className="mb-5 p-3.5 rounded-xl bg-blue-500/10 border border-blue-500/30 flex items-start gap-2.5 text-xs text-blue-300">

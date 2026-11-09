@@ -59,3 +59,14 @@ test("Garde-fous Analytics : aucun événement sans consentement", () => {
   assert.match(analyticsFile, /hasMarketingConsent/);
   assert.match(analyticsFile, /if \(!hasAnalyticsConsent\(\)\) return/);
 });
+
+test("SignupPage : rappel du plan choisi (Solo/Pro), lien Changer de plan et redirection Stripe", () => {
+  const signupFile = fs.readFileSync(path.join(rootDir, "src/pages/SignupPage.tsx"), "utf8");
+
+  assert.match(signupFile, /isPaidPlan \? planName : "Créez votre espace Bylz"/);
+  assert.match(signupFile, /Paiement sécurisé après création du compte/);
+  assert.match(signupFile, /Changer de plan/);
+  assert.match(signupFile, /to="\/tarifs"/);
+  assert.match(signupFile, /stripe-checkout/);
+  assert.match(signupFile, /window\.location\.href\s*=\s*checkoutData\.url/);
+});
