@@ -98,3 +98,39 @@ export function trackInvoiceEmitted(invoiceId: string, amount: number) {
 }
 
 
+
+
+/**
+ * User creates their first invoice
+ */
+export function trackFirstInvoice(invoiceId: string, amount: number) {
+  trackEvent("first_invoice", {
+    invoice_id: invoiceId,
+    value: amount,
+    currency: "EUR",
+  });
+}
+
+/**
+ * User clicks an upgrade touchpoint
+ */
+export function trackUpgradeClick(plan: string, location: string) {
+  trackEvent("upgrade_click", {
+    plan,
+    location,
+  });
+}
+
+/**
+ * User successfully completes Stripe checkout
+ */
+export function trackCheckoutSuccess(plan: string, value?: number) {
+  trackEvent("checkout_success", {
+    plan,
+    value,
+    currency: "EUR",
+  });
+  if (value) {
+    trackPurchase(plan, value);
+  }
+}

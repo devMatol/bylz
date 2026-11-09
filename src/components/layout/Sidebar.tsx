@@ -6,6 +6,8 @@ import { ThemeToggle } from "../shared/ThemeToggle";
 import { useAuth } from "../../contexts/AuthContext";
 import { useNotifications } from "../../contexts/NotificationsContext";
 import { SupportModal } from "../support/SupportModal";
+import { UpgradeModal } from "../shared/UpgradeModal";
+import { trackUpgradeClick } from "../../lib/analytics";
 import { cn } from "../../lib/utils";
 
 import { Logo } from "../shared/Logo";
@@ -22,6 +24,7 @@ export function Sidebar() {
   const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
   const [supportOpen, setSupportOpen] = useState(false);
+  const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
   const activeProfile = realProfile || profile;
@@ -121,6 +124,24 @@ export function Sidebar() {
           })}
         </nav>
 
+        
+        {/* Permanent upgrade button for Starter */}
+        {(!profile?.plan || profile?.plan === "starter") && (
+          <div className="px-4 py-2 border-t border-border/60">
+            <button
+              type="button"
+              onClick={() => {
+                trackUpgradeClick("solo", "sidebar_permanent_button");
+                setUpgradeModalOpen(true);
+              }}
+              className="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-sm transition-all cursor-pointer"
+            >
+              <Zap className="w-3.5 h-3.5 fill-current" />
+              <span>Passer à Solo</span>
+            </button>
+          </div>
+        )}
+  
         {/* Support & Admin link footer strip */}
         <div className="px-4 py-2 space-y-1.5 border-t border-border/60">
           <Link
@@ -179,6 +200,7 @@ export function Sidebar() {
           )}
         </div>
       </aside>
+      <UpgradeModal open={upgradeModalOpen} onClose={() => setUpgradeModalOpen(false)} targetPlan="solo" />
 
       <SupportModal open={supportOpen} onClose={() => setSupportOpen(false)} />
     </>

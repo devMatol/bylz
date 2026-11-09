@@ -24,6 +24,7 @@ import { useAuth } from "../contexts/AuthContext";
 import { useToast } from "../components/ui/Toast";
 import {
   fetchDashboardData,
+  fetchClients,
   MICRO_THRESHOLDS,
   VAT_THRESHOLDS,
   type DashboardData,
@@ -32,6 +33,7 @@ import {
 import { formatAmount, cn } from "../lib/utils";
 import { formatDateLong, todayISO, safeFormatDate } from "../lib/date";
 import { canUseFeature } from "../lib/planLimits";
+import { OnboardingChecklist } from "../components/dashboard/OnboardingChecklist";
 import { UpgradeModal } from "../components/shared/UpgradeModal";
 import { ReminderModal } from "../components/documents/ReminderModal";
 import { Button } from "../components/ui/Button";
@@ -68,6 +70,7 @@ export function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
+  const [clientsCount, setClientsCount] = useState(0);
   const [reminderInvoice, setReminderInvoice] = useState<(Invoice & { client_name: string; client_email?: string | null }) | null>(null);
 
   const isBlurred = !canUseFeature(profile?.plan, "fiscalDashboard");
@@ -191,6 +194,13 @@ export function DashboardPage() {
           </button>
         </div>
       </div>
+      {/* Checklist d'onboarding jusqu'à la 1ère facture */}
+      <OnboardingChecklist
+        company={company}
+        clientsCount={clientsCount}
+        invoicesCount={data?.recentInvoices?.length || 0}
+      />
+
       {isProfileIncomplete && (
         <div className="mb-4 p-3 sm:p-4 rounded-xl border border-amber-500/20 bg-amber-500/5 text-amber-800 dark:text-amber-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
           <div className="flex items-center space-x-3">

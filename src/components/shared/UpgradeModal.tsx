@@ -13,7 +13,7 @@ import { supabase } from "../../lib/supabase";
 import { useToast } from "../ui/Toast";
 import { BillingToggle } from "./BillingToggle";
 import { PLANS_DATA } from "../../lib/plansData";
-import { trackBeginCheckout } from "../../lib/analytics";
+import { trackBeginCheckout, trackUpgradeClick } from "../../lib/analytics";
 
 export interface UpgradeModalProps {
   open: boolean;
@@ -134,10 +134,11 @@ export function UpgradeModal({
 }: UpgradeModalProps) {
   const [loading, setLoading] = useState(false);
   const [billingCycle, setBillingCycle] = useState<BillingCycle>("annual");
+  const [selectedPlanOverride, setSelectedPlanOverride] = useState<"solo" | "pro" | null>(null);
   const { toast } = useToast();
 
   const config = FEATURE_CONFIG[feature] || FEATURE_CONFIG.invoices;
-  const targetPlan = customTargetPlan || config.targetPlan;
+  const targetPlan = selectedPlanOverride || customTargetPlan || config.targetPlan;
   const planTitle = targetPlan === "pro" ? "Plan Pro ⚡" : "Plan Solo ⚡";
 
   const priceId =
@@ -153,6 +154,7 @@ export function UpgradeModal({
     const planValue = targetPlan === "pro"
       ? (billingCycle === "annual" ? 80 : 12.9)
       : (billingCycle === "annual" ? 50 : 8.9);
+    trackUpgradeClick(targetPlan, "upgrade_modal_checkout");
     trackBeginCheckout(targetPlan, billingCycle, planValue);
     setLoading(true);
     try {
@@ -210,6 +212,28 @@ export function UpgradeModal({
           <p className="text-xs sm:text-sm text-muted leading-relaxed">
             {customBenefit || config.description}
           </p>
+        </div>
+
+        
+        {/* Plan Comparison Table / Tiers */}
+        <div className="grid grid-cols-3 gap-2 text-center text-xs py-2 border-y border-border">
+          <div className="p-2 rounded-lg bg-slate-50 border border-slate-200">
+            <p className="font-bold text-slate-800">Starter</p>
+            <p className="text-[11px] text-slate-500 font-mono mt-0.5">0 €</p>
+            <p className="text-[10px] text-slate-500 mt-1">3 factures / m</p>
+          </div>
+          <div className={`p-2 rounded-lg border cursor-pointer transition-all ${targetPlan === "solo" ? "bg-blue-50 border-blue-600 shadow-sm" : "bg-surface border-border"}`}
+               onClick={() => setSelectedPlanOverride("solo")}>
+            <p className="font-bold text-blue-700">Solo ★</p>
+            <p className="text-[11px] text-blue-700 font-mono font-bold mt-0.5">4,17 € / m</p>
+            <p className="text-[10px] text-slate-600 mt-1">Illimité & URSSAF</p>
+          </div>
+          <div className={`p-2 rounded-lg border cursor-pointer transition-all ${targetPlan === "pro" ? "bg-amber-50 border-amber-600 shadow-sm" : "bg-surface border-border"}`}
+               onClick={() => setSelectedPlanOverride("pro")}>
+            <p className="font-bold text-amber-700">Pro ⚡</p>
+            <p className="text-[11px] text-amber-700 font-mono font-bold mt-0.5">6,67 € / m</p>
+            <p className="text-[10px] text-slate-600 mt-1">Paiements & IA</p>
+          </div>
         </div>
 
         {/* Pricing Card */}
