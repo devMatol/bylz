@@ -22,14 +22,14 @@ export function LockedFeatureOverlay({
       className={`bg-surface/95 backdrop-blur-md border border-amber-500/30 rounded-2xl p-6 sm:p-8 max-w-md w-full text-center shadow-2xl space-y-4 bylz-glow-accent animate-in fade-in duration-200 ${className}`}
     >
       {/* Translucent Glowing Icon */}
-      <div className="w-14 h-14 rounded-2xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center mx-auto text-amber-400 shadow-xl shadow-amber-500/10">
+      <div className="w-14 h-14 rounded-2xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center mx-auto text-amber-800 dark:text-amber-400 shadow-xl shadow-amber-500/10">
         <Lock className="w-7 h-7" />
       </div>
 
       {/* Plan Badge */}
       {planBadge && (
         <div>
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-pill bg-amber-500/15 border border-amber-500/30 text-amber-400 text-[11px] font-black tracking-wide uppercase">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-pill bg-amber-500/15 border border-amber-500/30 text-amber-800 dark:text-amber-400 text-[11px] font-black tracking-wide uppercase">
             <Sparkles className="w-3.5 h-3.5" />
             <span>{planBadge}</span>
           </span>

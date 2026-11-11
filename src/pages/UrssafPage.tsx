@@ -365,7 +365,7 @@ export function UrssafPage() {
                           {formatAmount(currentPeriod.estimatedAmount)}
                         </p>
                         {currentPeriod.revenue === 0 && (
-                          <p className="text-xs text-amber-400 mt-1 font-medium">
+                          <p className="text-xs text-amber-800 dark:text-amber-400 mt-1 font-medium">
                             Rien à payer, mais la déclaration à 0 € est obligatoire
                           </p>
                         )}

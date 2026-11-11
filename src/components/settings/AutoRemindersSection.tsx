@@ -241,7 +241,7 @@ export function AutoRemindersSection() {
             <div>
               <p className="font-bold text-sm text-text flex items-center gap-2">
                 Les relances automatiques sont inactives sur votre forfait Starter
-                <span className="px-2 py-0.5 text-xs font-extrabold bg-amber-500/20 text-amber-400 rounded-md border border-amber-500/30">SOLO ⚡</span>
+                <span className="px-2 py-0.5 text-xs font-extrabold bg-amber-500/15 text-amber-800 dark:text-amber-400 rounded-md border border-amber-500/30">SOLO ⚡</span>
               </p>
               <p className="text-xs text-muted mt-0.5">
                 Passez au plan Solo ou Pro pour que Bylz envoie automatiquement vos relances d'impayés et encaisse plus vite votre trésorerie.
@@ -266,7 +266,7 @@ export function AutoRemindersSection() {
           <h4 className="text-xs font-bold text-muted uppercase tracking-wider flex items-center gap-2">
             <span>Échéancier des Relances ({rules.length})</span>
             {!canUseAutoReminders && (
-              <span className="px-2 py-0.5 text-xs font-extrabold bg-amber-500/10 text-amber-400 border border-amber-500/20 rounded-md">
+              <span className="px-2 py-0.5 text-xs font-extrabold bg-amber-500/15 text-amber-800 dark:text-amber-400 border border-amber-500/30 rounded-md">
                 Aperçu (Inactif)
               </span>
             )}
