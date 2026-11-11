@@ -111,7 +111,7 @@ export function MarketingFooter({ theme }: MarketingFooterProps = {}) {
                       : "text-primary focus-visible:outline-primary"
                   }`}
                 >
-                  Mode Essai Gratuit (Sans CB)
+                  Essayer sans compte
                 </Link>
               </li>
             </ul>

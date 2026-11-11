@@ -125,7 +125,7 @@ export function MarketingNavbar({ theme }: MarketingNavbarProps) {
                   Se connecter
                 </Link>
                 <Link
-                  to="/essai"
+                  to="/signup"
                   className="whitespace-nowrap px-4 py-2 text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-sm transition-colors"
                 >
                   Créer mon compte gratuit
@@ -138,7 +138,7 @@ export function MarketingNavbar({ theme }: MarketingNavbarProps) {
                     Se connecter
                   </Button>
                 </Link>
-                <Link to="/essai">
+                <Link to="/signup">
                   <Button variant="primary" size="sm">
                     Créer mon compte gratuit
                   </Button>
@@ -235,7 +235,7 @@ export function MarketingNavbar({ theme }: MarketingNavbarProps) {
                   Se connecter
                 </Link>
                 <Link
-                  to="/essai"
+                  to="/signup"
                   onClick={() => setMobileMenuOpen(false)}
                   className="w-full text-center py-3.5 rounded-lg bg-blue-600 hover:bg-blue-700 font-bold text-white text-sm shadow-sm transition-colors"
                 >
@@ -249,7 +249,7 @@ export function MarketingNavbar({ theme }: MarketingNavbarProps) {
                     Se connecter
                   </Button>
                 </Link>
-                <Link to="/essai" onClick={() => setMobileMenuOpen(false)}>
+                <Link to="/signup" onClick={() => setMobileMenuOpen(false)}>
                   <Button variant="primary" className="w-full justify-center text-sm py-3.5 font-bold">
                     Créer mon compte gratuit
                   </Button>

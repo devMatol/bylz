@@ -323,7 +323,7 @@ export function LandingPage() {
                     </Link>
                   ) : (
                     <>
-                      <Link to="/essai" className="w-full sm:w-auto">
+                      <Link to="/signup" className="w-full sm:w-auto">
                         <button className={`${btnPrimary} py-3.5 px-8 text-base w-full sm:w-auto`}>
                           Créer mon compte gratuit
                         </button>
@@ -500,7 +500,7 @@ export function LandingPage() {
             </div>
 
             <div className="text-center pt-2">
-              <Link to="/essai" className={`${btnPrimary} py-3 px-6 text-sm`}>
+              <Link to="/signup" className={`${btnPrimary} py-3 px-6 text-sm`}>
                 Créer mon compte gratuit
               </Link>
             </div>
@@ -593,7 +593,7 @@ export function LandingPage() {
                   Bylz regroupe les outils essentiels à la gestion d'un indépendant, sans fonctions superflues qui alourdissent votre quotidien.
                 </p>
                 <div className="pt-2 hidden lg:block">
-                  <Link to="/essai">
+                  <Link to="/signup">
                     <button className={`${btnPrimary} py-2.5 px-5 text-sm`}>
                       Créer mon compte gratuit
                     </button>
@@ -805,7 +805,7 @@ export function LandingPage() {
                 </div>
 
                 <div className="pt-6 mt-6 border-t border-blue-200">
-                  <Link to="/essai" className={`${btnPrimary} w-full py-3.5 text-sm`}>
+                  <Link to="/signup" className={`${btnPrimary} w-full py-3.5 text-sm`}>
                     Créer mon compte gratuit
                   </Link>
                   <p className="text-[11px] text-center text-slate-600 font-medium mt-2">
@@ -1156,7 +1156,7 @@ export function LandingPage() {
               Créez votre première facture PDF en 2 minutes. Sans carte bancaire et sans engagement.
             </p>
             <div className="pt-2">
-              <Link to="/essai" className={`${btnPrimary} py-3.5 px-8 text-sm`}>
+              <Link to="/signup" className={`${btnPrimary} py-3.5 px-8 text-sm`}>
                 Créer mon compte gratuit
               </Link>
             </div>
