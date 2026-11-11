@@ -61,7 +61,7 @@ export function OnboardingChecklist({
       id: "first_client",
       title: "Premier client",
       desc: "Ajoutez les coordonnées de votre premier client",
-      completed: clientsCount > 0,
+      completed: clientsCount > 0 || invoicesCount > 0,
       link: "/clients",
       actionText: "Créer un client",
     },
@@ -96,15 +96,15 @@ export function OnboardingChecklist({
       {/* Header */}
       <div className="p-4 sm:p-5 flex items-center justify-between border-b border-border/70 gap-3">
         <div className="flex items-center gap-3 min-w-0">
-          <div className="w-9 h-9 rounded-xl bg-blue-100 text-primary flex items-center justify-center flex-shrink-0">
-            <Sparkles className="w-5 h-5 text-blue-600" />
+          <div className="w-9 h-9 rounded-xl bg-blue-100 dark:bg-blue-950/60 text-primary dark:text-blue-400 flex items-center justify-center flex-shrink-0">
+            <Sparkles className="w-5 h-5 text-blue-600 dark:text-blue-400" />
           </div>
           <div className="min-w-0">
             <div className="flex items-center gap-2">
               <h3 className="text-sm font-bold text-text truncate">
                 Premiers pas sur Bylz
               </h3>
-              <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-blue-50 text-blue-700 border border-blue-200">
+              <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
                 {completedCount}/{steps.length} étapes
               </span>
             </div>
@@ -135,7 +135,7 @@ export function OnboardingChecklist({
       </div>
 
       {/* Progress Bar */}
-      <div className="w-full bg-slate-100 h-1.5 overflow-hidden">
+      <div className="w-full bg-slate-100 dark:bg-slate-800 h-1.5 overflow-hidden">
         <div
           className="bg-blue-600 h-full transition-all duration-300"
           style={{ width: `${progressPercent}%` }}
@@ -150,21 +150,21 @@ export function OnboardingChecklist({
               key={step.id}
               className={`p-3.5 rounded-xl border transition-all flex flex-col justify-between ${
                 step.completed
-                  ? "bg-emerald-50/40 border-emerald-200/80 text-emerald-950"
+                  ? "bg-emerald-50/50 dark:bg-emerald-950/30 border-emerald-200/80 dark:border-emerald-800/60 text-emerald-900 dark:text-emerald-200"
                   : "bg-surface border-border text-text hover:border-primary/40"
               }`}
             >
               <div className="flex items-start gap-2.5">
                 {step.completed ? (
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
                 ) : (
-                  <Circle className="w-4 h-4 text-slate-400 shrink-0 mt-0.5" />
+                  <Circle className="w-4 h-4 text-slate-400 dark:text-slate-500 shrink-0 mt-0.5" />
                 )}
                 <div className="min-w-0 flex-1">
-                  <p className={`text-xs font-bold ${step.completed ? "line-through text-slate-500" : "text-text"}`}>
+                  <p className={`text-xs font-bold ${step.completed ? "line-through text-slate-600 dark:text-slate-300" : "text-text"}`}>
                     {idx + 1}. {step.title}
                   </p>
-                  <p className="text-[11px] text-muted leading-tight mt-0.5">
+                  <p className={`text-[11px] leading-tight mt-0.5 ${step.completed ? "text-slate-500 dark:text-slate-400" : "text-muted"}`}>
                     {step.desc}
                   </p>
                 </div>

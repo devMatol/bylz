@@ -255,7 +255,7 @@ export function InvoicesPage() {
             <AlertTriangle className="w-5 h-5 flex-shrink-0 animate-pulse text-amber-500" />
             <div>
               <p className="font-semibold text-sm">Profil de l'entreprise incomplet</p>
-              <p className="text-xs opacity-90 text-muted">
+              <p className="text-xs text-slate-700 dark:text-slate-300">
                 Renseignez votre SIRET et votre adresse pour que vos factures comportent toutes les mentions obligatoires.
               </p>
             </div>
@@ -271,12 +271,12 @@ export function InvoicesPage() {
       )}
 
       {showHistoryBanner && (
-        <div className="mb-6 rounded-xl border border-blue-500/20 bg-blue-500/5 text-blue-800 dark:text-blue-200">
+        <div className="mb-6 rounded-xl border border-blue-500/20 bg-blue-500/5 text-blue-950 dark:text-blue-200">
           {/* Mobile compact 1-line bar */}
           <div className="flex sm:hidden items-center justify-between p-3 gap-2">
             <div className="flex items-center gap-2 min-w-0">
               <Receipt className="w-4 h-4 flex-shrink-0 text-blue-500" />
-              <span className="font-semibold text-xs truncate">Rattraper historique {new Date().getFullYear()}</span>
+              <span className="font-semibold text-xs truncate text-blue-950 dark:text-blue-200">Rattraper historique {new Date().getFullYear()}</span>
             </div>
             <div className="flex items-center gap-1.5 flex-shrink-0">
               <button
@@ -302,7 +302,7 @@ export function InvoicesPage() {
             <div className="flex items-center space-x-3 mb-3 sm:mb-0">
               <Receipt className="w-5 h-5 flex-shrink-0 text-blue-500 hidden sm:block" />
               <div>
-                <p className="font-semibold text-sm">Rattraper votre historique {new Date().getFullYear()}</p>
+                <p className="font-semibold text-sm text-blue-950 dark:text-blue-200">Rattraper votre historique {new Date().getFullYear()}</p>
                 <p className="text-xs opacity-90 text-muted">
                   Renseignez votre chiffre d'affaires antérieur ou importez vos anciennes factures pour suivre précisément vos plafonds de TVA.
                 </p>
@@ -443,7 +443,7 @@ export function InvoicesPage() {
                           </td>
                           <td className="p-3 text-right whitespace-nowrap">
                             {activeTab === "purchases" ? (
-                              <span className="font-bold text-violet-400">
+                              <span className="font-bold text-violet-700 dark:text-violet-300">
                                 - {formatAmount(r.total_ttc)}
                               </span>
                             ) : (
@@ -453,7 +453,7 @@ export function InvoicesPage() {
                           <td className="p-3">
                             <div className="inline-flex items-center gap-1.5 whitespace-nowrap flex-shrink-0">
                               {r.pa_status === "received" && (
-                                <span className="inline-flex items-center px-2 py-0.5 rounded-pill text-xs font-extrabold bg-violet-500/15 text-violet-400 border border-violet-500/30">
+                                <span className="inline-flex items-center px-2 py-0.5 rounded-pill text-xs font-extrabold bg-violet-500/15 text-violet-800 dark:text-violet-300 border border-violet-500/30">
                                   Achat électronique
                                 </span>
                               )}
@@ -509,7 +509,7 @@ export function InvoicesPage() {
                               {r.number}
                             </span>
                             {r.pa_status === "received" && (
-                              <span className="px-1.5 py-0.5 rounded text-xs font-bold bg-violet-500/10 text-violet-400 border border-violet-500/20">
+                              <span className="px-1.5 py-0.5 rounded text-xs font-bold bg-violet-500/10 text-violet-800 dark:text-violet-300 border border-violet-500/20">
                                 Achat électronique
                               </span>
                             )}
@@ -527,7 +527,7 @@ export function InvoicesPage() {
                         </span>
                         <div>
                           {activeTab === "purchases" ? (
-                            <span className="font-bold text-violet-400">
+                            <span className="font-bold text-violet-700 dark:text-violet-300">
                               - {formatAmount(r.total_ttc)}
                             </span>
                           ) : (

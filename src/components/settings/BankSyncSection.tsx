@@ -434,7 +434,7 @@ export function BankSyncSection() {
 
                   <div className="flex items-center space-x-2 justify-end pt-2 sm:pt-0 border-t sm:border-t-0 border-border/40">
                     {!isStale ? (
-                      <span className="inline-flex items-center px-2 py-0.5 rounded-pill text-xs font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-pill text-xs font-bold bg-emerald-500/15 text-emerald-800 dark:text-emerald-400 border border-emerald-500/30">
                         Actif
                       </span>
                     ) : (
@@ -494,7 +494,7 @@ export function BankSyncSection() {
               >
                 <div className="min-w-0 flex-1 space-y-0.5">
                   <div className="flex items-center gap-2">
-                    <span className="font-extrabold text-sm text-emerald-400">
+                    <span className="font-extrabold text-sm text-emerald-700 dark:text-emerald-400">
                       + {formatAmount(tx.amount)}
                     </span>
                     <span className="text-xs text-muted">
@@ -558,7 +558,7 @@ export function BankSyncSection() {
                 <button
                   type="button"
                   onClick={() => handleUndoMatch(tx.id)}
-                  className="text-xs text-amber-500 hover:text-amber-400 font-bold flex items-center gap-1"
+                  className="text-xs text-amber-800 dark:text-amber-400 hover:underline font-bold flex items-center gap-1"
                 >
                   <RotateCcw className="w-3.5 h-3.5" /> Annuler
                 </button>
@@ -580,7 +580,7 @@ export function BankSyncSection() {
 
         {selectedTx && (
           <div className="p-3 rounded-card bg-surface-hover/50 border border-border text-xs space-y-1">
-            <p className="font-extrabold text-emerald-400 text-sm">
+            <p className="font-extrabold text-emerald-700 dark:text-emerald-400 text-sm">
               + {formatAmount(selectedTx.amount)}
             </p>
             <p className="text-text font-medium">{selectedTx.label}</p>

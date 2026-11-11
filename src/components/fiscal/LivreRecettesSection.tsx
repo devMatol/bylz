@@ -184,7 +184,7 @@ export function LivreRecettesSection({
                         <td className="p-3 font-medium text-text">{r.clientName}</td>
                         <td className="p-3 text-muted">{r.paymentMethod}</td>
                         <td className="p-3 text-right text-muted">{formatAmount(r.amountHt)}</td>
-                        <td className="p-3 text-right font-extrabold text-emerald-400">{formatAmount(r.amountTtc)}</td>
+                        <td className="p-3 text-right font-extrabold text-emerald-700 dark:text-emerald-400">{formatAmount(r.amountTtc)}</td>
                       </tr>
                     ))
                   )
@@ -203,7 +203,7 @@ export function LivreRecettesSection({
                         <td className="p-3 font-medium text-text">{p.client_name}</td>
                         <td className="p-3 text-muted">Virement / Carte</td>
                         <td className="p-3 text-right text-muted">{formatAmount(p.total_ht || p.total_ttc / 1.2)}</td>
-                        <td className="p-3 text-right font-extrabold text-violet-400">- {formatAmount(p.total_ttc)}</td>
+                        <td className="p-3 text-right font-extrabold text-violet-700 dark:text-violet-400">- {formatAmount(p.total_ttc)}</td>
                       </tr>
                     ))
                   )
@@ -241,13 +241,13 @@ export function LivreRecettesSection({
             <Card className="p-6 border border-emerald-500/30 bg-surface/90 space-y-4">
             <div className="flex items-start justify-between">
               <div>
-                <span className="text-xs font-bold text-emerald-400 uppercase tracking-wider bg-emerald-500/10 px-2 py-0.5 rounded-pill border border-emerald-500/20">
+                <span className="text-xs font-bold text-emerald-800 dark:text-emerald-400 uppercase tracking-wider bg-emerald-500/10 px-2 py-0.5 rounded-pill border border-emerald-500/20">
                   Déclaration Annuelle de Revenus
                 </span>
                 <h3 className="text-lg font-black text-text mt-1">Formulaire 2042-C-PRO</h3>
                 <p className="text-xs text-muted">Synthèse automatique des cases à remplir pour votre déclaration</p>
               </div>
-              <CheckCircle className="w-8 h-8 text-emerald-400 flex-shrink-0" />
+              <CheckCircle className="w-8 h-8 text-emerald-700 dark:text-emerald-400 flex-shrink-0" />
             </div>
 
             <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-3">
@@ -257,10 +257,10 @@ export function LivreRecettesSection({
               </div>
 
               <div className="flex items-center justify-between text-sm pt-1">
-                <span className="font-bold text-amber-400 flex items-center gap-1.5">
+                <span className="font-bold text-amber-800 dark:text-amber-400 flex items-center gap-1.5">
                   Case à remplir : <code className="bg-amber-500/20 px-2 py-0.5 rounded text-amber-300 font-mono text-base font-black">{config.taxBoxCode}</code>
                 </span>
-                <span className="font-black text-emerald-400 text-base">{formatAmount(taxEstimation.caBrut)}</span>
+                <span className="font-black text-emerald-700 dark:text-emerald-400 text-base">{formatAmount(taxEstimation.caBrut)}</span>
               </div>
             </div>
 
@@ -271,7 +271,7 @@ export function LivreRecettesSection({
               </div>
               <div className="flex justify-between py-1 border-b border-border/50">
                 <span>Abattement Forfaitaire Automatique ({config.abattementPercent}%) :</span>
-                <strong className="text-emerald-400">- {formatAmount(taxEstimation.abattementMontant)}</strong>
+                <strong className="text-emerald-700 dark:text-emerald-400">- {formatAmount(taxEstimation.abattementMontant)}</strong>
               </div>
               <div className="flex justify-between py-1 font-bold text-text">
                 <span>Revenu Net Imposable Estime (soumis au barème IR) :</span>
@@ -294,7 +294,7 @@ export function LivreRecettesSection({
                 Cochez la case <strong>"Revenus industriels et commerciaux non professionnels"</strong> ou <strong>"Revenus non commerciaux"</strong> (Formulaire 2042-C-PRO).
               </li>
               <li className="leading-relaxed">
-                Reportez le montant brut <strong>{formatAmount(taxEstimation.caBrut)}</strong> dans la case <strong className="text-amber-400">{config.taxBoxCode}</strong>.
+                Reportez le montant brut <strong>{formatAmount(taxEstimation.caBrut)}</strong> dans la case <strong className="text-amber-800 dark:text-amber-400">{config.taxBoxCode}</strong>.
               </li>
               <li className="leading-relaxed">
                 L'administration fiscale applique automatiquement l'abattement forfaitaire de {config.abattementPercent}%.

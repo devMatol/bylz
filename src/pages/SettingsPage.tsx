@@ -829,7 +829,7 @@ export function SettingsPage() {
 
                       {/* Preview Footer */}
                       {invoiceFooter && (
-                        <div className="pt-2 border-t border-slate-100 text-[9px] text-slate-400 line-clamp-2 leading-tight">
+                        <div className="pt-2 border-t border-slate-100 text-[9px] text-slate-600 dark:text-slate-400 line-clamp-2 leading-tight">
                           {invoiceFooter}
                         </div>
                       )}
