@@ -311,7 +311,7 @@ export function AutoRemindersSection() {
                 >
                   <div className="flex items-center space-x-3">
                     <div className={`w-9 h-9 rounded-xl font-black text-xs flex items-center justify-center flex-shrink-0 ${
-                      isRuleActive ? "bg-primary/10 text-primary" : "bg-muted/20 text-muted"
+                      isRuleActive ? "bg-primary/10 text-primary dark:text-blue-300 dark:bg-blue-950/50" : "bg-muted/20 text-muted"
                     }`}>
                       J+{rule.delay_days}
                     </div>
@@ -624,7 +624,7 @@ export function AutoRemindersSection() {
                         )}
                       </td>
                       <td className="p-3 text-right">
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-pill text-xs font-bold bg-primary/10 text-primary border border-primary/20 uppercase">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-pill text-xs font-bold bg-primary/10 text-primary dark:text-blue-300 dark:bg-blue-950/50 border border-primary/20 dark:border-blue-800 uppercase">
                           {h.source === "auto" ? "Automatique" : "Manuelle"}
                         </span>
                       </td>

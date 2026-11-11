@@ -213,7 +213,7 @@ export function QuotesPage() {
                           type="button"
                           onClick={() => void handleConvert(r.id)}
                           disabled={convertingId === r.id}
-                          className="min-h-[40px] px-3 py-2 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 text-xs font-bold transition-colors cursor-pointer flex items-center gap-1.5"
+                          className="min-h-[40px] px-3 py-2 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary dark:text-blue-300 dark:bg-blue-950/40 dark:border-blue-800 border border-primary/20 text-xs font-bold transition-colors cursor-pointer flex items-center gap-1.5"
                           title="Convertir ce devis en facture"
                         >
                           {convertingId === r.id ? (

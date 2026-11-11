@@ -95,7 +95,7 @@ export function LivreRecettesSection({
             onClick={() => setTab("recettes")}
             className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
               tab === "recettes"
-                ? "bg-primary text-primary-foreground shadow-md"
+                ? "bg-primary text-white shadow-md"
                 : "bg-surface-hover text-muted hover:text-text"
             }`}
           >
@@ -106,7 +106,7 @@ export function LivreRecettesSection({
             onClick={() => setTab("achats")}
             className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
               tab === "achats"
-                ? "bg-primary text-primary-foreground shadow-md"
+                ? "bg-primary text-white shadow-md"
                 : "bg-surface-hover text-muted hover:text-text"
             }`}
           >

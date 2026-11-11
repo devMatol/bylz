@@ -127,7 +127,7 @@ export function SettingsPage() {
   const [searchingSiret, setSearchingSiret] = useState(false);
 
   const [logoUrl, setLogoUrl] = useState("");
-  const [accentColor, setAccentColor] = useState("#7C6FE0");
+  const [accentColor, setAccentColor] = useState("#2563EB");
   const [invoiceFooter, setInvoiceFooter] = useState("");
   const [savingDesign, setSavingDesign] = useState(false);
   const [logoUploading, setLogoUploading] = useState(false);
@@ -173,7 +173,7 @@ export function SettingsPage() {
       setVatOption(company.vat_option || "non_renseigne");
       setPreviousCa((company.previous_ca || 0).toString());
       setLogoUrl(company.logo_url || "");
-      setAccentColor(company.accent_color || "#7C6FE0");
+      setAccentColor(company.accent_color && company.accent_color !== "#7C6FE0" ? company.accent_color : "#2563EB");
       setInvoiceFooter(company.invoice_footer || "");
     }
   }, [company]);
@@ -631,8 +631,8 @@ export function SettingsPage() {
               </div>
 
               {/* Starter Included Callout Banner */}
-              <div className="flex items-start sm:items-center gap-2.5 p-3.5 rounded-xl bg-primary/10 border border-primary/20 text-xs text-primary font-medium">
-                <Sparkles className="w-4 h-4 flex-shrink-0 mt-0.5 sm:mt-0 text-primary" />
+              <div className="flex items-start sm:items-center gap-2.5 p-3.5 rounded-xl bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900/50 text-xs text-blue-900 dark:text-blue-200 font-medium">
+                <Sparkles className="w-4 h-4 flex-shrink-0 mt-0.5 sm:mt-0 text-blue-600 dark:text-blue-400" />
                 <span>
                   <strong>Inclus dans tous les plans (Starter, Solo et Pro) :</strong> Votre logo et votre couleur d'accentuation sont appliqués automatiquement sur tous vos devis, factures et fichiers PDF avec mentions légales.
                 </span>
@@ -741,7 +741,7 @@ export function SettingsPage() {
                             type="text"
                             value={accentColor.toUpperCase()}
                             onChange={(e) => setAccentColor(e.target.value)}
-                            placeholder="#7C6FE0"
+                            placeholder="#2563EB"
                             className="text-xs font-mono h-8"
                           />
                         </div>
@@ -829,7 +829,7 @@ export function SettingsPage() {
 
                       {/* Preview Footer */}
                       {invoiceFooter && (
-                        <div className="pt-2 border-t border-slate-100 text-[9px] text-slate-600 dark:text-slate-400 line-clamp-2 leading-tight">
+                        <div className="pt-2 border-t border-slate-100 text-[9px] text-slate-700 line-clamp-2 leading-tight">
                           {invoiceFooter}
                         </div>
                       )}

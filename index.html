@@ -1,6 +1,18 @@
 <!doctype html>
 <html lang="fr">
   <head>
+    <script>
+      try {
+        var v2 = localStorage.getItem('bylz-theme-v2');
+        var theme = (v2 === 'light' || v2 === 'dark') ? v2 : 'light';
+        document.documentElement.setAttribute('data-theme', theme);
+        if (theme === 'dark') {
+          document.documentElement.classList.add('dark');
+        } else {
+          document.documentElement.classList.remove('dark');
+        }
+      } catch (e) {}
+    </script>
     <!-- Google Consent Mode v2 Default (Strictement denied par défaut avant tout chargement de traceurs) -->
     <script>
       window.dataLayer = window.dataLayer || [];

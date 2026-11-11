@@ -192,7 +192,7 @@ export function InvoicesPage() {
             className={cn(
               "px-4 py-3 text-xs font-bold transition-all border-b-2 -mb-px flex items-center gap-1.5 flex-shrink-0",
               activeTab === "sales"
-                ? "border-primary text-primary"
+                ? "border-primary text-primary dark:text-blue-300 dark:border-blue-400"
                 : "border-transparent text-muted hover:text-text hover:border-border/30"
             )}
           >
@@ -200,7 +200,7 @@ export function InvoicesPage() {
             <span className={cn(
               "text-xs px-1.5 py-0.5 rounded-full font-bold",
               activeTab === "sales"
-                ? "bg-primary/10 text-primary"
+                ? "bg-primary/10 text-primary dark:bg-blue-950/50 dark:text-blue-300"
                 : "bg-surface-hover/80 text-muted"
             )}>
               {salesRows.length}
@@ -212,7 +212,7 @@ export function InvoicesPage() {
             className={cn(
               "px-4 py-3 text-xs font-bold transition-all border-b-2 -mb-px flex items-center gap-1.5 flex-shrink-0",
               activeTab === "purchases"
-                ? "border-primary text-primary"
+                ? "border-primary text-primary dark:text-blue-300 dark:border-blue-400"
                 : "border-transparent text-muted hover:text-text hover:border-border/30"
             )}
           >
@@ -220,7 +220,7 @@ export function InvoicesPage() {
             <span className={cn(
               "text-xs px-1.5 py-0.5 rounded-full font-bold",
               activeTab === "purchases"
-                ? "bg-primary/10 text-primary"
+                ? "bg-primary/10 text-primary dark:bg-blue-950/50 dark:text-blue-300"
                 : "bg-surface-hover/80 text-muted"
             )}>
               {purchaseRows.length}
@@ -319,7 +319,7 @@ export function InvoicesPage() {
               <button
                 type="button"
                 onClick={() => setImportOpen(true)}
-                className="flex-1 sm:flex-none text-xs whitespace-nowrap bg-primary text-primary-foreground px-3.5 min-h-[40px] rounded-pill font-semibold hover:bg-primary-hover transition-colors animate-pulse flex items-center justify-center"
+                className="flex-1 sm:flex-none text-xs whitespace-nowrap bg-primary text-white px-3.5 min-h-[40px] rounded-pill font-semibold hover:bg-primary-hover transition-colors animate-pulse flex items-center justify-center"
               >
                 Importer des PDF
               </button>

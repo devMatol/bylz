@@ -93,7 +93,7 @@ export function Sidebar() {
                   cn(
                     "flex items-center gap-3 px-3 py-2.5 rounded text-sm font-medium transition-all duration-200 border-l-[3px]",
                     isActive
-                      ? "bg-primary/10 text-primary border-primary bylz-glow-primary"
+                      ? "bg-primary/10 text-primary border-primary dark:text-blue-300 dark:bg-blue-950/40 dark:border-blue-400 bylz-glow-primary"
                       : "text-muted border-transparent hover:text-text hover:bg-surface-hover"
                   )
                 }
@@ -164,7 +164,7 @@ export function Sidebar() {
           {isAdmin && (
             <Link
               to="/admin"
-              className="w-full flex items-center gap-2.5 px-3 py-2 rounded text-xs font-bold text-rose-500 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 transition-colors"
+              className="w-full flex items-center gap-2.5 px-3 py-2 rounded text-xs font-bold text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/50 hover:bg-rose-100 dark:hover:bg-rose-900/60 transition-colors"
             >
               <ShieldAlert className="w-4 h-4" />
               <span>Back-Office Admin</span>

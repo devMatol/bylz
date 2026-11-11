@@ -93,13 +93,14 @@ export function FiscalCharts({ monthlyData, caThreshold }: FiscalChartsProps) {
                   y1={yVal}
                   x2={chartWidth - paddingX}
                   y2={yVal}
-                  stroke="rgba(255, 255, 255, 0.06)"
+                  stroke="var(--border)"
                   strokeDasharray="4 4"
                 />
                 <text
                   x={paddingX - 8}
                   y={yVal + 3}
-                  fill="rgba(148, 163, 184, 0.6)"
+                  fill="currentColor"
+                  className="text-slate-600 dark:text-slate-300 font-medium"
                   fontSize="12"
                   textAnchor="end"
                 >
@@ -151,7 +152,8 @@ export function FiscalCharts({ monthlyData, caThreshold }: FiscalChartsProps) {
                 <text
                   x={cx}
                   y={chartHeight - 4}
-                  fill="rgba(148, 163, 184, 0.8)"
+                  fill="currentColor"
+                  className="text-slate-600 dark:text-slate-300 font-medium"
                   fontSize="12"
                   fontWeight={isHovered ? "bold" : "normal"}
                   textAnchor="middle"
