@@ -32,21 +32,21 @@ export function ThresholdGaugeCard({
   const statusConfig = {
     safe: {
       badgeText: "Périmètre Sécurisé",
-      badgeClass: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
+      badgeClass: "bg-emerald-500/10 text-emerald-800 dark:text-emerald-400 border-emerald-500/30",
       barClass: "from-emerald-500 to-teal-400 shadow-emerald-500/20",
       icon: CheckCircle2,
       glow: "shadow-emerald-500/5 border-emerald-500/20",
     },
     warning: {
       badgeText: "Vigilance Seuil",
-      badgeClass: "bg-amber-500/10 text-amber-400 border-amber-500/20 animate-pulse",
+      badgeClass: "bg-amber-500/10 text-amber-800 dark:text-amber-400 border-amber-500/30 animate-pulse",
       barClass: "from-amber-500 to-yellow-400 shadow-amber-500/20",
       icon: AlertTriangle,
       glow: "shadow-amber-500/10 border-amber-500/30",
     },
     danger: {
       badgeText: "Attention : Seuil Frôlé / Dépassé",
-      badgeClass: "bg-rose-500/15 text-rose-400 border-rose-500/30 animate-bounce",
+      badgeClass: "bg-rose-500/15 text-rose-800 dark:text-rose-400 border-rose-500/30 animate-bounce",
       barClass: "from-rose-500 to-red-600 shadow-rose-500/30",
       icon: ShieldAlert,
       glow: "shadow-rose-500/15 border-rose-500/40",
@@ -155,7 +155,7 @@ export function ThresholdGaugeCard({
           <div className="flex items-center gap-1 text-xs">
             <Info className="w-3 h-3 text-muted" />
             <span>Reste disponible :</span>
-            <strong className={cn("font-bold", thresholdLimit - currentValue <= 0 ? "text-rose-400" : "text-emerald-400")}>
+            <strong className={cn("font-bold", thresholdLimit - currentValue <= 0 ? "text-rose-700 dark:text-rose-400" : "text-emerald-700 dark:text-emerald-400")}>
               {formatAmount(Math.max(0, thresholdLimit - currentValue))}
             </strong>
           </div>

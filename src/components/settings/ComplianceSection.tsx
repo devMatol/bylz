@@ -95,7 +95,7 @@ export function ComplianceSection() {
         <div className="p-4 rounded-card bg-surface-hover/40 border border-emerald-500/30 space-y-2">
           <p className="text-xs font-bold text-muted uppercase">Loi Anti-Fraude TVA (Inaltérabilité & Traçabilité)</p>
           <div className="flex items-center space-x-2">
-            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-pill bg-emerald-500/20 text-emerald-400 font-bold text-xs border border-emerald-500/30">
+            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-pill bg-emerald-500/15 text-emerald-800 dark:text-emerald-400 font-bold text-xs border border-emerald-500/30">
               <ShieldCheck className="w-3.5 h-3.5" /> Numérotation séquentielle continue
             </span>
           </div>
@@ -167,10 +167,10 @@ export function ComplianceSection() {
                       <span
                         className={`px-2 py-0.5 rounded-pill text-xs font-bold ${
                           b.status === "confirmed" || (b.status as string) === "submitted"
-                            ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
+                            ? "bg-emerald-500/15 text-emerald-800 dark:text-emerald-400 border border-emerald-500/30"
                             : b.status === "error"
-                            ? "bg-rose-500/20 text-rose-400 border border-rose-500/30"
-                            : "bg-sky-500/20 text-sky-400 border border-sky-500/30"
+                            ? "bg-rose-500/15 text-rose-800 dark:text-rose-400 border border-rose-500/30"
+                            : "bg-sky-500/15 text-sky-800 dark:text-sky-400 border border-sky-500/30"
                         }`}
                       >
                         {b.status}

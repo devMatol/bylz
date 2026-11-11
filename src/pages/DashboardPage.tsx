@@ -32,7 +32,7 @@ import {
 } from "../lib/api";
 import { formatAmount, cn } from "../lib/utils";
 import { formatDateLong, todayISO, safeFormatDate } from "../lib/date";
-import { canUseFeature } from "../lib/planLimits";
+import { canUseFeature, countActiveClients } from "../lib/planLimits";
 import { OnboardingChecklist } from "../components/dashboard/OnboardingChecklist";
 import { UpgradeModal } from "../components/shared/UpgradeModal";
 import { ReminderModal } from "../components/documents/ReminderModal";
@@ -91,14 +91,18 @@ export function DashboardPage() {
     setLoading(true);
     setLoadError(null);
     try {
-      const d = await fetchDashboardData(
-        company.id,
-        company.activity_type,
-        period,
-        profile?.tmi ?? null,
-        dataView
-      );
+      const [d, cCount] = await Promise.all([
+        fetchDashboardData(
+          company.id,
+          company.activity_type,
+          period,
+          profile?.tmi ?? null,
+          dataView
+        ),
+        countActiveClients(company.id),
+      ]);
       setData(d);
+      setClientsCount(cCount);
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Erreur";
       setLoadError(msg);
@@ -199,7 +203,7 @@ export function DashboardPage() {
             <AlertTriangle className="w-5 h-5 flex-shrink-0 animate-pulse text-amber-500" />
             <div>
               <p className="font-semibold text-sm">Profil de l'entreprise incomplet</p>
-              <p className="text-xs opacity-90 text-muted">
+              <p className="text-xs text-slate-700 dark:text-slate-300">
                 Renseignez votre SIRET et votre adresse pour que vos factures comportent toutes les mentions obligatoires.
               </p>
             </div>
@@ -215,12 +219,12 @@ export function DashboardPage() {
       )}
 
       {!dismissedHistory && company && company.previous_ca === 0 && (
-        <div className="mb-4 rounded-xl border border-blue-500/20 bg-blue-500/5 text-blue-800 dark:text-blue-200 overflow-hidden">
+        <div className="mb-4 rounded-xl border border-blue-500/20 bg-blue-500/5 text-blue-950 dark:text-blue-200 overflow-hidden">
           {/* Mobile: Replié sur 1 seule ligne par défaut */}
           <div className="flex sm:hidden items-center justify-between px-3 py-2 text-xs min-h-[40px]">
             <div className="flex items-center gap-2 min-w-0">
               <Receipt className="w-4 h-4 text-blue-500 flex-shrink-0" />
-              <span className="font-semibold truncate">Rattraper votre historique {new Date().getFullYear()}</span>
+              <span className="font-semibold truncate text-blue-950 dark:text-blue-200">Rattraper votre historique {new Date().getFullYear()}</span>
             </div>
             <div className="flex items-center gap-1 flex-shrink-0">
               <button
@@ -246,7 +250,7 @@ export function DashboardPage() {
             <div className="flex items-center space-x-3">
               <Receipt className="w-5 h-5 flex-shrink-0 text-blue-500 hidden sm:block" />
               <div>
-                <p className="font-semibold text-sm hidden sm:block">Rattraper votre historique {new Date().getFullYear()}</p>
+                <p className="font-semibold text-sm hidden sm:block text-blue-950 dark:text-blue-200">Rattraper votre historique {new Date().getFullYear()}</p>
                 <p className="text-xs opacity-90 text-muted">
                   Renseignez votre chiffre d'affaires antérieur ou importez vos anciennes factures de l'année pour suivre précisément vos plafonds de TVA et micro-entreprise.
                 </p>

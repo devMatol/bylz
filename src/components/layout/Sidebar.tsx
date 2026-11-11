@@ -15,7 +15,7 @@ import { Logo } from "../shared/Logo";
 const PLAN_BADGE: Record<string, { label: string; icon: typeof Zap; className: string }> = {
   starter: { label: "STARTER", icon: Lock, className: "bg-surface-hover text-muted" },
   solo: { label: "SOLO", icon: Zap, className: "bg-primary/15 text-primary" },
-  pro: { label: "PRO", icon: Zap, className: "bg-amber-500/15 text-amber-500" },
+  pro: { label: "PRO", icon: Zap, className: "bg-amber-500/15 text-amber-800 dark:text-amber-400 border border-amber-500/30" },
 };
 
 export function Sidebar() {

@@ -361,7 +361,7 @@ export function UrssafPage() {
                       </div>
                       <div className="p-4 rounded-xl bg-surface border border-border">
                         <p className="text-xs text-muted mb-1 font-medium">Cotisations estimées</p>
-                        <p className="text-xl font-black text-emerald-400">
+                        <p className="text-xl font-black text-emerald-700 dark:text-emerald-400">
                           {formatAmount(currentPeriod.estimatedAmount)}
                         </p>
                         {currentPeriod.revenue === 0 && (
@@ -436,7 +436,7 @@ export function UrssafPage() {
                           <tr key={p.id} className="text-text hover:bg-surface-hover/30 transition-colors">
                             <td className="py-3 font-bold">{p.label}</td>
                             <td className="py-3">{formatAmount(p.revenue)}</td>
-                            <td className="py-3 text-emerald-400">{formatAmount(p.estimatedAmount)}</td>
+                            <td className="py-3 font-semibold text-emerald-700 dark:text-emerald-400">{formatAmount(p.estimatedAmount)}</td>
                             <td className="py-3 text-muted">{p.declaredAt ? formatDateLong(p.declaredAt) : "-"}</td>
                             <td className="py-3">
                               <PeriodStatus period={p} />

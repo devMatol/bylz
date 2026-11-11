@@ -181,9 +181,9 @@ export function AutoRemindersSection() {
   };
 
   const toneLabels: Record<ReminderTone, { label: string; color: string }> = {
-    friendly: { label: "Amical", color: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30" },
-    firm: { label: "Ferme", color: "bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30" },
-    formal: { label: "Formel (Indemnité 40€ B2B)", color: "bg-rose-500/15 text-rose-600 dark:text-rose-400 border-rose-500/30" },
+    friendly: { label: "Amical", color: "bg-emerald-500/15 text-emerald-800 dark:text-emerald-400 border-emerald-500/30" },
+    firm: { label: "Ferme", color: "bg-amber-500/15 text-amber-800 dark:text-amber-400 border-amber-500/30" },
+    formal: { label: "Formel (Indemnité 40€ B2B)", color: "bg-rose-500/15 text-rose-800 dark:text-rose-400 border-rose-500/30" },
   };
 
   return (
@@ -235,7 +235,7 @@ export function AutoRemindersSection() {
       {!canUseAutoReminders && (
         <div className="p-4 sm:p-5 rounded-2xl border border-amber-500/30 bg-amber-500/10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="flex items-center space-x-3.5">
-            <div className="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center flex-shrink-0">
+            <div className="w-10 h-10 rounded-xl bg-amber-500/15 text-amber-800 dark:text-amber-400 flex items-center justify-center flex-shrink-0">
               <Lock className="w-5 h-5" />
             </div>
             <div>

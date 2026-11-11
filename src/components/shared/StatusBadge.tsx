@@ -38,14 +38,14 @@ export function StatusBadge({ status, type, className }: StatusBadgeProps) {
       <span
         className={cn(
           "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-pill text-xs font-semibold bg-surface-hover whitespace-nowrap flex-shrink-0 align-middle",
-          isImputed ? "text-success" : "text-violet-600 dark:text-violet-400",
+          isImputed ? "text-success" : "text-violet-700 dark:text-violet-300",
           className
         )}
       >
         <span
           className={cn(
             "inline-block w-1.5 h-1.5 rounded-full flex-shrink-0",
-            isImputed ? "bg-success" : "bg-violet-500"
+            isImputed ? "bg-success" : "bg-violet-600 dark:bg-violet-400"
           )}
         />
         <span>{isImputed ? "Imputé" : "Avoir"}</span>

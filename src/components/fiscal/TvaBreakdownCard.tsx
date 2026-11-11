@@ -33,7 +33,7 @@ export function TvaBreakdownCard({
           className={`text-xs font-extrabold px-3 py-1 rounded-pill border w-fit ${
             isAssujetti
               ? "bg-primary/10 text-primary border-primary/20"
-              : "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
+              : "bg-emerald-500/10 text-emerald-800 dark:text-emerald-400 border-emerald-500/30"
           }`}
         >
           {isAssujetti ? "Assujetti TVA (Régime Réel / Simplifié)" : "Franchise de TVA Active"}
@@ -55,11 +55,11 @@ export function TvaBreakdownCard({
           <div className="p-4 rounded-xl bg-slate-900/80 border border-slate-800 space-y-2">
             <div className="flex items-center justify-between text-xs text-muted">
               <span className="flex items-center gap-1 font-medium">
-                <ArrowUpRight className="w-4 h-4 text-emerald-400" />
+                <ArrowUpRight className="w-4 h-4 text-emerald-700 dark:text-emerald-400" />
                 TVA Collectée (Factures Clients)
               </span>
             </div>
-            <p className="text-2xl font-black text-emerald-400">
+            <p className="text-2xl font-black text-emerald-700 dark:text-emerald-400">
               {formatAmount(tvaCollected)}
             </p>
             <p className="text-xs text-muted">TVA facturée à vos clients</p>
@@ -69,11 +69,11 @@ export function TvaBreakdownCard({
           <div className="p-4 rounded-xl bg-slate-900/80 border border-slate-800 space-y-2">
             <div className="flex items-center justify-between text-xs text-muted">
               <span className="flex items-center gap-1 font-medium">
-                <ArrowDownLeft className="w-4 h-4 text-violet-400" />
+                <ArrowDownLeft className="w-4 h-4 text-violet-700 dark:text-violet-300" />
                 TVA Déductible (Achats Pros)
               </span>
             </div>
-            <p className="text-2xl font-black text-violet-400">
+            <p className="text-2xl font-black text-violet-700 dark:text-violet-300">
               {formatAmount(tvaDeductible)}
             </p>
             <p className="text-xs text-muted">TVA récupérable sur vos dépenses</p>
