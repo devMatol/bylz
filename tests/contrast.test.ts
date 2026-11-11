@@ -1,24 +1,27 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { runContrastAudit } from "../scripts/check-contrast.mjs";
+import { runRenderedContrastAudit } from "../scripts/check-contrast.mjs";
 
-test("Vérification automatique des contrastes WCAG AA (>= 4.5:1) en clair et en sombre", () => {
-  const result = runContrastAudit();
+test("Vérification automatique des contrastes WCAG AA (>= 4.5:1) en conditions réelles Playwright (4 combinaisons)", async () => {
+  const results = await runRenderedContrastAudit();
 
-  const failedItems = result.rows.filter((r) => r.status === "FAIL");
+  assert.equal(results.length, 4, "Les 4 combinaisons OS/App doivent être testées");
 
-  if (failedItems.length > 0) {
-    const errorDetails = failedItems
-      .map(
-        (f) =>
-          `[${f.page}] [${f.theme}] ${f.component} ratio=${f.ratio}:1 (attendu >= 4.5:1)`
-      )
-      .join("\n");
-    assert.fail(
-      `${failedItems.length} élément(s) ont un contraste inférieur au seuil WCAG AA de 4.5:1 :\n${errorDetails}`
-    );
+  for (const comb of results) {
+    if (comb.totalFailed > 0) {
+      const details = comb.failures
+        .slice(0, 5)
+        .map(
+          (f: any) =>
+            `[${f.page}] "${f.text}" fg=rgb(${f.fgRgb}) bg=rgb(${f.bgRgb}) ratio=${f.ratio}:1 (seuil ${f.threshold}:1)`
+        )
+        .join("\n");
+      assert.fail(
+        `Échec de contraste pour ${comb.combination} (${comb.totalFailed} échecs) :\n${details}`
+      );
+    }
+
+    assert.equal(comb.totalFailed, 0, `Aucun échec pour ${comb.combination}`);
+    assert.ok(comb.totalChecked >= 50, `Au moins 50 éléments vérifiés pour ${comb.combination}`);
   }
-
-  assert.equal(result.failed, 0, "Aucun échec de contraste ne doit être présent");
-  assert.ok(result.totalChecked >= 30, "Au moins 30 vérifications de contraste doivent être exécutées");
 });

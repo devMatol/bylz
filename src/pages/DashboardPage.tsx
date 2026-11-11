@@ -153,7 +153,7 @@ export function DashboardPage() {
               className={cn(
                 "min-h-[40px] px-3.5 py-2 rounded-pill text-xs font-semibold whitespace-nowrap transition-all flex items-center justify-center",
                 period === p
-                  ? "bg-primary text-primary-foreground font-bold shadow-xs"
+                  ? "bg-primary text-white font-bold shadow-xs"
                   : "text-muted hover:text-text"
               )}
             >
@@ -267,7 +267,7 @@ export function DashboardPage() {
               <button
                 type="button"
                 onClick={() => navigate("/invoices?import=true")}
-                className="flex-1 sm:flex-none text-xs whitespace-nowrap bg-primary text-primary-foreground px-3 min-h-[40px] rounded-pill font-semibold hover:bg-primary-hover transition-colors flex items-center justify-center"
+                className="flex-1 sm:flex-none text-xs whitespace-nowrap bg-primary text-white px-3 min-h-[40px] rounded-pill font-semibold hover:bg-primary-hover transition-colors flex items-center justify-center"
               >
                 Importer des PDF
               </button>
@@ -482,7 +482,7 @@ export function DashboardPage() {
                   <button
                     type="button"
                     onClick={() => navigate("/invoices")}
-                    className="min-h-[40px] px-2 -mr-2 inline-flex items-center text-xs text-primary font-semibold hover:underline"
+                    className="min-h-[40px] px-2 -mr-2 inline-flex items-center text-xs text-primary dark:text-blue-300 font-semibold hover:underline"
                   >
                     Voir tout
                   </button>
@@ -915,7 +915,8 @@ function CaBarChart({
                 y={y + 3}
                 textAnchor="end"
                 fontSize={12}
-                fill="var(--text-muted)"
+                fill="currentColor"
+                className="text-slate-600 dark:text-slate-300 font-medium"
               >
                 {tv >= 1000 ? `${(tv / 1000).toFixed(0)}k` : tv.toFixed(0)}
               </text>
@@ -955,7 +956,8 @@ function CaBarChart({
                 y={height - 10}
                 textAnchor="middle"
                 fontSize={12}
-                fill="var(--text-muted)"
+                fill="currentColor"
+                className="text-slate-600 dark:text-slate-300 font-medium"
               >
                 {monthLabel}
               </text>

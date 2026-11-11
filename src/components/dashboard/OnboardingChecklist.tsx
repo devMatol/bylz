@@ -174,7 +174,7 @@ export function OnboardingChecklist({
                 <div className="mt-3 pt-2 border-t border-border/50 flex justify-end">
                   <Link
                     to={step.link}
-                    className="inline-flex items-center gap-1 text-xs font-bold text-primary hover:text-primary-hover"
+                    className="inline-flex items-center gap-1 text-xs font-bold text-primary dark:text-blue-300 hover:text-primary-hover dark:hover:text-blue-200"
                   >
                     <span>{step.actionText}</span>
                     <ArrowRight className="w-3 h-3" />
