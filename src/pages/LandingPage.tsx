@@ -264,37 +264,36 @@ export function LandingPage() {
               {/* Left Column : Valeur, arguments et CTA */}
               <div className="lg:col-span-7 space-y-6 text-left">
 
-                {/* Titre percutant H1 optimisé SEO */}
+                {/* Titre percutant H1 */}
                 <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-slate-900 leading-[1.15]">
-                  Facturation & gestion pour les{" "}
-                  <span className="text-blue-700">indépendants</span>.
+                  Vos factures en 3 clics,{" "}
+                  <span className="text-blue-700">même si vous venez de vous lancer</span>
                 </h1>
 
-                {/* 4 Promesses claires à cocher */}
-                <ul className="space-y-3 pt-1 text-slate-800 text-sm sm:text-base font-medium">
+                {/* Sous-titre court en mots simples */}
+                <p className="text-base sm:text-lg text-slate-700 leading-relaxed max-w-xl">
+                  Créez vos devis et factures conformes, suivez vos paiements et estimez vos cotisations sans prise de tête.
+                </p>
+
+                {/* 3 Promesses concrètes */}
+                <ul className="space-y-2.5 pt-1 text-slate-800 text-sm sm:text-base font-medium">
                   <li className="flex items-center gap-3">
                     <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center flex-shrink-0">
                       <Check className="w-3.5 h-3.5 stroke-[3]" />
                     </span>
-                    <span>Factures PDF avec <strong>les mentions légales essentielles</strong></span>
+                    <span>Factures conformes avec mentions légales automatiques</span>
                   </li>
                   <li className="flex items-center gap-3">
                     <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center flex-shrink-0">
                       <Check className="w-3.5 h-3.5 stroke-[3]" />
                     </span>
-                    <span>Calcul automatique de vos <strong>cotisations URSSAF</strong> et de votre net</span>
+                    <span>Calcul automatique de vos cotisations URSSAF et de votre net</span>
                   </li>
                   <li className="flex items-center gap-3">
                     <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center flex-shrink-0">
                       <Check className="w-3.5 h-3.5 stroke-[3]" />
                     </span>
-                    <span>Suivi en direct du <strong>seuil de TVA</strong> (Franchise en base)</span>
-                  </li>
-                  <li className="flex items-center gap-3">
-                    <span className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-800 flex items-center justify-center flex-shrink-0">
-                      <Sparkles className="w-3.5 h-3.5 stroke-[2.5]" />
-                    </span>
-                    <span><strong>Assistant IA utilisable depuis WhatsApp</strong> <span className="inline-block px-1.5 py-0.5 rounded text-[11px] font-bold bg-amber-100 text-amber-800 border border-amber-300 ml-1">Option Pro</span> pour dicter vos devis et facturer</span>
+                    <span>Suivi en direct du seuil de TVA sans calculatrice</span>
                   </li>
                 </ul>
 
@@ -313,9 +312,9 @@ export function LandingPage() {
                           Créer mon compte gratuit
                         </button>
                       </Link>
-                      <Link to="/tarifs" onClick={() => trackCtaClick("hero")} className="w-full sm:w-auto">
+                      <Link to="/essai" onClick={() => trackCtaClick("hero")} className="w-full sm:w-auto">
                         <button className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl border border-slate-300 bg-white text-slate-800 text-base font-bold hover:bg-slate-50 hover:text-slate-900 transition-colors shadow-sm">
-                          Consulter les tarifs
+                          Voir Bylz en 30 secondes
                         </button>
                       </Link>
                     </>
