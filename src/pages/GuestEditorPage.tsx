@@ -48,7 +48,47 @@ import { formatAmount } from "../lib/utils";
 import { NAV_ITEMS } from "../lib/constants";
 import { trackDemoStart, trackDemoLockedClick } from "../lib/analytics";
 
-type GuestTab = "dashboard" | "invoice";
+type GuestTab = "dashboard" | "invoice" | "quotes" | "clients" | "catalog";
+
+const UNLOCKED_PATHS: Record<string, GuestTab> = {
+  "/dashboard": "dashboard",
+  "/invoices": "invoice",
+  "/quotes": "quotes",
+  "/clients": "clients",
+  "/catalog": "catalog",
+};
+
+const DEMO_PRELOADED_CLIENT = {
+  id: "guest-client-1",
+  name: "Acme Studio SARL",
+  email: "comptabilite@acme.fr",
+  type: "b2b" as const,
+  siren: "803245912",
+  siret: "803 245 912 00024",
+  vat_number: "FR34803245912",
+  address: "42 avenue des Champs-Élysées, 75008 Paris",
+};
+
+const DEMO_PRELOADED_ITEMS = [
+  {
+    id: "demo-item-1",
+    company_id: "guest-company",
+    title: "Création de site vitrine responsive",
+    description: "Conception graphique et développement web sur mesure",
+    unit_price: 1200,
+    nature: "service" as const,
+    created_at: new Date().toISOString(),
+  },
+  {
+    id: "demo-item-2",
+    company_id: "guest-company",
+    title: "Maintenance et support mensuel",
+    description: "Sauvegardes, mises à jour de sécurité et assistance",
+    unit_price: 350,
+    nature: "service" as const,
+    created_at: new Date().toISOString(),
+  },
+];
 
 export function GuestEditorPageContent() {
   const { draft, updateDraft } = useGuestDraft();
@@ -198,21 +238,17 @@ export function GuestEditorPageContent() {
         <nav className="flex-1 flex flex-col gap-1 p-4 overflow-y-auto">
           {NAV_ITEMS.map((item) => {
             const Icon = item.icon;
-            const isDashboard = item.path === "/dashboard";
-            const isInvoice = item.path === "/invoices";
-            const isActive =
-              (isDashboard && activeTab === "dashboard") ||
-              (isInvoice && activeTab === "invoice");
+            const targetTab = UNLOCKED_PATHS[item.path];
+            const isUnlocked = !!targetTab;
+            const isActive = isUnlocked && activeTab === targetTab;
 
             return (
               <button
                 key={item.path}
                 type="button"
                 onClick={() => {
-                  if (isDashboard) {
-                    setActiveTab("dashboard");
-                  } else if (isInvoice) {
-                    setActiveTab("invoice");
+                  if (targetTab) {
+                    setActiveTab(targetTab);
                   } else {
                     openWall("locked_feature", item.label);
                   }
@@ -237,7 +273,7 @@ export function GuestEditorPageContent() {
                   >
                     {item.badge}
                   </span>
-                ) : !isDashboard && !isInvoice ? (
+                ) : !isUnlocked ? (
                   <Lock className="w-3.5 h-3.5 text-muted/40" />
                 ) : null}
               </button>
@@ -278,7 +314,15 @@ export function GuestEditorPageContent() {
             </div>
             <div className="hidden md:flex items-center gap-2">
               <span className="text-sm font-bold text-text">
-                {activeTab === "dashboard" ? "Tableau de bord" : "Nouvelle Facture"}
+                {activeTab === "dashboard"
+                  ? "Tableau de bord"
+                  : activeTab === "invoice"
+                  ? "Nouvelle Facture"
+                  : activeTab === "quotes"
+                  ? "Devis"
+                  : activeTab === "clients"
+                  ? "Clients"
+                  : "Catalogue"}
               </span>
               <span className="text-xs text-muted">· Aperçu interactif</span>
             </div>
@@ -596,7 +640,26 @@ export function GuestEditorPageContent() {
                 <div className={`space-y-6 ${mobileView === "preview" ? "hidden lg:block" : "block"} lg:col-span-6`}>
                   {/* Client Info */}
                   <Card className="p-5 space-y-4 bg-surface border-border">
-                    <h3 className="text-sm font-bold text-text">Destinataire (Client)</h3>
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-sm font-bold text-text">Destinataire (Client)</h3>
+                      {draft?.clientName !== DEMO_PRELOADED_CLIENT.name && (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() =>
+                            updateDraft({
+                              clientName: DEMO_PRELOADED_CLIENT.name,
+                              clientEmail: DEMO_PRELOADED_CLIENT.email,
+                              clientType: DEMO_PRELOADED_CLIENT.type,
+                            })
+                          }
+                          className="text-xs h-7 px-2.5 font-semibold text-primary hover:bg-primary/10 border-primary/30"
+                        >
+                          + Choisir {DEMO_PRELOADED_CLIENT.name}
+                        </Button>
+                      )}
+                    </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <Input
                         label="Nom du client / Raison sociale"
@@ -644,7 +707,41 @@ export function GuestEditorPageContent() {
 
                   {/* Lignes de la facture */}
                   <Card className="p-5 space-y-4 bg-surface border-border">
-                    <h3 className="text-sm font-bold text-text">Prestations & Lignes de facturation</h3>
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                      <h3 className="text-sm font-bold text-text">Prestations & Lignes de facturation</h3>
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        <span className="text-[11px] text-muted mr-1">Catalogue démo :</span>
+                        {DEMO_PRELOADED_ITEMS.map((item) => (
+                          <button
+                            key={item.id}
+                            type="button"
+                            onClick={() => {
+                              const hasSingleEmptyLine =
+                                lines.length === 1 &&
+                                !lines[0].description &&
+                                lines[0].unitPrice === 0;
+
+                              const newLine = {
+                                description: item.title,
+                                quantity: 1,
+                                unitPrice: item.unit_price,
+                                nature: item.nature,
+                              };
+
+                              if (hasSingleEmptyLine) {
+                                updateDraft({ lines: [newLine] });
+                              } else {
+                                updateDraft({ lines: [...lines, newLine] });
+                              }
+                            }}
+                            className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-semibold bg-primary/10 hover:bg-primary/15 text-primary border border-primary/20 transition-colors"
+                          >
+                            <span>+ {item.title}</span>
+                            <span className="font-mono text-[10px] opacity-80">({formatAmount(item.unit_price)})</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
                     <LineEditor
                       lines={lines.map((l, i) => ({
                         description: l.description || "",
@@ -663,7 +760,7 @@ export function GuestEditorPageContent() {
                           })),
                         })
                       }
-                      catalog={[]}
+                      catalog={DEMO_PRELOADED_ITEMS}
                     />
 
                     {lines.length > 0 && (
@@ -792,13 +889,229 @@ export function GuestEditorPageContent() {
                   <Button
                     variant="primary"
                     size="sm"
-                    onClick={() => openWall("emit_invoice")}
+                    onClick={() => setPreviewOpen(true)}
                     disabled={!canEmit}
                     className="text-xs h-9 px-4 font-bold bylz-glow-primary"
                   >
-                    Valider & Télécharger PDF
+                    Valider et voir l'aperçu PDF
                   </Button>
                 </div>
+              </div>
+            </div>
+          )}
+
+          {/* TAB 3: DEVIS DEMO */}
+          {activeTab === "quotes" && (
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h1 className="text-2xl font-black text-text tracking-tight">Devis</h1>
+                  <p className="text-xs sm:text-sm text-muted">Créez et suivez vos devis professionnels en direct</p>
+                </div>
+                <Button
+                  variant="primary"
+                  size="sm"
+                  onClick={() => setActiveTab("invoice")}
+                  className="text-xs font-bold bylz-glow-primary"
+                >
+                  Nouveau devis
+                </Button>
+              </div>
+
+              <Card className="p-5 space-y-4 bg-surface border-border">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs">
+                    <thead>
+                      <tr className="border-b border-border text-muted text-[11px] uppercase tracking-wider font-bold">
+                        <th className="py-2.5 px-3">Numéro</th>
+                        <th className="py-2.5 px-3">Client</th>
+                        <th className="py-2.5 px-3">Date</th>
+                        <th className="py-2.5 px-3 text-right">Montant TTC</th>
+                        <th className="py-2.5 px-3 text-center">Statut</th>
+                        <th className="py-2.5 px-3 text-right">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border">
+                      <tr className="hover:bg-surface-hover transition-colors">
+                        <td className="py-3 px-3 font-mono font-bold text-text">DEV-2026-001</td>
+                        <td className="py-3 px-3 font-semibold text-text">Acme Studio SARL</td>
+                        <td className="py-3 px-3 text-muted">15 mai 2026</td>
+                        <td className="py-3 px-3 font-mono font-bold text-text text-right">1 500,00 €</td>
+                        <td className="py-3 px-3 text-center">
+                          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 dark:bg-emerald-500/15 text-emerald-800 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-500/30">
+                            Accepté
+                          </span>
+                        </td>
+                        <td className="py-3 px-3 text-right">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              updateDraft({
+                                clientName: "Acme Studio SARL",
+                                clientEmail: "comptabilite@acme.fr",
+                                clientType: "b2b",
+                                lines: [
+                                  {
+                                    description: "Prestation validée sur devis DEV-2026-001",
+                                    quantity: 1,
+                                    unitPrice: 1500,
+                                    nature: "service",
+                                  },
+                                ],
+                              });
+                              setActiveTab("invoice");
+                            }}
+                            className="text-[11px] h-7 px-2.5"
+                          >
+                            Facturer
+                          </Button>
+                        </td>
+                      </tr>
+                      <tr className="hover:bg-surface-hover transition-colors">
+                        <td className="py-3 px-3 font-mono font-bold text-text">DEV-2026-002</td>
+                        <td className="py-3 px-3 font-semibold text-text">Studio Apex SAS</td>
+                        <td className="py-3 px-3 text-muted">10 mai 2026</td>
+                        <td className="py-3 px-3 font-mono font-bold text-text text-right">850,00 €</td>
+                        <td className="py-3 px-3 text-center">
+                          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 dark:bg-blue-500/15 text-blue-800 dark:text-blue-400 border border-blue-300 dark:border-blue-500/30">
+                            Envoyé
+                          </span>
+                        </td>
+                        <td className="py-3 px-3 text-right">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setPreviewOpen(true)}
+                            className="text-[11px] h-7 px-2.5"
+                          >
+                            Aperçu
+                          </Button>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </Card>
+            </div>
+          )}
+
+          {/* TAB 4: CLIENTS DEMO */}
+          {activeTab === "clients" && (
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h1 className="text-2xl font-black text-text tracking-tight">Clients</h1>
+                  <p className="text-xs sm:text-sm text-muted">Fiche client avec coordonnées et suivi du CA</p>
+                </div>
+              </div>
+
+              <Card className="p-5 space-y-4 bg-surface border-border">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs">
+                    <thead>
+                      <tr className="border-b border-border text-muted text-[11px] uppercase tracking-wider font-bold">
+                        <th className="py-2.5 px-3">Client</th>
+                        <th className="py-2.5 px-3">Type</th>
+                        <th className="py-2.5 px-3">SIREN</th>
+                        <th className="py-2.5 px-3">Email</th>
+                        <th className="py-2.5 px-3 text-right">CA facturé</th>
+                        <th className="py-2.5 px-3 text-right">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border">
+                      <tr className="hover:bg-surface-hover transition-colors">
+                        <td className="py-3 px-3">
+                          <div className="font-semibold text-text">{DEMO_PRELOADED_CLIENT.name}</div>
+                          <div className="text-[11px] text-muted">{DEMO_PRELOADED_CLIENT.address}</div>
+                        </td>
+                        <td className="py-3 px-3">
+                          <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+                            Entreprise (B2B)
+                          </span>
+                        </td>
+                        <td className="py-3 px-3 font-mono text-text">{DEMO_PRELOADED_CLIENT.siren}</td>
+                        <td className="py-3 px-3 text-muted">{DEMO_PRELOADED_CLIENT.email}</td>
+                        <td className="py-3 px-3 font-mono font-bold text-text text-right">4 250,00 €</td>
+                        <td className="py-3 px-3 text-right">
+                          <Button
+                            variant="primary"
+                            size="sm"
+                            onClick={() => {
+                              updateDraft({
+                                clientName: DEMO_PRELOADED_CLIENT.name,
+                                clientEmail: DEMO_PRELOADED_CLIENT.email,
+                                clientType: DEMO_PRELOADED_CLIENT.type,
+                              });
+                              setActiveTab("invoice");
+                            }}
+                            className="text-[11px] h-7 px-2.5 font-bold bylz-glow-primary"
+                          >
+                            Créer une facture
+                          </Button>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </Card>
+            </div>
+          )}
+
+          {/* TAB 5: CATALOGUE DEMO */}
+          {activeTab === "catalog" && (
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h1 className="text-2xl font-black text-text tracking-tight">Catalogue</h1>
+                  <p className="text-xs sm:text-sm text-muted">Vos prestations enregistrées pour facturer en 1 clic</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {DEMO_PRELOADED_ITEMS.map((item) => (
+                  <Card key={item.id} className="p-5 flex flex-col justify-between space-y-4 bg-surface border-border">
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-100 dark:bg-blue-500/15 text-blue-800 dark:text-blue-300 border border-blue-200 dark:border-blue-500/20 uppercase">
+                          {item.nature}
+                        </span>
+                        <span className="text-base font-black font-mono text-text">
+                          {formatAmount(item.unit_price)} HT
+                        </span>
+                      </div>
+                      <h3 className="text-sm font-bold text-text">{item.title}</h3>
+                      <p className="text-xs text-muted leading-relaxed">{item.description}</p>
+                    </div>
+                    <Button
+                      variant="primary"
+                      size="sm"
+                      onClick={() => {
+                        const hasSingleEmptyLine =
+                          lines.length === 1 &&
+                          !lines[0].description &&
+                          lines[0].unitPrice === 0;
+
+                        const newLine = {
+                          description: item.title,
+                          quantity: 1,
+                          unitPrice: item.unit_price,
+                          nature: item.nature,
+                        };
+
+                        if (hasSingleEmptyLine) {
+                          updateDraft({ lines: [newLine] });
+                        } else {
+                          updateDraft({ lines: [...lines, newLine] });
+                        }
+                        setActiveTab("invoice");
+                      }}
+                      className="text-xs font-bold justify-center bylz-glow-primary"
+                    >
+                      Insérer dans une facture
+                    </Button>
+                  </Card>
+                ))}
               </div>
             </div>
           )}
@@ -822,8 +1135,10 @@ export function GuestEditorPageContent() {
 
         <button
           type="button"
-          onClick={() => openWall("locked_feature", "Devis")}
-          className="flex flex-col items-center justify-center gap-0.5 flex-1 h-full text-[11px] font-semibold text-muted hover:text-text transition-colors"
+          onClick={() => setActiveTab("quotes")}
+          className={`flex flex-col items-center justify-center gap-0.5 flex-1 h-full text-[11px] font-semibold transition-colors ${
+            activeTab === "quotes" ? "text-blue-600 dark:text-blue-300 font-extrabold" : "text-slate-500 dark:text-slate-400 hover:text-text"
+          }`}
         >
           <FileText className="w-5 h-5" />
           <span>Devis</span>
@@ -874,8 +1189,9 @@ export function GuestEditorPageContent() {
             <div className="flex-1 overflow-y-auto p-4 space-y-1">
               {NAV_ITEMS.map((item) => {
                 const Icon = item.icon;
-                const isDashboard = item.path === "/dashboard";
-                const isInvoice = item.path === "/invoices";
+                const targetTab = UNLOCKED_PATHS[item.path];
+                const isUnlocked = !!targetTab;
+                const isActive = isUnlocked && activeTab === targetTab;
 
                 return (
                   <button
@@ -883,15 +1199,17 @@ export function GuestEditorPageContent() {
                     type="button"
                     onClick={() => {
                       setMobileDrawerOpen(false);
-                      if (isDashboard) {
-                        setActiveTab("dashboard");
-                      } else if (isInvoice) {
-                        setActiveTab("invoice");
+                      if (targetTab) {
+                        setActiveTab(targetTab);
                       } else {
                         openWall("locked_feature", item.label);
                       }
                     }}
-                    className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold text-muted hover:text-text hover:bg-surface-hover"
+                    className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold ${
+                      isActive
+                        ? "bg-blue-50 dark:bg-blue-600/15 text-blue-700 dark:text-blue-300 font-bold"
+                        : "text-muted hover:text-text hover:bg-surface-hover"
+                    }`}
                   >
                     <div className="flex items-center gap-3">
                       <Icon className="w-4 h-4" />
@@ -901,7 +1219,7 @@ export function GuestEditorPageContent() {
                       <span className="px-1.5 py-0.5 rounded text-[9px] font-black bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-300">
                         {item.badge}
                       </span>
-                    ) : !isDashboard && !isInvoice ? (
+                    ) : !isUnlocked ? (
                       <Lock className="w-3.5 h-3.5 text-muted/40" />
                     ) : null}
                   </button>
@@ -929,7 +1247,33 @@ export function GuestEditorPageContent() {
       {/* 6. FULL SCREEN PREVIEW MODAL                              */}
       {/* ========================================================= */}
       {previewOpen && (
-        <PreviewModal open={previewOpen} onClose={() => setPreviewOpen(false)}>
+        <PreviewModal
+          open={previewOpen}
+          onClose={() => setPreviewOpen(false)}
+          footer={
+            <div className="flex items-center justify-between w-full">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setPreviewOpen(false)}
+                className="text-xs"
+              >
+                Modifier la facture
+              </Button>
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={() => {
+                  setPreviewOpen(false);
+                  openWall("emit_invoice");
+                }}
+                className="text-xs font-bold bylz-glow-primary"
+              >
+                Télécharger le PDF officiel Factur-X
+              </Button>
+            </div>
+          }
+        >
           <DocumentPreview
             company={mockCompany}
             client={mockClient}
