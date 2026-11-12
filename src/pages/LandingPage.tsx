@@ -11,7 +11,6 @@ import {
   Building2,
   FileCheck,
   Receipt,
-  Layers, BellRing,
   Check,
   ArrowRight,
   Zap,
@@ -21,8 +20,6 @@ import {
   Wrench,
   GraduationCap,
   ShoppingBag,
-  X,
-  Clock,
   MessageSquare,
   Bot,
   Sparkles,
@@ -73,39 +70,6 @@ export function LandingPage() {
       num: "4",
       title: "Déclarez l'URSSAF",
       desc: "Calcul au centime près selon votre taux officiel selon votre activité (vente, services ou libéral) et rappel automatique des échéances.",
-    },
-  ];
-
-  const featuresList = [
-    {
-      title: "Factures & Devis avec mentions obligatoires",
-      desc: "Personnalisation complète avec votre logo et couleurs. Toutes les mentions légales obligatoires sont insérées automatiquement.",
-      icon: FileText,
-    },
-    {
-      title: "Suivi de la Franchise de TVA",
-      desc: "Jauge de progression en temps réel vers le plafond légal 2026 (37 500 € en services, 85 000 € en vente) pour anticiper le passage à la TVA sans mauvaise surprise.",
-      icon: TrendingUp,
-    },
-    {
-      title: "Calcul des cotisations & Revenu net",
-      desc: "Estimation automatique de vos cotisations URSSAF et calcul de votre revenu net pour piloter votre activité en direct.",
-      icon: Calculator,
-    },
-    {
-      title: "Livre chronologique des recettes",
-      desc: "Livre chronologique des recettes, exportable en CSV pour vos déclarations.",
-      icon: Layers,
-    },
-    {
-      title: "Annuaire SIRET & Gestion clients",
-      desc: "Remplissage instantané des informations de vos clients grâce à la connexion directe avec la base légale de l'INSEE.",
-      icon: Building2,
-    },
-    {
-      title: "Livre des recettes & Exports CSV",
-      desc: "Suivez vos encaissements et exportez facilement vos données et votre livre des recettes au format CSV.",
-      icon: Receipt,
     },
   ];
 
@@ -445,7 +409,7 @@ export function LandingPage() {
               </div>
               <div className="inline-flex items-center gap-2 min-h-[44px] py-2 px-1">
                 <FileCheck className="w-4 h-4 text-blue-700" />
-                <span>Livre chronologique des recettes, exportable en CSV</span>
+                <span>Registre des encaissements exportable en CSV</span>
               </div>
               <div className="inline-flex items-center gap-2 min-h-[44px] py-2 px-1">
                 <Lock className="w-4 h-4 text-slate-700" />
@@ -469,7 +433,7 @@ export function LandingPage() {
                 Du devis à la déclaration URSSAF, tout est connecté
               </h2>
               <p className="text-slate-700 text-base sm:text-lg">
-                Moins de double saisie, moins de calculs à la main pour votre gestion au quotidien.
+                Fini les heures passées sur les tableurs : devis transformés en factures en 1 clic, cotisations estimées en direct et registre des encaissements exportable.
               </p>
             </div>
 
@@ -569,268 +533,7 @@ export function LandingPage() {
         </section>
 
         {/* ========================================================= */}
-        {/* 5. FONCTIONNALITÉS : TOUT CE DONT VOUS AVEZ BESOIN        */}
-        {/* ========================================================= */}
-        <section className="py-20 bg-slate-50 border-b border-slate-200">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
-              {/* Titre ancré à gauche */}
-              <div className="lg:col-span-4 space-y-4 text-left">
-                <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight leading-tight">
-                  Tout ce dont vous avez besoin pour gérer votre activité
-                </h2>
-                <p className="text-slate-700 text-sm leading-relaxed">
-                  Bylz regroupe les outils essentiels à la gestion d'un indépendant, sans fonctions superflues qui alourdissent votre quotidien.
-                </p>
-                <div className="pt-2 hidden lg:block">
-                  <Link to="/signup">
-                    <button className={`${btnPrimary} py-2.5 px-5 text-sm`}>
-                      Créer mon compte gratuit
-                    </button>
-                  </Link>
-                </div>
-              </div>
-
-              {/* Grille 2 colonnes de fonctionnalités détaillées à droite */}
-              <div className="lg:col-span-8 grid grid-cols-1 sm:grid-cols-2 gap-6">
-                {featuresList.map((f, i) => {
-                  const Icon = f.icon;
-                  return (
-                    <div
-                      key={i}
-                      className="p-5 rounded-xl bg-white border border-slate-200 shadow-sm space-y-2.5 text-left"
-                    >
-                      <div className="w-9 h-9 rounded-lg bg-blue-100 text-blue-800 flex items-center justify-center">
-                        <Icon className="w-5 h-5" />
-                      </div>
-                      <h3 className="font-bold text-base text-slate-900">{f.title}</h3>
-                      <p className="text-xs text-slate-700 leading-relaxed font-normal">{f.desc}</p>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* ========================================================= */}
-        {/* 6. COMPARATIF & IMPACT : BYLZ VS TABLEURS (STYLE ABBY / INDY) */}
-        {/* ========================================================= */}
-        <section id="comparatif" className="py-20 bg-white border-b border-slate-200">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-16">
-            {/* Titre de section */}
-            <div className="text-center max-w-3xl mx-auto space-y-4">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-200 text-blue-800 text-xs font-bold">
-                <ShieldCheck className="w-3.5 h-3.5 text-blue-700" />
-                <span>Pourquoi quitter les tableurs traditionnels</span>
-              </div>
-              <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight leading-tight">
-                Fini les dimanches soirs passés sur vos factures
-              </h2>
-              <p className="text-slate-700 text-base sm:text-lg">
-                La gestion d'une micro-entreprise ne devrait pas être une source de stress fiscal.
-                Découvrez ce qui change concrètement au quotidien.
-              </p>
-            </div>
-
-            {/* 3 Métriques d'impact (Inspiré Abby & Indy) */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="p-6 rounded-2xl bg-slate-50 border border-slate-200 text-left space-y-2">
-                <div className="w-10 h-10 rounded-xl bg-blue-100 text-blue-800 flex items-center justify-center font-bold">
-                  <Clock className="w-5 h-5 text-blue-700" />
-                </div>
-                <p className="text-xl font-black text-slate-900 tracking-tight">Moins de saisie</p>
-                <p className="text-xs font-bold text-slate-800">Moins de calculs à la main</p>
-                <p className="text-xs text-slate-600 leading-relaxed">
-                  Devis transformés en factures en un clic, relances automatiques et synchronisation de vos justificatifs.
-                </p>
-              </div>
-
-              <div className="p-6 rounded-2xl bg-slate-50 border border-slate-200 text-left space-y-2">
-                <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold">
-                  <Calculator className="w-5 h-5 text-emerald-700" />
-                </div>
-                <p className="text-xl font-black text-slate-900 tracking-tight">Zéro surprise</p>
-                <p className="text-xs font-bold text-slate-800">Sur vos cotisations URSSAF & TVA</p>
-                <p className="text-xs text-slate-600 leading-relaxed">
-                  Vos charges sociales sont estimées dès l'encaissement avec alertes de seuils en direct.
-                </p>
-              </div>
-
-              <div className="p-6 rounded-2xl bg-slate-50 border border-slate-200 text-left space-y-2">
-                <div className="w-10 h-10 rounded-xl bg-blue-100 text-blue-800 flex items-center justify-center font-bold">
-                  <FileCheck className="w-5 h-5 text-blue-700" />
-                </div>
-                <p className="text-xl font-black text-slate-900 tracking-tight">Facturation claire</p>
-                <p className="text-xs font-bold text-slate-800">Mentions légales obligatoires incluses</p>
-                <p className="text-xs text-slate-600 leading-relaxed">
-                  Génération de factures PDF propres avec les mentions indispensables (EI, franchise TVA, pénalités).
-                </p>
-              </div>
-            </div>
-
-            {/* Tableau comparatif côte à côte : Tableur vs Bylz (Inspiré Indy) */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-stretch">
-              {/* Colonne Tableurs / Ancienne méthode */}
-              <div className="p-7 sm:p-8 rounded-2xl bg-slate-50 border border-slate-200 text-left flex flex-col justify-between">
-                <div className="space-y-6">
-                  <div className="flex items-center justify-between pb-4 border-b border-slate-200">
-                    <div>
-                      <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-                        Méthode traditionnelle
-                      </span>
-                      <h3 className="text-xl font-bold text-slate-900 mt-1">Excel, Word ou papier</h3>
-                    </div>
-                    <span className="px-3 py-1 rounded-full text-xs font-bold bg-slate-200 text-slate-700">
-                      Dépassé en 2026
-                    </span>
-                  </div>
-
-                  <ul className="space-y-4 text-xs sm:text-sm text-slate-700">
-                    <li className="flex items-start gap-3">
-                      <div className="w-5 h-5 rounded-full bg-rose-100 text-rose-700 flex items-center justify-center flex-shrink-0 mt-0.5">
-                        <X className="w-3.5 h-3.5 stroke-[3]" />
-                      </div>
-                      <span>
-                        <strong className="text-slate-900 font-semibold">Format non structuré :</strong> les PDF simples et tableurs ne respectent pas les exigences attendues pour la facturation électronique.
-                      </span>
-                    </li>
-                    <li className="flex items-start gap-3">
-                      <div className="w-5 h-5 rounded-full bg-rose-100 text-rose-700 flex items-center justify-center flex-shrink-0 mt-0.5">
-                        <X className="w-3.5 h-3.5 stroke-[3]" />
-                      </div>
-                      <span>
-                        <strong className="text-slate-900 font-semibold">Calculs URSSAF manuels :</strong> formules complexes à ajuster soi-même selon les taux révisés chaque année.
-                      </span>
-                    </li>
-                    <li className="flex items-start gap-3">
-                      <div className="w-5 h-5 rounded-full bg-rose-100 text-rose-700 flex items-center justify-center flex-shrink-0 mt-0.5">
-                        <X className="w-3.5 h-3.5 stroke-[3]" />
-                      </div>
-                      <span>
-                        <strong className="text-slate-900 font-semibold">Aucun suivi des seuils de TVA :</strong> risque d'assujettissement imprévu et de rattrapage fiscal en cas de dépassement.
-                      </span>
-                    </li>
-                    <li className="flex items-start gap-3">
-                      <div className="w-5 h-5 rounded-full bg-rose-100 text-rose-700 flex items-center justify-center flex-shrink-0 mt-0.5">
-                        <X className="w-3.5 h-3.5 stroke-[3]" />
-                      </div>
-                      <span>
-                        <strong className="text-slate-900 font-semibold">Livre des recettes fastidieux :</strong> obligation légale de tenir un registre chronologique des encaissements, pénible à la main.
-                      </span>
-                    </li>
-                    <li className="flex items-start gap-3">
-                      <div className="w-5 h-5 rounded-full bg-rose-100 text-rose-700 flex items-center justify-center flex-shrink-0 mt-0.5">
-                        <X className="w-3.5 h-3.5 stroke-[3]" />
-                      </div>
-                      <span>
-                        <strong className="text-slate-900 font-semibold">Heures perdues :</strong> double saisie des devis, factures et exports récapitulatifs pour la déclaration.
-                      </span>
-                    </li>
-                  </ul>
-                </div>
-              </div>
-
-              {/* Colonne Bylz / Moderne */}
-              <div className="p-7 sm:p-8 rounded-2xl bg-blue-50/50 border-2 border-blue-600 text-left flex flex-col justify-between shadow-lg relative">
-                <div className="space-y-6">
-                  <div className="flex items-center justify-between pb-4 border-b border-blue-200">
-                    <div>
-                      <span className="text-xs font-bold text-blue-700 uppercase tracking-wider">
-                        Gestion moderne
-                      </span>
-                      <h3 className="text-xl font-bold text-slate-900 mt-1">Avec Bylz</h3>
-                    </div>
-                    <span className="px-3 py-1 rounded-full text-xs font-bold bg-blue-600 text-white">
-                      Recommandé
-                    </span>
-                  </div>
-
-                  <ul className="space-y-4 text-xs sm:text-sm text-slate-800">
-                    <li className="flex items-start gap-3">
-                      <div className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-800 flex items-center justify-center flex-shrink-0 mt-0.5">
-                        <Check className="w-3.5 h-3.5 stroke-[3]" />
-                      </div>
-                      <span>
-                        <strong className="text-slate-900 font-semibold">Facturation instantanée :</strong>{" "}
-                        Factures Factur-X générées et validées, transmission via partenaire en cours d'activation.
-                      </span>
-                    </li>
-                    <li className="flex items-start gap-3">
-                      <div className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-800 flex items-center justify-center flex-shrink-0 mt-0.5">
-                        <Check className="w-3.5 h-3.5 stroke-[3]" />
-                      </div>
-                      <span>
-                        <strong className="text-slate-900 font-semibold">Cotisations calculées en direct :</strong>{" "}
-                        barèmes officiels 2026 appliqués automatiquement selon votre catégorie d'activité.
-                      </span>
-                    </li>
-                    <li className="flex items-start gap-3">
-                      <div className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-800 flex items-center justify-center flex-shrink-0 mt-0.5">
-                        <Check className="w-3.5 h-3.5 stroke-[3]" />
-                      </div>
-                      <span>
-                        <strong className="text-slate-900 font-semibold">Jauge de TVA & alertes proactives :</strong>{" "}
-                        suivi en temps réel de votre progression vers le seuil de franchise (Art. 293 B).
-                      </span>
-                    </li>
-                    <li className="flex items-start gap-3">
-                      <div className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-800 flex items-center justify-center flex-shrink-0 mt-0.5">
-                        <Check className="w-3.5 h-3.5 stroke-[3]" />
-                      </div>
-                      <span>
-                        <strong className="text-slate-900 font-semibold">Livre des recettes :</strong>{" "}
-                        tient votre livre chronologique des recettes, exportable en CSV.
-                      </span>
-                    </li>
-                    <li className="flex items-start gap-3">
-                      <div className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-800 flex items-center justify-center flex-shrink-0 mt-0.5">
-                        <Check className="w-3.5 h-3.5 stroke-[3]" />
-                      </div>
-                      <span>
-                        <strong className="text-slate-900 font-semibold">Simplicité en 1 clic :</strong> conversion de devis, numérotation séquentielle automatique et export PDF immédiat.
-                      </span>
-                    </li>
-                  </ul>
-                </div>
-
-                <div className="pt-6 mt-6 border-t border-blue-200">
-                  <Link to="/signup" className={`${btnPrimary} w-full py-3.5 text-sm`}>
-                    Créer mon compte gratuit
-                  </Link>
-                  <p className="text-[11px] text-center text-slate-600 font-medium mt-2">
-                    Gratuit jusqu'à 3 factures/mois : Sans carte bancaire : Sans engagement
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Encart Assistance & Support humain (Inspiré Abby & Indy) */}
-            <div className="p-6 sm:p-8 rounded-2xl bg-slate-50 border border-slate-200 flex flex-col md:flex-row items-center justify-between gap-6 text-left">
-              <div className="flex items-start gap-4">
-                <div className="w-12 h-12 rounded-xl bg-blue-100 text-blue-800 flex items-center justify-center flex-shrink-0">
-                  <MessageSquare className="w-6 h-6 text-blue-700" />
-                </div>
-                <div className="space-y-1">
-                  <h3 className="text-base font-bold text-slate-900">
-                    Un doute sur vos cotisations ou vos factures ?
-                  </h3>
-                  <p className="text-xs sm:text-sm text-slate-700 max-w-2xl leading-relaxed">
-                    Une question ? Écrivez-nous, nous répondons du lundi au vendredi.
-                  </p>
-                </div>
-              </div>
-              <div className="flex-shrink-0 w-full md:w-auto">
-                <Link to="/contact" className="inline-flex items-center justify-center min-h-[44px] w-full md:w-auto px-5 py-2.5 rounded-lg border-2 border-blue-600 text-blue-700 hover:bg-blue-50 font-bold text-xs transition-colors">
-                  Poser une question
-                </Link>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* ========================================================= */}
-        {/* 7. QUEL QUE SOIT VOTRE STATUT, BYLZ S'ADAPTE             */}
+        {/* 5. QUEL QUE SOIT VOTRE STATUT, BYLZ S'ADAPTE             */}
         {/* ========================================================= */}
         <section className="py-20 bg-slate-50 border-b border-slate-200">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
