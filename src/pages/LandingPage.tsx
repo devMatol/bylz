@@ -268,16 +268,6 @@ export function LandingPage() {
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center">
               {/* Left Column : Valeur, arguments et CTA */}
               <div className="lg:col-span-7 space-y-6 text-left">
-                {/* Badges Réforme 2026 & Assistant IA */}
-                <div className="flex flex-wrap items-center gap-2.5">
-                  <Link
-                    to="/facturation-electronique"
-                    className="inline-flex items-center gap-2 px-3.5 py-2 min-h-[44px] rounded-full bg-blue-50 border border-blue-200 text-blue-800 text-xs font-bold hover:bg-blue-100 transition-colors"
-                  >
-                    <ShieldCheck className="w-4 h-4 text-blue-700 flex-shrink-0" />
-                    <span>Facturation électronique 2026 : voir les règles officielles</span>
-                  </Link>
-                </div>
 
                 {/* Titre percutant H1 optimisé SEO */}
                 <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-slate-900 leading-[1.15]">
@@ -449,22 +439,22 @@ export function LandingPage() {
         <section className="py-6 bg-slate-100 border-b border-slate-200">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-8 text-xs font-bold text-slate-800">
-              <Link to="/conformite" className="inline-flex items-center gap-2 hover:text-blue-700 transition-colors min-h-[44px] py-2 px-1" title="Mentions légales obligatoires conformes">
+              <div className="inline-flex items-center gap-2 min-h-[44px] py-2 px-1">
                 <ShieldCheck className="w-4 h-4 text-emerald-700" />
                 <span>Mentions légales obligatoires conformes</span>
-              </Link>
-              <Link to="/outils/modele-facture-gratuit" className="inline-flex items-center gap-2 hover:text-blue-700 transition-colors min-h-[44px] py-2 px-1" title="Modèle de facture">
+              </div>
+              <div className="inline-flex items-center gap-2 min-h-[44px] py-2 px-1">
                 <FileCheck className="w-4 h-4 text-blue-700" />
                 <span>Livre chronologique des recettes, exportable en CSV</span>
-              </Link>
-              <Link to="/conformite" className="inline-flex items-center gap-2 hover:text-blue-700 transition-colors min-h-[44px] py-2 px-1" title="Sécurité et hébergement en Europe">
+              </div>
+              <div className="inline-flex items-center gap-2 min-h-[44px] py-2 px-1">
                 <Lock className="w-4 h-4 text-slate-700" />
                 <span>Base de données hébergée en Europe</span>
-              </Link>
-              <Link to="/outils/simulateur-urssaf" className="inline-flex items-center gap-2 hover:text-blue-700 transition-colors min-h-[44px] py-2 px-1" title="Simulateur de cotisations URSSAF 2026">
+              </div>
+              <div className="inline-flex items-center gap-2 min-h-[44px] py-2 px-1">
                 <CheckCircle2 className="w-4 h-4 text-emerald-700" />
                 <span>Taux de cotisations 2026 à jour</span>
-              </Link>
+              </div>
             </div>
           </div>
         </section>
