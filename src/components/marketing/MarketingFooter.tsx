@@ -1,5 +1,6 @@
+import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { ShieldCheck, Heart } from "lucide-react";
+import { ShieldCheck, Heart, ChevronDown } from "lucide-react";
 import { Logo } from "../shared/Logo";
 
 interface MarketingFooterProps {
@@ -10,9 +11,16 @@ export function MarketingFooter({ theme }: MarketingFooterProps = {}) {
   const location = useLocation();
   const isLight = theme !== "dark";
 
+  // Accordion state for mobile (< md) - collapsed by default to save ~800px on mobile
+  const [openSections, setOpenSections] = useState<Record<string, boolean>>({});
+
+  const toggleSection = (key: string) => {
+    setOpenSections((prev) => ({ ...prev, [key]: !prev[key] }));
+  };
+
   return (
     <footer
-      className={`pt-16 pb-12 text-sm transition-colors border-t ${
+      className={`pt-6 pb-6 md:pt-16 md:pb-12 text-sm transition-colors border-t ${
         isLight
           ? "bg-slate-50 border-slate-200 text-slate-700"
           : "bg-[#0a0e1a] border-slate-800 text-slate-300"
@@ -20,12 +28,12 @@ export function MarketingFooter({ theme }: MarketingFooterProps = {}) {
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div
-          className={`grid grid-cols-1 md:grid-cols-5 gap-10 pb-12 border-b ${
+          className={`grid grid-cols-1 md:grid-cols-5 gap-6 md:gap-10 pb-8 md:pb-12 border-b ${
             isLight ? "border-slate-200" : "border-slate-800"
           }`}
         >
           {/* Col 1: Brand */}
-          <div className="md:col-span-2 space-y-4">
+          <div className="md:col-span-2 space-y-3 md:space-y-4">
             <Logo variant={isLight ? "navy" : "white"} height={32} />
             <p
               className={`text-xs max-w-sm leading-relaxed font-normal ${
@@ -44,16 +52,26 @@ export function MarketingFooter({ theme }: MarketingFooterProps = {}) {
             </div>
           </div>
 
-          {/* Col 2: Produit */}
-          <div className="space-y-3">
-            <h4
-              className={`font-bold text-xs uppercase tracking-wider ${
-                isLight ? "text-slate-900" : "text-white"
-              }`}
+          {/* Col 2: Produit (Accordéon mobile) */}
+          <div className="border-t border-slate-200/60 md:border-t-0 pt-3 md:pt-0">
+            <button
+              type="button"
+              onClick={() => toggleSection("produit")}
+              className="w-full flex items-center justify-between py-2 md:py-0 md:cursor-default text-left font-bold text-xs uppercase tracking-wider"
+              aria-expanded={!!openSections.produit}
             >
-              Produit
-            </h4>
-            <ul className="space-y-1 sm:space-y-2 text-xs font-medium">
+              <span className={isLight ? "text-slate-900" : "text-white"}>Produit</span>
+              <ChevronDown
+                className={`w-4 h-4 md:hidden transition-transform duration-200 ${
+                  openSections.produit ? "rotate-180" : ""
+                } ${isLight ? "text-slate-600" : "text-slate-400"}`}
+              />
+            </button>
+            <ul
+              className={`${
+                openSections.produit ? "block" : "hidden"
+              } md:!block space-y-1 sm:space-y-2 text-xs font-medium pt-2 md:pt-3`}
+            >
               <li>
                 <Link
                   to="/fonctionnalites"
@@ -117,16 +135,26 @@ export function MarketingFooter({ theme }: MarketingFooterProps = {}) {
             </ul>
           </div>
 
-          {/* Col 3: Outils Fiscaux & Blog */}
-          <div className="space-y-3">
-            <h4
-              className={`font-bold text-xs uppercase tracking-wider ${
-                isLight ? "text-slate-900" : "text-white"
-              }`}
+          {/* Col 3: Outils Fiscaux & Blog (Accordéon mobile) */}
+          <div className="border-t border-slate-200/60 md:border-t-0 pt-3 md:pt-0">
+            <button
+              type="button"
+              onClick={() => toggleSection("outils")}
+              className="w-full flex items-center justify-between py-2 md:py-0 md:cursor-default text-left font-bold text-xs uppercase tracking-wider"
+              aria-expanded={!!openSections.outils}
             >
-              Outils & Guides Gratuits
-            </h4>
-            <ul className="space-y-1 sm:space-y-2 text-xs font-medium">
+              <span className={isLight ? "text-slate-900" : "text-white"}>Outils & Guides Gratuits</span>
+              <ChevronDown
+                className={`w-4 h-4 md:hidden transition-transform duration-200 ${
+                  openSections.outils ? "rotate-180" : ""
+                } ${isLight ? "text-slate-600" : "text-slate-400"}`}
+              />
+            </button>
+            <ul
+              className={`${
+                openSections.outils ? "block" : "hidden"
+              } md:!block space-y-1 sm:space-y-2 text-xs font-medium pt-2 md:pt-3`}
+            >
               <li>
                 <Link
                   to="/outils/simulateur-urssaf"
@@ -178,16 +206,26 @@ export function MarketingFooter({ theme }: MarketingFooterProps = {}) {
             </ul>
           </div>
 
-          {/* Col 4: Légales & Contact */}
-          <div className="space-y-3">
-            <h4
-              className={`font-bold text-xs uppercase tracking-wider ${
-                isLight ? "text-slate-900" : "text-white"
-              }`}
+          {/* Col 4: Légales & Contact (Accordéon mobile) */}
+          <div className="border-t border-slate-200/60 md:border-t-0 pt-3 md:pt-0">
+            <button
+              type="button"
+              onClick={() => toggleSection("infos")}
+              className="w-full flex items-center justify-between py-2 md:py-0 md:cursor-default text-left font-bold text-xs uppercase tracking-wider"
+              aria-expanded={!!openSections.infos}
             >
-              Informations
-            </h4>
-            <ul className="space-y-1 sm:space-y-2 text-xs font-medium">
+              <span className={isLight ? "text-slate-900" : "text-white"}>Informations</span>
+              <ChevronDown
+                className={`w-4 h-4 md:hidden transition-transform duration-200 ${
+                  openSections.infos ? "rotate-180" : ""
+                } ${isLight ? "text-slate-600" : "text-slate-400"}`}
+              />
+            </button>
+            <ul
+              className={`${
+                openSections.infos ? "block" : "hidden"
+              } md:!block space-y-1 sm:space-y-2 text-xs font-medium pt-2 md:pt-3`}
+            >
               <li>
                 <Link
                   to="/contact"
@@ -270,7 +308,7 @@ export function MarketingFooter({ theme }: MarketingFooterProps = {}) {
 
         {/* Bottom bar */}
         <div
-          className={`pt-8 flex flex-col md:flex-row items-center justify-between text-xs space-y-4 md:space-y-0 font-medium ${
+          className={`pt-6 md:pt-8 flex flex-col md:flex-row items-center justify-between text-xs space-y-3 md:space-y-0 font-medium ${
             isLight ? "text-slate-600" : "text-slate-400"
           }`}
         >

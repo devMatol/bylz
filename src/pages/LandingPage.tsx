@@ -238,7 +238,7 @@ export function LandingPage() {
         {/* ========================================================= */}
         {/* 2. APERÇU PRODUIT                                         */}
         {/* ========================================================= */}
-        <section className="py-10 md:py-18 bg-slate-50 border-b border-slate-200 px-4 sm:px-6 lg:px-8">
+        <section className="py-6 md:py-18 bg-slate-50 border-b border-slate-200 px-4 sm:px-6 lg:px-8">
           <div className="max-w-5xl mx-auto space-y-6 md:space-y-8">
             <div className="text-center space-y-1.5 max-w-2xl mx-auto">
               <span className="inline-block px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-blue-100 text-blue-700">
@@ -349,17 +349,19 @@ export function LandingPage() {
               </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 max-w-5xl mx-auto">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5 sm:gap-6 max-w-5xl mx-auto">
               {threeSteps.map((step) => (
                 <div
                   key={step.num}
-                  className="p-4 sm:p-6 rounded-2xl bg-slate-50 border border-slate-200 space-y-2 sm:space-y-3 text-left hover:border-blue-400 transition-colors"
+                  className="p-3.5 sm:p-6 rounded-xl sm:rounded-2xl bg-slate-50 border border-slate-200 flex items-start gap-3 sm:block sm:space-y-3 text-left hover:border-blue-400 transition-colors"
                 >
-                  <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-blue-700 text-white font-black text-xs sm:text-sm flex items-center justify-center">
+                  <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-blue-700 text-white font-black text-xs sm:text-sm flex items-center justify-center shrink-0">
                     {step.num}
                   </div>
-                  <h3 className="font-bold text-sm sm:text-base text-slate-900">{step.title}</h3>
-                  <p className="text-xs sm:text-sm text-slate-700 leading-relaxed font-normal">{step.desc}</p>
+                  <div className="space-y-0.5 sm:space-y-1">
+                    <h3 className="font-bold text-xs sm:text-base text-slate-900">{step.title}</h3>
+                    <p className="text-[11px] sm:text-sm text-slate-700 leading-snug sm:leading-relaxed font-normal">{step.desc}</p>
+                  </div>
                 </div>
               ))}
             </div>
@@ -368,7 +370,7 @@ export function LandingPage() {
               <Link
                 to="/signup"
                 onClick={() => trackCtaClick("milieu")}
-                className={`${btnPrimary} py-3 px-6 text-sm`}
+                className={`${btnPrimary} py-2.5 sm:py-3 px-6 text-sm`}
               >
                 Créer mon compte gratuit
               </Link>
@@ -379,57 +381,57 @@ export function LandingPage() {
         {/* ========================================================= */}
         {/* 4. SECTION DÉBUTANTS : VOUS VENEZ DE VOUS LANCER ?         */}
         {/* ========================================================= */}
-        <section className="py-10 md:py-20 bg-slate-50 border-b border-slate-200">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6 md:space-y-10">
-            <div className="text-center max-w-3xl mx-auto space-y-2 md:space-y-3">
+        <section className="py-8 md:py-20 bg-slate-50 border-b border-slate-200">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-5 md:space-y-10">
+            <div className="text-center max-w-3xl mx-auto space-y-1.5 md:space-y-3">
               <span className="inline-block px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-blue-100 text-blue-700">
                 Guide débutant
               </span>
               <h2 className="text-2xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
                 Vous venez de vous lancer ?
               </h2>
-              <p className="text-slate-700 text-sm sm:text-lg">
+              <p className="text-slate-700 text-xs sm:text-lg">
                 Démarrer son activité apporte son lot de doutes administratifs. Bylz vous évite les erreurs courantes dès le premier jour.
               </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 sm:gap-6 max-w-5xl mx-auto">
-              <div className="p-4 sm:p-6 rounded-2xl bg-white border border-slate-200 shadow-xs space-y-2">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5 sm:gap-6 max-w-5xl mx-auto">
+              <div className="p-3.5 sm:p-6 rounded-xl sm:rounded-2xl bg-white border border-slate-200 shadow-xs space-y-1 sm:space-y-2">
                 <p className="text-xs sm:text-sm font-bold text-slate-900 flex items-start gap-2">
                   <span className="text-blue-600 font-extrabold text-sm sm:text-base">?</span>
-                  <span>Quelles mentions obligatoires dois-je inscrire sur mes factures ?</span>
+                  <span>Quelles mentions obligatoires sur mes factures ?</span>
                 </p>
-                <p className="text-xs sm:text-sm text-slate-700 leading-relaxed pl-4 sm:pl-5">
+                <p className="text-[11px] sm:text-sm text-slate-700 leading-snug sm:leading-relaxed pl-4 sm:pl-5">
                   Bylz renseigne automatiquement toutes les mentions légales requises selon votre statut pour des factures 100 % conformes.
                 </p>
               </div>
 
-              <div className="p-4 sm:p-6 rounded-2xl bg-white border border-slate-200 shadow-xs space-y-2">
+              <div className="p-3.5 sm:p-6 rounded-xl sm:rounded-2xl bg-white border border-slate-200 shadow-xs space-y-1 sm:space-y-2">
                 <p className="text-xs sm:text-sm font-bold text-slate-900 flex items-start gap-2">
                   <span className="text-blue-600 font-extrabold text-sm sm:text-base">?</span>
-                  <span>Combien dois-je réellement mettre de côté pour mes cotisations ?</span>
+                  <span>Combien mettre de côté pour mes cotisations ?</span>
                 </p>
-                <p className="text-xs sm:text-sm text-slate-700 leading-relaxed pl-4 sm:pl-5">
+                <p className="text-[11px] sm:text-sm text-slate-700 leading-snug sm:leading-relaxed pl-4 sm:pl-5">
                   Vos cotisations et votre revenu net disponible sont calculés en temps réel dès l'émission de chaque facture.
                 </p>
               </div>
 
-              <div className="p-4 sm:p-6 rounded-2xl bg-white border border-slate-200 shadow-xs space-y-2">
+              <div className="p-3.5 sm:p-6 rounded-xl sm:rounded-2xl bg-white border border-slate-200 shadow-xs space-y-1 sm:space-y-2">
                 <p className="text-xs sm:text-sm font-bold text-slate-900 flex items-start gap-2">
                   <span className="text-blue-600 font-extrabold text-sm sm:text-base">?</span>
-                  <span>À quel moment vais-je devoir commencer à facturer la TVA ?</span>
+                  <span>À quel moment commencer à facturer la TVA ?</span>
                 </p>
-                <p className="text-xs sm:text-sm text-slate-700 leading-relaxed pl-4 sm:pl-5">
+                <p className="text-[11px] sm:text-sm text-slate-700 leading-snug sm:leading-relaxed pl-4 sm:pl-5">
                   Une jauge visuelle suit votre chiffre d'affaires cumulé et vous alerte bien avant d'atteindre le plafond d'exonération.
                 </p>
               </div>
 
-              <div className="p-4 sm:p-6 rounded-2xl bg-white border border-slate-200 shadow-xs space-y-2">
+              <div className="p-3.5 sm:p-6 rounded-xl sm:rounded-2xl bg-white border border-slate-200 shadow-xs space-y-1 sm:space-y-2">
                 <p className="text-xs sm:text-sm font-bold text-slate-900 flex items-start gap-2">
                   <span className="text-blue-600 font-extrabold text-sm sm:text-base">?</span>
-                  <span>Comment relancer un client en retard sans paraître agressif ?</span>
+                  <span>Comment relancer un retard sans paraître agressif ?</span>
                 </p>
-                <p className="text-xs sm:text-sm text-slate-700 leading-relaxed pl-4 sm:pl-5">
+                <p className="text-[11px] sm:text-sm text-slate-700 leading-snug sm:leading-relaxed pl-4 sm:pl-5">
                   Vous suivez les échéances en un coup d'œil et déclenchez des rappels clairs et courtois en un clic.
                 </p>
               </div>
@@ -440,33 +442,35 @@ export function LandingPage() {
         {/* ========================================================= */}
         {/* 5. FONCTIONS CLÉS                                         */}
         {/* ========================================================= */}
-        <section className="py-10 md:py-20 bg-white border-b border-slate-200">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6 md:space-y-12">
-            <div className="text-center max-w-3xl mx-auto space-y-2 md:space-y-3">
+        <section className="py-8 md:py-20 bg-white border-b border-slate-200">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-5 md:space-y-12">
+            <div className="text-center max-w-3xl mx-auto space-y-1.5 md:space-y-3">
               <span className="inline-block px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-blue-100 text-blue-700">
                 Fonctionnalités
               </span>
               <h2 className="text-2xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
                 Tout ce dont vous avez besoin au quotidien
               </h2>
-              <p className="text-slate-700 text-sm sm:text-lg">
-                Des outils conçus spécifiquement pour les indépendants et micro-entreprises, sans complication inutile.
+              <p className="text-slate-700 text-xs sm:text-lg">
+                Des outils conçus pour les indépendants et micro-entreprises, sans complication inutile.
               </p>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 sm:gap-6 max-w-6xl mx-auto">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 sm:gap-6 max-w-6xl mx-auto">
               {keyFeatures.map((feat, idx) => {
                 const Icon = feat.icon;
                 return (
                   <div
                     key={idx}
-                    className="p-4 sm:p-6 rounded-2xl bg-slate-50 border border-slate-200 space-y-2 sm:space-y-3 text-left hover:border-blue-400 transition-colors"
+                    className="p-3 sm:p-6 rounded-xl sm:rounded-2xl bg-slate-50 border border-slate-200 flex items-start gap-3 sm:block sm:space-y-3 text-left hover:border-blue-400 transition-colors"
                   >
-                    <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-blue-100 text-blue-800 flex items-center justify-center">
+                    <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-blue-100 text-blue-800 flex items-center justify-center shrink-0">
                       <Icon className="w-4 h-4 sm:w-5 sm:h-5" />
                     </div>
-                    <h3 className="font-bold text-sm sm:text-base text-slate-900">{feat.title}</h3>
-                    <p className="text-xs sm:text-sm text-slate-700 leading-relaxed font-normal">{feat.desc}</p>
+                    <div className="space-y-0.5 sm:space-y-1">
+                      <h3 className="font-bold text-xs sm:text-base text-slate-900">{feat.title}</h3>
+                      <p className="text-[11px] sm:text-sm text-slate-700 leading-snug sm:leading-relaxed font-normal">{feat.desc}</p>
+                    </div>
                   </div>
                 );
               })}
@@ -477,7 +481,7 @@ export function LandingPage() {
         {/* ========================================================= */}
         {/* 6. ASSISTANT WHATSAPP                                     */}
         {/* ========================================================= */}
-        <section className="py-10 md:py-20 bg-slate-900 text-white">
+        <section className="py-8 md:py-20 bg-slate-900 text-white">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 md:gap-10 items-center">
               <div className="lg:col-span-6 space-y-4 md:space-y-5 text-left">
@@ -564,14 +568,14 @@ export function LandingPage() {
         {/* ========================================================= */}
         {/* 7. GRILLE TARIFAIRE (Starter, Solo, Pro)                  */}
         {/* ========================================================= */}
-        <section id="tarifs" className="py-12 md:py-24 bg-white border-b border-slate-200">
-          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8 md:space-y-12">
-            <div className="text-center max-w-3xl mx-auto space-y-3 md:space-y-4">
+        <section id="tarifs" className="py-6 md:py-20 bg-white border-b border-slate-200">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-4 md:space-y-12">
+            <div className="text-center max-w-3xl mx-auto space-y-2 md:space-y-4">
               <h2 className="text-2xl sm:text-5xl font-extrabold text-slate-900 tracking-tight">
                 Des tarifs simples et transparents
               </h2>
-              <p className="text-slate-700 text-sm sm:text-lg">
-                Démarrez sans carte bancaire sur le plan gratuit permanent. Évoluez quand votre activité grandit. Résiliable à tout moment.
+              <p className="text-slate-700 text-xs sm:text-lg">
+                Démarrez sans carte bancaire sur le plan gratuit permanent. Évoluez quand votre activité grandit.
               </p>
 
               <div className="pt-1 flex justify-center">
@@ -580,10 +584,10 @@ export function LandingPage() {
             </div>
 
             {/* 3 Colonnes Tarifaires */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 items-stretch max-w-5xl mx-auto">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-8 items-stretch max-w-5xl mx-auto">
               {/* 1. Starter (Gratuit) */}
-              <div className="p-5 sm:p-7 rounded-2xl bg-white border border-slate-200 flex flex-col justify-between space-y-5 sm:space-y-6 text-left shadow-sm">
-                <div className="space-y-3 sm:space-y-4">
+              <div className="p-4 sm:p-7 rounded-2xl bg-white border border-slate-200 flex flex-col justify-between space-y-4 sm:space-y-6 text-left shadow-sm">
+                <div className="space-y-2.5 sm:space-y-4">
                   <div>
                     <h3 className="text-lg sm:text-xl font-bold text-slate-900">Starter</h3>
                   </div>
@@ -595,7 +599,7 @@ export function LandingPage() {
 
                   <hr className="border-slate-100" />
 
-                  <ul className="space-y-2 sm:space-y-3 text-xs text-slate-800 font-medium">
+                  <ul className="space-y-1.5 sm:space-y-3 text-xs text-slate-800 font-medium">
                     <li className="flex items-center gap-2 sm:gap-2.5">
                       <Check className="w-4 h-4 text-blue-700 flex-shrink-0" />
                       <span>Jusqu'à 3 factures par mois</span>
@@ -612,11 +616,11 @@ export function LandingPage() {
                     )}
                     <li className="flex items-center gap-2 sm:gap-2.5">
                       <Check className="w-4 h-4 text-blue-700 flex-shrink-0" />
-                      <span>Export PDF avec mentions légales essentielles</span>
+                      <span>Export PDF avec mentions légales</span>
                     </li>
                     <li className="flex items-center gap-2 sm:gap-2.5">
                       <Check className="w-4 h-4 text-blue-700 flex-shrink-0" />
-                      <span>Recherche SIRET automatique client</span>
+                      <span>Recherche SIRET automatique</span>
                     </li>
                     <li className="flex items-center gap-2 sm:gap-2.5">
                       <Check className="w-4 h-4 text-blue-700 flex-shrink-0" />
@@ -627,26 +631,26 @@ export function LandingPage() {
 
                 <div>
                   <Link to="/signup?plan=starter" onClick={() => trackCtaClick("tarifs")} className="block w-full pt-1">
-                    <button className={`${btnPrimary} w-full py-3 text-sm`}>
+                    <button className={`${btnPrimary} w-full py-2.5 sm:py-3 text-sm`}>
                       Créer mon compte gratuit
                     </button>
                   </Link>
-                  <p className="text-[10px] sm:text-[11px] text-slate-500 text-center mt-2">
+                  <p className="text-[10px] sm:text-[11px] text-slate-500 text-center mt-1.5 sm:mt-2">
                     Inscription immédiate sans carte bancaire, accès direct à votre espace.
                   </p>
                 </div>
               </div>
 
               {/* 2. Solo (Formule Recommandée) */}
-              <div className="p-5 sm:p-7 rounded-2xl bg-blue-50/50 border-2 border-blue-600 flex flex-col justify-between space-y-5 sm:space-y-6 text-left relative shadow-md">
-                <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 px-4 py-1.5 rounded-full bg-blue-700 text-white text-xs font-black uppercase tracking-wider shadow-sm flex items-center gap-1.5">
+              <div className="p-4 sm:p-7 rounded-2xl bg-blue-50/50 border-2 border-blue-600 flex flex-col justify-between space-y-4 sm:space-y-6 text-left relative shadow-md">
+                <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 px-3.5 py-1 rounded-full bg-blue-700 text-white text-[11px] sm:text-xs font-black uppercase tracking-wider shadow-sm flex items-center gap-1.5 whitespace-nowrap">
                   <span>★ {PLANS_DATA.solo.badge}</span>
                 </div>
 
-                <div className="space-y-3 sm:space-y-4">
+                <div className="space-y-2.5 sm:space-y-4">
                   <div>
                     <h3 className="text-lg sm:text-xl font-bold text-slate-900">Solo</h3>
-                    <p className="text-xs text-slate-700 font-medium mt-0.5">
+                    <p className="text-[11px] sm:text-xs text-slate-700 font-medium mt-0.5">
                       Facturation illimitée et pilotage fiscal complet
                     </p>
                   </div>
@@ -659,11 +663,11 @@ export function LandingPage() {
                       <span className="text-xs text-slate-700 font-medium">/ {billingCycle === "annual" ? "an" : "mois"}</span>
                     </div>
                     {billingCycle === "annual" ? (
-                      <p className="text-xs font-bold text-emerald-700 mt-1">
+                      <p className="text-[11px] sm:text-xs font-bold text-emerald-700 mt-0.5 sm:mt-1">
                         (soit {PLANS_DATA.solo.pricing.annualMonthlyEquivFormatted} / mois • {PLANS_DATA.solo.pricing.annualSavingsFormatted} d'économie)
                       </p>
                     ) : (
-                      <p className="text-[11px] text-slate-600 mt-1">
+                      <p className="text-[10px] sm:text-[11px] text-slate-600 mt-0.5 sm:mt-1">
                         Facturé 8,90 € / mois sans engagement
                       </p>
                     )}
@@ -671,7 +675,7 @@ export function LandingPage() {
 
                   <hr className="border-blue-200" />
 
-                  <ul className="space-y-2 sm:space-y-3 text-xs text-slate-900 font-medium">
+                  <ul className="space-y-1.5 sm:space-y-3 text-xs text-slate-900 font-medium">
                     <li className="flex items-center gap-2 sm:gap-2.5">
                       <Check className="w-4 h-4 text-blue-700 flex-shrink-0" />
                       <span><strong>Factures & Devis illimités</strong></span>
@@ -682,7 +686,7 @@ export function LandingPage() {
                     </li>
                     <li className="flex items-center gap-2 sm:gap-2.5">
                       <Check className="w-4 h-4 text-blue-700 flex-shrink-0" />
-                      <span>Tableau de bord fiscal & seuils de TVA en temps réel</span>
+                      <span>Tableau fiscal & seuils TVA temps réel</span>
                     </li>
                     <li className="flex items-center gap-2 sm:gap-2.5">
                       <Check className="w-4 h-4 text-blue-700 flex-shrink-0" />
@@ -694,41 +698,41 @@ export function LandingPage() {
                     </li>
                     <li className="flex items-center gap-2 sm:gap-2.5">
                       <Check className="w-4 h-4 text-blue-700 flex-shrink-0" />
-                      <span>Relances automatiques des factures par e-mail</span>
+                      <span>Relances impayés automatiques</span>
                     </li>
                     <li className="flex items-center gap-2 sm:gap-2.5">
                       <Check className="w-4 h-4 text-blue-700 flex-shrink-0" />
-                      <span>Réponse sous 24 h ouvrées, du lundi au vendredi</span>
+                      <span>Réponse sous 24 h ouvrées</span>
                     </li>
                   </ul>
                 </div>
 
                 <div>
                   <Link to={`/signup?plan=solo&billing=${billingCycle}`} onClick={() => trackCtaClick("tarifs")} className="block w-full pt-1">
-                    <button className={`${btnPrimary} w-full py-3 sm:py-3.5 text-sm sm:text-base`}>
+                    <button className={`${btnPrimary} w-full py-2.5 sm:py-3.5 text-sm sm:text-base`}>
                       Choisir Solo
                     </button>
                   </Link>
-                  <p className="text-[10px] sm:text-[11px] text-slate-500 text-center mt-2">
+                  <p className="text-[10px] sm:text-[11px] text-slate-500 text-center mt-1.5 sm:mt-2">
                     Redirection vers le paiement sécurisé Stripe après inscription, résiliable à tout moment en 1 clic.
                   </p>
                 </div>
               </div>
 
               {/* 3. Pro */}
-              <div className="p-5 sm:p-7 rounded-2xl bg-white border border-slate-200 flex flex-col justify-between space-y-5 sm:space-y-6 text-left shadow-sm">
-                <div className="space-y-3 sm:space-y-4">
+              <div className="p-4 sm:p-7 rounded-2xl bg-white border border-slate-200 flex flex-col justify-between space-y-4 sm:space-y-6 text-left shadow-sm">
+                <div className="space-y-2.5 sm:space-y-4">
                   <div>
                     <div className="flex items-center justify-between">
                       <h3 className="text-lg sm:text-xl font-bold text-slate-900">Pro</h3>
                       {billingCycle === "annual" && (
-                        <span className="bg-blue-50 text-blue-700 font-bold text-[11px] px-2 py-0.5 rounded-full border border-blue-200">
+                        <span className="bg-blue-50 text-blue-700 font-bold text-[10px] sm:text-[11px] px-2 py-0.5 rounded-full border border-blue-200">
                           -48%
                         </span>
                       )}
                     </div>
-                    <p className="text-xs text-slate-600 font-medium mt-0.5">
-                      Paiement en ligne par carte et pilotage multi-entreprises
+                    <p className="text-[11px] sm:text-xs text-slate-600 font-medium mt-0.5">
+                      Paiement en ligne par carte et multi-entreprises
                     </p>
                   </div>
 
@@ -740,11 +744,11 @@ export function LandingPage() {
                       <span className="text-xs text-slate-600 font-medium">/ {billingCycle === "annual" ? "an" : "mois"}</span>
                     </div>
                     {billingCycle === "annual" ? (
-                      <p className="text-xs font-bold text-emerald-700 mt-1">
+                      <p className="text-[11px] sm:text-xs font-bold text-emerald-700 mt-0.5 sm:mt-1">
                         (soit {PLANS_DATA.pro.pricing.annualMonthlyEquivFormatted} / mois • {PLANS_DATA.pro.pricing.annualSavingsFormatted} d'économie)
                       </p>
                     ) : (
-                      <p className="text-[11px] text-slate-600 mt-1">
+                      <p className="text-[10px] sm:text-[11px] text-slate-600 mt-0.5 sm:mt-1">
                         Facturé 12,90 € / mois sans engagement
                       </p>
                     )}
@@ -752,7 +756,7 @@ export function LandingPage() {
 
                   <hr className="border-slate-100" />
 
-                  <ul className="space-y-2 sm:space-y-3 text-xs text-slate-800 font-medium">
+                  <ul className="space-y-1.5 sm:space-y-3 text-xs text-slate-800 font-medium">
                     <li className="flex items-center gap-2 sm:gap-2.5">
                       <Check className="w-4 h-4 text-blue-700 flex-shrink-0" />
                       <span><strong>Toutes les fonctionnalités Solo incluses</strong></span>
@@ -771,18 +775,18 @@ export function LandingPage() {
                     </li>
                     <li className="flex items-center gap-2 sm:gap-2.5">
                       <Check className="w-4 h-4 text-blue-700 flex-shrink-0" />
-                      <span>Réponse sous 24 h ouvrées, du lundi au vendredi</span>
+                      <span>Réponse sous 24 h ouvrées</span>
                     </li>
                   </ul>
                 </div>
 
                 <div>
                   <Link to={`/signup?plan=pro&billing=${billingCycle}`} onClick={() => trackCtaClick("tarifs")} className="block w-full pt-1">
-                    <button className={`${btnPrimary} w-full py-3 sm:py-3.5 text-sm sm:text-base`}>
+                    <button className={`${btnPrimary} w-full py-2.5 sm:py-3.5 text-sm sm:text-base`}>
                       Choisir Pro
                     </button>
                   </Link>
-                  <p className="text-[10px] sm:text-[11px] text-slate-500 text-center mt-2">
+                  <p className="text-[10px] sm:text-[11px] text-slate-500 text-center mt-1.5 sm:mt-2">
                     Redirection vers le paiement sécurisé Stripe après inscription, résiliable à tout moment en 1 clic.
                   </p>
                 </div>
@@ -812,8 +816,8 @@ export function LandingPage() {
         {/* ========================================================= */}
         {/* 9. FAQ                                                    */}
         {/* ========================================================= */}
-        <section id="faq" className="py-12 md:py-20 bg-slate-50 border-b border-slate-200">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6 md:space-y-12">
+        <section id="faq" className="py-8 md:py-20 bg-slate-50 border-b border-slate-200">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-4 md:space-y-12">
             <div className="text-center max-w-3xl mx-auto space-y-2 md:space-y-3">
               <h2 className="text-2xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
                 Questions fréquentes
@@ -868,7 +872,7 @@ export function LandingPage() {
         {/* ========================================================= */}
         {/* 10. APPEL FINAL                                           */}
         {/* ========================================================= */}
-        <section className="py-10 md:py-20 px-4 sm:px-6 lg:px-8 bg-white">
+        <section className="py-8 md:py-20 px-4 sm:px-6 lg:px-8 bg-white">
           <div className="max-w-5xl mx-auto rounded-2xl sm:rounded-3xl bg-[#011142] text-white p-6 sm:p-14 text-center space-y-4 sm:space-y-6 shadow-xl border border-blue-900/40">
             <h2 className="text-2xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight">
               Prêt à simplifier votre facturation ?
