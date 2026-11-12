@@ -65,6 +65,7 @@ export const PLANS_DATA: Record<"starter" | "solo" | "pro", PlanData> = {
     features: [
       "Jusqu'à 3 factures et devis par mois",
       "Jusqu'à 3 clients actifs",
+      "3 factures créées par WhatsApp par mois",
       "Export PDF avec mentions légales essentielles",
       "Sans engagement, sans carte bancaire",
     ],
@@ -233,6 +234,12 @@ export const FEATURE_MATRIX: FeatureMatrixCategory[] = [
         starter: false,
         solo: false,
         pro: true,
+      },
+      {
+        name: "Factures créées par WhatsApp",
+        starter: "3 / mois",
+        solo: false,
+        pro: "Illimité",
       },
       {
         name: "Assistant IA de facturation (Web & WhatsApp)",

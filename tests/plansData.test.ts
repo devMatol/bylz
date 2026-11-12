@@ -10,6 +10,7 @@ test("Cohérence Plan Starter avec DEFAULT_PLAN_LIMITS", () => {
   // Quotas
   assert.equal(limits.invoicesPerMonth, 3);
   assert.equal(limits.maxClients, 3);
+  assert.equal(limits.whatsAppInvoicesPerMonth, 3);
 
   // Aucune fonction payante débloquée
   assert.equal(limits.fiscalDashboard, false);
@@ -35,6 +36,7 @@ test("Cohérence Plan Solo avec DEFAULT_PLAN_LIMITS", () => {
   // Quotas illimités
   assert.equal(limits.invoicesPerMonth, null);
   assert.equal(limits.maxClients, null);
+  assert.equal(limits.whatsAppInvoicesPerMonth, 0);
 
   // Fonctions débloquées
   assert.equal(limits.fiscalDashboard, true);
@@ -58,6 +60,7 @@ test("Cohérence Plan Pro avec DEFAULT_PLAN_LIMITS", () => {
 
   assert.equal(limits.invoicesPerMonth, null);
   assert.equal(limits.maxClients, null);
+  assert.equal(limits.whatsAppInvoicesPerMonth, null);
   assert.equal(limits.fiscalDashboard, true);
   assert.equal(limits.reminders, true);
   assert.equal(limits.exports, true);
