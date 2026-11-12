@@ -4,6 +4,7 @@ import type { PlanType, Plan } from "../types/database";
 export interface PlanFeatureLimits {
   invoicesPerMonth: number | null; // null = unlimited
   maxClients: number | null; // null = unlimited
+  whatsAppInvoicesPerMonth: number | null; // null = unlimited, 0 = disabled
   fiscalDashboard: boolean;
   reminders: boolean;
   exports: boolean;
@@ -13,10 +14,25 @@ export interface PlanFeatureLimits {
 
 export type FeatureKey = keyof PlanFeatureLimits;
 
+export function isWhatsAppStarterEnabled(): boolean {
+  const envProcess = (globalThis as unknown as { process?: { env?: Record<string, string | undefined> } }).process?.env;
+  if (envProcess && "VITE_WHATSAPP_STARTER_ENABLED" in envProcess) {
+    return envProcess.VITE_WHATSAPP_STARTER_ENABLED === "true";
+  }
+  try {
+    return (import.meta as unknown as { env?: Record<string, string | undefined> }).env?.VITE_WHATSAPP_STARTER_ENABLED === "true";
+  } catch {
+    return false;
+  }
+}
+
 export const DEFAULT_PLAN_LIMITS: Record<PlanType, PlanFeatureLimits> = {
   starter: {
     invoicesPerMonth: 3,
     maxClients: 3,
+    get whatsAppInvoicesPerMonth(): number {
+      return isWhatsAppStarterEnabled() ? 3 : 0;
+    },
     fiscalDashboard: false,
     reminders: false,
     exports: false,
@@ -26,6 +42,7 @@ export const DEFAULT_PLAN_LIMITS: Record<PlanType, PlanFeatureLimits> = {
   solo: {
     invoicesPerMonth: null,
     maxClients: null,
+    whatsAppInvoicesPerMonth: 0,
     fiscalDashboard: true,
     reminders: true,
     exports: true,
@@ -35,6 +52,7 @@ export const DEFAULT_PLAN_LIMITS: Record<PlanType, PlanFeatureLimits> = {
   pro: {
     invoicesPerMonth: null,
     maxClients: null,
+    whatsAppInvoicesPerMonth: null,
     fiscalDashboard: true,
     reminders: true,
     exports: true,
@@ -58,10 +76,14 @@ export async function loadPlansFromDB(): Promise<Plan[]> {
 
     const cache: Record<string, PlanFeatureLimits> = {};
     for (const p of plansList) {
-      const feat = p.features || {};
+      const feat = (p.features || {}) as Record<string, unknown>;
+      const whatsAppLimit = typeof feat.whatsAppInvoicesPerMonth === "number"
+        ? (feat.whatsAppInvoicesPerMonth as number)
+        : (p.key === "starter" ? 3 : p.key === "pro" ? null : 0);
       cache[p.key] = {
         invoicesPerMonth: p.invoice_limit,
         maxClients: p.client_limit,
+        whatsAppInvoicesPerMonth: whatsAppLimit,
         fiscalDashboard: !!feat.fiscalDashboard,
         reminders: !!feat.reminders,
         exports: !!feat.exports,

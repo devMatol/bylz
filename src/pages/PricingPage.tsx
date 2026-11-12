@@ -139,6 +139,9 @@ export function PricingPage() {
                     Créer mon compte gratuit
                   </Button>
                 </Link>
+                <p className="text-[11px] text-slate-500 text-center mt-2">
+                  Inscription immédiate sans carte bancaire, accès direct à votre espace.
+                </p>
               </div>
             </div>
 
@@ -187,6 +190,9 @@ export function PricingPage() {
                     Choisir Solo
                   </Button>
                 </Link>
+                <p className="text-[11px] text-slate-500 text-center mt-2">
+                  Redirection vers le paiement sécurisé Stripe après inscription, résiliable à tout moment depuis vos paramètres.
+                </p>
               </div>
             </div>
 
@@ -232,6 +238,9 @@ export function PricingPage() {
                     Choisir Pro
                   </Button>
                 </Link>
+                <p className="text-[11px] text-slate-500 text-center mt-2">
+                  Redirection vers le paiement sécurisé Stripe après inscription, résiliable à tout moment depuis vos paramètres.
+                </p>
               </div>
             </div>
           </div>

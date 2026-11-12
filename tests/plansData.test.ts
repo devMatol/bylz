@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { PLANS_DATA, FEATURE_MATRIX } from "../src/lib/plansData.ts";
-import { DEFAULT_PLAN_LIMITS } from "../src/lib/planLimits.ts";
+import { DEFAULT_PLAN_LIMITS, isWhatsAppStarterEnabled } from "../src/lib/planLimits.ts";
 
 test("Cohérence Plan Starter avec DEFAULT_PLAN_LIMITS", () => {
   const starter = PLANS_DATA.starter;
@@ -10,6 +10,7 @@ test("Cohérence Plan Starter avec DEFAULT_PLAN_LIMITS", () => {
   // Quotas
   assert.equal(limits.invoicesPerMonth, 3);
   assert.equal(limits.maxClients, 3);
+  assert.equal(limits.whatsAppInvoicesPerMonth, isWhatsAppStarterEnabled() ? 3 : 0);
 
   // Aucune fonction payante débloquée
   assert.equal(limits.fiscalDashboard, false);
@@ -25,6 +26,9 @@ test("Cohérence Plan Starter avec DEFAULT_PLAN_LIMITS", () => {
     assert.doesNotMatch(f, /Relance/i, "Starter ne doit pas promettre les relances");
     assert.doesNotMatch(f, /Stripe/i, "Starter ne doit pas promettre Stripe Connect");
     assert.doesNotMatch(f, /Assistant.*IA/i, "Starter ne doit pas promettre l'assistant IA");
+    if (!isWhatsAppStarterEnabled()) {
+      assert.doesNotMatch(f, /WhatsApp/i, "Starter ne doit pas annoncer WhatsApp tant que le drapeau est inactif");
+    }
   }
 });
 
@@ -35,6 +39,7 @@ test("Cohérence Plan Solo avec DEFAULT_PLAN_LIMITS", () => {
   // Quotas illimités
   assert.equal(limits.invoicesPerMonth, null);
   assert.equal(limits.maxClients, null);
+  assert.equal(limits.whatsAppInvoicesPerMonth, 0);
 
   // Fonctions débloquées
   assert.equal(limits.fiscalDashboard, true);
@@ -58,11 +63,22 @@ test("Cohérence Plan Pro avec DEFAULT_PLAN_LIMITS", () => {
 
   assert.equal(limits.invoicesPerMonth, null);
   assert.equal(limits.maxClients, null);
+  assert.equal(limits.whatsAppInvoicesPerMonth, null);
   assert.equal(limits.fiscalDashboard, true);
   assert.equal(limits.reminders, true);
   assert.equal(limits.exports, true);
   assert.equal(limits.paymentLinks, true);
   assert.equal(limits.multiCompany, true);
+});
+
+test("Drapeau VITE_WHATSAPP_STARTER_ENABLED : contrôle strict des annonces et quotas", () => {
+  if (!isWhatsAppStarterEnabled()) {
+    assert.equal(DEFAULT_PLAN_LIMITS.starter.whatsAppInvoicesPerMonth, 0);
+    assert.equal(PLANS_DATA.starter.features.some((f) => /WhatsApp/i.test(f)), false);
+  } else {
+    assert.equal(DEFAULT_PLAN_LIMITS.starter.whatsAppInvoicesPerMonth, 3);
+    assert.equal(PLANS_DATA.starter.features.some((f) => /WhatsApp/i.test(f)), true);
+  }
 });
 
 test("Calcul mathématique exact des badges de réduction", () => {

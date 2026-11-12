@@ -4,30 +4,20 @@ import {
   ShieldCheck,
   CheckCircle2,
   ChevronDown,
-  FileText,
-  Calculator,
-  TrendingUp,
-  Lock,
-  Building2,
   FileCheck,
-  Receipt,
   Check,
   ArrowRight,
-  Zap,
-  Code,
-  Palette,
-  Briefcase,
-  Wrench,
-  GraduationCap,
-  ShoppingBag,
   MessageSquare,
-  Bot,
   Sparkles,
+  Calculator,
+  Bell,
+  Search,
+  Download,
 } from "lucide-react";
 import { SEO } from "../components/seo/SEO";
 import { SEO_METADATA } from "../lib/seoMeta";
 import { PLANS_DATA } from "../lib/plansData";
-import { FAQS_LIST } from "../data/faqData";
+import { isWhatsAppStarterEnabled } from "../lib/planLimits";
 import { MarketingNavbar } from "../components/marketing/MarketingNavbar";
 import { MarketingFooter } from "../components/marketing/MarketingFooter";
 import { BillingToggle } from "../components/shared/BillingToggle";
@@ -75,71 +65,68 @@ export function LandingPage() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  if (!loading && user && !forcePublic) {
-    const isStarter = profile?.plan === "starter";
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-blue-700 border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  if (user && !forcePublic) {
+    const isStarter = !profile?.plan || profile.plan === "starter";
     const defaultPath = isStarter ? "/invoices" : "/dashboard";
     return <Navigate to={defaultPath} replace />;
   }
 
-  const workflowSteps = [
+  const threeSteps = [
     {
       num: "1",
-      title: "Créez vos devis",
-      desc: "Édition en 1 minute, prestations enregistrées et conversion en facture d'un simple clic dès l'accord client.",
+      title: "Créez votre devis ou facture",
+      desc: "Saisissez votre client et vos prestations en quelques secondes. Toutes les mentions obligatoires s'appliquent automatiquement.",
     },
     {
       num: "2",
-      title: "Facturez simplement",
-      desc: "Factures Factur-X générées et validées, transmission via partenaire en cours d'activation.",
+      title: "Envoyez et encaissez en direct",
+      desc: "Téléchargez le PDF officiel ou partagez un lien direct pour vous faire payer rapidement par virement ou carte.",
     },
     {
       num: "3",
-      title: "Suivez vos encaissements",
-      desc: "Statut des règlements en direct, relances types en 1 clic et synchronisation de trésorerie.",
-    },
-    {
-      num: "4",
-      title: "Déclarez l'URSSAF",
-      desc: "Calcul au centime près selon votre taux officiel selon votre activité (vente, services ou libéral) et rappel automatique des échéances.",
+      title: "Suivez vos cotisations URSSAF",
+      desc: "Vos cotisations et votre revenu net disponible se calculent automatiquement à chaque encaissement sans calculatrice.",
     },
   ];
 
-  const personas = [
+  const keyFeatures = [
     {
-      role: "Développeurs & Tech",
-      icon: Code,
-      highlight: "Gestion au TJM",
-      details: "Facturation mensuelle récurrente, calcul de la franchise TVA et exports comptables en direct.",
+      title: "Factures & Devis conformes",
+      desc: "Format Factur-X officiel avec mentions obligatoires adaptées à votre activité.",
+      icon: FileCheck,
     },
     {
-      role: "Designers & Créatifs",
-      icon: Palette,
-      highlight: "Devis & Factures",
-      details: "Modèles de devis soignés, conversion en facture en un clic et suivi des règlements.",
+      title: "Calcul des cotisations URSSAF",
+      desc: "Estimation automatique de vos cotisations sociales et de votre revenu net réel.",
+      icon: Calculator,
     },
     {
-      role: "Consultants & Coachs",
-      icon: Briefcase,
-      highlight: "Facturation B2B",
-      details: "Mentions contractuelles spécifiques, délais de paiement 30/60 jours et suivi des relances.",
+      title: "Suivi du seuil de TVA",
+      desc: "Jauge visuelle de franchise en base pour anticiper le dépassement en toute sérénité.",
+      icon: ShieldCheck,
     },
     {
-      role: "Artisans & BTP",
-      icon: Wrench,
-      highlight: "Mentions Légales",
-      details: "Pied de page personnalisable pour vos mentions d'assurance et devis détaillés clairs.",
+      title: "Relances d'impayés automatiques",
+      desc: "Suivez les échéances en un coup d'œil et déclenchez des rappels cordiaux en un clic.",
+      icon: Bell,
     },
     {
-      role: "Formateurs & Enseignants",
-      icon: GraduationCap,
-      highlight: "Franchise en base",
-      details: "Mention légale de TVA automatique, gestion des devis et ventilation des cotisations BNC.",
+      title: "Recherche SIRET automatique",
+      desc: "Remplissage instantané des coordonnées de vos clients professionnels depuis la base officielle.",
+      icon: Search,
     },
     {
-      role: "Vente & E-commerce",
-      icon: ShoppingBag,
-      highlight: "Régime Vente BIC",
-      details: "Suivi des encaissements chronologique, registre des dépenses et calcul du taux spécifique de 12,3 %.",
+      title: "Registre des encaissements & export",
+      desc: "Historique chronologique complet exportable en CSV pour faciliter vos déclarations.",
+      icon: Download,
     },
   ];
 
@@ -150,7 +137,13 @@ export function LandingPage() {
     },
     {
       q: "Puis-je utiliser Bylz gratuitement ?",
-      a: "Absolument. Notre formule gratuite est permanente jusqu'à 3 factures par mois. Vous n'avez pas besoin de renseigner de carte bancaire pour démarrer.",
+      a: "Absolument. Notre formule gratuite Starter est permanente jusqu'à 3 factures par mois. Vous n'avez pas besoin de renseigner de carte bancaire pour démarrer.",
+    },
+    {
+      q: "Comment fonctionne l'assistant WhatsApp ?",
+      a: isWhatsAppStarterEnabled()
+        ? "Vous pouvez dicter ou écrire un message pour créer un brouillon de facture en direct. L'offre gratuite Starter inclut jusqu'à 3 factures créées par WhatsApp par mois, et le Plan Pro offre un usage illimité."
+        : "Vous pouvez dicter ou écrire un message pour créer un brouillon de facture en direct. Cette fonctionnalité est disponible avec le Plan Pro pour piloter l'ensemble de votre facturation à la voix.",
     },
     {
       q: "Comment fonctionne le calcul des cotisations URSSAF ?",
@@ -158,334 +151,227 @@ export function LandingPage() {
     },
     {
       q: "Où sont hébergées mes données ?",
-      a: "Votre base de données et vos factures sont hébergées en Europe chez Supabase (infrastructure AWS), avec sauvegardes quotidiennes.",
+      a: "Vos données et factures sont hébergées exclusivement au sein de l'Union Européenne (serveurs certifiés ISO 27001 et conformes RGPD). Vos documents sont sauvegardés quotidiennement.",
     },
     {
-      q: "Puis-je importer mes anciennes factures ?",
-      a: "Tout à fait. Bylz dispose d'un outil d'import qui analyse vos anciens fichiers PDF ou tableurs pour reconstituer votre historique sans repartir de zéro.",
-    },
-    {
-      q: "Que se passe-t-il si je dépasse le seuil de franchise de TVA ?",
-      a: "Une alerte vous prévient dès que vous approchez des seuils légaux 2026 (37 500 € en services, 85 000 € en vente). L'application vous guide ensuite pour basculer facilement en facturation avec TVA sans risque de pénalité fiscale.",
-    },
-    {
-      q: "Y a-t-il un engagement de durée ?",
-      a: "Aucun. Toutes nos offres payantes sont sans engagement. Vous pouvez changer de formule ou résilier à tout moment d'un simple clic depuis vos paramètres.",
-    },
-    {
-      q: "Mes factures sont-elles valables en cas de contrôle fiscal ?",
-      a: "Oui. Bylz génère des pièces avec numérotation chronologique séquentielle sans rupture et tient votre livre chronologique des recettes.",
+      q: "Puis-je résilier mon abonnement à tout moment ?",
+      a: "Oui, sans aucun engagement. Vous pouvez suspendre ou résilier votre abonnement payant en un clic depuis les paramètres de votre compte. Vous conservez toujours l'accès à vos factures.",
     },
   ];
 
-  // Primary Button unified styling class
   const btnPrimary =
-    "inline-flex items-center justify-center font-bold text-sm text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-sm transition-colors min-h-[44px]";
-
-  // Schemas JSON-LD
-  const softwareSchema = {
-    "@context": "https://schema.org",
-    "@type": "SoftwareApplication",
-    name: "Bylz",
-    applicationCategory: "BusinessApplication",
-    operatingSystem: "Web",
-    description:
-      "Logiciel de facturation PDF et de gestion des cotisations URSSAF pour auto-entrepreneurs et micro-entreprises.",
-    offers: [
-      {
-        "@type": "Offer",
-        name: "Starter",
-        price: "0.00",
-        priceCurrency: "EUR",
-        availability: "https://schema.org/InStock",
-        priceValidUntil: "2026-12-31",
-        url: "https://bylz.fr/tarifs",
-      },
-      {
-        "@type": "Offer",
-        name: "Solo",
-        price: billingCycle === "annual" ? "4.17" : "8.90",
-        priceCurrency: "EUR",
-        availability: "https://schema.org/InStock",
-        priceValidUntil: "2026-12-31",
-        url: "https://bylz.fr/tarifs",
-      },
-      {
-        "@type": "Offer",
-        name: "Pro",
-        price: billingCycle === "annual" ? "6.67" : "12.90",
-        priceCurrency: "EUR",
-        availability: "https://schema.org/InStock",
-        priceValidUntil: "2026-12-31",
-        url: "https://bylz.fr/tarifs",
-      },
-    ],
-  };
-
-  const organizationSchema = {
-    "@context": "https://schema.org",
-    "@type": "Organization",
-    name: "Bylz",
-    url: "https://bylz.fr",
-    logo: "https://bylz.fr/og-image.png",
-  };
-
-  const faqSchema = {
-    "@context": "https://schema.org",
-    "@type": "FAQPage",
-    mainEntity: faqs.map((f) => ({
-      "@type": "Question",
-      name: f.q,
-      acceptedAnswer: {
-        "@type": "Answer",
-        text: f.a,
-      },
-    })),
-  };
+    "inline-flex items-center justify-center font-bold rounded-xl transition-all duration-200 bg-blue-700 hover:bg-blue-800 text-white shadow-sm hover:shadow";
 
   return (
-    <div className="min-h-screen bg-white text-slate-900 selection:bg-blue-600/20 selection:text-blue-900 relative overflow-x-hidden font-sans">
-      <SEO
-        title={SEO_METADATA["/"].title}
-        description={SEO_METADATA["/"].description}
-        canonical={SEO_METADATA["/"].canonical}
-        jsonLd={[softwareSchema, organizationSchema, faqSchema]}
-      />
+    <>
+      <SEO {...SEO_METADATA.home} />
 
-      <MarketingNavbar theme="light" />
+      <div className="min-h-screen bg-white text-slate-900 selection:bg-blue-100 selection:text-blue-900 font-sans">
+        <MarketingNavbar />
 
-      <main className="relative z-10">
         {/* ========================================================= */}
-        {/* 1. HERO SECTION                                           */}
+        {/* 1. HERO                                                   */}
         {/* ========================================================= */}
-        <section className="pt-32 pb-16 md:pt-40 md:pb-24 bg-gradient-to-b from-slate-50 via-white to-white border-b border-slate-200 px-4 sm:px-6 lg:px-8">
-          <div className="max-w-7xl mx-auto">
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center">
-              {/* Left Column : Valeur, arguments et CTA */}
-              <div className="lg:col-span-7 space-y-6 text-left">
+        <section className="pt-24 pb-10 md:pt-40 md:pb-20 bg-gradient-to-b from-slate-50 via-white to-white border-b border-slate-200 px-4 sm:px-6 lg:px-8">
+          <div className="max-w-4xl mx-auto text-center space-y-5 md:space-y-6">
+            <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-slate-900 leading-[1.15]">
+              Vos factures en 3 clics,{" "}
+              <span className="text-blue-700">même si vous venez de vous lancer</span>
+            </h1>
 
-                {/* Titre percutant H1 optimisé SEO */}
-                <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-slate-900 leading-[1.15]">
-                  Facturation & gestion pour les{" "}
-                  <span className="text-blue-700">indépendants</span>.
-                </h1>
+            <p className="text-sm sm:text-lg text-slate-700 leading-relaxed max-w-2xl mx-auto">
+              Créez vos devis et factures conformes, suivez vos paiements et estimez vos cotisations sans prise de tête.
+            </p>
 
-                {/* 4 Promesses claires à cocher */}
-                <ul className="space-y-3 pt-1 text-slate-800 text-sm sm:text-base font-medium">
-                  <li className="flex items-center gap-3">
-                    <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center flex-shrink-0">
-                      <Check className="w-3.5 h-3.5 stroke-[3]" />
-                    </span>
-                    <span>Factures PDF avec <strong>les mentions légales essentielles</strong></span>
-                  </li>
-                  <li className="flex items-center gap-3">
-                    <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center flex-shrink-0">
-                      <Check className="w-3.5 h-3.5 stroke-[3]" />
-                    </span>
-                    <span>Calcul automatique de vos <strong>cotisations URSSAF</strong> et de votre net</span>
-                  </li>
-                  <li className="flex items-center gap-3">
-                    <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center flex-shrink-0">
-                      <Check className="w-3.5 h-3.5 stroke-[3]" />
-                    </span>
-                    <span>Suivi en direct du <strong>seuil de TVA</strong> (Franchise en base)</span>
-                  </li>
-                  <li className="flex items-center gap-3">
-                    <span className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-800 flex items-center justify-center flex-shrink-0">
-                      <Sparkles className="w-3.5 h-3.5 stroke-[2.5]" />
-                    </span>
-                    <span><strong>Assistant IA utilisable depuis WhatsApp</strong> <span className="inline-block px-1.5 py-0.5 rounded text-[11px] font-bold bg-amber-100 text-amber-800 border border-amber-300 ml-1">Option Pro</span> pour dicter vos devis et facturer</span>
-                  </li>
-                </ul>
+            <ul className="flex flex-wrap items-center justify-center gap-x-5 gap-y-1.5 pt-1 text-slate-800 text-xs sm:text-sm font-medium">
+              <li className="flex items-center gap-1.5">
+                <Check className="w-4 h-4 text-blue-700 stroke-[3]" />
+                <span>Factures conformes avec mentions légales automatiques</span>
+              </li>
+              <li className="flex items-center gap-1.5">
+                <Check className="w-4 h-4 text-blue-700 stroke-[3]" />
+                <span>Calcul automatique cotisations URSSAF & net</span>
+              </li>
+              <li className="flex items-center gap-1.5">
+                <Check className="w-4 h-4 text-blue-700 stroke-[3]" />
+                <span>Suivi en direct du seuil de TVA</span>
+              </li>
+            </ul>
 
-                {/* Boutons d'action */}
-                <div className="pt-2 flex flex-col sm:flex-row items-stretch sm:items-center gap-3.5">
-                  {user ? (
-                    <Link to="/dashboard" className="w-full sm:w-auto">
-                      <button className={`${btnPrimary} py-3.5 px-8 text-base w-full sm:w-auto`}>
-                        Accéder à mon tableau de bord
-                      </button>
-                    </Link>
-                  ) : (
-                    <>
-                      <Link to="/signup" onClick={() => trackCtaClick("hero")} className="w-full sm:w-auto">
-                        <button className={`${btnPrimary} py-3.5 px-8 text-base w-full sm:w-auto`}>
-                          Créer mon compte gratuit
-                        </button>
-                      </Link>
-                      <Link to="/tarifs" onClick={() => trackCtaClick("hero")} className="w-full sm:w-auto">
-                        <button className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl border border-slate-300 bg-white text-slate-800 text-base font-bold hover:bg-slate-50 hover:text-slate-900 transition-colors shadow-sm">
-                          Consulter les tarifs
-                        </button>
-                      </Link>
-                    </>
-                  )}
-                </div>
+            <div className="pt-1 flex flex-col sm:flex-row items-center justify-center gap-3">
+              {user ? (
+                <Link to="/dashboard" className="w-full sm:w-auto">
+                  <button className={`${btnPrimary} py-3.5 px-8 text-base w-full sm:w-auto`}>
+                    Accéder à mon tableau de bord
+                  </button>
+                </Link>
+              ) : (
+                <>
+                  <Link to="/signup" onClick={() => trackCtaClick("hero")} className="w-full sm:w-auto">
+                    <button className={`${btnPrimary} py-3.5 px-8 text-base w-full sm:w-auto`}>
+                      Créer mon compte gratuit
+                    </button>
+                  </Link>
+                  <Link to="/essai" onClick={() => trackCtaClick("hero")} className="w-full sm:w-auto">
+                    <button className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl border border-slate-300 bg-white text-slate-800 text-base font-bold hover:bg-slate-50 hover:text-slate-900 transition-colors shadow-sm">
+                      Voir Bylz en 30 secondes
+                    </button>
+                  </Link>
+                </>
+              )}
+            </div>
 
-                {/* Garanties objectives */}
-                <div className="pt-4 flex flex-wrap items-center gap-y-2 gap-x-5 text-xs text-slate-700 font-semibold border-t border-slate-200">
-                  <span className="flex items-center gap-1.5">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-700" /> Gratuit jusqu'à 3 factures/mois
-                  </span>
-                  <span className="flex items-center gap-1.5">
-                    <Lock className="w-4 h-4 text-slate-700" /> Base de données hébergée en Europe
-                  </span>
-                </div>
-              </div>
-
-              {/* Right Column : Aperçu Visuel Produit Fidèle */}
-              <div className="hidden lg:block lg:col-span-5">
-                <div className="relative mx-auto max-w-lg lg:max-w-none">
-                  {/* Carte Principale : Dashboard d'activité */}
-                  <div className="rounded-2xl bg-white border border-slate-200 shadow-xl overflow-hidden">
-                    <div className="px-5 py-3.5 border-b border-slate-200 flex items-center justify-between bg-slate-50">
-                      <div className="flex items-center gap-2">
-                        <span className="w-2.5 h-2.5 rounded-full bg-blue-700 inline-block" />
-                        <span className="font-bold text-xs text-slate-900">Bylz : Pilotage Micro-Entreprise</span>
-                      </div>
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-[10px] font-bold text-slate-600 bg-slate-200/80 px-2 py-0.5 rounded border border-slate-300 uppercase tracking-wider">
-                          Exemple
-                        </span>
-                        <span className="text-[11px] font-bold text-emerald-800 bg-emerald-100/70 px-2 py-0.5 rounded border border-emerald-300">
-                          Exercice 2026
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="p-5 space-y-4 text-left">
-                      {/* Metric Row */}
-                      <div className="grid grid-cols-2 gap-3">
-                        <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200">
-                          <p className="text-[11px] font-semibold text-slate-600">Chiffre d'affaires Q4</p>
-                          <p className="text-xl font-bold text-slate-900 font-mono mt-0.5">14 250,00 €</p>
-                          <p className="text-[11px] text-emerald-700 font-semibold mt-1">+15% vs Q3</p>
-                        </div>
-                        <div className="p-3.5 rounded-xl bg-blue-50/70 border border-blue-200">
-                          <p className="text-[11px] font-semibold text-blue-900">Part URSSAF estimée</p>
-                          <p className="text-xl font-bold text-blue-900 font-mono mt-0.5">3 648,00 €</p>
-                          <p className="text-[11px] text-blue-800 font-semibold mt-1">Taux officiel 25,6 % (BNC SSI)</p>
-                        </div>
-                      </div>
-
-                      {/* Jauge TVA */}
-                      <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
-                        <div className="flex justify-between items-center text-xs">
-                          <span className="font-bold text-slate-800">Seuil de Franchise TVA (Services)</span>
-                          <span className="font-mono text-slate-700 text-xs font-semibold">31 400 / 37 500 €</span>
-                        </div>
-                        <div className="w-full bg-slate-200 h-2.5 rounded-full overflow-hidden">
-                          <div className="bg-blue-600 h-full w-[83.7%]" />
-                        </div>
-                        <p className="text-[11px] text-slate-600 font-medium">
-                          Marge restante de 6 100 € avant assujettissement
-                        </p>
-                      </div>
-
-                      {/* Assistant IA Copilot row avec mention WhatsApp */}
-                      <div className="p-3 rounded-xl border border-emerald-300 bg-emerald-50/70 flex items-center justify-between">
-                        <div className="flex items-center gap-2.5">
-                          <div className="w-8 h-8 rounded-lg bg-emerald-600 text-white flex items-center justify-center flex-shrink-0 shadow-sm">
-                            <MessageSquare className="w-4 h-4" />
-                          </div>
-                          <div>
-                            <div className="flex items-center gap-1.5">
-                              <span className="text-xs font-bold text-slate-900">Assistant IA Bylz</span>
-                              <span className="text-[10px] font-bold text-emerald-800 bg-emerald-100 px-1.5 py-0.2 rounded border border-emerald-300">
-                                WhatsApp & Web
-                              </span>
-                            </div>
-                            <p className="text-[11px] text-slate-700 font-medium">
-                              « Facture envoyée et URSSAF calculé à 25,6 % »
-                            </p>
-                          </div>
-                        </div>
-                        <span className="text-[11px] font-bold text-emerald-800 whitespace-nowrap pl-2">
-                          Sur WhatsApp
-                        </span>
-                      </div>
-
-                      {/* Facture Factur-X prête */}
-                      <div className="p-3.5 rounded-xl border border-slate-200 bg-white flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <div className="w-9 h-9 rounded-lg bg-blue-100 text-blue-800 flex items-center justify-center font-bold text-xs">
-                            PDF/A
-                          </div>
-                          <div>
-                            <p className="text-xs font-bold text-slate-900">FAC-2026-012</p>
-                            <p className="text-[11px] text-slate-600 font-medium">Facture PDF</p>
-                          </div>
-                        </div>
-                        <span className="px-2.5 py-0.5 rounded text-[11px] font-bold bg-emerald-100/70 text-emerald-800 border border-emerald-300">
-                          Payée : 3 200 €
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
+            <div className="pt-3 flex flex-wrap items-center justify-center gap-y-1.5 gap-x-5 text-xs text-slate-700 font-semibold border-t border-slate-200">
+              <span className="flex items-center gap-1.5">
+                <CheckCircle2 className="w-4 h-4 text-emerald-700" /> Gratuit jusqu'à 3 factures/mois
+              </span>
+              <span className="flex items-center gap-1.5">
+                <CheckCircle2 className="w-4 h-4 text-emerald-700" /> Sans carte bancaire
+              </span>
+              <span className="flex items-center gap-1.5">
+                <CheckCircle2 className="w-4 h-4 text-emerald-700" /> Sans engagement
+              </span>
             </div>
           </div>
         </section>
 
         {/* ========================================================= */}
-        {/* 2. BANDEAU DE RÉASSURANCE & LABELS LÉGAUX                  */}
+        {/* 2. APERÇU PRODUIT                                         */}
         {/* ========================================================= */}
-        <section className="py-6 bg-slate-100 border-b border-slate-200">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-8 text-xs font-bold text-slate-800">
-              <div className="inline-flex items-center gap-2 min-h-[44px] py-2 px-1">
-                <ShieldCheck className="w-4 h-4 text-emerald-700" />
-                <span>Mentions légales obligatoires conformes</span>
-              </div>
-              <div className="inline-flex items-center gap-2 min-h-[44px] py-2 px-1">
-                <FileCheck className="w-4 h-4 text-blue-700" />
-                <span>Registre des encaissements exportable en CSV</span>
-              </div>
-              <div className="inline-flex items-center gap-2 min-h-[44px] py-2 px-1">
-                <Lock className="w-4 h-4 text-slate-700" />
-                <span>Base de données hébergée en Europe</span>
-              </div>
-              <div className="inline-flex items-center gap-2 min-h-[44px] py-2 px-1">
-                <CheckCircle2 className="w-4 h-4 text-emerald-700" />
-                <span>Taux de cotisations 2026 à jour</span>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* ========================================================= */}
-        {/* 3. WORKFLOW : DU DEVIS À L'URSSAF                         */}
-        {/* ========================================================= */}
-        <section className="py-20 bg-white">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
-            <div className="text-center max-w-3xl mx-auto space-y-3">
-              <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
-                Du devis à la déclaration URSSAF, tout est connecté
+        <section className="py-6 md:py-18 bg-slate-50 border-b border-slate-200 px-4 sm:px-6 lg:px-8">
+          <div className="max-w-5xl mx-auto space-y-6 md:space-y-8">
+            <div className="text-center space-y-1.5 max-w-2xl mx-auto">
+              <span className="inline-block px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-blue-100 text-blue-700">
+                Aperçu en direct
+              </span>
+              <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+                Une interface claire conçue pour aller vite
               </h2>
-              <p className="text-slate-700 text-base sm:text-lg">
-                Fini les heures passées sur les tableurs : devis transformés en factures en 1 clic, cotisations estimées en direct et registre des encaissements exportable.
+              <p className="text-xs sm:text-base text-slate-600">
+                Pilotez votre chiffre d'affaires, vos cotisations et vos factures en un coup d'œil.
               </p>
             </div>
 
-            {/* 4 Colonnes horizontales numérotées */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {workflowSteps.map((step) => (
+            {/* Mock Dashboard Card */}
+            <div className="max-w-3xl mx-auto rounded-2xl sm:rounded-3xl bg-white border border-slate-200/80 p-4 sm:p-7 shadow-xl space-y-4 sm:space-y-5">
+              <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
+                <div className="flex items-center gap-2">
+                  <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-rose-500/80" />
+                  <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-amber-500/80" />
+                  <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-emerald-500/80" />
+                  <span className="text-[11px] sm:text-xs font-mono font-medium text-slate-500 ml-1.5">app.bylz.fr</span>
+                </div>
+                <span className="text-[10px] sm:text-[11px] font-bold text-slate-700 bg-slate-100 px-2 sm:px-2.5 py-0.5 rounded-full">
+                  Micro-entreprise
+                </span>
+              </div>
+
+              {/* 3 Metric Cards */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-3">
+                <div className="p-3 sm:p-3.5 rounded-xl sm:rounded-2xl bg-blue-50/70 border border-blue-100 space-y-0.5 sm:space-y-1">
+                  <span className="text-[10px] sm:text-[11px] font-bold text-blue-900">CA Encaissé 2026</span>
+                  <p className="text-lg sm:text-xl font-extrabold text-blue-950 font-mono">31 400 €</p>
+                  <p className="text-[10px] text-blue-800 font-semibold">+18% ce trimestre</p>
+                </div>
+                <div className="p-3 sm:p-3.5 rounded-xl sm:rounded-2xl bg-slate-100/80 border border-slate-200 space-y-0.5 sm:space-y-1">
+                  <span className="text-[10px] sm:text-[11px] font-bold text-slate-700">Cotisations URSSAF</span>
+                  <p className="text-lg sm:text-xl font-extrabold text-slate-900 font-mono">8 038 €</p>
+                  <p className="text-[10px] text-slate-600 font-semibold">Taux officiel 25,6 %</p>
+                </div>
+                <div className="p-3 sm:p-3.5 rounded-xl sm:rounded-2xl bg-emerald-50 border border-emerald-100 space-y-0.5 sm:space-y-1">
+                  <span className="text-[10px] sm:text-[11px] font-bold text-emerald-800">Net après cotisations</span>
+                  <p className="text-lg sm:text-xl font-extrabold text-emerald-950 font-mono">23 362 €</p>
+                  <p className="text-[10px] text-emerald-800 font-semibold">Revenu disponible réel</p>
+                </div>
+              </div>
+
+              {/* Seuil TVA Bar */}
+              <div className="p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-slate-50 border border-slate-200 space-y-1.5 sm:space-y-2">
+                <div className="flex items-center justify-between text-xs font-bold text-slate-900">
+                  <span className="flex items-center gap-1.5 text-[11px] sm:text-xs">
+                    <ShieldCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-600" />
+                    Seuil franchise TVA (37 500 €)
+                  </span>
+                  <span className="text-emerald-700 font-mono font-extrabold text-[11px] sm:text-xs">83,7 %</span>
+                </div>
+                <div className="h-2 w-full bg-slate-200 rounded-full overflow-hidden">
+                  <div className="h-full bg-blue-600 rounded-full transition-all" style={{ width: "83.7%" }} />
+                </div>
+                <p className="text-[10px] sm:text-[11px] text-slate-600">
+                  Marge restante de 6 100 € avant assujettissement à la TVA.
+                </p>
+              </div>
+
+              {/* Facture Factur-X prête */}
+              <div className="p-2.5 sm:p-3.5 rounded-xl sm:rounded-2xl border border-slate-200 bg-white flex items-center justify-between">
+                <div className="flex items-center gap-2.5 sm:gap-3">
+                  <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg sm:rounded-xl bg-blue-100 text-blue-800 flex items-center justify-center font-bold text-xs">
+                    PDF
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold text-slate-900">FAC-2026-012 · Acme Studio SARL</p>
+                    <p className="text-[10px] sm:text-[11px] text-slate-500">Facture Factur-X avec mentions obligatoires</p>
+                  </div>
+                </div>
+                <span className="px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-md sm:rounded-lg text-[11px] sm:text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
+                  Payée : 3 200,00 €
+                </span>
+              </div>
+
+              <div className="text-center pt-1">
+                <Link
+                  to="/essai"
+                  onClick={() => trackCtaClick("hero")}
+                  className="inline-flex items-center gap-1.5 text-xs font-bold text-blue-700 hover:text-blue-900 transition-colors"
+                >
+                  <span>Tester l'interface en direct sans créer de compte</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </Link>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ========================================================= */}
+        {/* 3. 3 ÉTAPES                                               */}
+        {/* ========================================================= */}
+        <section className="py-10 md:py-20 bg-white border-b border-slate-200">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6 md:space-y-12">
+            <div className="text-center max-w-3xl mx-auto space-y-2 md:space-y-3">
+              <span className="inline-block px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-blue-100 text-blue-700">
+                Comment ça marche
+              </span>
+              <h2 className="text-2xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
+                3 étapes simples pour facturer
+              </h2>
+              <p className="text-slate-700 text-sm sm:text-lg">
+                Fini les heures passées sur les tableurs : devis transformés en factures en un clic, cotisations estimées et registre tenu à jour.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5 sm:gap-6 max-w-5xl mx-auto">
+              {threeSteps.map((step) => (
                 <div
                   key={step.num}
-                  className="p-6 rounded-xl bg-slate-50 border border-slate-200 space-y-3 text-left hover:border-blue-400 transition-colors"
+                  className="p-3.5 sm:p-6 rounded-xl sm:rounded-2xl bg-slate-50 border border-slate-200 flex items-start gap-3 sm:block sm:space-y-3 text-left hover:border-blue-400 transition-colors"
                 >
-                  <div className="w-8 h-8 rounded-lg bg-blue-700 text-white font-bold text-sm flex items-center justify-center">
+                  <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-blue-700 text-white font-black text-xs sm:text-sm flex items-center justify-center shrink-0">
                     {step.num}
                   </div>
-                  <h3 className="font-bold text-base text-slate-900">{step.title}</h3>
-                  <p className="text-xs text-slate-700 leading-relaxed font-normal">{step.desc}</p>
+                  <div className="space-y-0.5 sm:space-y-1">
+                    <h3 className="font-bold text-xs sm:text-base text-slate-900">{step.title}</h3>
+                    <p className="text-[11px] sm:text-sm text-slate-700 leading-snug sm:leading-relaxed font-normal">{step.desc}</p>
+                  </div>
                 </div>
               ))}
             </div>
 
-            <div className="text-center pt-2">
-              <Link to="/signup" className={`${btnPrimary} py-3 px-6 text-sm`}>
+            <div className="text-center pt-1">
+              <Link
+                to="/signup"
+                onClick={() => trackCtaClick("milieu")}
+                className={`${btnPrimary} py-2.5 sm:py-3 px-6 text-sm`}
+              >
                 Créer mon compte gratuit
               </Link>
             </div>
@@ -493,108 +379,98 @@ export function LandingPage() {
         </section>
 
         {/* ========================================================= */}
-        {/* 4. BANDEAU DE RUPTURE SOMBRE : RÉFORME 2026               */}
+        {/* 4. SECTION DÉBUTANTS : VOUS VENEZ DE VOUS LANCER ?         */}
         {/* ========================================================= */}
-        <section className="py-20 bg-[#011142] text-white">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
-              {/* Colonne gauche : Explications réforme */}
-              <div className="lg:col-span-6 space-y-5 text-left">
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-900/60 text-blue-200 text-xs font-bold border border-blue-400/40">
-                  <ShieldCheck className="w-4 h-4 text-blue-300" />
-                  <span>Obligation Légale 2026</span>
-                </div>
-                <h2 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight leading-tight">
-                  Factures Factur-X générées et validées, transmission via partenaire en cours d'activation
-                </h2>
-                <p className="text-slate-200 text-sm sm:text-base leading-relaxed">
-                  Bylz génère des factures conformes Factur-X validées selon les schémas officiels. La transmission via notre plateforme partenaire est en cours d'activation pour la réforme. Bylz n'est pas une plateforme agréée.
+        <section className="py-8 md:py-20 bg-slate-50 border-b border-slate-200">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-5 md:space-y-10">
+            <div className="text-center max-w-3xl mx-auto space-y-1.5 md:space-y-3">
+              <span className="inline-block px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-blue-100 text-blue-700">
+                Guide débutant
+              </span>
+              <h2 className="text-2xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
+                Vous venez de vous lancer ?
+              </h2>
+              <p className="text-slate-700 text-xs sm:text-lg">
+                Démarrer son activité apporte son lot de doutes administratifs. Bylz vous évite les erreurs courantes dès le premier jour.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5 sm:gap-6 max-w-5xl mx-auto">
+              <div className="p-3.5 sm:p-6 rounded-xl sm:rounded-2xl bg-white border border-slate-200 shadow-xs space-y-1 sm:space-y-2">
+                <p className="text-xs sm:text-sm font-bold text-slate-900 flex items-start gap-2">
+                  <span className="text-blue-600 font-extrabold text-sm sm:text-base">?</span>
+                  <span>Quelles mentions obligatoires sur mes factures ?</span>
                 </p>
-                <div className="pt-2">
-                  <Link
-                    to="/conformite"
-                    className="inline-flex items-center gap-2 text-sm font-bold text-blue-300 hover:text-white transition-colors min-h-[44px] py-2"
-                  >
-                    <span>Comprendre la réforme et les obligations de votre statut</span>
-                    <ArrowRight className="w-4 h-4" />
-                  </Link>
-                </div>
+                <p className="text-[11px] sm:text-sm text-slate-700 leading-snug sm:leading-relaxed pl-4 sm:pl-5">
+                  Bylz renseigne automatiquement toutes les mentions légales requises selon votre statut pour des factures 100 % conformes.
+                </p>
               </div>
 
-              {/* Colonne droite : 3 Cartes de conformité vérifiées */}
-              <div className="lg:col-span-6 space-y-3">
-                <div className="p-4 rounded-xl bg-white/10 border border-white/15 flex items-start gap-3.5">
-                  <div className="w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <Check className="w-4 h-4 stroke-[2.5]" />
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-sm text-white">Facturation électronique Factur-X</h3>
-                    <p className="text-xs text-slate-200 mt-0.5">
-                      Factures Factur-X générées et validées, transmission via partenaire en cours d'activation.
-                    </p>
-                  </div>
-                </div>
+              <div className="p-3.5 sm:p-6 rounded-xl sm:rounded-2xl bg-white border border-slate-200 shadow-xs space-y-1 sm:space-y-2">
+                <p className="text-xs sm:text-sm font-bold text-slate-900 flex items-start gap-2">
+                  <span className="text-blue-600 font-extrabold text-sm sm:text-base">?</span>
+                  <span>Combien mettre de côté pour mes cotisations ?</span>
+                </p>
+                <p className="text-[11px] sm:text-sm text-slate-700 leading-snug sm:leading-relaxed pl-4 sm:pl-5">
+                  Vos cotisations et votre revenu net disponible sont calculés en temps réel dès l'émission de chaque facture.
+                </p>
+              </div>
 
-                <div className="p-4 rounded-xl bg-white/10 border border-white/15 flex items-start gap-3.5">
-                  <div className="w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <Check className="w-4 h-4 stroke-[2.5]" />
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-sm text-white">Conformité fiscale & Mentions obligatoires</h3>
-                    <p className="text-xs text-slate-200 mt-0.5">
-                      Mentions légales indispensables générées automatiquement selon votre statut juridique.
-                    </p>
-                  </div>
-                </div>
+              <div className="p-3.5 sm:p-6 rounded-xl sm:rounded-2xl bg-white border border-slate-200 shadow-xs space-y-1 sm:space-y-2">
+                <p className="text-xs sm:text-sm font-bold text-slate-900 flex items-start gap-2">
+                  <span className="text-blue-600 font-extrabold text-sm sm:text-base">?</span>
+                  <span>À quel moment commencer à facturer la TVA ?</span>
+                </p>
+                <p className="text-[11px] sm:text-sm text-slate-700 leading-snug sm:leading-relaxed pl-4 sm:pl-5">
+                  Une jauge visuelle suit votre chiffre d'affaires cumulé et vous alerte bien avant d'atteindre le plafond d'exonération.
+                </p>
+              </div>
 
-                <div className="p-4 rounded-xl bg-white/10 border border-white/15 flex items-start gap-3.5">
-                  <div className="w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <Check className="w-4 h-4 stroke-[2.5]" />
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-sm text-white">Conservation de vos documents</h3>
-                    <p className="text-xs text-slate-200 mt-0.5">
-                      Stockage sécurisé sur une base de données chiffrée en Europe avec sauvegardes régulières.
-                    </p>
-                  </div>
-                </div>
+              <div className="p-3.5 sm:p-6 rounded-xl sm:rounded-2xl bg-white border border-slate-200 shadow-xs space-y-1 sm:space-y-2">
+                <p className="text-xs sm:text-sm font-bold text-slate-900 flex items-start gap-2">
+                  <span className="text-blue-600 font-extrabold text-sm sm:text-base">?</span>
+                  <span>Comment relancer un retard sans paraître agressif ?</span>
+                </p>
+                <p className="text-[11px] sm:text-sm text-slate-700 leading-snug sm:leading-relaxed pl-4 sm:pl-5">
+                  Vous suivez les échéances en un coup d'œil et déclenchez des rappels clairs et courtois en un clic.
+                </p>
               </div>
             </div>
           </div>
         </section>
 
         {/* ========================================================= */}
-        {/* 5. QUEL QUE SOIT VOTRE STATUT, BYLZ S'ADAPTE             */}
+        {/* 5. FONCTIONS CLÉS                                         */}
         {/* ========================================================= */}
-        <section className="py-20 bg-slate-50 border-b border-slate-200">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
-            <div className="text-center max-w-3xl mx-auto space-y-3">
-              <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
-                Quel que soit votre statut, Bylz s'adapte
+        <section className="py-8 md:py-20 bg-white border-b border-slate-200">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-5 md:space-y-12">
+            <div className="text-center max-w-3xl mx-auto space-y-1.5 md:space-y-3">
+              <span className="inline-block px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-blue-100 text-blue-700">
+                Fonctionnalités
+              </span>
+              <h2 className="text-2xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
+                Tout ce dont vous avez besoin au quotidien
               </h2>
-              <p className="text-slate-700 text-sm sm:text-base">
-                Chaque métier indépendant possède ses propres contraintes juridiques et fiscales. Bylz applique les règles adaptées à votre activité.
+              <p className="text-slate-700 text-xs sm:text-lg">
+                Des outils conçus pour les indépendants et micro-entreprises, sans complication inutile.
               </p>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {personas.map((p, i) => {
-                const Icon = p.icon;
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 sm:gap-6 max-w-6xl mx-auto">
+              {keyFeatures.map((feat, idx) => {
+                const Icon = feat.icon;
                 return (
                   <div
-                    key={i}
-                    className="p-6 rounded-xl bg-white border border-slate-200 shadow-sm space-y-3 text-left"
+                    key={idx}
+                    className="p-3 sm:p-6 rounded-xl sm:rounded-2xl bg-slate-50 border border-slate-200 flex items-start gap-3 sm:block sm:space-y-3 text-left hover:border-blue-400 transition-colors"
                   >
-                    <div className="flex items-center justify-between">
-                      <div className="w-9 h-9 rounded-lg bg-blue-100 text-blue-800 flex items-center justify-center">
-                        <Icon className="w-5 h-5" />
-                      </div>
-                      <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-800 border border-slate-300">
-                        {p.highlight}
-                      </span>
+                    <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-blue-100 text-blue-800 flex items-center justify-center shrink-0">
+                      <Icon className="w-4 h-4 sm:w-5 sm:h-5" />
                     </div>
-                    <h3 className="font-bold text-base text-slate-900">{p.role}</h3>
-                    <p className="text-xs text-slate-700 leading-relaxed font-normal">{p.details}</p>
+                    <div className="space-y-0.5 sm:space-y-1">
+                      <h3 className="font-bold text-xs sm:text-base text-slate-900">{feat.title}</h3>
+                      <p className="text-[11px] sm:text-sm text-slate-700 leading-snug sm:leading-relaxed font-normal">{feat.desc}</p>
+                    </div>
                   </div>
                 );
               })}
@@ -603,99 +479,195 @@ export function LandingPage() {
         </section>
 
         {/* ========================================================= */}
-        {/* 8. GRILLE TARIFAIRE (3 Offres Réelles : Starter, Solo, Pro) */}
+        {/* 6. ASSISTANT WHATSAPP                                     */}
         {/* ========================================================= */}
-        <section id="tarifs" className="py-24 bg-white border-b border-slate-200">
-          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
-            <div className="text-center max-w-3xl mx-auto space-y-4">
-              <h2 className="text-3xl sm:text-5xl font-extrabold text-slate-900 tracking-tight">
+        <section className="py-8 md:py-20 bg-slate-900 text-white">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 md:gap-10 items-center">
+              <div className="lg:col-span-6 space-y-4 md:space-y-5 text-left">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                  <MessageSquare className="w-3.5 h-3.5" /> Nouveauté WhatsApp
+                </span>
+                <h2 className="text-2xl sm:text-4xl font-extrabold text-white tracking-tight leading-tight">
+                  Facturez directement depuis WhatsApp
+                </h2>
+                <p className="text-slate-300 text-sm sm:text-lg leading-relaxed">
+                  Pas besoin d'ouvrir votre ordinateur entre deux rendez-vous : dictez ou tapez un simple message pour préparer vos devis et factures.
+                </p>
+                <div className="p-3.5 sm:p-4 rounded-xl bg-white/5 border border-white/10 space-y-1.5 sm:space-y-2 text-xs">
+                  <p className="font-bold text-white flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+                    <span>
+                      {isWhatsAppStarterEnabled()
+                        ? "Inclus dans l'offre gratuite Starter : 3 factures par mois créées par WhatsApp."
+                        : "Disponible avec le Plan Pro : facturez directement depuis WhatsApp à la voix ou par texte."}
+                    </span>
+                  </p>
+                  <p className="text-slate-400 text-[11px] sm:text-xs">
+                    {isWhatsAppStarterEnabled()
+                      ? "Disponible en illimité dans le Plan Pro pour piloter l'ensemble de votre facturation à la voix."
+                      : "Génération automatique de factures conformes Factur-X sans ouvrir votre ordinateur."}
+                  </p>
+                </div>
+                <div className="pt-1">
+                  <Link
+                    to="/signup"
+                    onClick={() => trackCtaClick("hero")}
+                    className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm transition-colors shadow-lg"
+                  >
+                    Créer mon compte gratuit
+                  </Link>
+                </div>
+              </div>
+
+              {/* Chat simulation */}
+              <div className="lg:col-span-6">
+                <div className="max-w-md mx-auto rounded-2xl sm:rounded-3xl bg-[#0b141a] p-3.5 sm:p-6 border border-slate-800 shadow-2xl space-y-3 font-sans text-xs">
+                  <div className="flex items-center justify-between pb-2.5 sm:pb-3 border-b border-slate-800">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-emerald-600 flex items-center justify-center text-white font-bold text-xs">
+                        B
+                      </div>
+                      <div>
+                        <p className="font-bold text-white text-xs">Assistant Bylz</p>
+                        <p className="text-[10px] text-emerald-400 font-semibold">En ligne • WhatsApp</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Outgoing user message */}
+                  <div className="flex justify-end">
+                    <div className="max-w-[85%] rounded-2xl rounded-tr-xs bg-[#005c4b] text-white p-2.5 sm:p-3 space-y-1">
+                      <p className="text-xs">Crée une facture de 1 200 € pour Acme Studio : création de site vitrine</p>
+                      <span className="text-[10px] text-emerald-200 block text-right">10:42 ✓✓</span>
+                    </div>
+                  </div>
+
+                  {/* Incoming bot response */}
+                  <div className="flex justify-start">
+                    <div className="max-w-[85%] rounded-2xl rounded-tl-xs bg-[#202c33] text-white p-2.5 sm:p-3 space-y-1.5 border border-slate-700/60">
+                      <p className="font-bold text-emerald-300 text-[11px]">⚡ Facture prête pour validation</p>
+                      <p className="text-xs text-slate-200">
+                        • <strong>Client :</strong> Acme Studio SARL<br />
+                        • <strong>Montant TTC :</strong> 1 200,00 €<br />
+                        • <strong>Mentions légales :</strong> ajoutées automatiquement<br />
+                        • <strong>Cotisations estimées :</strong> 307,20 €
+                      </p>
+                      <p className="text-[11px] text-slate-300 italic">
+                        Répondez <strong>VALIDER</strong> pour générer votre PDF officiel Factur-X.
+                      </p>
+                      <span className="text-[10px] text-slate-400 block text-right">10:42</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ========================================================= */}
+        {/* 7. GRILLE TARIFAIRE (Starter, Solo, Pro)                  */}
+        {/* ========================================================= */}
+        <section id="tarifs" className="py-6 md:py-20 bg-white border-b border-slate-200">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-4 md:space-y-12">
+            <div className="text-center max-w-3xl mx-auto space-y-2 md:space-y-4">
+              <h2 className="text-2xl sm:text-5xl font-extrabold text-slate-900 tracking-tight">
                 Des tarifs simples et transparents
               </h2>
-              <p className="text-slate-700 text-base sm:text-lg">
-                Démarrez sans carte bancaire sur le plan gratuit permanent. Évoluez quand votre activité grandit. Résiliable à tout moment.
+              <p className="text-slate-700 text-xs sm:text-lg">
+                Démarrez sans carte bancaire sur le plan gratuit permanent. Évoluez quand votre activité grandit.
               </p>
 
-              <div className="pt-2 flex justify-center">
+              <div className="pt-1 flex justify-center">
                 <BillingToggle billingCycle={billingCycle} onChange={setBillingCycle} />
               </div>
             </div>
 
-            {/* 3 Colonnes Tarifaires Réelles */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch max-w-5xl mx-auto">
+            {/* 3 Colonnes Tarifaires */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-8 items-stretch max-w-5xl mx-auto">
               {/* 1. Starter (Gratuit) */}
-              <div className="p-7 rounded-2xl bg-white border border-slate-200 flex flex-col justify-between space-y-6 text-left shadow-sm">
-                <div className="space-y-4">
+              <div className="p-4 sm:p-7 rounded-2xl bg-white border border-slate-200 flex flex-col justify-between space-y-4 sm:space-y-6 text-left shadow-sm">
+                <div className="space-y-2.5 sm:space-y-4">
                   <div>
-                    <h3 className="text-xl font-bold text-slate-900">Starter</h3>
-                    
+                    <h3 className="text-lg sm:text-xl font-bold text-slate-900">Starter</h3>
                   </div>
 
                   <div className="flex items-baseline gap-1">
-                    <span className="text-4xl font-extrabold text-slate-900 font-mono">0 €</span>
+                    <span className="text-3xl sm:text-4xl font-extrabold text-slate-900 font-mono">0 €</span>
                     <span className="text-xs text-slate-600 font-medium">/mois</span>
                   </div>
-                  
 
                   <hr className="border-slate-100" />
 
-                  <ul className="space-y-3 text-xs text-slate-800 font-medium">
-                    <li className="flex items-center gap-2.5">
+                  <ul className="space-y-1.5 sm:space-y-3 text-xs text-slate-800 font-medium">
+                    <li className="flex items-center gap-2 sm:gap-2.5">
                       <Check className="w-4 h-4 text-blue-700 flex-shrink-0" />
                       <span>Jusqu'à 3 factures par mois</span>
                     </li>
-                    <li className="flex items-center gap-2.5">
+                    <li className="flex items-center gap-2 sm:gap-2.5">
                       <Check className="w-4 h-4 text-blue-700 flex-shrink-0" />
                       <span>Jusqu'à 3 clients actifs</span>
                     </li>
-                    <li className="flex items-center gap-2.5">
+                    {isWhatsAppStarterEnabled() && (
+                      <li className="flex items-center gap-2 sm:gap-2.5">
+                        <Check className="w-4 h-4 text-blue-700 flex-shrink-0" />
+                        <span>3 factures créées par WhatsApp par mois</span>
+                      </li>
+                    )}
+                    <li className="flex items-center gap-2 sm:gap-2.5">
                       <Check className="w-4 h-4 text-blue-700 flex-shrink-0" />
-                      <span>Export PDF avec mentions légales essentielles</span>
+                      <span>Export PDF avec mentions légales</span>
                     </li>
-                    <li className="flex items-center gap-2.5">
+                    <li className="flex items-center gap-2 sm:gap-2.5">
                       <Check className="w-4 h-4 text-blue-700 flex-shrink-0" />
-                      <span>Recherche SIRET automatique client</span>
+                      <span>Recherche SIRET automatique</span>
                     </li>
-                    <li className="flex items-center gap-2.5">
+                    <li className="flex items-center gap-2 sm:gap-2.5">
                       <Check className="w-4 h-4 text-blue-700 flex-shrink-0" />
                       <span>Sans engagement, sans carte bancaire</span>
                     </li>
                   </ul>
                 </div>
 
-                <Link to="/signup?plan=starter" onClick={() => trackCtaClick("tarifs")} className="block w-full pt-2">
-                  <button className={`${btnPrimary} w-full py-3`}>
-                    Créer mon compte gratuit
-                  </button>
-                </Link>
+                <div>
+                  <Link to="/signup?plan=starter" onClick={() => trackCtaClick("tarifs")} className="block w-full pt-1">
+                    <button className={`${btnPrimary} w-full py-2.5 sm:py-3 text-sm`}>
+                      Créer mon compte gratuit
+                    </button>
+                  </Link>
+                  <p className="text-[10px] sm:text-[11px] text-slate-500 text-center mt-1.5 sm:mt-2">
+                    Inscription immédiate sans carte bancaire, accès direct à votre espace.
+                  </p>
+                </div>
               </div>
 
               {/* 2. Solo (Formule Recommandée) */}
-              <div className="p-7 rounded-2xl bg-blue-50/50 border-2 border-blue-600 flex flex-col justify-between space-y-6 text-left relative shadow-md">
-                <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 px-4 py-1.5 rounded-full bg-blue-700 text-white text-xs font-black uppercase tracking-wider shadow-sm flex items-center gap-1.5">
+              <div className="p-4 sm:p-7 rounded-2xl bg-blue-50/50 border-2 border-blue-600 flex flex-col justify-between space-y-4 sm:space-y-6 text-left relative shadow-md">
+                <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 px-3.5 py-1 rounded-full bg-blue-700 text-white text-[11px] sm:text-xs font-black uppercase tracking-wider shadow-sm flex items-center gap-1.5 whitespace-nowrap">
                   <span>★ {PLANS_DATA.solo.badge}</span>
                 </div>
 
-                <div className="space-y-4">
+                <div className="space-y-2.5 sm:space-y-4">
                   <div>
-                    <h3 className="text-xl font-bold text-slate-900">Solo</h3>
-                    <p className="text-xs text-slate-700 font-medium mt-0.5">
+                    <h3 className="text-lg sm:text-xl font-bold text-slate-900">Solo</h3>
+                    <p className="text-[11px] sm:text-xs text-slate-700 font-medium mt-0.5">
                       Facturation illimitée et pilotage fiscal complet
                     </p>
                   </div>
 
                   <div>
                     <div className="flex items-baseline gap-1">
-                      <span className="text-4xl font-extrabold text-blue-700 font-mono">
+                      <span className="text-3xl sm:text-4xl font-extrabold text-blue-700 font-mono">
                         {billingCycle === "annual" ? "50 €" : "8,90 €"}
                       </span>
                       <span className="text-xs text-slate-700 font-medium">/ {billingCycle === "annual" ? "an" : "mois"}</span>
                     </div>
                     {billingCycle === "annual" ? (
-                      <p className="text-xs font-bold text-emerald-700 mt-1">
+                      <p className="text-[11px] sm:text-xs font-bold text-emerald-700 mt-0.5 sm:mt-1">
                         (soit {PLANS_DATA.solo.pricing.annualMonthlyEquivFormatted} / mois • {PLANS_DATA.solo.pricing.annualSavingsFormatted} d'économie)
                       </p>
                     ) : (
-                      <p className="text-[11px] text-slate-600 mt-1">
+                      <p className="text-[10px] sm:text-[11px] text-slate-600 mt-0.5 sm:mt-1">
                         Facturé 8,90 € / mois sans engagement
                       </p>
                     )}
@@ -703,75 +675,80 @@ export function LandingPage() {
 
                   <hr className="border-blue-200" />
 
-                  <ul className="space-y-3 text-xs text-slate-900 font-medium">
-                    <li className="flex items-center gap-2.5">
+                  <ul className="space-y-1.5 sm:space-y-3 text-xs text-slate-900 font-medium">
+                    <li className="flex items-center gap-2 sm:gap-2.5">
                       <Check className="w-4 h-4 text-blue-700 flex-shrink-0" />
                       <span><strong>Factures & Devis illimités</strong></span>
                     </li>
-                    <li className="flex items-center gap-2.5">
+                    <li className="flex items-center gap-2 sm:gap-2.5">
                       <Check className="w-4 h-4 text-blue-700 flex-shrink-0" />
                       <span>Clients et catalogue illimités</span>
                     </li>
-                    <li className="flex items-center gap-2.5">
+                    <li className="flex items-center gap-2 sm:gap-2.5">
                       <Check className="w-4 h-4 text-blue-700 flex-shrink-0" />
-                      <span>Tableau de bord fiscal & seuils de TVA en temps réel</span>
+                      <span>Tableau fiscal & seuils TVA temps réel</span>
                     </li>
-                    <li className="flex items-center gap-2.5">
+                    <li className="flex items-center gap-2 sm:gap-2.5">
                       <Check className="w-4 h-4 text-blue-700 flex-shrink-0" />
                       <span>Calcul des cotisations URSSAF</span>
                     </li>
-                    <li className="flex items-center gap-2.5">
+                    <li className="flex items-center gap-2 sm:gap-2.5">
                       <Check className="w-4 h-4 text-blue-700 flex-shrink-0" />
                       <span>Livre des recettes chronologique & export CSV</span>
                     </li>
-                    <li className="flex items-center gap-2.5">
+                    <li className="flex items-center gap-2 sm:gap-2.5">
                       <Check className="w-4 h-4 text-blue-700 flex-shrink-0" />
-                      <span>Relances automatiques des impayés par e-mail</span>
+                      <span>Relances impayés automatiques</span>
                     </li>
-                    <li className="flex items-center gap-2.5">
+                    <li className="flex items-center gap-2 sm:gap-2.5">
                       <Check className="w-4 h-4 text-blue-700 flex-shrink-0" />
-                      <span>Réponse sous 24 h ouvrées, du lundi au vendredi</span>
+                      <span>Réponse sous 24 h ouvrées</span>
                     </li>
                   </ul>
                 </div>
 
-                <Link to={`/signup?plan=solo&billing=${billingCycle}`} onClick={() => trackCtaClick("tarifs")} className="block w-full pt-2">
-                  <button className={`${btnPrimary} w-full py-3.5 text-base`}>
-                    Choisir Solo
-                  </button>
-                </Link>
+                <div>
+                  <Link to={`/signup?plan=solo&billing=${billingCycle}`} onClick={() => trackCtaClick("tarifs")} className="block w-full pt-1">
+                    <button className={`${btnPrimary} w-full py-2.5 sm:py-3.5 text-sm sm:text-base`}>
+                      Choisir Solo
+                    </button>
+                  </Link>
+                  <p className="text-[10px] sm:text-[11px] text-slate-500 text-center mt-1.5 sm:mt-2">
+                    Redirection vers le paiement sécurisé Stripe après inscription, résiliable à tout moment depuis vos paramètres.
+                  </p>
+                </div>
               </div>
 
               {/* 3. Pro */}
-              <div className="p-7 rounded-2xl bg-white border border-slate-200 flex flex-col justify-between space-y-6 text-left shadow-sm">
-                <div className="space-y-4">
+              <div className="p-4 sm:p-7 rounded-2xl bg-white border border-slate-200 flex flex-col justify-between space-y-4 sm:space-y-6 text-left shadow-sm">
+                <div className="space-y-2.5 sm:space-y-4">
                   <div>
                     <div className="flex items-center justify-between">
-                      <h3 className="text-xl font-bold text-slate-900">Pro</h3>
+                      <h3 className="text-lg sm:text-xl font-bold text-slate-900">Pro</h3>
                       {billingCycle === "annual" && (
-                        <span className="bg-blue-50 text-blue-700 font-bold text-[11px] px-2 py-0.5 rounded-full border border-blue-200">
+                        <span className="bg-blue-50 text-blue-700 font-bold text-[10px] sm:text-[11px] px-2 py-0.5 rounded-full border border-blue-200">
                           -48%
                         </span>
                       )}
                     </div>
-                    <p className="text-xs text-slate-600 font-medium mt-0.5">
-                      Paiement en ligne par carte et pilotage multi-entreprises
+                    <p className="text-[11px] sm:text-xs text-slate-600 font-medium mt-0.5">
+                      Paiement en ligne par carte et multi-entreprises
                     </p>
                   </div>
 
                   <div>
                     <div className="flex items-baseline gap-1">
-                      <span className="text-4xl font-extrabold text-slate-900 font-mono">
+                      <span className="text-3xl sm:text-4xl font-extrabold text-slate-900 font-mono">
                         {billingCycle === "annual" ? "80 €" : "12,90 €"}
                       </span>
                       <span className="text-xs text-slate-600 font-medium">/ {billingCycle === "annual" ? "an" : "mois"}</span>
                     </div>
                     {billingCycle === "annual" ? (
-                      <p className="text-xs font-bold text-emerald-700 mt-1">
+                      <p className="text-[11px] sm:text-xs font-bold text-emerald-700 mt-0.5 sm:mt-1">
                         (soit {PLANS_DATA.pro.pricing.annualMonthlyEquivFormatted} / mois • {PLANS_DATA.pro.pricing.annualSavingsFormatted} d'économie)
                       </p>
                     ) : (
-                      <p className="text-[11px] text-slate-600 mt-1">
+                      <p className="text-[10px] sm:text-[11px] text-slate-600 mt-0.5 sm:mt-1">
                         Facturé 12,90 € / mois sans engagement
                       </p>
                     )}
@@ -779,85 +756,100 @@ export function LandingPage() {
 
                   <hr className="border-slate-100" />
 
-                  <ul className="space-y-3 text-xs text-slate-800 font-medium">
-                    <li className="flex items-center gap-2.5">
+                  <ul className="space-y-1.5 sm:space-y-3 text-xs text-slate-800 font-medium">
+                    <li className="flex items-center gap-2 sm:gap-2.5">
                       <Check className="w-4 h-4 text-blue-700 flex-shrink-0" />
                       <span><strong>Toutes les fonctionnalités Solo incluses</strong></span>
                     </li>
-                    <li className="flex items-center gap-2.5">
+                    <li className="flex items-center gap-2 sm:gap-2.5">
                       <Check className="w-4 h-4 text-blue-700 flex-shrink-0" />
                       <span>Paiement en ligne par carte (Stripe Connect)</span>
                     </li>
-                    <li className="flex items-center gap-2.5">
+                    <li className="flex items-center gap-2 sm:gap-2.5">
                       <Check className="w-4 h-4 text-blue-700 flex-shrink-0" />
-                      <span>Gestion multi-entreprises (plusieurs SIRET)</span>
+                      <span>Multi-entreprises sous un seul compte</span>
                     </li>
-                    <li className="flex items-center gap-2.5">
+                    <li className="flex items-center gap-2 sm:gap-2.5">
                       <Check className="w-4 h-4 text-blue-700 flex-shrink-0" />
-                      <span>Assistant IA de facturation & WhatsApp</span>
+                      <span>Assistant IA de facturation (Web & WhatsApp)</span>
                     </li>
-                    <li className="flex items-center gap-2.5">
+                    <li className="flex items-center gap-2 sm:gap-2.5">
                       <Check className="w-4 h-4 text-blue-700 flex-shrink-0" />
-                      <span>Réponse sous 24 h ouvrées, du lundi au vendredi</span>
+                      <span>Réponse sous 24 h ouvrées</span>
                     </li>
                   </ul>
                 </div>
 
-                <Link to={`/signup?plan=pro&billing=${billingCycle}`} onClick={() => trackCtaClick("tarifs")} className="block w-full pt-2">
-                  <button className={`${btnPrimary} w-full py-3`}>
-                    Choisir Pro
-                  </button>
-                </Link>
+                <div>
+                  <Link to={`/signup?plan=pro&billing=${billingCycle}`} onClick={() => trackCtaClick("tarifs")} className="block w-full pt-1">
+                    <button className={`${btnPrimary} w-full py-2.5 sm:py-3.5 text-sm sm:text-base`}>
+                      Choisir Pro
+                    </button>
+                  </Link>
+                  <p className="text-[10px] sm:text-[11px] text-slate-500 text-center mt-1.5 sm:mt-2">
+                    Redirection vers le paiement sécurisé Stripe après inscription, résiliable à tout moment depuis vos paramètres.
+                  </p>
+                </div>
               </div>
             </div>
           </div>
         </section>
 
         {/* ========================================================= */}
-        {/* 9. FAQ EN 2 COLONNES                                      */}
+        {/* 8. FACTURATION ÉLECTRONIQUE (2 lignes concises)           */}
         {/* ========================================================= */}
-        <section id="faq" className="py-20 bg-slate-50">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
-            <div className="text-center max-w-3xl mx-auto space-y-3">
-              <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
-                Foire aux Questions
+        <section className="py-6 sm:py-8 bg-blue-900 text-white border-y border-blue-800">
+          <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-1.5 sm:space-y-2">
+            <p className="text-xs sm:text-base font-bold text-white flex items-center justify-center gap-2">
+              <ShieldCheck className="w-4 h-4 sm:w-5 sm:h-5 text-blue-300 flex-shrink-0" />
+              <span>Facturation électronique 2026 : vos factures Factur-X sont générées et validées selon les formats officiels.</span>
+            </p>
+            <p className="text-[11px] sm:text-sm text-blue-200">
+              La transmission via partenaire est en cours d'activation pour l'entrée en vigueur de la réforme. Bylz n'est pas une plateforme agréée.{" "}
+              <Link to="/conformite" className="underline hover:text-white font-medium ml-1">
+                En savoir plus sur la réforme →
+              </Link>
+            </p>
+          </div>
+        </section>
+
+        {/* ========================================================= */}
+        {/* 9. FAQ                                                    */}
+        {/* ========================================================= */}
+        <section id="faq" className="py-8 md:py-20 bg-slate-50 border-b border-slate-200">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-4 md:space-y-12">
+            <div className="text-center max-w-3xl mx-auto space-y-2 md:space-y-3">
+              <h2 className="text-2xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
+                Questions fréquentes
               </h2>
-              <p className="text-sm sm:text-base text-slate-700">
+              <p className="text-slate-700 text-xs sm:text-base">
                 Tout ce que vous devez savoir pour démarrer sereinement sur Bylz.
               </p>
             </div>
 
-            {/* 2 Colonnes de FAQ */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-left">
+            <div className="max-w-3xl mx-auto space-y-3 sm:space-y-4">
               {faqs.map((faq, idx) => {
                 const isOpen = openFaqIndex === idx;
                 return (
                   <div
                     key={idx}
-                    className="rounded-xl bg-white border border-slate-200 overflow-hidden shadow-sm"
+                    className="rounded-xl sm:rounded-2xl border border-slate-200 bg-white overflow-hidden transition-all shadow-xs"
                   >
                     <button
                       type="button"
-                      id={`faq-question-${idx}`}
-                      aria-expanded={isOpen}
-                      aria-controls={`faq-answer-${idx}`}
                       onClick={() => setOpenFaqIndex(isOpen ? null : idx)}
-                      className="w-full text-left px-5 py-4 min-h-[44px] flex items-center justify-between gap-3 font-bold text-slate-900 text-sm hover:text-blue-700 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 rounded-lg"
+                      className="w-full py-3.5 px-4 sm:py-4 sm:px-6 text-left flex items-center justify-between gap-3 sm:gap-4 font-bold text-slate-900 text-xs sm:text-base hover:bg-slate-50 transition-colors"
+                      aria-expanded={isOpen}
                     >
                       <span>{faq.q}</span>
                       <ChevronDown
-                        className={`w-4 h-4 text-slate-700 flex-shrink-0 transition-transform duration-200 ${
+                        className={`w-4 h-4 sm:w-5 sm:h-5 text-slate-600 transition-transform duration-200 flex-shrink-0 ${
                           isOpen ? "rotate-180 text-blue-700" : ""
                         }`}
                       />
                     </button>
                     {isOpen && (
-                      <div
-                        id={`faq-answer-${idx}`}
-                        role="region"
-                        aria-labelledby={`faq-question-${idx}`}
-                        className="px-5 pb-5 pt-1 text-xs text-slate-700 leading-relaxed font-normal border-t border-slate-100"
-                      >
+                      <div className="px-4 sm:px-6 pb-4 sm:pb-5 pt-1 text-xs sm:text-sm text-slate-700 leading-relaxed border-t border-slate-100 bg-slate-50/50">
                         {faq.a}
                       </div>
                     )}
@@ -865,33 +857,49 @@ export function LandingPage() {
                 );
               })}
             </div>
+
+            <div className="text-center pt-1">
+              <p className="text-xs text-slate-600">
+                Une question spécifique ?{" "}
+                <Link to="/contact" className="text-blue-700 hover:text-blue-900 font-bold underline">
+                  Contactez notre support par e-mail
+                </Link>
+              </p>
+            </div>
           </div>
         </section>
 
         {/* ========================================================= */}
-        {/* 10. BANNIÈRE FINALE CTA                                   */}
+        {/* 10. APPEL FINAL                                           */}
         {/* ========================================================= */}
-        <section className="py-20 px-4 sm:px-6 lg:px-8 bg-white">
-          <div className="max-w-5xl mx-auto rounded-3xl bg-[#011142] text-white p-10 sm:p-14 text-center space-y-6 shadow-xl border border-blue-900/40">
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight">
-              Prêt à simplifier votre activité ?
+        <section className="py-8 md:py-20 px-4 sm:px-6 lg:px-8 bg-white">
+          <div className="max-w-5xl mx-auto rounded-2xl sm:rounded-3xl bg-[#011142] text-white p-6 sm:p-14 text-center space-y-4 sm:space-y-6 shadow-xl border border-blue-900/40">
+            <h2 className="text-2xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight">
+              Prêt à simplifier votre facturation ?
             </h2>
-            <p className="text-slate-200 text-base sm:text-lg max-w-xl mx-auto leading-relaxed font-medium">
-              Créez votre première facture PDF en 2 minutes. Sans carte bancaire et sans engagement.
+            <p className="text-slate-200 text-xs sm:text-lg max-w-2xl mx-auto leading-relaxed">
+              Créez vos factures en 3 clics avec toutes les mentions légales. Sans carte bancaire et sans engagement.
             </p>
-            <div className="pt-2">
-              <Link to="/signup" onClick={() => trackCtaClick("bas de page")} className={`${btnPrimary} py-3.5 px-8 text-sm`}>
-                Créer mon compte gratuit
+            <div className="pt-1 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
+              <Link to="/signup" onClick={() => trackCtaClick("bas de page")} className="w-full sm:w-auto">
+                <button className="w-full sm:w-auto px-6 sm:px-8 py-3.5 sm:py-4 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-extrabold text-sm sm:text-base shadow-lg hover:shadow-blue-500/25 transition-all">
+                  Créer mon compte gratuit
+                </button>
+              </Link>
+              <Link to="/essai" onClick={() => trackCtaClick("bas de page")} className="w-full sm:w-auto">
+                <button className="w-full sm:w-auto px-5 sm:px-6 py-3.5 sm:py-4 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-sm sm:text-base border border-white/20 transition-all">
+                  Tester sans compte
+                </button>
               </Link>
             </div>
-            <p className="text-xs text-slate-400 font-medium">
-              Gratuit pour toujours jusqu'à 3 factures/mois
+            <p className="text-[11px] sm:text-xs text-slate-400">
+              Formule Starter gratuite jusqu'à 3 factures/mois • Sans carte bancaire • Résiliable à tout moment
             </p>
           </div>
         </section>
-      </main>
 
-      <MarketingFooter />
-    </div>
+        <MarketingFooter />
+      </div>
+    </>
   );
 }

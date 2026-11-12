@@ -8,6 +8,8 @@
  * - Balises meta, JSON-LD et scripts de pré-rendu
  */
 
+import { isWhatsAppStarterEnabled } from "./planLimits.ts";
+
 export interface PlanPricing {
   annualTotal: number;
   monthlyPrice: number;
@@ -62,12 +64,20 @@ export const PLANS_DATA: Record<"starter" | "solo" | "pro", PlanData> = {
       annualSavings: 0,
       annualSavingsFormatted: "0 €",
     },
-    features: [
-      "Jusqu'à 3 factures et devis par mois",
-      "Jusqu'à 3 clients actifs",
-      "Export PDF avec mentions légales essentielles",
-      "Sans engagement, sans carte bancaire",
-    ],
+    get features(): string[] {
+      const items = [
+        "Jusqu'à 3 factures et devis par mois",
+        "Jusqu'à 3 clients actifs",
+      ];
+      if (isWhatsAppStarterEnabled()) {
+        items.push("3 factures créées par WhatsApp par mois");
+      }
+      items.push(
+        "Export PDF avec mentions légales essentielles",
+        "Sans engagement, sans carte bancaire"
+      );
+      return items;
+    },
   },
   solo: {
     id: "solo",
@@ -233,6 +243,14 @@ export const FEATURE_MATRIX: FeatureMatrixCategory[] = [
         starter: false,
         solo: false,
         pro: true,
+      },
+      {
+        name: "Factures créées par WhatsApp",
+        get starter(): string | boolean {
+          return isWhatsAppStarterEnabled() ? "3 / mois" : false;
+        },
+        solo: false,
+        pro: "Illimité",
       },
       {
         name: "Assistant IA de facturation (Web & WhatsApp)",
