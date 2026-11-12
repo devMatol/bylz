@@ -262,7 +262,7 @@ export function LandingPage() {
                   <span className="text-[11px] sm:text-xs font-mono font-medium text-slate-500 ml-1.5">app.bylz.fr</span>
                 </div>
                 <span className="text-[10px] sm:text-[11px] font-bold text-slate-700 bg-slate-100 px-2 sm:px-2.5 py-0.5 rounded-full">
-                  Micro-entreprise BNC
+                  Micro-entreprise
                 </span>
               </div>
 
