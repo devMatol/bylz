@@ -46,6 +46,7 @@ import { VAT_THRESHOLDS_2026, URSSAF_RATES_2026 } from "../lib/fiscalRates";
 import { todayISO, paymentTermsToDate, isValidDate } from "../lib/date";
 import { formatAmount } from "../lib/utils";
 import { NAV_ITEMS } from "../lib/constants";
+import { trackDemoStart, trackDemoLockedClick } from "../lib/analytics";
 
 type GuestTab = "dashboard" | "invoice";
 
@@ -60,6 +61,10 @@ export function GuestEditorPageContent() {
   const [wallOpen, setWallOpen] = useState(false);
   const [lockedFeatureName, setLockedFeatureName] = useState<string>("cette fonctionnalité");
   const [wallTriggerReason, setWallTriggerReason] = useState<"locked_feature" | "emit_invoice">("emit_invoice");
+
+  useEffect(() => {
+    trackDemoStart();
+  }, []);
 
   // Handle query params (?tab=invoice & ?prefill=true)
   useEffect(() => {
@@ -162,6 +167,9 @@ export function GuestEditorPageContent() {
     setWallTriggerReason(reason);
     if (featureTitle) setLockedFeatureName(featureTitle);
     setWallOpen(true);
+    if (reason === "locked_feature") {
+      trackDemoLockedClick(featureTitle);
+    }
   };
 
   // Mock data for the Demo Dashboard (Authentic to real Bylz app)

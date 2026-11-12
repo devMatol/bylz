@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
 import {
   ShieldCheck,
@@ -33,6 +33,7 @@ import { MarketingFooter } from "../components/marketing/MarketingFooter";
 import { BillingToggle } from "../components/shared/BillingToggle";
 import { type BillingCycle } from "../lib/constants";
 import { useAuth } from "../contexts/AuthContext";
+import { trackScrollDepth, trackCtaClick } from "../lib/analytics";
 
 export function LandingPage() {
   const { user, profile, loading } = useAuth();
@@ -43,6 +44,36 @@ export function LandingPage() {
 
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(0);
   const [billingCycle, setBillingCycle] = useState<BillingCycle>("annual");
+
+  useEffect(() => {
+    const fired = { 25: false, 50: false, 75: false, 100: false };
+
+    const handleScroll = () => {
+      const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+      if (docHeight <= 0) return;
+      const scrollPercent = (window.scrollY / docHeight) * 100;
+
+      if (!fired[25] && scrollPercent >= 25) {
+        fired[25] = true;
+        trackScrollDepth(25);
+      }
+      if (!fired[50] && scrollPercent >= 50) {
+        fired[50] = true;
+        trackScrollDepth(50);
+      }
+      if (!fired[75] && scrollPercent >= 75) {
+        fired[75] = true;
+        trackScrollDepth(75);
+      }
+      if (!fired[100] && scrollPercent >= 99) {
+        fired[100] = true;
+        trackScrollDepth(100);
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   if (!loading && user && !forcePublic) {
     const isStarter = profile?.plan === "starter";
@@ -277,12 +308,12 @@ export function LandingPage() {
                     </Link>
                   ) : (
                     <>
-                      <Link to="/signup" className="w-full sm:w-auto">
+                      <Link to="/signup" onClick={() => trackCtaClick("hero")} className="w-full sm:w-auto">
                         <button className={`${btnPrimary} py-3.5 px-8 text-base w-full sm:w-auto`}>
                           Créer mon compte gratuit
                         </button>
                       </Link>
-                      <Link to="/tarifs" className="w-full sm:w-auto">
+                      <Link to="/tarifs" onClick={() => trackCtaClick("hero")} className="w-full sm:w-auto">
                         <button className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl border border-slate-300 bg-white text-slate-800 text-base font-bold hover:bg-slate-50 hover:text-slate-900 transition-colors shadow-sm">
                           Consulter les tarifs
                         </button>
@@ -631,7 +662,7 @@ export function LandingPage() {
                   </ul>
                 </div>
 
-                <Link to="/signup?plan=starter" className="block w-full pt-2">
+                <Link to="/signup?plan=starter" onClick={() => trackCtaClick("tarifs")} className="block w-full pt-2">
                   <button className={`${btnPrimary} w-full py-3`}>
                     Créer mon compte gratuit
                   </button>
@@ -704,7 +735,7 @@ export function LandingPage() {
                   </ul>
                 </div>
 
-                <Link to={`/signup?plan=solo&billing=${billingCycle}`} className="block w-full pt-2">
+                <Link to={`/signup?plan=solo&billing=${billingCycle}`} onClick={() => trackCtaClick("tarifs")} className="block w-full pt-2">
                   <button className={`${btnPrimary} w-full py-3.5 text-base`}>
                     Choisir Solo
                   </button>
@@ -772,7 +803,7 @@ export function LandingPage() {
                   </ul>
                 </div>
 
-                <Link to={`/signup?plan=pro&billing=${billingCycle}`} className="block w-full pt-2">
+                <Link to={`/signup?plan=pro&billing=${billingCycle}`} onClick={() => trackCtaClick("tarifs")} className="block w-full pt-2">
                   <button className={`${btnPrimary} w-full py-3`}>
                     Choisir Pro
                   </button>
@@ -849,7 +880,7 @@ export function LandingPage() {
               Créez votre première facture PDF en 2 minutes. Sans carte bancaire et sans engagement.
             </p>
             <div className="pt-2">
-              <Link to="/signup" className={`${btnPrimary} py-3.5 px-8 text-sm`}>
+              <Link to="/signup" onClick={() => trackCtaClick("bas de page")} className={`${btnPrimary} py-3.5 px-8 text-sm`}>
                 Créer mon compte gratuit
               </Link>
             </div>

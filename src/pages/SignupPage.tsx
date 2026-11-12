@@ -9,7 +9,7 @@ import { SEO } from "../components/seo/SEO";
 import { useAuth } from "../contexts/AuthContext";
 import { signUp, signInWithGoogle, resendConfirmationEmail } from "../lib/auth";
 import { sendWelcomeEmail } from "../lib/emailNotifier";
-import { trackSignUp } from "../lib/analytics";
+import { trackSignUp, trackSignupView, trackSignupSubmit } from "../lib/analytics";
 import { cn, formatAmount } from "../lib/utils";
 import { supabase } from "../lib/supabase";
 import { STRIPE_PRICE_SOLO_ANNUAL, STRIPE_PRICE_SOLO_MONTHLY, STRIPE_PRICE_PRO_ANNUAL, STRIPE_PRICE_PRO_MONTHLY } from "../lib/constants";
@@ -61,6 +61,7 @@ const STRENGTH_LABELS = { weak: "Faible", medium: "Moyen", strong: "Fort" };
 
 export function SignupPage() {
   useEffect(() => {
+    trackSignupView();
     const params = new URLSearchParams(window.location.search);
     const p = params.get("plan");
     const b = params.get("billing");
@@ -122,6 +123,7 @@ export function SignupPage() {
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
+    trackSignupSubmit(planParam || "starter");
     setError(null);
 
     if (phone && !isValidPhone(phone)) {

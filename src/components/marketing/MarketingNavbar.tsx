@@ -4,6 +4,7 @@ import { Menu, X, ArrowRight, LayoutDashboard } from "lucide-react";
 import { Button } from "../ui/Button";
 import { useAuth } from "../../contexts/AuthContext";
 import { Logo } from "../shared/Logo";
+import { trackCtaClick } from "../../lib/analytics";
 
 interface MarketingNavbarProps {
   theme?: "light" | "dark";
@@ -126,6 +127,7 @@ export function MarketingNavbar({ theme }: MarketingNavbarProps) {
                 </Link>
                 <Link
                   to="/signup"
+                  onClick={() => trackCtaClick("navbar")}
                   className="whitespace-nowrap px-4 py-2 text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-sm transition-colors"
                 >
                   Créer mon compte gratuit
@@ -138,7 +140,7 @@ export function MarketingNavbar({ theme }: MarketingNavbarProps) {
                     Se connecter
                   </Button>
                 </Link>
-                <Link to="/signup">
+                <Link to="/signup" onClick={() => trackCtaClick("navbar")}>
                   <Button variant="primary" size="sm">
                     Créer mon compte gratuit
                   </Button>
@@ -236,7 +238,10 @@ export function MarketingNavbar({ theme }: MarketingNavbarProps) {
                 </Link>
                 <Link
                   to="/signup"
-                  onClick={() => setMobileMenuOpen(false)}
+                  onClick={() => {
+                    trackCtaClick("navbar");
+                    setMobileMenuOpen(false);
+                  }}
                   className="w-full text-center py-3.5 rounded-lg bg-blue-600 hover:bg-blue-700 font-bold text-white text-sm shadow-sm transition-colors"
                 >
                   Créer mon compte gratuit
@@ -249,7 +254,13 @@ export function MarketingNavbar({ theme }: MarketingNavbarProps) {
                     Se connecter
                   </Button>
                 </Link>
-                <Link to="/signup" onClick={() => setMobileMenuOpen(false)}>
+                <Link
+                  to="/signup"
+                  onClick={() => {
+                    trackCtaClick("navbar");
+                    setMobileMenuOpen(false);
+                  }}
+                >
                   <Button variant="primary" className="w-full justify-center text-sm py-3.5 font-bold">
                     Créer mon compte gratuit
                   </Button>
