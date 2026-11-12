@@ -492,6 +492,67 @@ export function LandingPage() {
         </section>
 
         {/* ========================================================= */}
+        {/* SECTION DÉBUTANTS : VOUS VENEZ DE VOUS LANCER ?           */}
+        {/* ========================================================= */}
+        <section className="py-16 md:py-20 bg-slate-50 border-b border-slate-200">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
+            <div className="text-center max-w-3xl mx-auto space-y-3">
+              <span className="inline-block px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-blue-100 text-blue-700">
+                Guide débutant
+              </span>
+              <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
+                Vous venez de vous lancer ?
+              </h2>
+              <p className="text-slate-700 text-base sm:text-lg">
+                Démarrer son activité apporte son lot de doutes administratifs. Bylz vous évite les erreurs courantes dès le premier jour.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-5xl mx-auto">
+              <div className="p-6 rounded-2xl bg-white border border-slate-200 shadow-xs space-y-2.5">
+                <p className="text-sm font-bold text-slate-900 flex items-start gap-2">
+                  <span className="text-blue-600 font-extrabold text-base">?</span>
+                  <span>Quelles mentions obligatoires dois-je inscrire sur mes factures ?</span>
+                </p>
+                <p className="text-sm text-slate-700 leading-relaxed pl-5">
+                  Bylz renseigne automatiquement toutes les mentions légales requises selon votre statut pour des factures 100 % conformes.
+                </p>
+              </div>
+
+              <div className="p-6 rounded-2xl bg-white border border-slate-200 shadow-xs space-y-2.5">
+                <p className="text-sm font-bold text-slate-900 flex items-start gap-2">
+                  <span className="text-blue-600 font-extrabold text-base">?</span>
+                  <span>Combien dois-je réellement mettre de côté pour mes cotisations ?</span>
+                </p>
+                <p className="text-sm text-slate-700 leading-relaxed pl-5">
+                  Vos cotisations et votre revenu net disponible sont calculés en temps réel dès l'émission de chaque facture.
+                </p>
+              </div>
+
+              <div className="p-6 rounded-2xl bg-white border border-slate-200 shadow-xs space-y-2.5">
+                <p className="text-sm font-bold text-slate-900 flex items-start gap-2">
+                  <span className="text-blue-600 font-extrabold text-base">?</span>
+                  <span>À quel moment vais-je devoir commencer à facturer la TVA ?</span>
+                </p>
+                <p className="text-sm text-slate-700 leading-relaxed pl-5">
+                  Une jauge visuelle suit votre chiffre d'affaires cumulé et vous alerte bien avant d'atteindre le plafond d'exonération.
+                </p>
+              </div>
+
+              <div className="p-6 rounded-2xl bg-white border border-slate-200 shadow-xs space-y-2.5">
+                <p className="text-sm font-bold text-slate-900 flex items-start gap-2">
+                  <span className="text-blue-600 font-extrabold text-base">?</span>
+                  <span>Comment relancer un client en retard sans paraître agressif ?</span>
+                </p>
+                <p className="text-sm text-slate-700 leading-relaxed pl-5">
+                  Vous suivez les échéances en un coup d'œil et déclenchez des rappels clairs et courtois en un clic.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ========================================================= */}
         {/* 4. BANDEAU DE RUPTURE SOMBRE : RÉFORME 2026               */}
         {/* ========================================================= */}
         <section className="py-20 bg-[#011142] text-white">
