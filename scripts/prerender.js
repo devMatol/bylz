@@ -949,11 +949,7 @@ async function prerender() {
     // Inject SEO tags into head
     html = html.replace("</head>", `${seoTags}\n  </head>`);
 
-    // Inject rich, tailored HTML body matching the exact route design
-    if (routePath === "essai") {
-      html = html.replace('style="background-color: #ffffff; color: #0f172a;"', 'style="background-color: #0a0e1a; color: #ffffff;"');
-      html = html.replace('<meta name="theme-color" content="#ffffff" />', '<meta name="theme-color" content="#0a0e1a" />');
-    }
+    // Démo /essai alignée sur le thème clair standard (pas de forçage fond sombre)
 
     const bodyContent = renderPageBody(routePath, meta, allArticles);
     if (bodyContent) {
