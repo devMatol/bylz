@@ -17,6 +17,7 @@ import {
 import { SEO } from "../components/seo/SEO";
 import { SEO_METADATA } from "../lib/seoMeta";
 import { PLANS_DATA } from "../lib/plansData";
+import { isWhatsAppStarterEnabled } from "../lib/planLimits";
 import { MarketingNavbar } from "../components/marketing/MarketingNavbar";
 import { MarketingFooter } from "../components/marketing/MarketingFooter";
 import { BillingToggle } from "../components/shared/BillingToggle";
@@ -140,7 +141,9 @@ export function LandingPage() {
     },
     {
       q: "Comment fonctionne l'assistant WhatsApp ?",
-      a: "Vous pouvez dicter ou écrire un message pour créer un brouillon de facture en direct. L'offre gratuite Starter inclut jusqu'à 3 factures créées par WhatsApp par mois, et le Plan Pro offre un usage illimité.",
+      a: isWhatsAppStarterEnabled()
+        ? "Vous pouvez dicter ou écrire un message pour créer un brouillon de facture en direct. L'offre gratuite Starter inclut jusqu'à 3 factures créées par WhatsApp par mois, et le Plan Pro offre un usage illimité."
+        : "Vous pouvez dicter ou écrire un message pour créer un brouillon de facture en direct. Cette fonctionnalité est disponible avec le Plan Pro pour piloter l'ensemble de votre facturation à la voix.",
     },
     {
       q: "Comment fonctionne le calcul des cotisations URSSAF ?",
@@ -490,10 +493,16 @@ export function LandingPage() {
                 <div className="p-3.5 sm:p-4 rounded-xl bg-white/5 border border-white/10 space-y-1.5 sm:space-y-2 text-xs">
                   <p className="font-bold text-white flex items-center gap-2">
                     <CheckCircle2 className="w-4 h-4 text-emerald-400 flex-shrink-0" />
-                    <span>Inclus dans l'offre gratuite Starter : 3 factures par mois créées par WhatsApp.</span>
+                    <span>
+                      {isWhatsAppStarterEnabled()
+                        ? "Inclus dans l'offre gratuite Starter : 3 factures par mois créées par WhatsApp."
+                        : "Disponible avec le Plan Pro : facturez directement depuis WhatsApp à la voix ou par texte."}
+                    </span>
                   </p>
                   <p className="text-slate-400 text-[11px] sm:text-xs">
-                    Disponible en illimité dans le Plan Pro pour piloter l'ensemble de votre facturation à la voix.
+                    {isWhatsAppStarterEnabled()
+                      ? "Disponible en illimité dans le Plan Pro pour piloter l'ensemble de votre facturation à la voix."
+                      : "Génération automatique de factures conformes Factur-X sans ouvrir votre ordinateur."}
                   </p>
                 </div>
                 <div className="pt-1">
@@ -595,10 +604,12 @@ export function LandingPage() {
                       <Check className="w-4 h-4 text-blue-700 flex-shrink-0" />
                       <span>Jusqu'à 3 clients actifs</span>
                     </li>
-                    <li className="flex items-center gap-2 sm:gap-2.5">
-                      <Check className="w-4 h-4 text-blue-700 flex-shrink-0" />
-                      <span>3 factures créées par WhatsApp par mois</span>
-                    </li>
+                    {isWhatsAppStarterEnabled() && (
+                      <li className="flex items-center gap-2 sm:gap-2.5">
+                        <Check className="w-4 h-4 text-blue-700 flex-shrink-0" />
+                        <span>3 factures créées par WhatsApp par mois</span>
+                      </li>
+                    )}
                     <li className="flex items-center gap-2 sm:gap-2.5">
                       <Check className="w-4 h-4 text-blue-700 flex-shrink-0" />
                       <span>Export PDF avec mentions légales essentielles</span>

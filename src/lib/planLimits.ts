@@ -14,11 +14,25 @@ export interface PlanFeatureLimits {
 
 export type FeatureKey = keyof PlanFeatureLimits;
 
+export function isWhatsAppStarterEnabled(): boolean {
+  const envProcess = (globalThis as unknown as { process?: { env?: Record<string, string | undefined> } }).process?.env;
+  if (envProcess && "VITE_WHATSAPP_STARTER_ENABLED" in envProcess) {
+    return envProcess.VITE_WHATSAPP_STARTER_ENABLED === "true";
+  }
+  try {
+    return (import.meta as unknown as { env?: Record<string, string | undefined> }).env?.VITE_WHATSAPP_STARTER_ENABLED === "true";
+  } catch {
+    return false;
+  }
+}
+
 export const DEFAULT_PLAN_LIMITS: Record<PlanType, PlanFeatureLimits> = {
   starter: {
     invoicesPerMonth: 3,
     maxClients: 3,
-    whatsAppInvoicesPerMonth: 3,
+    get whatsAppInvoicesPerMonth(): number {
+      return isWhatsAppStarterEnabled() ? 3 : 0;
+    },
     fiscalDashboard: false,
     reminders: false,
     exports: false,

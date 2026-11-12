@@ -1,5 +1,6 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "npm:@supabase/supabase-js@2.57.4";
+import { checkWhatsAppMonthlyQuota } from "./prepared_server_quota.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -375,17 +376,22 @@ Deno.serve(async (req: Request) => {
 
       const ownerPlan = company?.owner?.plan || "starter";
       const isOwnerTestingLowerPlan = ownerPlan === "starter" || ownerPlan === "solo";
+      const isAdmin = company?.owner?.is_admin === true || company?.owner?.admin_role === "super_admin";
       const isUserPro = !isOwnerTestingLowerPlan && (
         ownerPlan === "pro" ||
         ownerPlan === "unlimited" ||
-        company?.owner?.is_admin === true ||
-        company?.owner?.admin_role === "super_admin"
+        isAdmin
       );
 
-      if (!isUserPro) {
-        replyText = `⚡ *Bylz Copilot IA (WhatsApp & Web)*\n\n` +
-          `L'Assistant IA par texte et note vocale est une fonctionnalité exclusive réservée aux membres du **Plan PRO ⚡**.\n\n` +
-          `👉 Rendez-vous sur https://bylz.fr/tarifs pour débloquer votre assistant IA illimité et piloter votre facturation à la voix !`;
+      // Contrôle de quota WhatsApp côté serveur (Starter jusqu'à 3/mois, Pro illimité, Solo restreint)
+      const quotaCheck = await checkWhatsAppMonthlyQuota(adminClient, company.id, ownerPlan, isAdmin);
+
+      if (!quotaCheck.allowed) {
+        replyText = quotaCheck.errorMessage || (
+          `⚡ *Bylz Copilot IA (WhatsApp & Web)*\n\n` +
+          `L'Assistant IA par texte et note vocale est une fonctionnalité exclusive réservée aux membres du **Plan PRO ⚡** (ou dans la limite de 3 factures/mois en Starter).\n\n` +
+          `👉 Rendez-vous sur https://bylz.fr/tarifs pour débloquer votre assistant IA illimité et piloter votre facturation à la voix !`
+        );
       } else {
         const lowerInput = textContent.toLowerCase().trim();
 
@@ -541,6 +547,7 @@ Deno.serve(async (req: Request) => {
               total_vat: 0,
               total_ttc: amount,
               paid_amount: 0,
+              created_via: "whatsapp",
             })
             .select()
             .single();
@@ -1233,6 +1240,7 @@ Sinon, réponds de manière concise, précise et amicale en français sur WhatsA
                         total_vat: 0,
                         total_ttc: amount,
                         paid_amount: 0,
+                        created_via: "whatsapp",
                       })
                       .select()
                       .single();
