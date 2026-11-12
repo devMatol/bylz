@@ -203,7 +203,7 @@ export function trackScrollDepth(percent: 25 | 50 | 75 | 100) {
   trackEvent("scroll_depth", { percent });
 }
 
-export function trackCtaClick(emplacement: "hero" | "tarifs" | "bas de page" | "navbar") {
+export function trackCtaClick(emplacement: "hero" | "tarifs" | "bas de page" | "navbar" | "milieu") {
   if (!hasAnalyticsConsent()) return;
   trackEvent("cta_click", { emplacement });
 }

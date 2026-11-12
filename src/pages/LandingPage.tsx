@@ -364,6 +364,7 @@ export function LandingPage() {
             <div className="text-center pt-1">
               <Link
                 to="/signup"
+                onClick={() => trackCtaClick("milieu")}
                 className={`${btnPrimary} py-3 px-6 text-sm`}
               >
                 Créer mon compte gratuit
