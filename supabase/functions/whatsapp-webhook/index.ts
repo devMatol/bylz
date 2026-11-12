@@ -101,7 +101,7 @@ function bufferToBase64(buffer: ArrayBuffer): string {
   return btoa(binary);
 }
 
-Deno.serve(async (req: Request) => {
+Deno.serve(async (req: Request): Promise<Response> => {
   // 1. Meta WhatsApp Webhook Verification (GET request)
   if (req.method === "GET") {
     const url = new URL(req.url);
@@ -135,6 +135,8 @@ Deno.serve(async (req: Request) => {
   let metaPhoneNumberId = "";
   let replyText = "";
   let body: any = {};
+  let entry: any = null;
+  let message: any = null;
 
   try {
     const contentType = req.headers.get("content-type") || "";
@@ -234,8 +236,8 @@ Deno.serve(async (req: Request) => {
         body = {};
       }
 
-      let entry: any = null;
-      let message: any = null;
+      entry = null;
+      message = null;
       if (body.is_web_client) {
         isWebClient = true;
         textContent = body.text || body.message || "";
@@ -293,7 +295,22 @@ Deno.serve(async (req: Request) => {
 
       if (!company) {
         replyText = `👋 *Bonjour !* Votre compte n'est pas encore associé à une entreprise sur Bylz.\n\nConnectez-vous sur https://bylz.fr pour configurer votre entreprise !`;
-        return;
+        if (isTwilio) {
+          const twiML = `<?xml version="1.0" encoding="UTF-8"?>\n<Response>\n  <Message><![CDATA[${replyText}]]></Message>\n</Response>`;
+          return new Response(twiML, {
+            status: 200,
+            headers: { ...corsHeaders, "Content-Type": "application/xml; charset=utf-8" },
+          });
+        }
+        if (!isWebClient && fromPhone && fromPhone !== "web_client") {
+          const phoneNumberId = metaPhoneNumberId || "1344246648768355";
+          const validMetaToken = "EAANpHbOHsisBSZAcVQzSmgmBid5hI5rOMNM2W0nmGah9MMWiA6GbcH1PHZCp13hJNgvJvkGQLSPsgebnEPyot3P7ZC77mwrc2eeApBCfgRIZC0vvSVuerQhT5bQvLLQI6EVSlhyazZBS1hZAzpykfZB2F7Nk5yX8ZBJM2bHfFxAX7pXLrq0hIvRPknA9tyTlNgZDZD";
+          await sendMetaWhatsAppMessage(phoneNumberId, fromPhone, replyText, validMetaToken);
+        }
+        return new Response(
+          JSON.stringify({ success: true, reply: replyText, matched_company: null }),
+          { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
       }
 
             // ---------------------------------------------------------------------------
@@ -955,7 +972,7 @@ Sinon, réponds de manière concise, précise et amicale en français sur WhatsA
                   dbg(`[GEMINI ERR ${model}] HTTP ${geminiRes.status}: ${errTxt.substring(0, 60)}`);
                   console.warn(`Gemini model ${model} returned error ${geminiRes.status}: ${errTxt}`);
                 }
-              } catch (mErr) {
+              } catch (mErr: any) {
                 dbg(`[GEMINI EXCEPTION ${model}] ${mErr?.message || String(mErr)}`);
                 console.warn(`Error attempting Gemini model ${model}:`, mErr);
               }
@@ -1000,7 +1017,7 @@ Sinon, réponds de manière concise, précise et amicale en français sur WhatsA
                       isAiConfirm = true;
                     }
                   }
-                } catch (checkErr) {
+                } catch (checkErr: any) {
                   dbg(`[EXCEPT CHECK OUI/NON] ${checkErr?.message}`);
                 }
               }
@@ -1405,6 +1422,7 @@ Sinon, réponds de manière concise, précise et amicale en français sur WhatsA
         }
       }
     }
+  }
 
     // Debug summary kept in server logs only (commented out for clean user-facing WhatsApp messages)
     // const debugSummary = "\n\n------------------\n🛠️ *DIAGNOSTIC EN DIRECT* :\n" + debugLogs.map(l => "• " + l).join("\n");
@@ -1434,7 +1452,6 @@ Sinon, réponds de manière concise, précise et amicale en français sur WhatsA
       }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
-  }
   } catch (err: any) {
     console.error("WhatsApp Webhook error:", err);
     const errDetail = err?.stack || err?.message || String(err);
