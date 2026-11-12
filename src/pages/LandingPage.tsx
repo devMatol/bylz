@@ -88,8 +88,8 @@ export function LandingPage() {
       icon: TrendingUp,
     },
     {
-      title: "Calcul URSSAF & Abattement fiscal",
-      desc: "Application automatique de l'abattement forfaitaire (34% en BNC, 50% en BIC) pour estimer précisément votre revenu net imposable.",
+      title: "Calcul des cotisations & Revenu net",
+      desc: "Estimation automatique de vos cotisations URSSAF et calcul de votre revenu net pour piloter votre activité en direct.",
       icon: Calculator,
     },
     {
@@ -287,13 +287,13 @@ export function LandingPage() {
                     <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center flex-shrink-0">
                       <Check className="w-3.5 h-3.5 stroke-[3]" />
                     </span>
-                    <span>Calcul automatique de vos <strong>cotisations URSSAF</strong> et abattement fiscal</span>
+                    <span>Calcul automatique de vos <strong>cotisations URSSAF</strong> et de votre net</span>
                   </li>
                   <li className="flex items-center gap-3">
                     <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center flex-shrink-0">
                       <Check className="w-3.5 h-3.5 stroke-[3]" />
                     </span>
-                    <span>Suivi en direct du <strong>seuil de TVA</strong> (Franchise Art. 293 B du CGI)</span>
+                    <span>Suivi en direct du <strong>seuil de TVA</strong> (Franchise en base)</span>
                   </li>
                   <li className="flex items-center gap-3">
                     <span className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-800 flex items-center justify-center flex-shrink-0">
