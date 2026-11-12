@@ -321,7 +321,7 @@ export function BankSyncSection() {
             <p className="text-xs font-bold text-text mt-1">Détection auto du virement</p>
           </div>
           <div className="p-3 rounded-xl bg-surface border border-border flex flex-col items-center">
-            <span className="text-xs font-bold text-emerald-500 uppercase">3. Payée</span>
+            <span className="text-xs font-bold text-emerald-700 dark:text-emerald-400 uppercase">3. Payée</span>
             <p className="text-xs font-bold text-text mt-1">Rapprochement sans effort</p>
           </div>
         </div>
