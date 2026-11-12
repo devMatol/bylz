@@ -714,7 +714,7 @@ export function LandingPage() {
                     </button>
                   </Link>
                   <p className="text-[10px] sm:text-[11px] text-slate-500 text-center mt-1.5 sm:mt-2">
-                    Redirection vers le paiement sécurisé Stripe après inscription, résiliable à tout moment en 1 clic.
+                    Redirection vers le paiement sécurisé Stripe après inscription, résiliable à tout moment depuis vos paramètres.
                   </p>
                 </div>
               </div>
@@ -787,7 +787,7 @@ export function LandingPage() {
                     </button>
                   </Link>
                   <p className="text-[10px] sm:text-[11px] text-slate-500 text-center mt-1.5 sm:mt-2">
-                    Redirection vers le paiement sécurisé Stripe après inscription, résiliable à tout moment en 1 clic.
+                    Redirection vers le paiement sécurisé Stripe après inscription, résiliable à tout moment depuis vos paramètres.
                   </p>
                 </div>
               </div>
