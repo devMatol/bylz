@@ -193,3 +193,37 @@ export function trackCheckoutSuccess(plan: string, value?: number) {
     trackPurchase(plan, value);
   }
 }
+
+/**
+ * Mesure Lot 11 - Conversion & Parcours (Strictement conditionné au consentement Analytics)
+ */
+
+export function trackScrollDepth(percent: 25 | 50 | 75 | 100) {
+  if (!hasAnalyticsConsent()) return;
+  trackEvent("scroll_depth", { percent });
+}
+
+export function trackCtaClick(emplacement: "hero" | "tarifs" | "bas de page" | "navbar") {
+  if (!hasAnalyticsConsent()) return;
+  trackEvent("cta_click", { emplacement });
+}
+
+export function trackDemoStart() {
+  if (!hasAnalyticsConsent()) return;
+  trackEvent("demo_start");
+}
+
+export function trackDemoLockedClick(feature?: string) {
+  if (!hasAnalyticsConsent()) return;
+  trackEvent("demo_locked_click", { feature });
+}
+
+export function trackSignupView() {
+  if (!hasAnalyticsConsent()) return;
+  trackEvent("signup_view");
+}
+
+export function trackSignupSubmit(plan?: string) {
+  if (!hasAnalyticsConsent()) return;
+  trackEvent("signup_submit", { plan });
+}

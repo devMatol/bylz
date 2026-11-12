@@ -9,7 +9,7 @@ import { SEO } from "../components/seo/SEO";
 import { useAuth } from "../contexts/AuthContext";
 import { signUp, signInWithGoogle, resendConfirmationEmail } from "../lib/auth";
 import { sendWelcomeEmail } from "../lib/emailNotifier";
-import { trackSignUp } from "../lib/analytics";
+import { trackSignUp, trackSignupView, trackSignupSubmit } from "../lib/analytics";
 import { cn, formatAmount } from "../lib/utils";
 import { supabase } from "../lib/supabase";
 import { STRIPE_PRICE_SOLO_ANNUAL, STRIPE_PRICE_SOLO_MONTHLY, STRIPE_PRICE_PRO_ANNUAL, STRIPE_PRICE_PRO_MONTHLY } from "../lib/constants";
@@ -61,6 +61,7 @@ const STRENGTH_LABELS = { weak: "Faible", medium: "Moyen", strong: "Fort" };
 
 export function SignupPage() {
   useEffect(() => {
+    trackSignupView();
     const params = new URLSearchParams(window.location.search);
     const p = params.get("plan");
     const b = params.get("billing");
@@ -82,9 +83,7 @@ export function SignupPage() {
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -124,18 +123,15 @@ export function SignupPage() {
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
+    trackSignupSubmit(planParam || "starter");
     setError(null);
 
-    if (!isValidPhone(phone)) {
+    if (phone && !isValidPhone(phone)) {
       setError("Veuillez saisir un numéro de téléphone valide (ex : 06 12 34 56 78).");
       return;
     }
     if (password.length < 8) {
       setError("Le mot de passe doit contenir au moins 8 caractères.");
-      return;
-    }
-    if (password !== confirmPassword) {
-      setError("Les deux mots de passe ne correspondent pas.");
       return;
     }
 
@@ -374,13 +370,12 @@ export function SignupPage() {
         />
 
         <Input
-          label="Numéro de téléphone"
+          label="Numéro de téléphone (facultatif, utile pour WhatsApp)"
           type="tel"
           placeholder="06 12 34 56 78"
           leftIcon={<Phone className="w-4 h-4" />}
           value={phone}
           onChange={(e) => setPhone(formatPhoneInput(e.target.value))}
-          required
           autoComplete="tel"
         />
 
@@ -416,41 +411,6 @@ export function SignupPage() {
             <span className="text-xs text-muted">
               Sécurité : {STRENGTH_LABELS[strength.level]}
             </span>
-          </div>
-        )}
-
-        <div className="relative">
-          <Input
-            label="Confirmer le mot de passe"
-            type={showConfirmPassword ? "text" : "password"}
-            placeholder="Retapez votre mot de passe"
-            leftIcon={<Lock className="w-4 h-4" />}
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-            required
-            autoComplete="new-password"
-          />
-          <button
-            type="button"
-            onClick={() => setShowConfirmPassword((s) => !s)}
-            className="absolute right-3 top-[34px] text-muted hover:text-text transition-colors"
-            aria-label={showConfirmPassword ? "Masquer le mot de passe" : "Afficher le mot de passe"}
-          >
-            {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-          </button>
-        </div>
-
-        {confirmPassword.length > 0 && (
-          <div className="-mt-1">
-            {password === confirmPassword ? (
-              <p className="text-xs text-emerald-400 flex items-center gap-1 font-medium">
-                <CheckCircle2 className="w-3.5 h-3.5" /> Les mots de passe correspondent
-              </p>
-            ) : (
-              <p className="text-xs text-danger flex items-center gap-1 font-medium">
-                Les mots de passe ne correspondent pas
-              </p>
-            )}
           </div>
         )}
 
